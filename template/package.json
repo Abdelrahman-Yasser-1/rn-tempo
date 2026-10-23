@@ -7,7 +7,12 @@
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",
-    "test": "jest"
+    "test": "jest",
+    "ai:start": "node scripts/ai-log/session-start.mjs",
+    "ai:prompt": "node scripts/ai-log/prompt.mjs",
+    "ai:stop": "node scripts/ai-log/session-stop.mjs",
+    "ai:report": "node scripts/ai-log/report.mjs",
+    "test:ai-log": "node --test \"scripts/ai-log/__tests__/*.test.mjs\""
   },
   "dependencies": {
     "@react-native/new-app-screen": "0.88.0",
