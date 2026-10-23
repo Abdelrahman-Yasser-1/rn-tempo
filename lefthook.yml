@@ -1,0 +1,18 @@
+# Root hooks for the RN-TEMPO repo. The template ships its own lefthook.yml for generated projects.
+pre-commit:
+  parallel: false
+  commands:
+    stage-ai-session:
+      run: node template/scripts/ai-log/stage-session.mjs
+    gitleaks:
+      run: gitleaks git --staged --redact --no-banner || { echo "gitleaks failed or is missing (brew install gitleaks)"; exit 1; }
+
+prepare-commit-msg:
+  commands:
+    ai-trailers:
+      run: node template/scripts/ai-log/add-trailers.mjs {1} {2}
+
+commit-msg:
+  commands:
+    commitlint:
+      run: yarn commitlint --edit {1}
