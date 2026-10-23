@@ -1,0 +1,41 @@
+{
+  "name": "@rn-tempo/commitlint-config",
+  "version": "0.0.0",
+  "description": "Shared commitlint config for RN-TEMPO projects: Conventional Commits, required scopes and AI session trailers.",
+  "license": "MIT",
+  "type": "module",
+  "main": "index.mjs",
+  "exports": {
+    ".": "./index.mjs",
+    "./rules/ai-session-trailer": "./rules/ai-session-trailer.mjs"
+  },
+  "files": [
+    "index.mjs",
+    "rules/*.mjs",
+    "!rules/*.test.mjs"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Abdelrahman-Yasser-1/rn-tempo.git",
+    "directory": "packages/commitlint-config"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "lint": "node --check index.mjs && node --check rules/ai-session-trailer.mjs",
+    "test": "vitest run",
+    "typecheck": "true"
+  },
+  "peerDependencies": {
+    "@commitlint/cli": ">=21"
+  },
+  "dependencies": {
+    "@commitlint/config-conventional": "21.2.4"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "21.2.4",
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
+  }
+}
