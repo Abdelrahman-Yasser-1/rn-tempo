@@ -1,0 +1,8 @@
+{
+  "hooks": {
+    "SessionStart": [{ "hooks": [{ "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/template/scripts/ai-log/session-start.mjs\" --tool claude-code" }] }],
+    "UserPromptSubmit": [{ "hooks": [{ "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/template/scripts/ai-log/prompt.mjs\"" }] }],
+    "Stop": [{ "hooks": [{ "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/template/scripts/ai-log/session-stop.mjs\"" }] }],
+    "PostToolUse": [{ "matcher": "Edit|Write|MultiEdit", "hooks": [{ "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/template/scripts/ai-log/lint-edited.mjs\"" }] }]
+  }
+}
