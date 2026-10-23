@@ -1,4 +1,7 @@
 # Root hooks for the RN-TEMPO repo. The template ships its own lefthook.yml for generated projects.
+output:
+  - failure
+  - execution_out
 pre-commit:
   parallel: false
   commands:
