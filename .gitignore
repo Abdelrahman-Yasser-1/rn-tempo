@@ -1,0 +1,39 @@
+# dependencies
+node_modules/
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
+
+# build output
+dist/
+coverage/
+.next/
+out/
+*.tsbuildinfo
+
+# OS / IDE
+.DS_Store
+.idea/
+*.swp
+
+# env & secrets (template/.env.dev is intentionally committed — it holds no secrets)
+.env
+.env.*
+!.env.example
+!template/.env.dev
+*.keystore
+!template/android/app/debug.keystore
+*.jks
+*.p12
+*.mobileprovision
+
+# AI session pointer (session logs themselves are committed)
+.ai/.current.json
+template/.ai/.current.json
+
+# logs
+*.log

@@ -1,0 +1,22 @@
+{
+  "name": "rn-tempo",
+  "private": true,
+  "description": "RN-TEMPO: opinionated, AI-ready React Native CLI template, CLI tool and docs.",
+  "license": "MIT",
+  "packageManager": "yarn@4.18.1",
+  "engines": {
+    "node": ">=24.3.0"
+  },
+  "workspaces": [
+    "packages/*",
+    "docs"
+  ],
+  "scripts": {
+    "prepare": "lefthook install",
+    "lint": "yarn workspaces foreach -A --exclude rn-tempo run lint",
+    "test": "yarn workspaces foreach -A --exclude rn-tempo run test",
+    "typecheck": "yarn workspaces foreach -A --exclude rn-tempo run typecheck",
+    "changeset": "changeset",
+    "release": "changeset publish"
+  }
+}
