@@ -22,7 +22,7 @@
     "access": "public"
   },
   "scripts": {
-    "lint": "true",
+    "lint": "node --check index.mjs",
     "test": "vitest run",
     "typecheck": "true"
   },
