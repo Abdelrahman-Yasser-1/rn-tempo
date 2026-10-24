@@ -22,6 +22,8 @@ const screenFolders = folder('{PascalCase}Screen', [
   file('index.ts'),
 ]);
 
+const serviceFiles = [file('{PascalCase}.tsx'), file('{PascalCase}.test.tsx'), ...camelFiles];
+
 const featureChildren = [
   folder('api', [file('{camelCase}(.api)?.ts'), file('{camelCase}(.api)?.test.ts')]),
   folder('components', [
@@ -79,9 +81,8 @@ export const FOLDER_STRUCTURE = {
       folder('constants', camelFiles),
       folder('types', camelFiles),
     ]),
-    folder('services', [
-      folder(KEBAB, [file('{PascalCase}.tsx'), file('{PascalCase}.test.tsx'), ...camelFiles]),
-    ]),
+    // One nested level is allowed (e.g. services/security/pinning); two levels deep is an error.
+    folder('services', [folder(KEBAB, [...serviceFiles, folder(KEBAB, serviceFiles)])]),
     folder('theme', camelFiles),
     folder('assets', [
       folder('(fonts|images|icons|animations)', [file('*'), { name: '*', ruleId: 'free_tree' }]),

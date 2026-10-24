@@ -59,6 +59,11 @@ describe('eslint-config fixtures', () => {
       'src/shared/components/RnSheet/RnSheet.tsx',
       'no-restricted-imports',
     ],
+    [
+      'a service folder nested two levels deep',
+      'src/services/security/pinning/deep/tooDeep.ts',
+      'project-structure/folder-structure',
+    ],
     ['an enum', 'src/shared/types/status.ts', 'no-restricted-syntax'],
     ['console', 'src/shared/utils/logs.ts', 'no-console'],
     [
