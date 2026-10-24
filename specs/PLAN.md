@@ -2241,3 +2241,56 @@ Recorded by the integrator during WS0. Where this list and the plan disagree, **
 19. **Contract amendments:** the plan's own "Contract amendments already decided" section is applied:
     - `services/network` and `services/toast` folders exist.
     - Namespace `forms` and `GET /products/search?q=` are part of the contracts. WS3 and WS9 must include them.
+
+## Amendments after WS1 + WS2 (2026-10-25) — these also override the plan text
+
+**Build and environment**
+
+20. **`ios/build` holds React Native codegen output** (`ios/build/generated`, written by `pod install`).
+    - Never delete it. If you do, run `cd template/ios && bundle exec pod install` before building again.
+    - Stale codegen produced a false "Unable to find module for SampleTurboModule" red box.
+    - Using `-derivedDataPath ios/build` with `xcodebuild` is fine.
+21. **Device checks are expected, not optional.** An Android AVD (`Pixel_9`) and iOS simulators (`iPhone 17 Pro`) exist on the dev machine:
+    - Android: `$ANDROID_HOME/emulator/emulator -avd Pixel_9 -no-snapshot-save &`
+    - iOS: `xcrun simctl boot "iPhone 17 Pro"`
+    - Screenshots: `adb exec-out screencap -p > x.png` or `xcrun simctl io booted screenshot x.png`.
+    - Debug builds need Metro (`yarn start`; on Android also `adb reverse tcp:8081 tcp:8081`).
+    - Shut devices and Metro down when done.
+22. **The splash never hides until WS3 calls `BootSplash.hide({ fade: true })`** at the end of bootstrap (task 3.10).
+    - On iOS, bootsplash is initialized in `SceneDelegate.swift` (`customize(_ rootView:)`).
+    - `src/app/App.tsx` carries a `WS3 (task 3.12): …` note to remove.
+23. **iOS layout:**
+    - Configs: `ios/Config/<Env>.{shared,debug,release}.xcconfig`.
+    - Schemes: `TempoApp-<Env>`.
+    - The env file is chosen by a scheme pre-action that copies `.env.<env>` to `.env` (gitignored).
+    - The Podfile has a `post_install` step that raises stale pod deployment targets.
+    - `scripts/native/ios-envs.rb` (`yarn ios:envs`) is the only way to change configs or schemes (idempotent).
+24. **Android prod signing:**
+    - `prodRelease` / `bundleProdRelease` fail without the `TEMPO_UPLOAD_*` properties. The only override is `-PtempoAllowDebugSigning=true` (or `TEMPO_ALLOW_DEBUG_SIGNING=true`), for local testing only.
+    - dev and staging release builds fall back to the debug keystore with a warning.
+    - **WS8 Fastlane must provide the upload key for every prod build.**
+25. **Env files:** `.env.staging` and `.env.prod` are gitignored. **WS8 CI writes them from the secrets** `ENV_FILE_STAGING` and `ENV_FILE_PROD` before native builds.
+
+**Lint and code conventions (from WS1)**
+
+26. **Run `cd template && yarn verify` before every push.** CI runs a root `yarn install` and then `yarn verify`: typecheck, eslint, ls-lint, i18n check, `format:check` and jest.
+27. **No literal `TODO`/`FIXME` comments** (`sonarjs/todo-tag`). Write hand-off notes as `WS<N> (task x.y): …`.
+28. **Props and type definitions:**
+    - Component props are `Readonly<Props>` (`sonarjs/prefer-read-only-props`).
+    - Use `type` aliases, not `interface` (`consistent-type-definitions: type`).
+29. **Shared components** (`src/shared/components/**`) may import the RN primitives (`Text`, the Touchables, `Image`, `TextInput`, `Button`) but **never `StyleSheet`**; styles come from `react-native-unistyles`. Everywhere else, those primitives are forbidden too.
+30. **Allowed folder nesting:**
+    - Service folders may nest **one** kebab-case level (e.g. `src/services/security/pinning/`). Two levels deep is an error.
+    - `src/test-utils` allows camelCase `.tsx` (e.g. `renderWithProviders.tsx`).
+31. **ESLint scope:**
+    - `scripts/ai-log` is ignored by ESLint.
+    - Any eslint call with explicit file lists must pass `--no-warn-ignored` (already the case in the lefthook and verify-changed scripts).
+    - `eslint-plugin-project-structure` writes `projectStructure.cache.json` (gitignored).
+32. **i18next-cli has no `failOnWarnings`.** `i18next.config.ts` raises the lint checks to errors instead. `i18n:check` becomes meaningful once WS3 adds locale files.
+
+**Agent hygiene**
+
+33. **zsh does not word-split unquoted variables.** Use arrays or explicit arguments in shell loops.
+34. **Rate limits:**
+    - Long agent runs may stop on a rate limit. Commit early and often so work survives.
+    - The AI session pointer goes stale after 12h. Run `yarn ai:start …` again when resuming the next day.
