@@ -1,0 +1,11 @@
+# gitleaks config: default rules plus an allowlist for lockfiles, whose checksums look like API keys.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Lockfile checksums are not secrets"
+paths = [
+  '''(^|/)Podfile\.lock$''',
+  '''(^|/)yarn\.lock$''',
+  '''(^|/)Gemfile\.lock$''',
+]
