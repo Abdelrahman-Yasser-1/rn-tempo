@@ -79,3 +79,6 @@ yarn-error.log
 .env.*
 !.env.example
 !.env.dev
+
+# eslint-plugin-project-structure cache
+projectStructure.cache.json
