@@ -1,0 +1,20 @@
+{
+  "$schema": "https://unpkg.com/@rn-tempo/contracts/schemas/feature-manifest.schema.json",
+  "name": "dynamic-forms",
+  "title": "Config-driven forms",
+  "description": "Multi-step forms rendered from config with a field registry, visibility rules and zod validation.",
+  "defaultEnabled": false,
+  "requires": [],
+  "conflicts": [],
+  "deleteGlobs": [
+    "src/features/dynamic-forms/**",
+    "src/locales/*/forms.json",
+    "specs/dynamic-forms/**"
+  ],
+  "dependencies": [],
+  "devDependencies": [],
+  "envKeys": [],
+  "jsonPatches": [],
+  "postRemove": [],
+  "docs": "/docs/features/dynamic-forms"
+}

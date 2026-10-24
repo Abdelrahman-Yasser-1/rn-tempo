@@ -1,0 +1,24 @@
+{
+  "$schema": "https://unpkg.com/@rn-tempo/contracts/schemas/feature-manifest.schema.json",
+  "name": "device-integrity",
+  "title": "Device integrity check",
+  "description": "Jailbreak/root/hook detection with jail-monkey; blocks the app in prod builds when enabled.",
+  "defaultEnabled": true,
+  "requires": [],
+  "conflicts": [],
+  "deleteGlobs": [
+    "src/services/security/integrity/**"
+  ],
+  "dependencies": [
+    "jail-monkey"
+  ],
+  "devDependencies": [],
+  "envKeys": [
+    "DEVICE_INTEGRITY_ENABLED"
+  ],
+  "jsonPatches": [],
+  "postRemove": [
+    "pods"
+  ],
+  "docs": "/docs/features/device-integrity"
+}

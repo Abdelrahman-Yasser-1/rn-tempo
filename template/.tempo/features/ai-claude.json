@@ -1,0 +1,19 @@
+{
+  "$schema": "https://unpkg.com/@rn-tempo/contracts/schemas/feature-manifest.schema.json",
+  "name": "ai-claude",
+  "title": "Claude Code setup",
+  "description": "CLAUDE.md, skills, commands, agents and hooks for Claude Code.",
+  "defaultEnabled": true,
+  "requires": [],
+  "conflicts": [],
+  "deleteGlobs": [
+    ".claude/**",
+    "CLAUDE.md"
+  ],
+  "dependencies": [],
+  "devDependencies": [],
+  "envKeys": [],
+  "jsonPatches": [],
+  "postRemove": [],
+  "docs": "/docs/features/ai-claude"
+}
