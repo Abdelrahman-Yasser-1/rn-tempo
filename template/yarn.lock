@@ -5016,6 +5016,30 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@rn-tempo/commitlint-config@link:../packages/commitlint-config::locator=tempo-app%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@rn-tempo/commitlint-config@link:../packages/commitlint-config::locator=tempo-app%40workspace%3A."
+  languageName: node
+  linkType: soft
+
+"@rn-tempo/eslint-config@link:../packages/eslint-config::locator=tempo-app%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@rn-tempo/eslint-config@link:../packages/eslint-config::locator=tempo-app%40workspace%3A."
+  languageName: node
+  linkType: soft
+
+"@rn-tempo/prettier-config@link:../packages/prettier-config::locator=tempo-app%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@rn-tempo/prettier-config@link:../packages/prettier-config::locator=tempo-app%40workspace%3A."
+  languageName: node
+  linkType: soft
+
+"@rn-tempo/tsconfig@link:../packages/tsconfig::locator=tempo-app%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@rn-tempo/tsconfig@link:../packages/tsconfig::locator=tempo-app%40workspace%3A."
+  languageName: node
+  linkType: soft
+
 "@rozenite/agent-bridge@npm:2.1.0":
   version: 2.1.0
   resolution: "@rozenite/agent-bridge@npm:2.1.0"
@@ -14223,6 +14247,10 @@ __metadata:
     "@react-navigation/bottom-tabs": "npm:7.21.0"
     "@react-navigation/native": "npm:7.5.1"
     "@react-navigation/native-stack": "npm:7.21.0"
+    "@rn-tempo/commitlint-config": "link:../packages/commitlint-config"
+    "@rn-tempo/eslint-config": "link:../packages/eslint-config"
+    "@rn-tempo/prettier-config": "link:../packages/prettier-config"
+    "@rn-tempo/tsconfig": "link:../packages/tsconfig"
     "@rozenite/metro": "npm:2.5.0"
     "@rozenite/mmkv-plugin": "npm:2.1.0"
     "@rozenite/network-activity-plugin": "npm:2.5.0"
