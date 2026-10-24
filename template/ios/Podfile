@@ -6,6 +6,13 @@ require Pod::Executable.execute_command('node', ['-p',
   )', __dir__]).strip
 
 platform :ios, min_ios_version_supported
+
+# Maps each per-environment build configuration to a CocoaPods build type.
+# Keep in sync with the configurations created by scripts/native/ios-envs.rb (yarn ios:envs).
+project 'TempoApp',
+        'Debug-Dev' => :debug, 'Release-Dev' => :release,
+        'Debug-Staging' => :debug, 'Release-Staging' => :release,
+        'Debug-Prod' => :debug, 'Release-Prod' => :release
 prepare_react_native_project!
 
 linkage = ENV['USE_FRAMEWORKS']
