@@ -55,9 +55,11 @@
     "zustand": "5.0.16"
   },
   "devDependencies": {
-    "@babel/core": "^7.25.2",
-    "@babel/preset-env": "^7.25.3",
-    "@babel/runtime": "^7.25.0",
+    "@babel/core": "7.29.7",
+    "@babel/preset-env": "7.29.7",
+    "@babel/runtime": "7.29.10",
+    "@commitlint/cli": "21.2.4",
+    "@ls-lint/ls-lint": "2.3.2",
     "@react-native-community/cli": "20.2.0",
     "@react-native-community/cli-platform-android": "20.2.0",
     "@react-native-community/cli-platform-ios": "20.2.0",
@@ -73,16 +75,25 @@
     "@storybook/addon-ondevice-controls": "10.7.0",
     "@storybook/react-native": "10.7.0",
     "@testing-library/react-native": "14.1.0",
-    "@types/fast-text-encoding": "^1",
+    "@types/fast-text-encoding": "1.0.3",
     "@types/jest": "30.0.0",
-    "@types/react": "^19.2.0",
+    "@types/react": "19.3.0",
+    "babel-plugin-module-resolver": "5.0.3",
+    "danger": "14.0.7",
+    "eslint": "10.13.0",
     "fast-text-encoding": "1.0.6",
+    "i18next-cli": "1.80.0",
     "jest": "30.5.2",
+    "knip": "6.42.1",
+    "lefthook": "2.2.2",
     "msw": "3.0.3",
+    "prettier": "3.9.10",
+    "react-native-svg-transformer": "1.5.3",
     "react-native-url-polyfill": "4.0.0",
+    "sharp": "0.35.5",
     "storybook": "10.6.3",
     "test-renderer": "1.3.1",
-    "typescript": "^6.0.3"
+    "typescript": "6.0.3"
   },
   "engines": {
     "node": ">=24.3.0"
