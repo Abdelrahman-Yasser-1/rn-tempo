@@ -20,7 +20,7 @@
     "ai:stop": "node scripts/ai-log/session-stop.mjs",
     "ai:report": "node scripts/ai-log/report.mjs",
     "test:ai-log": "node --test \"scripts/ai-log/__tests__/*.test.mjs\"",
-    "verify": "yarn typecheck && yarn lint && yarn lint:files && yarn i18n:check && yarn test --ci",
+    "verify": "yarn typecheck && yarn lint && yarn format:check && yarn lint:files && yarn i18n:check && yarn test --ci",
     "verify:changed": "node scripts/verify-changed.mjs"
   },
   "dependencies": {
