@@ -26,7 +26,7 @@ export function testsConfig() {
           ENUM_RESTRICTION,
           {
             selector:
-              "CallExpression[callee.property.name=/^(get|find|query)(All)?ByTestId$/], CallExpression[callee.name=/^(get|find|query)(All)?ByTestId$/]",
+              'CallExpression[callee.property.name=/^(get|find|query)(All)?ByTestId$/], CallExpression[callee.name=/^(get|find|query)(All)?ByTestId$/]',
             message: 'Prefer getByRole (or another accessible query) over getByTestId.',
           },
         ],

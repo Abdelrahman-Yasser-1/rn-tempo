@@ -11,7 +11,7 @@ Shared TypeScript presets for RN-TEMPO projects.
 // tsconfig.json
 {
   "extends": "@rn-tempo/tsconfig/react-native.json",
-  "compilerOptions": { "paths": { "@app/*": ["./src/app/*"] } }
+  "compilerOptions": { "paths": { "@app/*": ["./src/app/*"] } },
 }
 ```
 
