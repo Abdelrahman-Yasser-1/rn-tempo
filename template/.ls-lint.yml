@@ -1,0 +1,12 @@
+ls:
+  src:
+    .dir: kebab-case | PascalCase
+    .ts: camelCase | regex:[a-z][a-zA-Z0-9]*\.(store|api|d)
+    .tsx: PascalCase
+    .test.ts: camelCase | regex:[a-z][a-zA-Z0-9]*\.(store|api)
+    .test.tsx: PascalCase
+    .stories.tsx: PascalCase
+    .json: kebab-case
+  e2e:
+    .yaml: kebab-case
+ignore: [node_modules, android, ios, vendor, coverage, .git, .rnstorybook]
