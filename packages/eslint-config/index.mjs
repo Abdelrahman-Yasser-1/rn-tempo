@@ -4,6 +4,7 @@ import { baseConfig } from './configs/base.mjs';
 import { qualityConfig } from './configs/quality.mjs';
 import { reactConfig } from './configs/react.mjs';
 import { reactNativeConfig } from './configs/react-native.mjs';
+import { restrictionsConfig } from './configs/restrictions.mjs';
 import { testsConfig } from './configs/tests.mjs';
 
 /**
@@ -16,6 +17,7 @@ export function createConfig({ root }) {
     ...reactConfig(),
     ...reactNativeConfig(),
     ...qualityConfig(root),
+    ...restrictionsConfig(),
     ...testsConfig(),
     eslintConfigPrettier,
   ];
