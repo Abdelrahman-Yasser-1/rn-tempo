@@ -8,3 +8,4 @@ coverage
 .tempo
 .tempo.json
 yarn.lock
+.rnstorybook/storybook.requires.ts
