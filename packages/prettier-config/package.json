@@ -1,0 +1,35 @@
+{
+  "name": "@rn-tempo/prettier-config",
+  "version": "0.0.0",
+  "description": "Shared Prettier config for RN-TEMPO projects.",
+  "license": "MIT",
+  "type": "module",
+  "main": "index.mjs",
+  "exports": {
+    ".": "./index.mjs"
+  },
+  "files": [
+    "index.mjs"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Abdelrahman-Yasser-1/rn-tempo.git",
+    "directory": "packages/prettier-config"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "lint": "node --check index.mjs",
+    "test": "vitest run",
+    "typecheck": "true"
+  },
+  "peerDependencies": {
+    "prettier": ">=3"
+  },
+  "devDependencies": {
+    "prettier": "3.9.10",
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
+  }
+}
