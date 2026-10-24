@@ -22,6 +22,7 @@
     "lint:files": "ls-lint",
     "lint:deadcode": "knip",
     "i18n:check": "i18next-cli lint && i18next-cli extract --ci",
+    "icons": "node scripts/native/icons.mjs",
     "start": "react-native start",
     "start:dev": "react-native start",
     "start:staging": "react-native start",
