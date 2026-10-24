@@ -1,0 +1,40 @@
+# Git hooks shipped to generated projects. Installed by `lefthook install` (see the `prepare` flow).
+output:
+  - failure
+  - execution_out
+pre-commit:
+  parallel: true
+  commands:
+    eslint:
+      glob: '*.{ts,tsx,js,mjs}'
+      run: yarn eslint --fix --max-warnings=0 {staged_files}
+      stage_fixed: true
+    prettier:
+      glob: '*.{ts,tsx,js,mjs,json,md,yml,yaml}'
+      run: yarn prettier --write {staged_files}
+      stage_fixed: true
+    ls-lint:
+      run: yarn ls-lint
+    typecheck:
+      glob: '*.{ts,tsx}'
+      run: yarn tsc --noEmit
+    env-guard:
+      glob: '{.env.staging,.env.prod,*.keystore,*.jks,*.p12,*.mobileprovision}'
+      run: echo 'Refusing to commit secrets {staged_files}' && exit 1
+    gitleaks:
+      run: gitleaks git --staged --redact --no-banner
+    stage-ai-session:
+      run: node scripts/ai-log/stage-session.mjs
+prepare-commit-msg:
+  commands:
+    ai-trailers:
+      run: node scripts/ai-log/add-trailers.mjs {1} {2}
+commit-msg:
+  commands:
+    commitlint:
+      run: yarn commitlint --edit {1}
+pre-push:
+  commands:
+    test:
+      run: yarn jest --ci --changedSince=origin/main --passWithNoTests
+# `tempo doctor --ci` joins pre-push once the CLI is published (WS5).
