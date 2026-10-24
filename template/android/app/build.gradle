@@ -172,11 +172,14 @@ dependencies {
 }
 
 // prodRelease must never be silently signed with the debug keystore. Opt in for local testing with
-// `-PtempoAllowDebugSigning=true` (or env TEMPO_ALLOW_DEBUG_SIGNING=true). Only the tasks the user
-// requested are inspected: shared internal tasks such as preProdReleaseBuild also appear in other graphs.
-gradle.taskGraph.whenReady {
-    def prodReleaseRequested = gradle.startParameter.taskNames.any { it.toLowerCase().contains("prodrelease") }
-    if (prodReleaseRequested && !hasUploadKey) {
+// `-PtempoAllowDebugSigning=true` (or env TEMPO_ALLOW_DEBUG_SIGNING=true).
+// The check looks at the tasks that actually sign/package prod release output, so it also covers
+// `assembleRelease`, `bundleRelease`, `build`, ... Shared internal tasks (preProdReleaseBuild) appear in
+// other variants' graphs and are deliberately not matched.
+def prodReleaseSigningTasks = ["validateSigningProdRelease", "packageProdRelease", "signProdReleaseBundle", "bundleProdRelease"]
+gradle.taskGraph.whenReady { graph ->
+    def prodReleaseSigned = graph.allTasks.any { it.project == project && it.name in prodReleaseSigningTasks }
+    if (prodReleaseSigned && !hasUploadKey) {
         if (allowDebugSigning) {
             logger.warn("WARNING: ##### prodRelease is signed with the DEBUG keystore (tempoAllowDebugSigning). DO NOT DISTRIBUTE. #####")
         } else {
