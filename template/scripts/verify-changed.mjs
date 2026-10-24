@@ -50,7 +50,7 @@ const code = changed.filter((file) => CODE.test(file));
 const formattable = changed.filter((file) => FORMATTABLE.test(file));
 
 if (code.length > 0) {
-  run('eslint', 'yarn', ['eslint', '--max-warnings=0', ...code]);
+  run('eslint', 'yarn', ['eslint', '--max-warnings=0', '--no-warn-ignored', ...code]);
 }
 if (formattable.length > 0) {
   run('prettier', 'yarn', ['prettier', '--check', ...formattable]);

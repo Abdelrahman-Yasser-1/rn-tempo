@@ -7,7 +7,7 @@ pre-commit:
   commands:
     eslint:
       glob: '*.{ts,tsx,js,mjs}'
-      run: yarn eslint --fix --max-warnings=0 {staged_files}
+      run: yarn eslint --fix --max-warnings=0 --no-warn-ignored {staged_files}
       stage_fixed: true
     prettier:
       glob: '*.{ts,tsx,js,mjs,json,md,yml,yaml}'
