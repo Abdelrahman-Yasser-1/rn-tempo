@@ -1,0 +1,41 @@
+{
+  "name": "@rn-tempo/contracts",
+  "version": "0.0.0",
+  "description": "Shared contracts for RN-TEMPO: JSON schemas (.tempo.json, feature manifests, AI session logs) and feature-marker syntax.",
+  "license": "MIT",
+  "type": "module",
+  "main": "index.mjs",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.mjs"
+    },
+    "./schemas/*": "./schemas/*"
+  },
+  "files": [
+    "index.mjs",
+    "index.d.ts",
+    "markers.mjs",
+    "schemas"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Abdelrahman-Yasser-1/rn-tempo.git",
+    "directory": "packages/contracts"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "lint": "node --check index.mjs && node --check markers.mjs",
+    "test": "vitest run",
+    "typecheck": "true"
+  },
+  "devDependencies": {
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
+  }
+}

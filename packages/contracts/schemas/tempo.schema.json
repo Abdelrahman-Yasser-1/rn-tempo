@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://unpkg.com/@rn-tempo/contracts/schemas/tempo.schema.json",
+  "title": "RN-TEMPO project metadata (.tempo.json)",
+  "description": "Written by create-tempo-app; read by `tempo doctor`, `tempo upgrade`, `tempo env` and the AI scripts (contract C8).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["templateVersion", "createdWith", "app", "envs", "features", "ai"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "templateVersion": { "$ref": "#/$defs/semver" },
+    "createdWith": { "type": "string", "pattern": "^create-tempo-app@" },
+    "app": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "displayName", "bundleId"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[A-Z][A-Za-z0-9]*$" },
+        "displayName": { "type": "string", "minLength": 1 },
+        "bundleId": { "type": "string", "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9]*)+$" }
+      }
+    },
+    "envs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "suffix", "displayName", "scheme", "badge"],
+        "properties": {
+          "name": { "type": "string", "pattern": "^[a-z][a-z0-9]*$" },
+          "suffix": { "type": "string", "pattern": "^(\\.[a-z][a-z0-9]*)?$" },
+          "displayName": { "type": "string", "minLength": 1 },
+          "scheme": { "type": "string", "pattern": "^[a-z][a-z0-9+.-]*$" },
+          "badge": { "type": ["string", "null"], "maxLength": 4 }
+        }
+      }
+    },
+    "features": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "feature-manifest.schema.json#/$defs/featureName" }
+    },
+    "ai": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tools", "logPrompts"],
+      "properties": {
+        "tools": { "type": "array", "uniqueItems": true, "items": { "enum": ["claude", "cursor", "copilot"] } },
+        "logPrompts": { "enum": ["full", "summary", "off"] }
+      }
+    }
+  },
+  "$defs": {
+    "semver": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?$" }
+  }
+}
