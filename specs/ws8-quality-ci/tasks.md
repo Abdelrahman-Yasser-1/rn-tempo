@@ -1,0 +1,10 @@
+# WS8 tasks
+
+Format: `- [ ] T<task id> <summary>`. Tick a box in the same commit that completes the task. Each plan task usually maps to several small commits; the plan lists the suggested commit headers.
+
+- [ ] T8.1 PR workflow
+- [ ] T8.2 Danger
+- [ ] T8.3 Fastlane
+- [ ] T8.4 Build/E2E/Release workflows
+- [ ] T8.5 Repo hygiene
+- [ ] T8.6 VS Code
