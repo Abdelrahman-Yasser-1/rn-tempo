@@ -1,5 +1,9 @@
 [
   {
+    "filename": "/Users/ayasser/Personal/rn-tempo-ws1/packages/eslint-config/test/fixtures/invalid/src/services/security/pinning/deep/tooDeep.ts",
+    "errorMessage": "🔥 Folder 'deep' is invalid. 🔥\n\nAccording to the structure, the 'pinning' folder can only contain files.\nError location = ./src/services/security/pinning/deep\n\n"
+  },
+  {
     "filename": "/Users/ayasser/Personal/rn-tempo-ws1/packages/eslint-config/test/fixtures/invalid/src/shared/components/RnSheet/RnSheet.tsx",
     "errorMessage": "🔥 File 'RnSheet.tsx' enforces the existence of other folders/files. 🔥\n\nEnforce existence = ./src/shared/components/RnSheet/RnSheet.test.tsx, ./src/shared/components/RnSheet/RnSheet.stories.tsx, ./src/shared/components/RnSheet/index.ts\nError location = ./src/shared/components/RnSheet/RnSheet.tsx\n\n"
   },
