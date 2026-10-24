@@ -1,0 +1,64 @@
+{
+  "name": "@rn-tempo/eslint-config",
+  "version": "0.0.0",
+  "description": "Shared ESLint flat config for RN-TEMPO projects: TypeScript, React Native, quality rules and architecture boundaries.",
+  "license": "MIT",
+  "type": "module",
+  "main": "index.mjs",
+  "exports": {
+    ".": "./index.mjs"
+  },
+  "files": [
+    "index.mjs",
+    "configs",
+    "!**/*.test.mjs"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Abdelrahman-Yasser-1/rn-tempo.git",
+    "directory": "packages/eslint-config"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "lint": "true",
+    "test": "vitest run",
+    "typecheck": "true"
+  },
+  "peerDependencies": {
+    "eslint": ">=10",
+    "typescript": ">=6"
+  },
+  "dependencies": {
+    "@eslint-react/eslint-plugin": "5.28.6",
+    "@eslint/compat": "2.1.1",
+    "@tanstack/eslint-plugin-query": "5.104.5",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-import-resolver-typescript": "4.4.5",
+    "eslint-plugin-boundaries": "7.2.1",
+    "eslint-plugin-i18next": "6.1.5",
+    "eslint-plugin-import-x": "4.17.1",
+    "eslint-plugin-jest": "29.17.0",
+    "eslint-plugin-jsdoc": "65.4.2",
+    "eslint-plugin-no-secrets": "2.3.3",
+    "eslint-plugin-project-structure": "3.14.5",
+    "eslint-plugin-promise": "7.3.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "eslint-plugin-react-native": "5.0.0",
+    "eslint-plugin-react-native-a11y": "3.5.1",
+    "eslint-plugin-regexp": "3.3.1",
+    "eslint-plugin-sonarjs": "4.2.2",
+    "eslint-plugin-testing-library": "7.16.2",
+    "eslint-plugin-unicorn": "78.0.0",
+    "globals": "17.13.0",
+    "typescript-eslint": "8.72.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "eslint": "10.13.0",
+    "typescript": "6.0.3",
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
+  }
+}
