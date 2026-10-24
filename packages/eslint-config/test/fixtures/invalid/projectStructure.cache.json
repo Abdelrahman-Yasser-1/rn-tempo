@@ -1,5 +1,9 @@
 [
   {
+    "filename": "/Users/ayasser/Personal/rn-tempo-ws1/packages/eslint-config/test/fixtures/invalid/src/shared/components/RnSheet/RnSheet.tsx",
+    "errorMessage": "🔥 File 'RnSheet.tsx' enforces the existence of other folders/files. 🔥\n\nEnforce existence = ./src/shared/components/RnSheet/RnSheet.test.tsx, ./src/shared/components/RnSheet/RnSheet.stories.tsx, ./src/shared/components/RnSheet/index.ts\nError location = ./src/shared/components/RnSheet/RnSheet.tsx\n\n"
+  },
+  {
     "filename": "/Users/ayasser/Personal/rn-tempo-ws1/packages/eslint-config/test/fixtures/invalid/src/features/home/screens/HomeScreen/HomeScreen.tsx",
     "errorMessage": "🔥 File 'HomeScreen.tsx' enforces the existence of other folders/files. 🔥\n\nEnforce existence = ./src/features/home/screens/HomeScreen/HomeScreen.test.tsx, ./src/features/home/screens/HomeScreen/index.ts\nError location = ./src/features/home/screens/HomeScreen/HomeScreen.tsx\n\n"
   },

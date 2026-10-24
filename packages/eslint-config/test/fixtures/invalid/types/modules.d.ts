@@ -11,6 +11,7 @@ declare module 'react-native' {
   export const Text: import('react').ComponentType<Props>;
   export const Pressable: import('react').ComponentType<Props>;
   export const Image: import('react').ComponentType<Props>;
+  export const StyleSheet: { create: <T>(styles: T) => T };
 }
 declare module 'react-native-unistyles' {
   export const StyleSheet: { create: <T>(styles: T) => T };

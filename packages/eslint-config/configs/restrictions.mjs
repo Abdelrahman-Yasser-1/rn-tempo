@@ -4,7 +4,6 @@ const RN_COMPONENTS = [
   'TouchableHighlight',
   'TouchableWithoutFeedback',
   'Image',
-  'StyleSheet',
   'Button',
   'TextInput',
 ];
@@ -14,6 +13,12 @@ const RESTRICTIONS = {
     name: 'react-native',
     importNames: RN_COMPONENTS,
     message: 'Use @shared/components and react-native-unistyles instead.',
+  },
+  // Never allowed, not even in shared components: styles come from react-native-unistyles.
+  reactNativeStyleSheet: {
+    name: 'react-native',
+    importNames: ['StyleSheet'],
+    message: 'Use StyleSheet from react-native-unistyles instead.',
   },
   config: { name: 'react-native-config', message: 'Use @config/env instead.' },
   asyncStorage: {

@@ -54,6 +54,11 @@ describe('eslint-config fixtures', () => {
       'no-restricted-imports',
     ],
     ['axios outside services/http', 'src/services/storage/usesAxios.ts', 'no-restricted-imports'],
+    [
+      'react-native StyleSheet in a shared component',
+      'src/shared/components/RnSheet/RnSheet.tsx',
+      'no-restricted-imports',
+    ],
     ['an enum', 'src/shared/types/status.ts', 'no-restricted-syntax'],
     ['console', 'src/shared/utils/logs.ts', 'no-console'],
     [
