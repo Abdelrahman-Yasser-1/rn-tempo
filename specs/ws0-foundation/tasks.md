@@ -9,6 +9,6 @@ Format: `- [ ] T<task id> <summary>`. Tick a box in the same commit that complet
 - [x] T0.5 Dependency snapshot
 - [x] T0.6 Aliases, skeleton, contracts in code
 - [x] T0.7 Contracts package
-- [ ] T0.8 Repo docs, specs, ADRs
-- [ ] T0.9 Root CI skeleton
+- [x] T0.8 Repo docs, specs, ADRs
+- [x] T0.9 Root CI skeleton
 - [ ] T0.10 Branch protection
