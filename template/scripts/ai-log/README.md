@@ -2,15 +2,15 @@
 
 Every AI-assisted change is traceable to the prompts that produced it. These scripts keep a log per AI session in `.ai/sessions/` and add trailers to the commits made during that session.
 
-| Script | Run by | What it does |
-| --- | --- | --- |
+| Script              | Run by                                                                                               | What it does                                                             |
+| ------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
 | `session-start.mjs` | Claude Code `SessionStart` hook, or `yarn ai:start --tool <tool> --model <model> [--spec specs/<x>]` | Creates the session log and the `.ai/.current.json` pointer (gitignored) |
-| `prompt.mjs` | Claude Code `UserPromptSubmit` hook, or `yarn ai:prompt "<text>"` | Appends the prompt, redacted, to `## Prompts` |
-| `session-stop.mjs` | Claude Code `Stop` hook, or `yarn ai:stop --summary "<text>"` | Updates end time, commits, files and `## Summary` |
-| `add-trailers.mjs` | lefthook `prepare-commit-msg` | Adds `AI-Assisted`, `AI-Session` and `Spec` trailers |
-| `stage-session.mjs` | lefthook `pre-commit` | Stages the session log with the commit |
-| `report.mjs` | `yarn ai:report [--since 30d]` | AI-assisted commit stats per tool/model and author |
-| `lint-edited.mjs` | Claude Code `PostToolUse` hook | Runs eslint and prettier on files the agent edits |
+| `prompt.mjs`        | Claude Code `UserPromptSubmit` hook, or `yarn ai:prompt "<text>"`                                    | Appends the prompt, redacted, to `## Prompts`                            |
+| `session-stop.mjs`  | Claude Code `Stop` hook, or `yarn ai:stop --summary "<text>"`                                        | Updates end time, commits, files and `## Summary`                        |
+| `add-trailers.mjs`  | lefthook `prepare-commit-msg`                                                                        | Adds `AI-Assisted`, `AI-Session` and `Spec` trailers                     |
+| `stage-session.mjs` | lefthook `pre-commit`                                                                                | Stages the session log with the commit                                   |
+| `report.mjs`        | `yarn ai:report [--since 30d]`                                                                       | AI-assisted commit stats per tool/model and author                       |
+| `lint-edited.mjs`   | Claude Code `PostToolUse` hook                                                                       | Runs eslint and prettier on files the agent edits                        |
 
 ## Privacy
 

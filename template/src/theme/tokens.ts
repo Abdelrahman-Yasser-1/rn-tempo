@@ -47,7 +47,14 @@ export const spacing: Record<SpacingKey, number> = {
 };
 
 export type RadiusKey = 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'full';
-export const radii: Record<RadiusKey, number> = { none: 0, sm: 4, md: 8, lg: 12, xl: 16, full: 9999 };
+export const radii: Record<RadiusKey, number> = {
+  none: 0,
+  sm: 4,
+  md: 8,
+  lg: 12,
+  xl: 16,
+  full: 9999,
+};
 
 export type TypographyVariant =
   | 'display'

@@ -9,7 +9,11 @@ export const STALE_AFTER_MS = 12 * 60 * 60 * 1000;
 
 export function git(args, opts = {}) {
   try {
-    return execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], ...opts }).trim();
+    return execFileSync('git', args, {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+      ...opts,
+    }).trim();
   } catch {
     return '';
   }
@@ -95,7 +99,10 @@ export function writeCurrent(current, p = paths()) {
 
 /** Prompt logging mode from `.tempo.json` (`ai.logPrompts`): full | summary | off. */
 export function logPromptsMode(root = repoRoot()) {
-  for (const candidate of [path.join(root, '.tempo.json'), path.join(root, 'template', '.tempo.json')]) {
+  for (const candidate of [
+    path.join(root, '.tempo.json'),
+    path.join(root, 'template', '.tempo.json'),
+  ]) {
     if (!existsSync(candidate)) continue;
     try {
       const mode = JSON.parse(readFileSync(candidate, 'utf8'))?.ai?.logPrompts;
@@ -108,7 +115,9 @@ export function logPromptsMode(root = repoRoot()) {
 }
 
 export function shortId(seed) {
-  const clean = String(seed ?? '').replace(/[^a-z0-9]/gi, '').toLowerCase();
+  const clean = String(seed ?? '')
+    .replace(/[^a-z0-9]/gi, '')
+    .toLowerCase();
   return clean.length >= 6 ? clean.slice(0, 6) : randomBytes(3).toString('hex');
 }
 
@@ -124,7 +133,18 @@ export function resolveModel(input, fallback) {
 
 // ── Session document (YAML-ish frontmatter + markdown sections) ──────────────
 
-const FRONTMATTER_KEYS = ['id', 'tool', 'model', 'author', 'branch', 'spec', 'started', 'ended', 'commits', 'files'];
+const FRONTMATTER_KEYS = [
+  'id',
+  'tool',
+  'model',
+  'author',
+  'branch',
+  'spec',
+  'started',
+  'ended',
+  'commits',
+  'files',
+];
 
 function formatValue(value) {
   if (Array.isArray(value)) return `[${value.map((v) => JSON.stringify(String(v))).join(', ')}]`;
@@ -179,7 +199,10 @@ export function setSection(body, title, content) {
   const afterHeading = start + heading.length;
   const nextIdx = body.indexOf('\n## ', afterHeading);
   const end = nextIdx === -1 ? body.length : nextIdx + 1;
-  return `${body.slice(0, afterHeading)}\n${content.trimEnd()}\n\n${body.slice(end)}`.replace(/\n{3,}/g, '\n\n');
+  return `${body.slice(0, afterHeading)}\n${content.trimEnd()}\n\n${body.slice(end)}`.replace(
+    /\n{3,}/g,
+    '\n\n',
+  );
 }
 
 export function getSection(body, title) {

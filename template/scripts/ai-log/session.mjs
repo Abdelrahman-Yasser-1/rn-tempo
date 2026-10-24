@@ -37,10 +37,18 @@ function sessionFileName(date, tool, id) {
  * Starts a session, or resumes the active one when the session id matches
  * (or when no id is given and the active session is still fresh).
  */
-export function startSession({ tool = 'other', model = 'unknown', spec = null, sessionId = null, now = new Date() } = {}) {
+export function startSession({
+  tool = 'other',
+  model = 'unknown',
+  spec = null,
+  sessionId = null,
+  now = new Date(),
+} = {}) {
   const p = paths();
   const current = readCurrent(p);
-  const sameSession = sessionId ? current?.sessionId === sessionId : current && !isStale(current, now.getTime());
+  const sameSession = sessionId
+    ? current?.sessionId === sessionId
+    : current && !isStale(current, now.getTime());
   if (current && sameSession && existsSync(path.join(p.root, current.file))) return current;
 
   const id = shortId(sessionId);
@@ -74,7 +82,8 @@ export function startSession({ tool = 'other', model = 'unknown', spec = null, s
 export function formatPrompt(text, mode, extraPatterns) {
   if (mode === 'off') return '(prompt not logged)';
   const clean = redact(text, extraPatterns).trim();
-  if (mode === 'summary' && clean.length > PROMPT_SUMMARY_MAX) return `${clean.slice(0, PROMPT_SUMMARY_MAX)}…`;
+  if (mode === 'summary' && clean.length > PROMPT_SUMMARY_MAX)
+    return `${clean.slice(0, PROMPT_SUMMARY_MAX)}…`;
   return clean;
 }
 
@@ -101,7 +110,13 @@ export function lastAssistantText(transcriptPath) {
       const message = entry.message ?? entry;
       if ((entry.type ?? message.role) !== 'assistant') continue;
       const content = message.content;
-      const text = typeof content === 'string' ? content : (content ?? []).filter((c) => c.type === 'text').map((c) => c.text).join('\n');
+      const text =
+        typeof content === 'string'
+          ? content
+          : (content ?? [])
+              .filter((c) => c.type === 'text')
+              .map((c) => c.text)
+              .join('\n');
       if (text.trim()) return text.trim();
     } catch {
       // skip malformed lines
@@ -112,7 +127,9 @@ export function lastAssistantText(transcriptPath) {
 
 function changedFiles(root, startSha) {
   const files = new Set();
-  if (startSha) for (const f of git(['diff', '--name-only', startSha], { cwd: root }).split('\n')) if (f) files.add(f);
+  if (startSha)
+    for (const f of git(['diff', '--name-only', startSha], { cwd: root }).split('\n'))
+      if (f) files.add(f);
   for (const line of git(['status', '--porcelain'], { cwd: root }).split('\n')) {
     const file = line.slice(3).trim();
     if (file) files.add(file.includes(' -> ') ? file.split(' -> ')[1] : file);
@@ -129,7 +146,9 @@ export function stopSession({ summary = '', transcriptPath = null, now = new Dat
   const doc = readSessionFile(p.root, current.file);
   if (!doc) return null;
   const range = current.startSha ? `${current.startSha}..HEAD` : 'HEAD';
-  const commits = current.startSha ? git(['log', range, '--format=%h'], { cwd: p.root }).split('\n').filter(Boolean).reverse() : [];
+  const commits = current.startSha
+    ? git(['log', range, '--format=%h'], { cwd: p.root }).split('\n').filter(Boolean).reverse()
+    : [];
   doc.meta.ended = isoNow(now);
   doc.meta.commits = commits;
   doc.meta.files = changedFiles(p.root, current.startSha);
@@ -137,7 +156,11 @@ export function stopSession({ summary = '', transcriptPath = null, now = new Dat
   if (text) {
     const extra = loadExtraPatterns(p.redactFile);
     const clean = redact(text, extra);
-    doc.body = setSection(doc.body, 'Summary', clean.length > SUMMARY_MAX ? `${clean.slice(0, SUMMARY_MAX)}…` : clean);
+    doc.body = setSection(
+      doc.body,
+      'Summary',
+      clean.length > SUMMARY_MAX ? `${clean.slice(0, SUMMARY_MAX)}…` : clean,
+    );
   }
   writeSessionFile(p.root, current.file, doc);
   return current;

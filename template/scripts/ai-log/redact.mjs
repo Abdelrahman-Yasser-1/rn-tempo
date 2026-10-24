@@ -31,7 +31,9 @@ export function redact(text, extraPatterns = []) {
   for (const pattern of [...BUILT_IN_PATTERNS, ...extraPatterns]) {
     out = out.replace(pattern, (match, key, sep) =>
       // Keep the key name for `key=value` matches so the log stays readable.
-      typeof key === 'string' && typeof sep === 'string' && /^[a-z_-]+$/i.test(key) ? `${key}${sep}${REDACTED}` : REDACTED,
+      typeof key === 'string' && typeof sep === 'string' && /^[a-z_-]+$/i.test(key)
+        ? `${key}${sep}${REDACTED}`
+        : REDACTED,
     );
   }
   return out;

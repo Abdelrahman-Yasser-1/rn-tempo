@@ -17,7 +17,10 @@ module.exports = {
   plugins: [
     // Unistyles must see every file under src/ to wire styles to the C++ shadow tree.
     ['react-native-unistyles/plugin', { root: 'src' }],
-    ['module-resolver', { root: ['./'], extensions: ['.ts', '.tsx', '.js', '.json'], alias: ALIASES }],
+    [
+      'module-resolver',
+      { root: ['./'], extensions: ['.ts', '.tsx', '.js', '.json'], alias: ALIASES },
+    ],
     // Must stay last (Reanimated 4 / worklets requirement).
     'react-native-worklets/plugin',
   ],
