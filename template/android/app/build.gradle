@@ -65,7 +65,7 @@ react {
 /**
  * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
  */
-def enableProguardInReleaseBuilds = false
+def enableProguardInReleaseBuilds = true
 
 /**
  * The preferred build flavor of JavaScriptCore (JSC)
@@ -79,6 +79,9 @@ def enableProguardInReleaseBuilds = false
  * this variant is about 6MiB larger per architecture than default.
  */
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
+
+def uploadProp = { String name -> project.findProperty(name) ?: System.getenv(name) }
+def hasUploadKey = ["TEMPO_UPLOAD_STORE_FILE", "TEMPO_UPLOAD_STORE_PASSWORD", "TEMPO_UPLOAD_KEY_ALIAS", "TEMPO_UPLOAD_KEY_PASSWORD"].every { uploadProp(it) }
 
 android {
     ndkVersion rootProject.ext.ndkVersion
@@ -120,6 +123,15 @@ android {
         }
     }
     signingConfigs {
+        // Upload key: TEMPO_UPLOAD_* come from ~/.gradle/gradle.properties or the environment (CI).
+        if (hasUploadKey) {
+            release {
+                storeFile file(uploadProp("TEMPO_UPLOAD_STORE_FILE"))
+                storePassword uploadProp("TEMPO_UPLOAD_STORE_PASSWORD")
+                keyAlias uploadProp("TEMPO_UPLOAD_KEY_ALIAS")
+                keyPassword uploadProp("TEMPO_UPLOAD_KEY_PASSWORD")
+            }
+        }
         debug {
             storeFile file('debug.keystore')
             storePassword 'android'
@@ -132,10 +144,15 @@ android {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            if (hasUploadKey) {
+                signingConfig signingConfigs.release
+            } else {
+                // Local release testing only: never ship a build signed with the debug keystore.
+                logger.warn("WARNING: TEMPO_UPLOAD_* signing properties are missing, signing the release build with the debug keystore.")
+                signingConfig signingConfigs.debug
+            }
             minifyEnabled enableProguardInReleaseBuilds
+            shrinkResources true
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
     }
