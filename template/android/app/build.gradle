@@ -81,6 +81,7 @@ def enableProguardInReleaseBuilds = true
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
 def uploadProp = { String name -> project.findProperty(name) ?: System.getenv(name) }
+def allowDebugSigning = (project.findProperty("tempoAllowDebugSigning") ?: System.getenv("TEMPO_ALLOW_DEBUG_SIGNING")) == "true"
 def hasUploadKey = ["TEMPO_UPLOAD_STORE_FILE", "TEMPO_UPLOAD_STORE_PASSWORD", "TEMPO_UPLOAD_KEY_ALIAS", "TEMPO_UPLOAD_KEY_PASSWORD"].every { uploadProp(it) }
 
 android {
@@ -147,8 +148,9 @@ android {
             if (hasUploadKey) {
                 signingConfig signingConfigs.release
             } else {
-                // Local release testing only: never ship a build signed with the debug keystore.
-                logger.warn("WARNING: TEMPO_UPLOAD_* signing properties are missing, signing the release build with the debug keystore.")
+                // Without the upload key, release builds are signed with the debug keystore for local
+                // testing only. prodRelease refuses this unless explicitly allowed (see taskGraph check below).
+                logger.warn("WARNING: TEMPO_UPLOAD_* signing properties are missing, signing the release build with the debug keystore. Never ship this build.")
                 signingConfig signingConfigs.debug
             }
             minifyEnabled enableProguardInReleaseBuilds
@@ -166,5 +168,22 @@ dependencies {
         implementation("com.facebook.react:hermes-android")
     } else {
         implementation jscFlavor
+    }
+}
+
+// prodRelease must never be silently signed with the debug keystore. Opt in for local testing with
+// `-PtempoAllowDebugSigning=true` (or env TEMPO_ALLOW_DEBUG_SIGNING=true). Only the tasks the user
+// requested are inspected: shared internal tasks such as preProdReleaseBuild also appear in other graphs.
+gradle.taskGraph.whenReady {
+    def prodReleaseRequested = gradle.startParameter.taskNames.any { it.toLowerCase().contains("prodrelease") }
+    if (prodReleaseRequested && !hasUploadKey) {
+        if (allowDebugSigning) {
+            logger.warn("WARNING: ##### prodRelease is signed with the DEBUG keystore (tempoAllowDebugSigning). DO NOT DISTRIBUTE. #####")
+        } else {
+            throw new GradleException(
+                "prodRelease needs the upload key. Set TEMPO_UPLOAD_STORE_FILE, TEMPO_UPLOAD_STORE_PASSWORD, " +
+                "TEMPO_UPLOAD_KEY_ALIAS and TEMPO_UPLOAD_KEY_PASSWORD in ~/.gradle/gradle.properties or the environment. " +
+                "For local testing only, pass -PtempoAllowDebugSigning=true (or TEMPO_ALLOW_DEBUG_SIGNING=true) to sign with the debug keystore.")
+        }
     }
 }
