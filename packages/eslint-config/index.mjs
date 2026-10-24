@@ -6,6 +6,7 @@ import { qualityConfig } from './configs/quality.mjs';
 import { reactConfig } from './configs/react.mjs';
 import { reactNativeConfig } from './configs/react-native.mjs';
 import { restrictionsConfig } from './configs/restrictions.mjs';
+import { structureConfig } from './configs/structure.mjs';
 import { testsConfig } from './configs/tests.mjs';
 
 /**
@@ -20,7 +21,7 @@ export function createConfig({ root, structure = false }) {
     ...qualityConfig(root),
     ...restrictionsConfig(),
     ...testsConfig(),
-    ...(structure ? boundariesConfig(root) : []),
+    ...(structure ? [...boundariesConfig(root), ...structureConfig(root)] : []),
     eslintConfigPrettier,
   ];
 }
