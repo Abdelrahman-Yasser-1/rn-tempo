@@ -1,0 +1,25 @@
+{
+  "$schema": "https://unpkg.com/@rn-tempo/contracts/schemas/feature-manifest.schema.json",
+  "name": "ssl-pinning",
+  "title": "SSL public-key pinning",
+  "description": "SPKI pinning via react-native-ssl-public-key-pinning with a request gate; fails closed in prod.",
+  "defaultEnabled": true,
+  "requires": [],
+  "conflicts": [],
+  "deleteGlobs": [
+    "src/services/security/pinning/**"
+  ],
+  "dependencies": [
+    "react-native-ssl-public-key-pinning"
+  ],
+  "devDependencies": [],
+  "envKeys": [
+    "SSL_PINNING_ENABLED",
+    "SSL_PINS"
+  ],
+  "jsonPatches": [],
+  "postRemove": [
+    "pods"
+  ],
+  "docs": "/docs/features/ssl-pinning"
+}

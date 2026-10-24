@@ -1,0 +1,53 @@
+{
+  "$schema": "https://unpkg.com/@rn-tempo/contracts/schemas/tempo.schema.json",
+  "templateVersion": "0.0.0",
+  "createdWith": "create-tempo-app@0.0.0",
+  "app": {
+    "name": "TempoApp",
+    "displayName": "Tempo",
+    "bundleId": "com.rntempo.app"
+  },
+  "envs": [
+    {
+      "name": "dev",
+      "suffix": ".dev",
+      "displayName": "Tempo Dev",
+      "scheme": "tempo-dev",
+      "badge": "DEV"
+    },
+    {
+      "name": "staging",
+      "suffix": ".staging",
+      "displayName": "Tempo Stg",
+      "scheme": "tempo-staging",
+      "badge": "STG"
+    },
+    {
+      "name": "prod",
+      "suffix": "",
+      "displayName": "Tempo",
+      "scheme": "tempo",
+      "badge": null
+    }
+  ],
+  "features": [
+    "ssl-pinning",
+    "device-integrity",
+    "storybook",
+    "dynamic-forms",
+    "samples",
+    "maestro",
+    "ci-github",
+    "ai-claude",
+    "ai-cursor",
+    "ai-copilot"
+  ],
+  "ai": {
+    "tools": [
+      "claude",
+      "cursor",
+      "copilot"
+    ],
+    "logPrompts": "full"
+  }
+}

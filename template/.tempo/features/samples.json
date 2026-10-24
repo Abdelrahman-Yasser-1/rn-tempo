@@ -1,0 +1,22 @@
+{
+  "$schema": "https://unpkg.com/@rn-tempo/contracts/schemas/feature-manifest.schema.json",
+  "name": "samples",
+  "title": "Items reference feature",
+  "description": "The items feature (list, details, create): the reference implementation of the full feature pattern.",
+  "defaultEnabled": true,
+  "requires": [],
+  "conflicts": [],
+  "deleteGlobs": [
+    "src/features/items/**",
+    "src/locales/*/items.json",
+    "src/test-utils/msw/handlers/products.ts",
+    "specs/items/**",
+    "e2e/flows/items-*.yaml"
+  ],
+  "dependencies": [],
+  "devDependencies": [],
+  "envKeys": [],
+  "jsonPatches": [],
+  "postRemove": [],
+  "docs": "/docs/features/samples"
+}

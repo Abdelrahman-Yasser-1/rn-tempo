@@ -1,0 +1,25 @@
+{
+  "$schema": "https://unpkg.com/@rn-tempo/contracts/schemas/feature-manifest.schema.json",
+  "name": "maestro",
+  "title": "Maestro E2E tests",
+  "description": "Maestro flows for the core journeys plus the e2e CI workflow.",
+  "defaultEnabled": true,
+  "requires": [],
+  "conflicts": [],
+  "deleteGlobs": [
+    "e2e/**",
+    ".github/workflows/e2e.yml"
+  ],
+  "dependencies": [],
+  "devDependencies": [],
+  "envKeys": [],
+  "jsonPatches": [
+    {
+      "file": "package.json",
+      "op": "remove",
+      "path": "/scripts/e2e"
+    }
+  ],
+  "postRemove": [],
+  "docs": "/docs/features/maestro"
+}

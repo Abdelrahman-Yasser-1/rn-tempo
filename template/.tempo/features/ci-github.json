@@ -1,0 +1,22 @@
+{
+  "$schema": "https://unpkg.com/@rn-tempo/contracts/schemas/feature-manifest.schema.json",
+  "name": "ci-github",
+  "title": "GitHub Actions and Fastlane",
+  "description": "PR, build, e2e and release workflows, Fastlane lanes and Danger rules.",
+  "defaultEnabled": true,
+  "requires": [],
+  "conflicts": [],
+  "deleteGlobs": [
+    ".github/workflows/**",
+    "fastlane/**",
+    "Dangerfile.ts"
+  ],
+  "dependencies": [],
+  "devDependencies": [
+    "danger"
+  ],
+  "envKeys": [],
+  "jsonPatches": [],
+  "postRemove": [],
+  "docs": "/docs/features/ci-github"
+}

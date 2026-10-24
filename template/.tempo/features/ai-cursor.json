@@ -1,0 +1,18 @@
+{
+  "$schema": "https://unpkg.com/@rn-tempo/contracts/schemas/feature-manifest.schema.json",
+  "name": "ai-cursor",
+  "title": "Cursor setup",
+  "description": "Cursor rules and MCP config generated from ai/.",
+  "defaultEnabled": true,
+  "requires": [],
+  "conflicts": [],
+  "deleteGlobs": [
+    ".cursor/**"
+  ],
+  "dependencies": [],
+  "devDependencies": [],
+  "envKeys": [],
+  "jsonPatches": [],
+  "postRemove": [],
+  "docs": "/docs/features/ai-cursor"
+}

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://unpkg.com/@rn-tempo/contracts/schemas/feature-manifest.schema.json",
+  "name": "storybook",
+  "title": "On-device Storybook",
+  "description": "Storybook for React Native with stories for every shared component; dev builds only.",
+  "defaultEnabled": true,
+  "requires": [],
+  "conflicts": [],
+  "deleteGlobs": [
+    ".rnstorybook/**",
+    "src/**/*.stories.tsx"
+  ],
+  "dependencies": [],
+  "devDependencies": [
+    "@storybook/react-native",
+    "storybook",
+    "@storybook/addon-ondevice-controls",
+    "@storybook/addon-ondevice-actions"
+  ],
+  "envKeys": [
+    "STORYBOOK_ENABLED"
+  ],
+  "jsonPatches": [
+    {
+      "file": "package.json",
+      "op": "remove",
+      "path": "/scripts/storybook"
+    },
+    {
+      "file": "package.json",
+      "op": "remove",
+      "path": "/scripts/storybook:generate"
+    }
+  ],
+  "postRemove": [],
+  "docs": "/docs/features/storybook"
+}

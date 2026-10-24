@@ -1,0 +1,19 @@
+{
+  "$schema": "https://unpkg.com/@rn-tempo/contracts/schemas/feature-manifest.schema.json",
+  "name": "ai-copilot",
+  "title": "GitHub Copilot setup",
+  "description": "Copilot instructions generated from ai/.",
+  "defaultEnabled": true,
+  "requires": [],
+  "conflicts": [],
+  "deleteGlobs": [
+    ".github/copilot-instructions.md",
+    ".github/instructions/**"
+  ],
+  "dependencies": [],
+  "devDependencies": [],
+  "envKeys": [],
+  "jsonPatches": [],
+  "postRemove": [],
+  "docs": "/docs/features/ai-copilot"
+}
