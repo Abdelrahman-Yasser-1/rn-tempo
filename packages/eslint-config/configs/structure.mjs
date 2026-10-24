@@ -12,11 +12,7 @@ const folder = (name, children) => ({
   children: [file('.gitkeep'), ...children],
 });
 
-const camelFiles = [
-  file('{camelCase}.ts'),
-  file('{camelCase}.test.ts'),
-  file('{camelCase}.d.ts'),
-];
+const camelFiles = [file('{camelCase}.ts'), file('{camelCase}.test.ts'), file('{camelCase}.d.ts')];
 
 /** `<X>Screen/` folders: screen, its test and a barrel are mandatory (contract C5). */
 const screenFolders = folder('{PascalCase}Screen', [
@@ -74,7 +70,11 @@ export const FOLDER_STRUCTURE = {
     folder('features', [folder(KEBAB, featureChildren)]),
     folder('shared', [
       folder('components', [file('index.ts'), sharedComponent]),
-      folder('hooks', [file('index.ts'), file('use{PascalCase}.ts'), file('use{PascalCase}.test.ts')]),
+      folder('hooks', [
+        file('index.ts'),
+        file('use{PascalCase}.ts'),
+        file('use{PascalCase}.test.ts'),
+      ]),
       folder('utils', [file('index.ts'), ...camelFiles]),
       folder('constants', camelFiles),
       folder('types', camelFiles),
@@ -83,7 +83,9 @@ export const FOLDER_STRUCTURE = {
       folder(KEBAB, [file('{PascalCase}.tsx'), file('{PascalCase}.test.tsx'), ...camelFiles]),
     ]),
     folder('theme', camelFiles),
-    folder('assets', [folder('(fonts|images|icons|animations)', [file('*'), { name: '*', ruleId: 'free_tree' }])]),
+    folder('assets', [
+      folder('(fonts|images|icons|animations)', [file('*'), { name: '*', ruleId: 'free_tree' }]),
+    ]),
     folder('locales', [folder('[a-z][a-z](-[A-Z][A-Z])?', [file(`${KEBAB}.json`)])]),
     folder('config', camelFiles),
     folder('test-utils', [
@@ -119,10 +121,7 @@ export function structureConfig(root) {
       files: ['src/**'],
       plugins: { 'project-structure': projectStructurePlugin },
       rules: {
-        'project-structure/folder-structure': [
-          'error',
-          { ...FOLDER_STRUCTURE, projectRoot: root },
-        ],
+        'project-structure/folder-structure': ['error', { ...FOLDER_STRUCTURE, projectRoot: root }],
       },
     },
     {
