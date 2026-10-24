@@ -10,6 +10,11 @@ if (messageFile && source !== 'merge' && source !== 'squash') {
   const trailers = trailersFor(readCurrent());
   const message = readFileSync(messageFile, 'utf8');
   if (trailers.length > 0 && !/^AI-Session:/m.test(message)) {
-    git(['interpret-trailers', '--in-place', ...trailers.flatMap((t) => ['--trailer', t]), messageFile]);
+    git([
+      'interpret-trailers',
+      '--in-place',
+      ...trailers.flatMap((t) => ['--trailer', t]),
+      messageFile,
+    ]);
   }
 }

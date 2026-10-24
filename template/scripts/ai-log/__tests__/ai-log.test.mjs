@@ -38,7 +38,14 @@ describe('redact', () => {
     ].join('\n');
     const out = redact(input);
     assert.match(out, /token=\[REDACTED\]/);
-    for (const secret of ['abc123', 'xyz.abc', 'eyJhbGciOi', FAKE_AWS_KEY, 'jane.doe@acme.io', 'sk-abcdef']) {
+    for (const secret of [
+      'abc123',
+      'xyz.abc',
+      'eyJhbGciOi',
+      FAKE_AWS_KEY,
+      'jane.doe@acme.io',
+      'sk-abcdef',
+    ]) {
       assert.ok(!out.includes(secret), `leaked ${secret}`);
     }
   });
@@ -46,17 +53,33 @@ describe('redact', () => {
   it('masks private key blocks and applies extra patterns', () => {
     const key = '-----BEGIN RSA PRIVATE KEY-----\nMIIE\nabc\n-----END RSA PRIVATE KEY-----';
     assert.equal(redact(key), REDACTED);
-    assert.equal(redact('host internal.acme.local', [/internal\.acme\.local/g]), `host ${REDACTED}`);
+    assert.equal(
+      redact('host internal.acme.local', [/internal\.acme\.local/g]),
+      `host ${REDACTED}`,
+    );
   });
 
   it('leaves ordinary text alone', () => {
-    assert.equal(redact('Add OTP resend countdown to the login screen'), 'Add OTP resend countdown to the login screen');
+    assert.equal(
+      redact('Add OTP resend countdown to the login screen'),
+      'Add OTP resend countdown to the login screen',
+    );
   });
 });
 
 describe('session document', () => {
   it('round-trips frontmatter', () => {
-    const doc = { meta: { id: 'x', tool: 'claude-code', model: 'm', spec: null, commits: ['a1', 'b2'], files: [] }, body: '\n## Prompts\n' };
+    const doc = {
+      meta: {
+        id: 'x',
+        tool: 'claude-code',
+        model: 'm',
+        spec: null,
+        commits: ['a1', 'b2'],
+        files: [],
+      },
+      body: '\n## Prompts\n',
+    };
     const parsed = parseSession(serializeSession(doc));
     assert.equal(parsed.meta.tool, 'claude-code');
     assert.equal(parsed.meta.spec, null);
@@ -74,9 +97,12 @@ describe('session document', () => {
 
 describe('prompt modes', () => {
   const long = 'x'.repeat(200);
-  it('full keeps the whole redacted prompt', () => assert.equal(formatPrompt(long, 'full', []), long));
-  it('summary truncates to 140 chars', () => assert.equal(formatPrompt(long, 'summary', []), `${'x'.repeat(140)}…`));
-  it('off writes a placeholder', () => assert.equal(formatPrompt(long, 'off', []), '(prompt not logged)'));
+  it('full keeps the whole redacted prompt', () =>
+    assert.equal(formatPrompt(long, 'full', []), long));
+  it('summary truncates to 140 chars', () =>
+    assert.equal(formatPrompt(long, 'summary', []), `${'x'.repeat(140)}…`));
+  it('off writes a placeholder', () =>
+    assert.equal(formatPrompt(long, 'off', []), '(prompt not logged)'));
 });
 
 describe('session lifecycle', () => {
@@ -90,8 +116,16 @@ describe('session lifecycle', () => {
     const again = startSession({ tool: 'claude-code', model: 'claude-x', sessionId: 'abcdef123' });
     assert.equal(again.file, first.file);
 
-    appendPrompt('first prompt with password=hunter2', { tool: 'claude-code', model: 'claude-x', sessionId: 'abcdef123' });
-    appendPrompt('second prompt', { tool: 'claude-code', model: 'claude-x', sessionId: 'abcdef123' });
+    appendPrompt('first prompt with password=hunter2', {
+      tool: 'claude-code',
+      model: 'claude-x',
+      sessionId: 'abcdef123',
+    });
+    appendPrompt('second prompt', {
+      tool: 'claude-code',
+      model: 'claude-x',
+      sessionId: 'abcdef123',
+    });
 
     writeFileSync(path.join(dir, 'a.txt'), 'hello');
     sh(dir, 'git', ['add', 'a.txt']);
@@ -119,7 +153,11 @@ describe('trailers', () => {
 
   it('builds trailers only for fresh sessions', () => {
     const current = startSession({ tool: 'cursor', model: 'gpt-x', spec: 'specs/auth' });
-    assert.deepEqual(trailersFor(current), [`AI-Assisted: cursor/gpt-x`, `AI-Session: ${current.file}`, 'Spec: specs/auth']);
+    assert.deepEqual(trailersFor(current), [
+      `AI-Assisted: cursor/gpt-x`,
+      `AI-Session: ${current.file}`,
+      'Spec: specs/auth',
+    ]);
     const stale = { ...current, startedAt: new Date(Date.now() - 13 * 3600_000).toISOString() };
     assert.deepEqual(trailersFor(stale), []);
   });
