@@ -8,4 +8,4 @@ Format: `- [ ] T<task id> <summary>`. Tick a box in the same commit that complet
 - [ ] T4.4 Display and feedback
 - [ ] T4.5 Hooks
 - [ ] T4.6 Utils
-- [ ] T4.7 Asset registries
+- [x] T4.7 Asset registries

@@ -1,5 +1,8 @@
 const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 const { withRozenite } = require('@rozenite/metro');
+// @tempo-feature:storybook:start
+const { withStorybook } = require('@storybook/react-native/metro/withStorybook');
+// @tempo-feature:storybook:end
 
 const defaultConfig = getDefaultConfig(__dirname);
 const { assetExts, sourceExts } = defaultConfig.resolver;
@@ -10,7 +13,7 @@ const { assetExts, sourceExts } = defaultConfig.resolver;
  *
  * SVGs are imported as React components through react-native-svg-transformer.
  * Rozenite (DevTools plugins for TanStack Query, MMKV and network) is on outside production
- * bundles. The Storybook wrapper is added by WS4.
+ * bundles. Storybook replaces the app entry when STORYBOOK_ENABLED=true.
  *
  * @type {import('@react-native/metro-config').MetroConfig}
  */
@@ -24,6 +27,16 @@ const config = {
   },
 };
 
-module.exports = withRozenite(mergeConfig(defaultConfig, config), {
+let finalConfig = mergeConfig(defaultConfig, config);
+
+// @tempo-feature:storybook:start
+// With STORYBOOK_ENABLED unset, Metro swaps Storybook imports for empty modules.
+finalConfig = withStorybook(finalConfig, {
+  enabled: process.env.STORYBOOK_ENABLED === 'true',
+  configPath: './.rnstorybook',
+});
+// @tempo-feature:storybook:end
+
+module.exports = withRozenite(finalConfig, {
   enabled: process.env.NODE_ENV !== 'production',
 });
