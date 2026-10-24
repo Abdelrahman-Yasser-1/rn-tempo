@@ -22,6 +22,24 @@
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
+        <!-- Custom scheme deep link, e.g. tempo-dev://items/1 (per-flavor via manifestPlaceholders). -->
+        <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="${deepLinkScheme}" />
+        </intent-filter>
+        <!--
+          App Links (https). To enable them, set `deepLinkHost` in the productFlavors block of
+          android/app/build.gradle to your real domain (replace "example.invalid") and host
+          /.well-known/assetlinks.json on it. autoVerify only succeeds for a host you control.
+        -->
+        <intent-filter android:autoVerify="true">
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" android:host="${deepLinkHost}" />
+        </intent-filter>
       </activity>
     </application>
 </manifest>
