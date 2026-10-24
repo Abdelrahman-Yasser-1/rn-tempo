@@ -42,6 +42,7 @@ const POLICIES = [
     allow: {
       to: [
         types(
+          'app',
           'navigation',
           'shared-ui',
           'shared-core',
@@ -58,7 +59,10 @@ const POLICIES = [
   {
     from: { element: { type: 'navigation' } },
     allow: {
-      to: [types('shared-ui', 'shared-core', 'services', 'theme', 'config'), featureIndexOnly],
+      to: [
+        types('navigation', 'shared-ui', 'shared-core', 'services', 'theme', 'config'),
+        featureIndexOnly,
+      ],
     },
   },
   {
@@ -87,6 +91,8 @@ const POLICIES = [
     allow: { to: types('services', 'shared-core', 'config', 'locales') },
   },
   { from: { element: { type: 'theme' } }, allow: { to: types('theme') } },
+  { from: { element: { type: 'assets' } }, allow: { to: types('assets') } },
+  { from: { element: { type: 'locales' } }, allow: { to: types('locales') } },
   { from: { element: { type: 'config' } }, allow: { to: types('config') } },
   { from: { element: { type: 'test-utils' } }, allow: { to: types(...ALL_TYPES) } },
 ];
