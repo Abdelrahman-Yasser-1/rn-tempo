@@ -1,0 +1,16 @@
+# ADR-005: ESLint 10 flat config without @react-native/eslint-config
+
+- **Status:** accepted · 2026-10-24
+
+## Context
+`@react-native/eslint-config@0.88` supports only ESLint ≤ 9. `eslint-plugin-react-native-a11y` declares ESLint ≤ 8. Every other plugin we need supports ESLint 10.
+
+## Decision
+- Use ESLint 10 with a flat config, published as `@rn-tempo/eslint-config`.
+- Replace `@react-native/eslint-config` with `@eslint-react/eslint-plugin` + `eslint-plugin-react-hooks` + our own RN rules.
+- Wrap legacy plugins with `@eslint/compat` `fixupPluginRules`.
+- The plugins are dependencies of the config package, not of each app.
+
+## Consequences
+- Latest ESLint, and one package to update the rules in every project.
+- If the a11y plugin breaks under ESLint 10, its few rules are forked into the config package.
