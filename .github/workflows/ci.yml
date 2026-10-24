@@ -39,9 +39,12 @@ jobs:
         with:
           node-version-file: .nvmrc
       - run: corepack enable
+      # The lint plugins resolve from the linked packages/eslint-config, so install the root first.
+      - name: Install workspace packages
+        working-directory: .
+        run: yarn install --immutable
       - run: yarn install --immutable
-      - run: yarn tsc --noEmit
-      - run: yarn jest --ci
+      - run: yarn verify
       - run: yarn test:ai-log
 
   commitlint:
