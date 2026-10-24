@@ -2,7 +2,7 @@
 
 Format: `- [ ] T<task id> <summary>`. Tick a box in the same commit that completes the task. Each plan task usually maps to several small commits; the plan lists the suggested commit headers.
 
-- [ ] T1.1 prettier-config
+- [x] T1.1 prettier-config
 - [ ] T1.2 tsconfig package
 - [ ] T1.3 eslint-config: base
 - [ ] T1.4 eslint-config: quality plugins
