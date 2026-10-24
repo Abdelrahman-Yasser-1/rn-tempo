@@ -1,0 +1,6 @@
+target 'App' do
+  # @tempo-feature:ssl-pinning:start
+  pod 'Pin'
+  # @tempo-feature:ssl-pinning:end
+  pod 'Keep'
+end
