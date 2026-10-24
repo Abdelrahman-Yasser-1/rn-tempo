@@ -13,3 +13,10 @@ regexes = [
   # yarn.lock (berry): `  checksum: 10c0/<128 hex>`
   '''^\s*checksum: (10c0/)?[0-9a-f]{64,128}$''',
 ]
+
+[[allowlists]]
+# A fake AWS key used as a redaction test fixture in early history. Matched by value, not by commit
+# fingerprint, because rebase merges rewrite commit SHAs.
+description = "Known fake test fixture values"
+regexTarget = "secret"
+regexes = ['''^AKIAABCDEFGHIJKLMNOP$''']
