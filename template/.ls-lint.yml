@@ -7,6 +7,10 @@ ls:
     .test.tsx: PascalCase
     .stories.tsx: PascalCase
     .json: kebab-case
+  # Contract C5 names renderWithProviders.tsx in camelCase.
+  src/test-utils:
+    .tsx: camelCase | PascalCase
+    .test.tsx: camelCase | PascalCase
   e2e:
     .yaml: kebab-case
 ignore: [node_modules, android, ios, vendor, coverage, .git, .rnstorybook]
