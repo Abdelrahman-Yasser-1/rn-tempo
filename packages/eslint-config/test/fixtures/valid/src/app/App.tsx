@@ -1,5 +1,11 @@
-import { HomeScreen } from '@features/home';
+import { RootNavigator } from '@navigation/RootNavigator';
+
+import { AppProviders } from './providers/AppProviders';
 
 export function App() {
-  return <HomeScreen />;
+  return (
+    <AppProviders>
+      <RootNavigator />
+    </AppProviders>
+  );
 }
