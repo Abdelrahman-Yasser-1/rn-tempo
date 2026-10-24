@@ -287,6 +287,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@rn-tempo/contracts@workspace:packages/contracts":
+  version: 0.0.0-use.local
+  resolution: "@rn-tempo/contracts@workspace:packages/contracts"
+  dependencies:
+    ajv: "npm:8.20.0"
+    ajv-formats: "npm:3.0.1"
+    vite: "npm:8.3.5"
+    vitest: "npm:5.0.5"
+  languageName: unknown
+  linkType: soft
+
 "@rolldown/binding-android-arm-eabi@npm:1.2.15":
   version: 1.2.15
   resolution: "@rolldown/binding-android-arm-eabi@npm:1.2.15"
@@ -473,7 +484,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ajv@npm:^8.11.0":
+"ajv-formats@npm:3.0.1":
+  version: 3.0.1
+  resolution: "ajv-formats@npm:3.0.1"
+  dependencies:
+    ajv: "npm:^8.0.0"
+  peerDependencies:
+    ajv: ^8.0.0
+  peerDependenciesMeta:
+    ajv:
+      optional: true
+  checksum: 10c0/168d6bca1ea9f163b41c8147bae537e67bd963357a5488a1eaf3abe8baa8eec806d4e45f15b10767e6020679315c7e1e5e6803088dfb84efa2b4e9353b83dd0a
+  languageName: node
+  linkType: hard
+
+"ajv@npm:8.20.0, ajv@npm:^8.0.0, ajv@npm:^8.11.0":
   version: 8.20.0
   resolution: "ajv@npm:8.20.0"
   dependencies:
