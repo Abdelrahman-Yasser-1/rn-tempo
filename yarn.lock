@@ -514,6 +514,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@react-native/typescript-config@npm:0.88.0":
+  version: 0.88.0
+  resolution: "@react-native/typescript-config@npm:0.88.0"
+  checksum: 10c0/63d2be5aca69f3916a17a929aadf00c7e4a4f84ff41ae888c774ca61215fa7fc9757da0c29141d5ed3d00a0831100807d26792bfcc3e2e79ad614315f9d7f209
+  languageName: node
+  linkType: hard
+
 "@rn-tempo/commitlint-config@workspace:*, @rn-tempo/commitlint-config@workspace:packages/commitlint-config":
   version: 0.0.0-use.local
   resolution: "@rn-tempo/commitlint-config@workspace:packages/commitlint-config"
@@ -547,6 +554,19 @@ __metadata:
     vitest: "npm:5.0.5"
   peerDependencies:
     prettier: ">=3"
+  languageName: unknown
+  linkType: soft
+
+"@rn-tempo/tsconfig@workspace:packages/tsconfig":
+  version: 0.0.0-use.local
+  resolution: "@rn-tempo/tsconfig@workspace:packages/tsconfig"
+  dependencies:
+    "@react-native/typescript-config": "npm:0.88.0"
+    typescript: "npm:6.0.3"
+    vite: "npm:8.3.5"
+    vitest: "npm:5.0.5"
+  peerDependencies:
+    "@react-native/typescript-config": ">=0.88.0"
   languageName: unknown
   linkType: soft
 
@@ -1763,6 +1783,26 @@ __metadata:
     fdir: "npm:^6.5.0"
     picomatch: "npm:^4.0.4"
   checksum: 10c0/7f7bb0f197c88bc4b20c231e0deca4240ca3bf313a88f5a7fee93a872b84966a4d50220947c0455ad07a60b3b360961c5b7fd979222aeb716a9f99b412002e4c
+  languageName: node
+  linkType: hard
+
+"typescript@npm:6.0.3":
+  version: 6.0.3
+  resolution: "typescript@npm:6.0.3"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 10c0/4a25ff5045b984370f48f196b3a0120779b1b343d40b9a68d114ea5e5fff099809b2bb777576991a63a5cd59cf7bffd96ff6fe10afcefbcb8bd6fb96ad4b6606
+  languageName: node
+  linkType: hard
+
+"typescript@patch:typescript@npm%3A6.0.3#optional!builtin<compat/typescript>":
+  version: 6.0.3
+  resolution: "typescript@patch:typescript@npm%3A6.0.3#optional!builtin<compat/typescript>::version=6.0.3&hash=5786d5"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 10c0/2f25c74e65663c248fa1ade2b8459d9ce5372ff9dad07067310f132966ebec1d93f6c42f0baf77a6b6a7a91460463f708e6887013aaade22111037457c6b25df
   languageName: node
   linkType: hard
 
