@@ -10,6 +10,9 @@ import { getSection, parseSession, readCurrent, serializeSession, setSection } f
 import { REDACTED, redact } from '../redact.mjs';
 import { appendPrompt, formatPrompt, startSession, stopSession, trailersFor } from '../session.mjs';
 
+// Built at runtime so secret scanners don't flag the test fixture itself.
+const FAKE_AWS_KEY = ['AKIA', 'ABCDEFGHIJKLMNOP'].join('');
+
 const here = path.dirname(fileURLToPath(import.meta.url));
 const sh = (cwd, cmd, args) => execFileSync(cmd, args, { cwd, encoding: 'utf8' }).trim();
 
@@ -29,13 +32,13 @@ describe('redact', () => {
       'token=abc123',
       'Authorization: Bearer xyz.abc',
       'jwt eyJhbGciOi.eyJzdWIiOi.SflKxwRJSM',
-      'aws AKIAABCDEFGHIJKLMNOP',
+      `aws ${FAKE_AWS_KEY}`,
       'mail me at jane.doe@acme.io',
       'api_key: sk-abcdefghijklmnopqrstuvwxyz',
     ].join('\n');
     const out = redact(input);
     assert.match(out, /token=\[REDACTED\]/);
-    for (const secret of ['abc123', 'xyz.abc', 'eyJhbGciOi', 'AKIAABCDEFGHIJKLMNOP', 'jane.doe@acme.io', 'sk-abcdef']) {
+    for (const secret of ['abc123', 'xyz.abc', 'eyJhbGciOi', FAKE_AWS_KEY, 'jane.doe@acme.io', 'sk-abcdef']) {
       assert.ok(!out.includes(secret), `leaked ${secret}`);
     }
   });
