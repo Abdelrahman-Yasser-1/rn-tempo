@@ -2203,7 +2203,7 @@ Recorded by the integrator during WS0. Where this list and the plan disagree, **
 6. **gitleaks 8.30:**
    - Use `gitleaks git --staged` (pre-commit) and `gitleaks git` (CI). `protect` is deprecated.
    - `.gitleaks.toml` (root and template) allowlists **lockfile checksum lines only**, matched on line shape. Tokens elsewhere in lockfiles are still caught.
-   - `.gitleaksignore` lists known false-positive fingerprints.
+   - Known fake test fixtures are allowlisted **by value** in `.gitleaks.toml` (not by commit fingerprint in `.gitleaksignore`, because rebase merges rewrite SHAs).
 7. **Dependency placement:**
    - The template already has every dependency installed (WS0 task 0.5).
    - **Lint plugins are dependencies of `@rn-tempo/eslint-config`, not of the template.** The template only has `eslint`, `prettier`, `typescript`, `@ls-lint/ls-lint`, `knip`, `i18next-cli`, `lefthook`, `@commitlint/cli` and `danger`.
