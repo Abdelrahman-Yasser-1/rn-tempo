@@ -76,6 +76,9 @@ export function qualityConfig(root) {
       name: 'rn-tempo/quality/import-x',
       plugins: { 'import-x': importX },
       settings: {
+        'import-x/extensions': ['.ts', '.tsx', '.cts', '.mts', '.js', '.jsx', '.cjs', '.mjs'],
+        'import-x/external-module-folders': ['node_modules', 'node_modules/@types'],
+        'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx', '.cts', '.mts'] },
         'import-x/internal-regex': ALIAS_REGEX,
         'import-x/resolver-next': [
           createTypeScriptImportResolver({ project: path.join(root, 'tsconfig.json') }),
@@ -103,6 +106,7 @@ export function qualityConfig(root) {
     {
       name: 'rn-tempo/quality/i18n',
       files: ['src/**/*.tsx'],
+      ignores: [...TEST_FILES, ...STORY_FILES],
       plugins: { i18next },
       rules: {
         'i18next/no-literal-string': [
