@@ -1,10 +1,6 @@
 {
-  "extends": "@react-native/typescript-config",
+  "extends": "@rn-tempo/tsconfig/react-native.json",
   "compilerOptions": {
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "noFallthroughCasesInSwitch": true,
     // Path aliases: keep in sync with babel.config.js (contract C4).
     "paths": {
       "@app/*": ["./src/app/*"],

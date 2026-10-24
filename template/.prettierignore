@@ -1,0 +1,10 @@
+android
+ios
+vendor
+coverage
+.yarn
+.claude
+.ai
+.tempo
+.tempo.json
+yarn.lock
