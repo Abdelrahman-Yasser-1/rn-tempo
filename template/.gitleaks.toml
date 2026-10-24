@@ -1,11 +1,19 @@
-# gitleaks config: default rules plus an allowlist for lockfiles, whose checksums look like API keys.
+# gitleaks config: default rules, plus an allowlist for lockfile checksums (which look like API keys).
+# Only hex checksum values inside lockfiles are skipped, so tokens in registry URLs are still caught.
 [extend]
 useDefault = true
 
 [[allowlists]]
 description = "Lockfile checksums are not secrets"
+condition = "AND"
 paths = [
   '''(^|/)Podfile\.lock$''',
   '''(^|/)yarn\.lock$''',
   '''(^|/)Gemfile\.lock$''',
+]
+regexTarget = "secret"
+regexes = [
+  '''^(10c0/)?[0-9a-f]{40}$''',
+  '''^(10c0/)?[0-9a-f]{64}$''',
+  '''^(10c0/)?[0-9a-f]{128}$''',
 ]
