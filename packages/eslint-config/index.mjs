@@ -1,13 +1,22 @@
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
 
 import { baseConfig } from './configs/base.mjs';
+import { qualityConfig } from './configs/quality.mjs';
 import { reactConfig } from './configs/react.mjs';
 import { reactNativeConfig } from './configs/react-native.mjs';
+import { testsConfig } from './configs/tests.mjs';
 
 /**
  * Builds the RN-TEMPO flat config.
  * @param {{ root: string, structure?: boolean }} options `root` is the project folder (usually `import.meta.dirname`).
  */
 export function createConfig({ root }) {
-  return [...baseConfig(root), ...reactConfig(), ...reactNativeConfig(), eslintConfigPrettier];
+  return [
+    ...baseConfig(root),
+    ...reactConfig(),
+    ...reactNativeConfig(),
+    ...qualityConfig(root),
+    ...testsConfig(),
+    eslintConfigPrettier,
+  ];
 }
