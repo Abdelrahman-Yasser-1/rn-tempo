@@ -1,0 +1,212 @@
+name: PR
+
+# Workflows in `.github/` run at the root of a generated project, so paths have no `template/` prefix.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify (typecheck, lint, format, i18n, tests)
+    if: github.event.action != 'edited'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      # Corepack must be on before setup-node so the yarn cache can find the right yarn.
+      - run: corepack enable
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+      - run: yarn install --immutable
+      - run: yarn verify
+      # Fork PRs get a read-only token, so the comment step is skipped for them.
+      - name: Jest coverage summary
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        uses: ArtiomTr/jest-coverage-report-action@v2
+        with:
+          test-script: yarn jest
+          package-manager: yarn
+          skip-step: install
+
+  commitlint:
+    name: Commit messages
+    if: github.event.action != 'edited'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - run: corepack enable
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+      - run: yarn install --immutable
+      - name: Lint every commit in the PR
+        run: yarn commitlint --from "${{ github.event.pull_request.base.sha }}" --to "${{ github.event.pull_request.head.sha }}" --verbose
+
+  pr-title:
+    name: PR title
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      # Same types and scopes as @rn-tempo/commitlint-config. Add your own feature scopes here.
+      - uses: amannn/action-semantic-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          requireScope: true
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+          scopes: |
+            repo
+            template
+            packages
+            cli
+            contracts
+            eslint-config
+            prettier-config
+            commitlint-config
+            tsconfig
+            docs
+            docs-content
+            specs
+            ai
+            ci
+            release
+            deps
+            native
+            android
+            ios
+            env
+            app
+            navigation
+            theme
+            i18n
+            http
+            storage
+            security
+            flags
+            remote-config
+            logger
+            network
+            toast
+            ui
+            hooks
+            utils
+            auth
+            home
+            profile
+            settings
+            items
+            onboarding
+            forms
+            e2e
+            test
+            storybook
+            fastlane
+            vscode
+
+  danger:
+    name: Danger
+    if: github.event.action != 'edited'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - run: corepack enable
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+      - run: yarn install --immutable
+      - run: yarn danger ci
+        env:
+          DANGER_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  doctor:
+    name: Tempo doctor
+    if: github.event.action != 'edited'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+      - run: corepack enable
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+      - run: yarn install --immutable
+      # WS5 (task 5.6): `tempo` is not a project dependency until the CLI is published, so run it through
+      # npx and keep the step non-blocking until then.
+      - name: Run tempo doctor
+        id: doctor
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          npx --yes --package create-tempo-app tempo doctor --ci 2>&1 | tee doctor.txt
+      - name: Format doctor output
+        if: always()
+        run: |
+          {
+            echo '### tempo doctor'
+            echo
+            echo '```'
+            cat doctor.txt 2>/dev/null || echo 'tempo doctor did not run'
+            echo '```'
+          } > doctor.md
+      - name: Comment doctor output
+        if: always() && github.event.pull_request.head.repo.full_name == github.repository
+        uses: marocchino/sticky-pull-request-comment@v3
+        with:
+          header: tempo-doctor
+          path: doctor.md
+
+  gitleaks:
+    name: Secret scan
+    if: github.event.action != 'edited'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Install gitleaks
+        env:
+          GITLEAKS_VERSION: 8.30.1
+        run: |
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar -xz -C /usr/local/bin gitleaks
+          gitleaks version
+      - name: Scan full history
+        run: gitleaks git --redact --no-banner -v
