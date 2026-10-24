@@ -6,5 +6,5 @@ Format: `- [ ] T<task id> <summary>`. Tick a box in the same commit that complet
 - [x] T2.2 iOS configurations & schemes — via a script, never manual pbxproj edits
 - [x] T2.3 Per-env app icons
 - [x] T2.4 Splash
-- [ ] T2.5 Release hardening
-- [ ] T2.6 Native bits for other WS
+- [x] T2.5 Release hardening
+- [x] T2.6 Native bits for other WS
