@@ -5,6 +5,7 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 const TEMPLATE_FILE_NAME = 'src/app/App.tsx';
 const rootStyle = { flex: 1 };
 
+// WS3 (task 3.12): call BootSplash.hide({ fade: true }) after bootstrap, then remove this note.
 // Temporary root: WS3 (task 3.12) replaces this with providers, navigation and bootstrap.
 export function App() {
   const isDarkMode = useColorScheme() === 'dark';
