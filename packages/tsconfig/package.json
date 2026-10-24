@@ -1,0 +1,36 @@
+{
+  "name": "@rn-tempo/tsconfig",
+  "version": "0.0.0",
+  "description": "Shared TypeScript config presets for RN-TEMPO projects.",
+  "license": "MIT",
+  "files": [
+    "base.json",
+    "react-native.json"
+  ],
+  "exports": {
+    "./base.json": "./base.json",
+    "./react-native.json": "./react-native.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Abdelrahman-Yasser-1/rn-tempo.git",
+    "directory": "packages/tsconfig"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "lint": "node -e \"for (const f of ['base','react-native']) JSON.parse(require('fs').readFileSync(f + '.json', 'utf8'))\"",
+    "test": "vitest run",
+    "typecheck": "true"
+  },
+  "peerDependencies": {
+    "@react-native/typescript-config": ">=0.88.0"
+  },
+  "devDependencies": {
+    "@react-native/typescript-config": "0.88.0",
+    "typescript": "6.0.3",
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
+  }
+}
