@@ -1,0 +1,87 @@
+---
+description: Folder skeleton, path aliases, barrels and the import-boundary matrix enforced by ESLint.
+globs: src/**
+---
+
+# Architecture
+
+Code lives in layers; ESLint (`boundaries/dependencies`, `project-structure/folder-structure`) rejects anything outside the matrix or the skeleton below.
+
+## Folder skeleton (`src/`)
+
+```
+app/         App.tsx, providers/, bootstrap/, screens/<Name>Screen/
+navigation/  RootNavigator.tsx AuthNavigator.tsx MainTabs.tsx linking.ts types.ts navigationRef.ts useIsSignedIn.ts
+features/<kebab-name>/
+  api/ components/<PascalName>/ hooks/ screens/<Name>Screen/ store/ types/ utils/ constants.ts index.ts
+shared/      components/<PascalName>/  hooks/  utils/  constants/  types/
+services/<kebab>/   http, storage, secure-storage, security, flags, remote-config, logger, i18n, linking, toast, network
+theme/       tokens.ts themes.ts breakpoints.ts unistyles.ts scaling.ts index.ts
+assets/      fonts/ images/ icons/ animations/ (index.ts generated)
+locales/     en/<ns>.json  ar/<ns>.json
+config/      env.ts constants.ts
+test-utils/  renderWithProviders.tsx  msw/  factories/
+```
+
+- A screen folder `<Name>Screen/` must hold `<Name>Screen.tsx`, `<Name>Screen.test.tsx`, `styles.ts` and `index.ts`.
+- A shared component folder must hold `<Name>.tsx`, `<Name>.test.tsx`, `<Name>.stories.tsx`, `styles.ts`, `types.ts` and `index.ts`.
+- A feature component folder holds `<Name>.tsx`, `index.ts`, and optionally `<Name>.test.tsx`, `styles.ts`, `types.ts`.
+- `services/` may nest **one** kebab-case level (`src/services/security/pinning/`). Two levels is an error.
+- Unknown folders or files under `src/` are errors. Do not invent new top-level folders.
+
+## Path aliases
+
+`@app/*` `@navigation/*` `@features/*` `@shared/*` `@services/*` `@theme/*` `@assets/*` `@locales/*` `@config/*` `@test-utils/*` map to the folder of the same name under `src/`.
+
+## Barrels
+
+An `index.ts` barrel is allowed only at: each feature root, each component/screen folder, `src/shared/components/index.ts`, `src/shared/hooks/index.ts`, `src/shared/utils/index.ts`, `src/theme/index.ts`, `src/assets/*/index.ts`.
+
+## Boundary matrix
+
+| From          | May import                                                                                                                                                                               |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app`         | app, navigation, shared-ui, shared-core, services, theme, assets, config, locales, a feature (**`index.ts` only**)                                                                       |
+| `navigation`  | navigation, shared-ui, shared-core, services, theme, config, a feature (**`index.ts` only**)                                                                                             |
+| `feature`     | its own feature (anything), another feature (**`index.ts` only**), shared-ui, shared-core, services, theme, assets, config, `navigation/types.ts` and `navigation/navigationRef.ts` only |
+| `shared-ui`   | shared-ui, shared-core, services, theme, assets, config                                                                                                                                  |
+| `shared-core` | shared-core, config                                                                                                                                                                      |
+| `services`    | services, shared-core, config, locales                                                                                                                                                   |
+| `theme`       | theme                                                                                                                                                                                    |
+| `assets`      | assets                                                                                                                                                                                   |
+| `locales`     | locales                                                                                                                                                                                  |
+| `config`      | config                                                                                                                                                                                   |
+| `test-utils`  | anything                                                                                                                                                                                 |
+
+`shared-ui` = `src/shared/{components,hooks}`. `shared-core` = `src/shared/{utils,types,constants}` (pure code).
+Only `*.test.ts(x)`, `*.stories.tsx` and `src/test-utils/**` may import `@test-utils/*`.
+
+## Restricted imports
+
+| Import                                                                                                                           | Allowed only in                                                              |
+| -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `Text`, `TouchableOpacity`, `TouchableHighlight`, `TouchableWithoutFeedback`, `Image`, `Button`, `TextInput` from `react-native` | `src/shared/components/**`                                                   |
+| `StyleSheet` from `react-native`                                                                                                 | nowhere (use `react-native-unistyles`)                                       |
+| `react-native-config`                                                                                                            | `src/config/env.ts` (everyone else imports `@config/env`)                    |
+| `@react-native-async-storage/async-storage`                                                                                      | nowhere (use `@services/storage`)                                            |
+| `axios`                                                                                                                          | `src/services/http/**`                                                       |
+| `react-native-mmkv`                                                                                                              | `src/services/storage/**`                                                    |
+| `react-native-keychain`                                                                                                          | `src/services/secure-storage/**` and `src/services/storage/encryptionKey.ts` |
+
+Also: no default exports (`import-x/no-default-export`), no import cycles (`import-x/no-cycle`).
+
+## Examples
+
+```ts
+// ✅ a feature talking to another feature through its public API
+import { useCurrentUser } from '@features/auth';
+
+// ❌ deep import into another feature
+import { useAuthStore } from '@features/auth/store/auth.store';
+
+// ❌ services importing UI
+import { Button } from '@shared/components';
+
+// ❌ shared code importing a feature
+import { useCurrentUser } from '@features/auth';
+```
