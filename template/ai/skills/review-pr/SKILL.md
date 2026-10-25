@@ -1,0 +1,21 @@
+---
+name: review-pr
+description: Review a pull request or the current diff against this project's checklist. Use when asked to review changes before merge.
+---
+
+# review-pr
+
+1. Get the diff: `gh pr diff <n>` or `git diff main...HEAD`. Read the linked spec and `tasks.md`.
+2. Run `yarn verify` and `yarn spec:check`. Failing checks are blocking.
+3. Checklist:
+   - Scope: only what the task or spec asks; no unrelated changes.
+   - Architecture: imports follow `ai/rules/architecture.md` (barrels, feature index-only, restricted imports).
+   - Types: no `any`, no `@ts-ignore`, no unexplained `eslint-disable`, `Readonly` props, `type` not `interface`.
+   - UI: tokens only, i18n keys in `en` and `ar`, a11y props, RTL-safe, `testID` convention.
+   - State and API: server data in Query, `request()` with Zod, keys factory, mutations invalidate, no tokens in stores.
+   - Security: no secrets, `ENV` only, no `console`.
+   - Tests: new code covered, `getByRole`, MSW, AC-prefixed names for spec'd behavior.
+   - Commits: Conventional with scope, small, trailers present, checkboxes ticked.
+   - Dependencies: no unplanned adds or bumps; pins exact.
+   - PR: description complete, screenshots for UI (iOS + Android, light + dark, en + ar).
+4. Report findings grouped as Blocking, Should fix, Nit, each with `file:line` and a concrete suggestion.

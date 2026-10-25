@@ -1,0 +1,13 @@
+---
+name: create-feature
+description: Scaffold a new feature module (folders, locales, spec stubs). Use when the user wants a new feature area such as profile, orders or chat.
+---
+
+# create-feature
+
+1. Choose a kebab-case name. Features import other features only via their `index.ts` (see `ai/rules/architecture.md`).
+2. Run `yarn tempo g feature <name>` (when the CLI is installed). It creates the feature tree, `src/locales/{en,ar}/<name>.json` and `specs/<name>/`. Without the CLI, create the same files by hand following `ai/rules/architecture.md` and `naming.md`.
+3. Add the scope `<name>` to `commitlint.config.mjs` (`extraScopes`) and register the namespace in the i18n resources and `i18next.d.ts`.
+4. Register the route in `src/navigation/types.ts` and the stack (see `add-screen`).
+5. Run the `spec-new` skill if no spec exists yet.
+6. Run `yarn verify:changed`. Commit: `feat(<name>): scaffold <name> feature`.

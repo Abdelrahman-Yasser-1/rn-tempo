@@ -1,0 +1,17 @@
+---
+name: spec-new
+description: Draft specs/<feature>/spec.md from a feature request. Use when the user asks to specify, scope or plan a new feature before any code is written.
+---
+
+# spec-new
+
+Turn a feature request into a reviewable `spec.md` (status `draft`). Read `ai/rules/specs.md` first.
+
+1. Read `specs/product.md`, `specs/tech.md` and the existing `specs/*/spec.md` for context and glossary.
+2. Pick a kebab-case feature name. Create `specs/<feature>/` (use `yarn tempo spec new <feature>` when the CLI is installed; otherwise copy `specs/_templates/spec.md`).
+3. **Ask clarifying questions** before writing: who is the user, what is the happy path, error and empty states, offline behavior, permissions, flags, analytics, i18n (en + ar), a11y. Ask them in one batch; record unanswered ones under Open questions. Never guess.
+4. Fill `spec.md`: frontmatter `status: draft`, `owner`, `created`; sections Problem, User stories, Acceptance criteria, Out of scope, Open questions.
+5. Write acceptance criteria as `- **AC-1** Given <context>, when <action>, then <outcome>.` Each AC is testable, unique and numbered in order. Never renumber later; strike through removed ones.
+6. Run `yarn verify:changed` (formatting). `yarn spec:check` only gates `implemented` specs.
+7. Commit: `docs(specs): add <feature> spec`.
+8. Stop. A human sets `status: approved`. Do not start `spec-plan` or code on a draft.

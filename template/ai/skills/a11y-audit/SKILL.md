@@ -1,0 +1,14 @@
+---
+name: a11y-audit
+description: Audit screens or components for accessibility issues and fix them. Use when asked to check or improve accessibility.
+---
+
+# a11y-audit
+
+1. Read `ai/rules/a11y.md`. Pick the target screens or components (default: files changed on this branch).
+2. Check each interactive element for: valid `accessibilityRole`, label (translated), `accessibilityState`, 44x44 target or `hitSlop`, no nested touchables, live region for errors, `testID` convention.
+3. Check layout: `start`/`end` instead of `left`/`right`, text scaling up to 1.5x without clipping, contrast via theme tokens in light and dark, reduced-motion handling.
+4. Run `yarn eslint --no-warn-ignored <files>` to catch the `react-native-a11y` rules.
+5. Fix issues, add or adjust tests that assert role and state with `getByRole`.
+6. Run `yarn verify:changed`. Commit: `fix(ui): improve accessibility of <subject>`.
+7. Report what was fixed and what needs a manual screen-reader pass (VoiceOver, TalkBack).
