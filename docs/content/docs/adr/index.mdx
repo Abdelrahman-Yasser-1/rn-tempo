@@ -3,6 +3,22 @@ title: Architecture decisions
 description: Why the template made the choices it did.
 ---
 
-<Callout title="Coming in WS13" type="info">
-  This section is a stub. The content is written in workstream WS13.
-</Callout>
+Each record explains the context, the decision, its consequences and the alternatives we rejected.
+
+| ADR | Decision |
+| --- | --- |
+| [001](001-monorepo-layout.mdx) | One monorepo; `template/` is standalone, not a workspace |
+| [002](002-zustand-tanstack-query.mdx) | Zustand for client state, TanStack Query for server state |
+| [003](003-unistyles.mdx) | Unistyles 3 for styling and theming |
+| [004](004-typescript-6.mdx) | TypeScript 6.0 until typescript-eslint supports 7 |
+| [005](005-eslint-10-flat-config.mdx) | ESLint 10 flat config, no `@react-native/eslint-config` |
+| [006](006-maestro.mdx) | Maestro for E2E |
+| [007](007-own-cli-feature-markers.mdx) | Own CLI with feature markers |
+| [008](008-ai-session-tracking.mdx) | AI session logs and commit trailers |
+| [009](009-static-navigation.mdx) | React Navigation static API |
+| [010](010-app-config-endpoint.mdx) | Remote config endpoint; Firebase as a recipe |
+| [011](011-yarn4.mdx) | Yarn 4, node-modules linker, 24h age gate, `link:` config packages |
+| [012](012-no-expo-modules.mdx) | No Expo modules |
+| [013](013-babel-7.mdx) | Babel 7 until the RN preset supports 8 |
+
+Format: Context, Decision, Consequences, Alternatives. New ADRs go in `docs/content/docs/adr/` and are added to its `meta.json`.
