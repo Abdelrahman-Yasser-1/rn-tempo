@@ -33,7 +33,10 @@ beforeAll(() => {
 
 afterEach(() => {
   server.resetHandlers();
-  jest.requireMock<{ resetKeychainMock: () => void }>('react-native-keychain').resetKeychainMock();
+  // Tests that swap the keychain via jest.doMock bring their own fake without this helper.
+  jest
+    .requireMock<{ resetKeychainMock?: () => void }>('react-native-keychain')
+    .resetKeychainMock?.();
 });
 
 afterAll(() => {
