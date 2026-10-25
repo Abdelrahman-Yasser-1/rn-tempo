@@ -5,14 +5,19 @@ import type { ReactElement, ReactNode } from 'react';
 import { I18nextProvider } from 'react-i18next';
 import { UnistylesRuntime } from 'react-native-unistyles';
 
+import { useAuthStore } from '@features/auth';
 import { i18n, initI18nInstance } from '@services/i18n/i18n';
 import type { Language } from '@services/i18n/languageManager';
+
+import { createUser } from './factories/user';
 
 export type RenderWithProvidersOptions = {
   /** Initial navigation route; only meaningful when the UI contains a navigator. */
   route?: { name: string; params?: object };
   /** Starting theme. Under the Unistyles jest mock this is a no-op (mock resolves the first theme). */
   theme?: 'light' | 'dark';
+  /** Seeds the auth store as signed in (with a factory user) or signed out. Defaults to untouched. */
+  authenticated?: boolean;
   /** Starting language; defaults to `en`. */
   language?: Language;
 };
@@ -31,6 +36,12 @@ export async function renderWithProviders(
 ) {
   const queryClient = createTestQueryClient();
   await initI18nInstance(options.language ?? 'en');
+  if (options.authenticated !== undefined) {
+    useAuthStore.setState({
+      status: options.authenticated ? 'signedIn' : 'signedOut',
+      user: options.authenticated ? createUser() : null,
+    });
+  }
   if (options.theme) {
     UnistylesRuntime.setTheme(options.theme);
   }

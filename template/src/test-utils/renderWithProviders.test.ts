@@ -4,6 +4,7 @@ import { http, HttpResponse } from 'msw';
 import { createElement, useEffect, useState } from 'react';
 import { Text } from 'react-native';
 
+import { useAuthStore } from '@features/auth';
 import { i18n } from '@services/i18n/i18n';
 
 import { server } from './msw/server';
@@ -39,6 +40,15 @@ describe('renderWithProviders', () => {
     await renderWithProviders(createElement(Text, null, 'x'), { language: 'ar' });
 
     expect(i18n.language).toBe('ar');
+  });
+
+  test('authenticated seeds the auth store', async () => {
+    await renderWithProviders(createElement(Text, null, 'x'), { authenticated: true });
+    expect(useAuthStore.getState().status).toBe('signedIn');
+    expect(useAuthStore.getState().user).not.toBeNull();
+
+    await renderWithProviders(createElement(Text, null, 'x'), { authenticated: false });
+    expect(useAuthStore.getState()).toMatchObject({ status: 'signedOut', user: null });
   });
 
   test('AC-1: an MSW-mocked request resolves', async () => {
