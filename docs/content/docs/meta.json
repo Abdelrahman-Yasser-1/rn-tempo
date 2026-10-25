@@ -1,4 +1,17 @@
 {
   "title": "RN Tempo",
-  "pages": ["index"]
+  "pages": [
+    "index",
+    "getting-started",
+    "architecture",
+    "walkthrough",
+    "features",
+    "standards",
+    "ai",
+    "recipes",
+    "cli",
+    "upgrades",
+    "adr",
+    "project-docs"
+  ]
 }

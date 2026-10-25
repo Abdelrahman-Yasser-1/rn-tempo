@@ -1,0 +1,9 @@
+{
+  "title": "AI",
+  "description": "Set up AI tools, the skills catalog and session logging.",
+  "icon": "bot",
+  "pages": [
+    "index",
+    "..."
+  ]
+}

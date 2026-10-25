@@ -1,0 +1,9 @@
+{
+  "title": "Project docs",
+  "description": "How to write PROJECT.md, ADRs and specs in your own project.",
+  "icon": "file-text",
+  "pages": [
+    "index",
+    "..."
+  ]
+}

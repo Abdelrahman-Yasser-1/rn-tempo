@@ -1,0 +1,9 @@
+{
+  "title": "CLI",
+  "description": "Reference for create-tempo-app and the tempo command.",
+  "icon": "terminal",
+  "pages": [
+    "index",
+    "..."
+  ]
+}
