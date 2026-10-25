@@ -1,0 +1,21 @@
+{
+  "name": "fixture-app",
+  "scripts": {
+    "storybook": "STORYBOOK_ENABLED=true react-native start",
+    "storybook:generate": "sb-rn-get-stories",
+    "e2e": "maestro test e2e",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "jail-monkey": "3.0.0",
+    "react-native-ssl-public-key-pinning": "1.2.6",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@storybook/react-native": "10.7.0",
+    "storybook": "10.6.3",
+    "@storybook/addon-ondevice-controls": "10.7.0",
+    "@storybook/addon-ondevice-actions": "10.7.0",
+    "danger": "14.0.7"
+  }
+}

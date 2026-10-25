@@ -1,0 +1,5 @@
+target 'App' do
+  # @tempo-feature:device-integrity:start
+  pod 'RNJailMonkey'
+  # @tempo-feature:device-integrity:end
+end
