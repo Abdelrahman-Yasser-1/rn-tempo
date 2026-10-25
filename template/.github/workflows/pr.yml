@@ -36,7 +36,7 @@ jobs:
       # Fork PRs get a read-only token, so the comment step is skipped for them.
       - name: Jest coverage summary
         if: github.event.pull_request.head.repo.full_name == github.repository
-        uses: ArtiomTr/jest-coverage-report-action@v2
+        uses: ArtiomTr/jest-coverage-report-action@262a7bb0b20c4d1d6b6b026af0f008f78da72788 # v2.3.1
         with:
           test-script: yarn jest
           package-manager: yarn
@@ -62,75 +62,20 @@ jobs:
   pr-title:
     name: PR title
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: read
     steps:
-      # Same types and scopes as @rn-tempo/commitlint-config. Add your own feature scopes here.
-      - uses: amannn/action-semantic-pull-request@v6
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v7
+      - run: corepack enable
+      - uses: actions/setup-node@v7
         with:
-          requireScope: true
-          types: |
-            feat
-            fix
-            docs
-            style
-            refactor
-            perf
-            test
-            build
-            ci
-            chore
-            revert
-          scopes: |
-            repo
-            template
-            packages
-            cli
-            contracts
-            eslint-config
-            prettier-config
-            commitlint-config
-            tsconfig
-            docs
-            docs-content
-            specs
-            ai
-            ci
-            release
-            deps
-            native
-            android
-            ios
-            env
-            app
-            navigation
-            theme
-            i18n
-            http
-            storage
-            security
-            flags
-            remote-config
-            logger
-            network
-            toast
-            ui
-            hooks
-            utils
-            auth
-            home
-            profile
-            settings
-            items
-            onboarding
-            forms
-            e2e
-            test
-            storybook
-            fastlane
-            vscode
+          node-version-file: .nvmrc
+          cache: yarn
+      - run: yarn install --immutable
+      # The title is linted with the project's own commitlint config, so custom feature scopes just work.
+      # It goes through an env var, never inline `${{ }}` in the script (injection risk).
+      - name: Lint PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: printf '%s\n' "$PR_TITLE" | yarn commitlint --verbose
 
   danger:
     name: Danger
@@ -169,14 +114,18 @@ jobs:
           node-version-file: .nvmrc
           cache: yarn
       - run: yarn install --immutable
-      # WS5 (task 5.6): `tempo` is not a project dependency until the CLI is published, so run it through
-      # npx and keep the step non-blocking until then.
+      # `create-tempo-app` is an exact-pinned devDependency of generated projects (WS14), so the CLI comes
+      # from the lockfile. Findings are non-blocking; a run that produced no report (exec error) fails.
       - name: Run tempo doctor
-        id: doctor
-        continue-on-error: true
         run: |
-          set -o pipefail
-          npx --yes --package create-tempo-app tempo doctor --ci 2>&1 | tee doctor.txt
+          if [ -x node_modules/.bin/tempo ]; then
+            status=0
+            yarn tempo doctor --ci > doctor.txt 2>&1 || status=$?
+            cat doctor.txt
+            if [ ! -s doctor.txt ]; then exit "$status"; fi
+          else
+            echo "tempo CLI not installed, skipping" | tee doctor.txt
+          fi
       - name: Format doctor output
         if: always()
         run: |
@@ -189,7 +138,7 @@ jobs:
           } > doctor.md
       - name: Comment doctor output
         if: always() && github.event.pull_request.head.repo.full_name == github.repository
-        uses: marocchino/sticky-pull-request-comment@v3
+        uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
         with:
           header: tempo-doctor
           path: doctor.md
@@ -205,8 +154,12 @@ jobs:
       - name: Install gitleaks
         env:
           GITLEAKS_VERSION: 8.30.1
+          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
         run: |
-          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar -xz -C /usr/local/bin gitleaks
+          curl -sSfL -o gitleaks.tar.gz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  gitleaks.tar.gz" | sha256sum -c -
+          tar -xz -C /usr/local/bin -f gitleaks.tar.gz gitleaks
+          rm gitleaks.tar.gz
           gitleaks version
       - name: Scan full history
         run: gitleaks git --redact --no-banner -v
