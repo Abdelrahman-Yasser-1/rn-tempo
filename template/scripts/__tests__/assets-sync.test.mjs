@@ -4,7 +4,14 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
 
-import { renderRegistry, REGISTRIES, syncAssets, toPascalCase } from '../assets-sync.mjs';
+import {
+  assertSafeAsset,
+  listAssets,
+  renderRegistry,
+  REGISTRIES,
+  syncAssets,
+  toPascalCase,
+} from '../assets-sync.mjs';
 
 const [icons, images] = REGISTRIES;
 
@@ -46,4 +53,22 @@ test('syncAssets writes registries from the folders and is idempotent', () => {
     /spinner: require\('\.\/spinner\.json'\),/,
   );
   assert.equal(syncAssets(root).length, 0);
+});
+
+test('listAssets rejects file names that could inject code or escape the folder', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'assets-unsafe-'));
+  writeFileSync(path.join(dir, "a'); process.exit(1); ('.svg"), '<svg />');
+  assert.throws(() => listAssets(dir, ['.svg']), /unsafe asset file name/);
+});
+
+test('assertSafeAsset rejects traversal, quotes and spaces but accepts normal names', () => {
+  assert.throws(() => assertSafeAsset('../x.svg', '../x'), /unsafe asset file name/);
+  assert.throws(() => assertSafeAsset('a b.svg', 'a b'), /unsafe asset file name/);
+  assert.doesNotThrow(() => assertSafeAsset('chevron-left.svg', 'chevron-left'));
+});
+
+test('non-identifier keys and paths are emitted as escaped string literals', () => {
+  const out = renderRegistry(icons, [{ file: 'eye-off.svg', name: 'eye-off' }]);
+  assert.match(out, /import EyeOff from '\.\/eye-off\.svg';/);
+  assert.match(out, /'eye-off': EyeOff,/);
 });
