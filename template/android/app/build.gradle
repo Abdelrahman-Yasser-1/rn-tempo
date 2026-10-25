@@ -94,8 +94,9 @@ android {
         applicationId "com.rntempo.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        // Fastlane passes the real values: -PtempoVersionCode=<run number> -PtempoVersionName=<package.json version>.
+        versionCode((project.findProperty("tempoVersionCode") ?: 1) as int)
+        versionName((project.findProperty("tempoVersionName") ?: "1.0") as String)
     }
     buildFeatures {
         buildConfig true
