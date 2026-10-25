@@ -1,0 +1,14 @@
+---
+description: Start or stop AI session logging (for tools without hooks)
+argument-hint: start <tool> <model> [spec] | prompt <text> | stop <summary>
+---
+
+Claude Code logs sessions through `.claude/settings.json` hooks, so this command is mainly for other tools.
+
+Interpret $ARGUMENTS and run from the project root:
+
+- `start <tool> <model> [specs/<feature>]`: `yarn ai:start --tool <tool> --model <model> [--spec specs/<feature>]`
+- `prompt <text>`: `yarn ai:prompt "<text>"`
+- `stop <summary>`: `yarn ai:stop --summary "<summary>"`
+
+The session pointer expires after 12 hours; start again when resuming. Never edit session logs created by other sessions.
