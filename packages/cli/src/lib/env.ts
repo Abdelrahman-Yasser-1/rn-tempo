@@ -187,6 +187,8 @@ export type EnvOptions = {
   json?: boolean;
   /** Skip ios-envs.rb and icons (used in tests and on machines without Ruby/Xcode). */
   skipNative?: boolean;
+  /** Skip regenerating icons (batch callers run `runIcons` once at the end). */
+  skipIcons?: boolean;
   /** Called with human-readable warnings (e.g. non-macOS iOS skip). */
   warn?: (message: string) => void;
 };
@@ -205,7 +207,7 @@ async function syncNative(dir: string, tempo: TempoJson, options: EnvOptions): P
   } else {
     options.warn?.('Skipped the iOS configuration (needs macOS and ios/): run `yarn ios:envs` on a Mac.');
   }
-  await runIcons(dir, { runner, json: options.json });
+  if (!options.skipIcons) await runIcons(dir, { runner, json: options.json });
 }
 
 /** Adds an env to `.tempo.json`, Gradle, package scripts, `.env.<name>`, iOS configs and icons. */
