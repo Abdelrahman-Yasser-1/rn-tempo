@@ -146,7 +146,8 @@ describe('httpClient token refresh', () => {
     server.use(protectedHandler(calls), refreshHandler(401));
 
     await expect(httpClient.get('/secure')).rejects.toMatchObject({
-      response: { status: 401 },
+      code: 'UNAUTHORIZED',
+      status: 401,
     });
 
     expect(unauthorized).toHaveBeenCalledTimes(1);
