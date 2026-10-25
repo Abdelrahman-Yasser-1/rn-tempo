@@ -4,6 +4,7 @@
 //
 // Output is deterministic (no timestamps, no system fonts: ribbon letters are vector paths), so a
 // second run produces byte-identical files. Run it with `yarn icons`.
+import { readFileSync } from 'node:fs';
 import { mkdir, readdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -12,14 +13,37 @@ import sharp from 'sharp';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const sourceDir = path.join(root, 'src/assets/icons-source');
-const iosApp = 'TempoApp';
+const DEFAULT_IOS_APP = 'TempoApp';
 
-// Mirrors the environment matrix in specs/PLAN.md section B2.
-const ENVIRONMENTS = [
+// Mirrors the environment matrix in specs/PLAN.md section B2. Used when .tempo.json is missing.
+const DEFAULT_ENVIRONMENTS = [
   { flavor: 'dev', iosSet: 'AppIcon-Dev', badge: { text: 'DEV', color: '#F97316' } },
   { flavor: 'staging', iosSet: 'AppIcon-Staging', badge: { text: 'STG', color: '#8B5CF6' } },
   { flavor: 'prod', iosSet: 'AppIcon', badge: null },
 ];
+
+// .tempo.json envs carry a badge label but no color: dev and staging keep their B2 colors, any other
+// env gets this neutral slate.
+const BADGE_COLORS = { dev: '#F97316', staging: '#8B5CF6' };
+const NEUTRAL_BADGE_COLOR = '#64748B';
+
+/** Reads the env matrix (name + badge) and app name from .tempo.json, falling back to the defaults. */
+function loadProject() {
+  try {
+    const meta = JSON.parse(readFileSync(path.join(root, '.tempo.json'), 'utf8'));
+    const environments = meta.envs.map((env) => ({
+      flavor: env.name,
+      // Same naming as ios-envs.rb: prod owns the plain AppIcon set, other envs get AppIcon-<Name>.
+      iosSet: env.name === 'prod' ? 'AppIcon' : `AppIcon-${env.name.charAt(0).toUpperCase()}${env.name.slice(1)}`,
+      badge: env.badge ? { text: env.badge, color: BADGE_COLORS[env.name] ?? NEUTRAL_BADGE_COLOR } : null,
+    }));
+    return { iosApp: meta.app.name, environments };
+  } catch {
+    return { iosApp: DEFAULT_IOS_APP, environments: DEFAULT_ENVIRONMENTS };
+  }
+}
+
+const { iosApp, environments: ENVIRONMENTS } = loadProject();
 
 const LEGACY_SIZES = { mdpi: 48, hdpi: 72, xhdpi: 96, xxhdpi: 144, xxxhdpi: 192 };
 // Adaptive icon layers are 108dp.
@@ -37,6 +61,19 @@ const GLYPHS = {
   S: 'M9 1H3L1 3V5L3 7H7L9 9V11L7 13H1',
   T: 'M1 1H9M5 1V13',
   G: 'M9 3L7 1H3L1 3V11L3 13H7L9 11V7H5',
+  A: 'M1 13L5 1L9 13M2.8 9H7.2',
+  B: 'M1 1H6Q9 1 9 4Q9 7 6 7H1M6 7Q9 7 9 10Q9 13 6 13H1V1',
+  C: 'M9 3L7 1H3L1 3V11L3 13H7L9 11',
+  H: 'M1 1V13M9 1V13M1 7H9',
+  I: 'M1 1H9M5 1V13M1 13H9',
+  L: 'M1 1V13H9',
+  M: 'M1 13V1L5 7L9 1V13',
+  N: 'M1 13V1L9 13V1',
+  O: 'M3 1H7L9 3V11L7 13H3L1 11V3Z',
+  P: 'M1 13V1H6Q9 1 9 4Q9 7 6 7H1',
+  Q: 'M3 1H7L9 3V11L7 13H3L1 11V3ZM6 9L9 13',
+  R: 'M1 13V1H6Q9 1 9 4Q9 7 6 7H1M5 7L9 13',
+  U: 'M1 1V11L3 13H7L9 11V1',
 };
 const GLYPH_WIDTH = 10;
 const GLYPH_HEIGHT = 14;
@@ -55,6 +92,7 @@ function ribbonSvg(canvas, box, badge, clipRadius) {
   const paths = letters
     .map((letter, index) => {
       const x = startX + index * (GLYPH_WIDTH + GLYPH_GAP) * scale;
+      if (!GLYPHS[letter]) throw new Error(`icons.mjs: no glyph for badge letter "${letter}"; add it to GLYPHS`);
       return `<path transform="translate(${x} ${startY}) scale(${scale})" d="${GLYPHS[letter]}"/>`;
     })
     .join('');
