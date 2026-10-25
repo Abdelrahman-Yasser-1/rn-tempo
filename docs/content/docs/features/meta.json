@@ -1,0 +1,9 @@
+{
+  "title": "Features",
+  "description": "One page per feature, covering how it works, how to use, customize and remove it.",
+  "icon": "puzzle",
+  "pages": [
+    "index",
+    "..."
+  ]
+}
