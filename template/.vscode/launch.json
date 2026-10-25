@@ -1,0 +1,69 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Android (dev)",
+      "cwd": "${workspaceFolder}",
+      "type": "reactnativedirect",
+      "request": "launch",
+      "platform": "android",
+      "runArguments": ["--mode", "devDebug", "--appIdSuffix", "dev"]
+    },
+    {
+      "name": "Debug Android (staging)",
+      "cwd": "${workspaceFolder}",
+      "type": "reactnativedirect",
+      "request": "launch",
+      "platform": "android",
+      "runArguments": ["--mode", "stagingDebug", "--appIdSuffix", "staging"]
+    },
+    {
+      "name": "Debug Android (prod)",
+      "cwd": "${workspaceFolder}",
+      "type": "reactnativedirect",
+      "request": "launch",
+      "platform": "android",
+      "runArguments": ["--mode", "prodDebug"]
+    },
+    {
+      "name": "Debug iOS (dev)",
+      "cwd": "${workspaceFolder}",
+      "type": "reactnativedirect",
+      "request": "launch",
+      "platform": "ios",
+      "runArguments": ["--scheme", "TempoApp-Dev", "--mode", "Debug-Dev"]
+    },
+    {
+      "name": "Debug iOS (staging)",
+      "cwd": "${workspaceFolder}",
+      "type": "reactnativedirect",
+      "request": "launch",
+      "platform": "ios",
+      "runArguments": ["--scheme", "TempoApp-Staging", "--mode", "Debug-Staging"]
+    },
+    {
+      "name": "Debug iOS (prod)",
+      "cwd": "${workspaceFolder}",
+      "type": "reactnativedirect",
+      "request": "launch",
+      "platform": "ios",
+      "runArguments": ["--scheme", "TempoApp-Prod", "--mode", "Debug-Prod"]
+    },
+    {
+      "name": "Attach to packager (Android)",
+      "cwd": "${workspaceFolder}",
+      "type": "reactnativedirect",
+      "request": "attach",
+      "platform": "android",
+      "port": 8081
+    },
+    {
+      "name": "Attach to packager (iOS)",
+      "cwd": "${workspaceFolder}",
+      "type": "reactnativedirect",
+      "request": "attach",
+      "platform": "ios",
+      "port": 8081
+    }
+  ]
+}
