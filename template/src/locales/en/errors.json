@@ -1,1 +1,10 @@
-{}
+{
+  "forbidden": "You don't have permission to do this.",
+  "network": "No internet connection. Check your network and try again.",
+  "notFound": "We couldn't find what you were looking for.",
+  "server": "Something went wrong on our side. Please try again later.",
+  "timeout": "The request took too long. Please try again.",
+  "unauthorized": "Your session has expired. Please sign in again.",
+  "unknown": "Something went wrong. Please try again.",
+  "validation": "Some of the information you entered is invalid."
+}

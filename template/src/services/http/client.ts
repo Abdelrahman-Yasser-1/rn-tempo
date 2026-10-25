@@ -7,6 +7,7 @@ import { tokenStore } from '@services/secure-storage/tokenStore';
 import { STORAGE_KEYS } from '@services/storage/keys';
 import { storage } from '@services/storage/storage';
 
+import { normalizeError } from './errors';
 import { createRequestId } from './requestId';
 
 let resolvedBaseUrl: string | undefined;
@@ -136,3 +137,11 @@ async function handleUnauthorized(error: unknown): Promise<never> {
 }
 
 httpClient.interceptors.response.use((response) => response, handleUnauthorized);
+
+// Registered last so refresh logic sees raw axios errors; callers only ever see ApiError.
+httpClient.interceptors.response.use(
+  (response) => response,
+  (error: unknown) => {
+    throw normalizeError(error);
+  },
+);
