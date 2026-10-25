@@ -48,3 +48,18 @@ export async function gitInitialCommit(cwd: string, message: string, options: { 
 export async function yarnRun(cwd: string, script: string, args: readonly string[] = [], options: { json?: boolean; runner?: Runner } = {}): Promise<void> {
   await (options.runner ?? run)('yarn', [script, ...args], { cwd, json: options.json });
 }
+
+export type CaptureResult = { exitCode: number; stdout: string; stderr: string };
+
+/** Runs a command and captures its output; never throws (a missing binary gives exit code 127). */
+export type Capturer = (command: string, args: readonly string[], options: { cwd: string }) => Promise<CaptureResult>;
+
+/** Default capturer: execa with `reject: false`. */
+export const capture: Capturer = async (command, args, { cwd }) => {
+  try {
+    const result = await execa(command, [...args], { cwd, reject: false, stdin: 'ignore' });
+    return { exitCode: result.exitCode ?? 1, stdout: String(result.stdout ?? ''), stderr: String(result.stderr ?? '') };
+  } catch (error) {
+    return { exitCode: 127, stdout: '', stderr: error instanceof Error ? error.message : String(error) };
+  }
+};
