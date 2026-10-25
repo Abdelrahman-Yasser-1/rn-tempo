@@ -1,0 +1,143 @@
+# @tempo-feature:ci-github:start
+name: Build
+
+# Runs the Fastlane lanes. Manual runs pick env, platform and lane. Pushing a `v*` tag builds prod for both
+# platforms and ships it to the stores' internal tracks (lane `release`). release.yml dispatches this workflow
+# too, because tags created with GITHUB_TOKEN do not trigger other workflows.
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        description: Environment
+        type: choice
+        options: [dev, staging, prod]
+        default: dev
+      platform:
+        description: Platform
+        type: choice
+        options: [both, android, ios]
+        default: both
+      lane:
+        description: Fastlane lane
+        type: choice
+        options: [build, beta, release]
+        default: build
+  push:
+    tags: ['v*']
+
+concurrency:
+  group: build-${{ inputs.env || 'prod' }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  APP_ENV: ${{ inputs.env || 'prod' }}
+  LANE: ${{ inputs.lane || 'release' }}
+
+jobs:
+  android:
+    name: Android
+    if: inputs.platform != 'ios'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - run: corepack enable
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+      - run: yarn install --immutable
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+      - uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
+        with:
+          ruby-version: '3.4'
+          bundler-cache: true
+      # dev ships its .env.dev; staging and prod are gitignored and written from secrets.
+      - name: Write env file
+        if: env.APP_ENV != 'dev'
+        env:
+          ENV_FILE: ${{ env.APP_ENV == 'prod' && secrets.ENV_FILE_PROD || secrets.ENV_FILE_STAGING }}
+        run: printf '%s\n' "$ENV_FILE" > ".env.${APP_ENV}"
+      - name: Fastlane
+        env:
+          FIREBASE_APP_ID_DEV_ANDROID: ${{ secrets.FIREBASE_APP_ID_DEV_ANDROID }}
+          FIREBASE_APP_ID_STAGING_ANDROID: ${{ secrets.FIREBASE_APP_ID_STAGING_ANDROID }}
+          FIREBASE_APP_ID_PROD_ANDROID: ${{ secrets.FIREBASE_APP_ID_PROD_ANDROID }}
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          PLAY_JSON_KEY: ${{ secrets.PLAY_JSON_KEY }}
+          TEMPO_UPLOAD_STORE_BASE64: ${{ secrets.TEMPO_UPLOAD_STORE_BASE64 }}
+          TEMPO_UPLOAD_STORE_PASSWORD: ${{ secrets.TEMPO_UPLOAD_STORE_PASSWORD }}
+          TEMPO_UPLOAD_KEY_ALIAS: ${{ secrets.TEMPO_UPLOAD_KEY_ALIAS }}
+          TEMPO_UPLOAD_KEY_PASSWORD: ${{ secrets.TEMPO_UPLOAD_KEY_PASSWORD }}
+        run: bundle exec fastlane android "$LANE" env:"$APP_ENV"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: android-${{ env.APP_ENV }}
+          path: |
+            android/app/build/outputs/apk/**/release/*.apk
+            android/app/build/outputs/bundle/**/*.aab
+          if-no-files-found: warn
+
+  ios:
+    name: iOS
+    if: inputs.platform != 'android'
+    runs-on: macos-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+      - run: corepack enable
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+      - run: yarn install --immutable
+      - uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
+        with:
+          ruby-version: '3.4'
+          bundler-cache: true
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
+        with:
+          xcode-version: latest-stable
+      - name: Cache CocoaPods
+        uses: actions/cache@v6
+        with:
+          path: ios/Pods
+          key: pods-${{ runner.os }}-${{ hashFiles('ios/Podfile.lock') }}
+          restore-keys: pods-${{ runner.os }}-
+      # Never delete ios/build: it holds React Native codegen output written by pod install.
+      - name: Install pods
+        working-directory: ios
+        run: bundle exec pod install
+      - name: Write env file
+        if: env.APP_ENV != 'dev'
+        env:
+          ENV_FILE: ${{ env.APP_ENV == 'prod' && secrets.ENV_FILE_PROD || secrets.ENV_FILE_STAGING }}
+        run: printf '%s\n' "$ENV_FILE" > ".env.${APP_ENV}"
+      - name: Fastlane
+        env:
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_CONTENT }}
+          FIREBASE_APP_ID_DEV_IOS: ${{ secrets.FIREBASE_APP_ID_DEV_IOS }}
+          FIREBASE_APP_ID_STAGING_IOS: ${{ secrets.FIREBASE_APP_ID_STAGING_IOS }}
+          FIREBASE_APP_ID_PROD_IOS: ${{ secrets.FIREBASE_APP_ID_PROD_IOS }}
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: bundle exec fastlane ios "$LANE" env:"$APP_ENV"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ios-${{ env.APP_ENV }}
+          path: build/ios/*.ipa
+          if-no-files-found: warn
+# @tempo-feature:ci-github:end
