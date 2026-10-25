@@ -24,7 +24,8 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsdown",
+    "generate": "node scripts/generate-versions.mjs",
+    "build": "node scripts/generate-versions.mjs && tsdown",
     "lint": "tsc --noEmit --noUnusedLocals --noUnusedParameters",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
