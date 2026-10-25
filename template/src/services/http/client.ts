@@ -4,6 +4,9 @@ import { z } from 'zod';
 import { ENV, isProd } from '@config/env';
 import { i18n } from '@services/i18n/i18n';
 import { tokenStore } from '@services/secure-storage/tokenStore';
+// @tempo-feature:ssl-pinning:start
+import { isPinningReady } from '@services/security/pinning/pinning';
+// @tempo-feature:ssl-pinning:end
 import { STORAGE_KEYS } from '@services/storage/keys';
 import { storage } from '@services/storage/storage';
 
@@ -43,6 +46,12 @@ export const httpClient = axios.create({ baseURL: ENV.API_BASE_URL, timeout: ENV
 
 /** Adds base URL, Authorization, Accept-Language and x-request-id to an outgoing request. */
 export function decorateRequest(config: InternalAxiosRequestConfig): InternalAxiosRequestConfig {
+  // @tempo-feature:ssl-pinning:start
+  if (ENV.SSL_PINNING_ENABLED && !isPinningReady()) {
+    // Closes the race where a request fires before pinning is enforced during bootstrap.
+    throw new Error('CERT_PINNING_NOT_READY: request blocked until SSL pinning is initialized');
+  }
+  // @tempo-feature:ssl-pinning:end
   config.baseURL = resolveBaseUrl();
   const accessToken = tokenStore.getAccessToken();
   if (accessToken) {
