@@ -46,6 +46,7 @@ jobs:
       - run: yarn install --immutable
       - run: yarn verify
       - run: yarn test:ai-log
+      - run: yarn test:ai-sync
 
   commitlint:
     name: Commit messages
