@@ -2,7 +2,7 @@
 
 Format: `- [ ] T<task id> <summary>`. Tick a box in the same commit that completes the task. Each plan task usually maps to several small commits; the plan lists the suggested commit headers.
 
-- [ ] T3.1 Test infrastructure
+- [x] T3.1 Test infrastructure
 - [ ] T3.2 Theme (Unistyles 3)
 - [ ] T3.3 Storage, logger and i18n services
 - [ ] T3.4 HTTP client
