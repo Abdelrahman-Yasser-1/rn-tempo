@@ -15,3 +15,10 @@ gem 'logger'
 gem 'benchmark'
 gem 'mutex_m'
 gem 'nkf'
+
+# @tempo-feature:ci-github:start
+# Fastlane drives the build, beta and release lanes (see fastlane/README.md). Plugins live in fastlane/Pluginfile.
+gem 'fastlane', '2.241.1'
+plugins_path = File.join(File.dirname(__FILE__), 'fastlane', 'Pluginfile')
+eval_gemfile(plugins_path) if File.exist?(plugins_path)
+# @tempo-feature:ci-github:end
