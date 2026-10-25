@@ -10,3 +10,29 @@ html > body[data-scroll-locked] {
   margin-right: 0px !important;
   --removed-body-scroll-bar-size: 0px !important;
 }
+
+/* AnnotatedCode: line numbers (the notes refer to them), highlighted and annotated lines */
+.annotated-code code {
+  counter-reset: annotated-line;
+}
+
+.annotated-code code .line::before {
+  counter-increment: annotated-line;
+  content: counter(annotated-line);
+  display: inline-block;
+  width: 2ch;
+  margin-right: 1.5ch;
+  text-align: right;
+  color: var(--color-fd-muted-foreground);
+  opacity: 0.6;
+}
+
+.annotated-code code .annotated-hl {
+  background-color: color-mix(in srgb, var(--color-fd-primary) 14%, transparent);
+}
+
+.annotated-code code .annotated-note::after {
+  content: '\2190';
+  margin-left: 1.5ch;
+  color: var(--color-fd-primary);
+}
