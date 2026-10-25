@@ -6,7 +6,7 @@ Format: `- [ ] T<task id> <summary>`. Tick a box in the same commit that complet
 - [x] T3.2 Theme (Unistyles 3)
 - [x] T3.3 Storage, logger and i18n services
 - [x] T3.4 HTTP client
-- [ ] T3.5 Secure storage and auth store
+- [x] T3.5 Secure storage and auth store
 - [ ] T3.6 Security services
 - [ ] T3.7 Remote config and flags
 - [ ] T3.8 Linking service
