@@ -80,6 +80,21 @@ describe('httpClient request interceptor', () => {
   });
 });
 
+describe('httpClient pinning gate', () => {
+  test('AC-6: blocks requests until pinning is ready when pinning is enabled', async () => {
+    jest.replaceProperty(ENV, 'SSL_PINNING_ENABLED', true);
+    const { seen } = captureHeaders('/ping');
+
+    await expect(httpClient.get('/ping')).rejects.toMatchObject({
+      code: 'UNKNOWN',
+      message: expect.stringContaining('CERT_PINNING_NOT_READY') as string,
+    });
+
+    expect(seen).toHaveLength(0);
+    jest.restoreAllMocks();
+  });
+});
+
 describe('httpClient token refresh', () => {
   const unauthorized = jest.fn();
   let refreshCalls = 0;
