@@ -1,4 +1,5 @@
 import axios, { type InternalAxiosRequestConfig } from 'axios';
+import { z } from 'zod';
 
 import { ENV, isProd } from '@config/env';
 import { i18n } from '@services/i18n/i18n';
@@ -52,3 +53,86 @@ export function decorateRequest(config: InternalAxiosRequestConfig): InternalAxi
 }
 
 httpClient.interceptors.request.use(decorateRequest);
+
+declare module 'axios' {
+  // Module augmentation requires `interface`; marks a request that was already replayed once.
+  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- required by axios typing contract
+  interface InternalAxiosRequestConfig {
+    isRetry?: boolean;
+  }
+}
+
+const REFRESH_PATH = '/auth/refresh';
+const RefreshResponseSchema = z.object({ accessToken: z.string(), refreshToken: z.string() });
+
+// A bare instance: sharing httpClient would re-enter these interceptors and could loop.
+const refreshClient = axios.create({ timeout: ENV.API_TIMEOUT_MS });
+
+let unauthorizedHandler: (() => void) | undefined;
+
+/** Registers what happens when the session cannot be recovered (bootstrap wires `signOut`). */
+export function setUnauthorizedHandler(handler: (() => void) | undefined): void {
+  unauthorizedHandler = handler;
+}
+
+async function performRefresh(): Promise<string | null> {
+  const refreshToken = tokenStore.getRefreshToken();
+  if (!refreshToken) {
+    return null;
+  }
+  try {
+    const response = await refreshClient.post(
+      REFRESH_PATH,
+      { refreshToken },
+      { baseURL: resolveBaseUrl() },
+    );
+    const tokens = RefreshResponseSchema.parse(response.data);
+    await tokenStore.setTokens(tokens);
+    return tokens.accessToken;
+  } catch {
+    return null;
+  }
+}
+
+let refreshInFlight: Promise<string | null> | undefined;
+
+// Single-flight: concurrent 401s all await the same refresh instead of each starting one.
+function refreshAccessToken(): Promise<string | null> {
+  refreshInFlight ??= performRefresh().finally(() => {
+    refreshInFlight = undefined;
+  });
+  return refreshInFlight;
+}
+
+const BEARER_PREFIX = 'Bearer ';
+
+async function handleUnauthorized(error: unknown): Promise<never> {
+  if (!axios.isAxiosError(error) || error.response?.status !== 401 || !error.config) {
+    throw error;
+  }
+  const config = error.config;
+  const sentHeader = config.headers.get('Authorization');
+  if (typeof sentHeader !== 'string') {
+    // The request was anonymous (e.g. wrong password on login): nothing to refresh.
+    throw error;
+  }
+  if (config.isRetry) {
+    // The fresh token was rejected too: the session is gone.
+    unauthorizedHandler?.();
+    throw error;
+  }
+
+  const currentToken = tokenStore.getAccessToken();
+  const sentToken = sentHeader.slice(BEARER_PREFIX.length);
+  // Another request may already have refreshed while this one was in flight.
+  const nextToken =
+    currentToken !== null && currentToken !== sentToken ? currentToken : await refreshAccessToken();
+  if (!nextToken) {
+    unauthorizedHandler?.();
+    throw error;
+  }
+  config.isRetry = true;
+  return httpClient.request(config);
+}
+
+httpClient.interceptors.response.use((response) => response, handleUnauthorized);
