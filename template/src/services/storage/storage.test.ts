@@ -50,7 +50,7 @@ describe('storage', () => {
     expect(module.storage.getString('x')).toBeUndefined();
   });
 
-  test('AC-3: creates a 32-char hex key once and reuses it', async () => {
+  test('AC-3: creates a 32-char base64 key once and reuses it', async () => {
     const { module, keychain } = loadStorage();
     await module.initStorage();
     await module.initStorage();
@@ -58,7 +58,7 @@ describe('storage', () => {
     const stored = (await keychain.getGenericPassword({
       service: KEYCHAIN_SERVICES.mmkvKey,
     })) as { password: string };
-    expect(stored.password).toMatch(/^[0-9a-f]{32}$/);
+    expect(stored.password).toMatch(/^[a-z\d+/]{32}$/i);
     expect(keychain.setGenericPassword).toHaveBeenCalledTimes(1);
     expect(keychain.setGenericPassword).toHaveBeenCalledWith(
       'mmkv-encryption-key',
