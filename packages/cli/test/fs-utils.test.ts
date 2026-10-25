@@ -26,9 +26,14 @@ describe('globToRegExp', () => {
 });
 
 describe('assertInsideProject', () => {
-  it('rejects absolute and parent paths', () => {
-    expect(() => assertInsideProject('/etc/passwd', 'glob')).toThrow(/inside the project/);
-    expect(() => assertInsideProject('../x', 'glob')).toThrow(/inside the project/);
-    expect(() => assertInsideProject('src/x', 'glob')).not.toThrow();
+  it.each(['/etc/passwd', '../x', '..\\x', 'a/../../x', 'C:\\x', 'C:/x', '\\\\server\\share', '//server/share', ''])(
+    'rejects %j',
+    (value) => {
+      expect(() => assertInsideProject(value, 'glob')).toThrow(/inside the project/);
+    },
+  );
+
+  it.each(['src/x', 'src/a/../b', 'e2e/flows/items-*.yaml', '.claude/**'])('accepts %j', (value) => {
+    expect(() => assertInsideProject(value, 'glob')).not.toThrow();
   });
 });
