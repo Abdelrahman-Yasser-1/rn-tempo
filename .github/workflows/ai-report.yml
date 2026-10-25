@@ -76,6 +76,11 @@ jobs:
             const end = rest.search(/^## /m);
             return (end === -1 ? rest : rest.slice(0, end)).trim();
           }
+          const fence = (text) => {
+            const longest = Math.max(0, ...(text.match(/~+/g) ?? []).map((run) => run.length));
+            return '~'.repeat(Math.max(4, longest + 1));
+          };
+          const block = (text) => `${fence(text)}text\n${text}\n${fence(text)}`;
           const clip = (text, max) => (text.length > max ? `${text.slice(0, max)}\n... (truncated)` : text);
 
           let body = '## AI changes\n\n';
@@ -89,17 +94,17 @@ jobs:
             const prompts = section(text, 'Prompts');
             const promptCount = (prompts.match(/^### /gm) ?? []).length;
             const summary = section(text, 'Summary');
-            body += `### ${meta.tool ?? 'unknown'} / ${meta.model ?? 'unknown'}\n\n`;
-            body += `- Session: \`${file}\`\n- Author: ${meta.author ?? 'unknown'}\n- Spec: ${meta.spec && meta.spec !== 'null' ? `\`${meta.spec}\`` : 'none'}\n`;
+            body += `### \`${meta.tool ?? 'unknown'}\` / \`${meta.model ?? 'unknown'}\`\n\n`;
+            body += `- Session: \`${file}\`\n- Author: \`${(meta.author ?? 'unknown').replaceAll('`', "'")}\`\n- Spec: ${meta.spec && meta.spec !== 'null' ? `\`${meta.spec}\`` : 'none'}\n`;
             const own = assisted.filter((commit) => commit.session === file);
             if (own.length > 0) {
               body += `- Commits:\n${own.map((commit) => `  - \`${commit.sha}\` ${commit.subject}`).join('\n')}\n`;
             }
             body += '\n';
             if (summary) {
-              body += `<details><summary>Summary</summary>\n\n~~~~text\n${clip(summary, 1500)}\n~~~~\n\n</details>\n\n`;
+              body += `<details><summary>Summary</summary>\n\n${block(clip(summary, 1500))}\n\n</details>\n\n`;
             }
-            body += `<details><summary>Prompts (${promptCount})</summary>\n\n~~~~text\n${clip(prompts || '(none logged)', MAX_PROMPTS)}\n~~~~\n\n</details>\n\n`;
+            body += `<details><summary>Prompts (${promptCount})</summary>\n\n${block(clip(prompts || '(none logged)', MAX_PROMPTS))}\n\n</details>\n\n`;
           }
           const unlinked = assisted.filter((commit) => !sessionFiles.includes(commit.session));
           if (unlinked.length > 0) {
@@ -108,7 +113,7 @@ jobs:
           writeFileSync('ai-report.md', clip(body, MAX_TOTAL));
           NODE
       - name: Post comment
-        uses: marocchino/sticky-pull-request-comment@v3
+        uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
         with:
           header: ai-report
           path: ai-report.md
