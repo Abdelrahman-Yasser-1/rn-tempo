@@ -1,0 +1,230 @@
+# Fastlane lanes for build, beta and release. Every secret is read from the environment and listed in
+# fastlane/README.md. Run from the project root, e.g. `bundle exec fastlane android build env:dev type:apk`.
+require 'json'
+require 'base64'
+require 'tmpdir'
+
+fastlane_version '2.241.0'
+default_platform(:android)
+
+ROOT = File.expand_path('..', __dir__)
+
+# Single source of truth for the environment matrix (PLAN B2). The CLI renames these with the app.
+APP_NAME = 'TempoApp'
+ENVS = {
+  'dev' => { flavor: 'Dev', bundle_id: 'com.rntempo.app.dev' },
+  'staging' => { flavor: 'Staging', bundle_id: 'com.rntempo.app.staging' },
+  'prod' => { flavor: 'Prod', bundle_id: 'com.rntempo.app' }
+}.freeze
+UPLOAD_KEY_VARS = %w[
+  TEMPO_UPLOAD_STORE_FILE TEMPO_UPLOAD_STORE_PASSWORD TEMPO_UPLOAD_KEY_ALIAS TEMPO_UPLOAD_KEY_PASSWORD
+].freeze
+
+# Resolves and validates `env:` (dev | staging | prod).
+def tempo_env(options)
+  env = options[:env].to_s
+  UI.user_error!("env must be one of #{ENVS.keys.join(', ')} (got '#{env}')") unless ENVS.key?(env)
+  env
+end
+
+# Marketing version comes from package.json.
+def tempo_version
+  JSON.parse(File.read(File.join(ROOT, 'package.json'))).fetch('version')
+end
+
+# CI run number is monotonic across runs; locally fall back to minutes since the epoch (fits in an int32).
+def tempo_build_number
+  ENV['GITHUB_RUN_NUMBER'] ? Integer(ENV['GITHUB_RUN_NUMBER']) : Time.now.to_i / 60
+end
+
+# Native builds read .env.<env>. In CI it is written from ENV_FILE_STAGING / ENV_FILE_PROD.
+def tempo_require_env_file!(env)
+  return if File.exist?(File.join(ROOT, ".env.#{env}"))
+
+  UI.user_error!(".env.#{env} is missing. In CI, write it from the ENV_FILE_#{env.upcase} secret before building.")
+end
+
+# prodRelease refuses to build without the upload key (android/app/build.gradle). Gradle reads these from the
+# process environment, so they are never put on the command line (and never printed).
+def tempo_prepare_upload_key!
+  encoded = ENV.fetch('TEMPO_UPLOAD_STORE_BASE64', '')
+  unless encoded.empty?
+    keystore = File.join(Dir.mktmpdir('tempo-upload'), 'upload.keystore')
+    File.binwrite(keystore, Base64.decode64(encoded))
+    File.chmod(0o600, keystore)
+    ENV['TEMPO_UPLOAD_STORE_FILE'] = keystore
+  end
+  missing = UPLOAD_KEY_VARS.select { |name| ENV.fetch(name, '').empty? }
+  return if missing.empty?
+
+  UI.user_error!("Prod Android builds need the upload key. Missing: #{missing.join(', ')} " \
+                 '(or TEMPO_UPLOAD_STORE_BASE64 instead of TEMPO_UPLOAD_STORE_FILE).')
+end
+
+# Credentials for Firebase App Distribution: a service account (preferred) or a CLI token.
+def tempo_firebase_auth
+  json = ENV.fetch('FIREBASE_SERVICE_ACCOUNT_JSON', '')
+  return { service_credentials_json_data: json } unless json.empty?
+
+  token = ENV.fetch('FIREBASE_TOKEN', '')
+  return { firebase_cli_token: token } unless token.empty?
+
+  UI.user_error!('Set FIREBASE_SERVICE_ACCOUNT_JSON (preferred) or FIREBASE_TOKEN.')
+end
+
+def tempo_firebase_app_id(env, platform)
+  name = "FIREBASE_APP_ID_#{env.upcase}_#{platform.upcase}"
+  value = ENV.fetch(name, '')
+  UI.user_error!("#{name} is not set.") if value.empty?
+  value
+end
+
+def tempo_release_notes(env)
+  ENV.fetch('RELEASE_NOTES', "#{env} build #{tempo_build_number} (#{tempo_version})")
+end
+
+def tempo_firebase_options(env, platform)
+  groups = ENV.fetch('FIREBASE_TESTER_GROUPS', '')
+  { app: tempo_firebase_app_id(env, platform), release_notes: tempo_release_notes(env) }
+    .merge(groups.empty? ? {} : { groups: groups })
+    .merge(tempo_firebase_auth)
+end
+
+platform :android do
+  desc 'Build a release artifact. env:<dev|staging|prod> type:<apk|aab> (default apk, aab for prod)'
+  lane :build do |options|
+    path = android_artifact(env: tempo_env(options), type: options[:type])
+    UI.success("Built #{path}")
+  end
+
+  desc 'Build an APK and upload it to Firebase App Distribution. env:<dev|staging|prod>'
+  lane :beta do |options|
+    env = tempo_env(options)
+    apk = android_artifact(env: env, type: 'apk')
+    firebase_app_distribution(
+      **tempo_firebase_options(env, 'android'),
+      android_artifact_type: 'APK',
+      android_artifact_path: apk
+    )
+  end
+
+  desc 'Build the prod AAB and upload it to the Play internal track'
+  lane :release do
+    aab = android_artifact(env: 'prod', type: 'aab')
+    upload_to_play_store(
+      package_name: ENVS.fetch('prod').fetch(:bundle_id),
+      track: 'internal',
+      release_status: ENV.fetch('PLAY_RELEASE_STATUS', 'completed'),
+      aab: aab,
+      json_key_data: ENV.fetch('PLAY_JSON_KEY'),
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+
+  # Runs assemble<Env>Release / bundle<Env>Release and returns the artifact path.
+  private_lane :android_artifact do |options|
+    env = options[:env]
+    type = (options[:type] || (env == 'prod' ? 'aab' : 'apk')).to_s
+    UI.user_error!("type must be apk or aab (got '#{type}')") unless %w[apk aab].include?(type)
+    tempo_require_env_file!(env)
+    tempo_prepare_upload_key! if env == 'prod'
+
+    gradle(
+      task: type == 'aab' ? 'bundle' : 'assemble',
+      flavor: ENVS.fetch(env).fetch(:flavor),
+      build_type: 'Release',
+      project_dir: File.join(ROOT, 'android'),
+      properties: { 'tempoVersionCode' => tempo_build_number, 'tempoVersionName' => tempo_version }
+    )
+    shared = type == 'aab' ? Actions::SharedValues::GRADLE_AAB_OUTPUT_PATH : Actions::SharedValues::GRADLE_APK_OUTPUT_PATH
+    lane_context.fetch(shared)
+  end
+end
+
+platform :ios do
+  desc 'Build a signed IPA. env:<dev|staging|prod> (adhoc for dev/staging, app-store for prod)'
+  lane :build do |options|
+    ipa = ios_ipa(env: tempo_env(options))
+    UI.success("Built #{ipa}")
+  end
+
+  desc 'dev/staging: Firebase App Distribution. prod: TestFlight. env:<dev|staging|prod>'
+  lane :beta do |options|
+    env = tempo_env(options)
+    ipa = ios_ipa(env: env)
+    if env == 'prod'
+      ios_testflight(ipa: ipa, wait: false)
+    else
+      firebase_app_distribution(**tempo_firebase_options(env, 'ios'), ipa_path: ipa)
+    end
+  end
+
+  desc 'Build the prod IPA and upload it to TestFlight'
+  lane :release do
+    ios_testflight(ipa: ios_ipa(env: 'prod'), wait: true)
+  end
+
+  private_lane :ios_testflight do |options|
+    upload_to_testflight(
+      api_key: ios_api_key,
+      ipa: options[:ipa],
+      changelog: tempo_release_notes('prod'),
+      skip_waiting_for_build_processing: !options[:wait]
+    )
+  end
+
+  # The key may be the raw .p8 contents or the same contents base64 encoded.
+  private_lane :ios_api_key do
+    content = ENV.fetch('APP_STORE_CONNECT_API_KEY_KEY_CONTENT')
+    app_store_connect_api_key(
+      key_id: ENV.fetch('APP_STORE_CONNECT_API_KEY_ID'),
+      issuer_id: ENV.fetch('APP_STORE_CONNECT_API_KEY_ISSUER_ID'),
+      key_content: content,
+      is_key_content_base64: !content.include?('BEGIN PRIVATE KEY'),
+      in_house: false
+    )
+  end
+
+  # match (readonly) + gym with scheme TempoApp-<Env> and configuration Release-<Env>. Returns the IPA path.
+  # Never cleans: ios/build holds React Native codegen output (pod install).
+  private_lane :ios_ipa do |options|
+    env = options[:env]
+    config = ENVS.fetch(env)
+    suffix = config.fetch(:flavor)
+    bundle_id = config.fetch(:bundle_id)
+    match_type = env == 'prod' ? 'appstore' : 'adhoc'
+    tempo_require_env_file!(env)
+
+    setup_ci # temporary keychain and readonly match, only active on CI
+    sync_code_signing(type: match_type, readonly: true, app_identifier: bundle_id)
+    profile = lane_context.fetch(Actions::SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING).fetch(bundle_id)
+
+    # Edits ios/TempoApp.xcodeproj (manual signing for this configuration only). Revert locally with git.
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: File.join(ROOT, 'ios', "#{APP_NAME}.xcodeproj"),
+      targets: [APP_NAME],
+      build_configurations: ["Release-#{suffix}"],
+      code_sign_identity: 'iPhone Distribution',
+      profile_name: profile,
+      bundle_identifier: bundle_id,
+      **(ENV.fetch('APPLE_TEAM_ID', '').empty? ? {} : { team_id: ENV.fetch('APPLE_TEAM_ID') })
+    )
+
+    build_app(
+      workspace: File.join(ROOT, 'ios', "#{APP_NAME}.xcworkspace"),
+      scheme: "#{APP_NAME}-#{suffix}",
+      configuration: "Release-#{suffix}",
+      export_method: env == 'prod' ? 'app-store' : 'ad-hoc',
+      export_options: { provisioningProfiles: { bundle_id => profile } },
+      output_directory: File.join(ROOT, 'build', 'ios'),
+      output_name: "#{APP_NAME}-#{suffix}.ipa",
+      xcargs: "MARKETING_VERSION=#{tempo_version} CURRENT_PROJECT_VERSION=#{tempo_build_number}",
+      clean: false
+    )
+    lane_context.fetch(Actions::SharedValues::IPA_OUTPUT_PATH)
+  end
+end

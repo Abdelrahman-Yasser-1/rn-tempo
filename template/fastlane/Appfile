@@ -1,0 +1,6 @@
+# Production identifiers. Lanes override the app identifier per environment (see Fastfile).
+# @tempo-feature:ci-github:start
+package_name("com.rntempo.app") # Android applicationId of the prod flavor
+app_identifier("com.rntempo.app") # iOS bundle ID of the prod scheme
+team_id(ENV.fetch("APPLE_TEAM_ID")) unless ENV.fetch("APPLE_TEAM_ID", "").empty?
+# @tempo-feature:ci-github:end
