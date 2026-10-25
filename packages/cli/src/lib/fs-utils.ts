@@ -112,12 +112,22 @@ export async function removePath(target: string): Promise<void> {
   await rm(target, { recursive: true, force: true });
 }
 
-/** Rejects absolute paths and `..` segments so manifest data cannot escape the project. */
+/**
+ * Rejects paths that could leave the project: POSIX or Windows absolute paths, drive letters, UNC
+ * prefixes and `..` segments (backslashes are treated as separators so `..\\x` is caught too).
+ */
 export function assertInsideProject(rel: string, what: string): void {
-  const normalized = path.posix.normalize(rel);
-  if (path.isAbsolute(rel) || normalized.startsWith('../') || normalized === '..') {
-    throw new Error(`${what} "${rel}" must stay inside the project`);
-  }
+  const unified = rel.replaceAll('\\', '/');
+  const normalized = path.posix.normalize(unified);
+  const escapes =
+    rel.length === 0 ||
+    path.posix.isAbsolute(unified) ||
+    path.win32.isAbsolute(rel) ||
+    /^[A-Za-z]:/.test(rel) ||
+    unified.startsWith('//') ||
+    normalized === '..' ||
+    normalized.startsWith('../');
+  if (escapes) throw new Error(`${what} "${rel}" must stay inside the project`);
 }
 
 /** Converts a glob (`**`, `*`, `?`, `{a,b}`) to a RegExp over posix paths. `dir/**` also matches `dir`. */
