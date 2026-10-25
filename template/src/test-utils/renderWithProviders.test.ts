@@ -4,6 +4,8 @@ import { http, HttpResponse } from 'msw';
 import { createElement, useEffect, useState } from 'react';
 import { Text } from 'react-native';
 
+import { i18n } from '@services/i18n/i18n';
+
 import { server } from './msw/server';
 import { renderWithProviders } from './renderWithProviders';
 
@@ -31,6 +33,12 @@ describe('renderWithProviders', () => {
     await renderWithProviders(createElement(Text, null, 'hello'));
 
     expect(screen.getByText('hello')).toBeOnTheScreen();
+  });
+
+  test('AC-3: the language option initialises i18n', async () => {
+    await renderWithProviders(createElement(Text, null, 'x'), { language: 'ar' });
+
+    expect(i18n.language).toBe('ar');
   });
 
   test('AC-1: an MSW-mocked request resolves', async () => {
