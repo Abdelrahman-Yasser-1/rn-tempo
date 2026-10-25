@@ -1,0 +1,15 @@
+---
+name: spec-plan
+description: Write design.md and tasks.md from an approved spec. Use after a spec has status approved and the user wants a technical plan.
+---
+
+# spec-plan
+
+1. Open `specs/<feature>/spec.md`. If `status` is not `approved`, stop and say so.
+2. Read `ai/rules/architecture.md`, `api.md`, `state.md`, `i18n.md`, `a11y.md` and `specs/tech.md`.
+3. Write `design.md` (copy `specs/_templates/design.md`): Screens & navigation (route names, params, deep links), Data/API (Zod DTOs, endpoints, query keys), State (Zustand vs Query), Flags, i18n namespaces (en + ar), a11y, Analytics, Risks. Resolve or list every Open question.
+4. Write `tasks.md` (copy `specs/_templates/tasks.md`): an ordered checklist, small enough for one commit each (about 200 lines):
+   `- [ ] T1 (AC-1, AC-2) <imperative summary> — commit: feat(<scope>): <subject>`
+   Every AC appears in at least one task. Tests go in the same task as the code. Use scopes from `ai/rules/commits.md`.
+5. Set `status: in-progress` only when implementation begins (in `spec-implement`).
+6. Run `yarn verify:changed`. Commit: `docs(specs): plan <feature>`.
