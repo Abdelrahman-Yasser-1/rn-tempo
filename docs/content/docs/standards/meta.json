@@ -1,0 +1,9 @@
+{
+  "title": "Standards",
+  "description": "Lint rules, naming, commits and the other conventions the template enforces.",
+  "icon": "ruler",
+  "pages": [
+    "index",
+    "..."
+  ]
+}

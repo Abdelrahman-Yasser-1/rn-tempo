@@ -1,0 +1,9 @@
+{
+  "title": "Architecture decisions",
+  "description": "Why the template made the choices it did.",
+  "icon": "scale",
+  "pages": [
+    "index",
+    "..."
+  ]
+}

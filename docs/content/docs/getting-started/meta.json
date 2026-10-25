@@ -1,0 +1,9 @@
+{
+  "title": "Getting started",
+  "description": "Prerequisites, creating a project and running each environment.",
+  "icon": "rocket",
+  "pages": [
+    "index",
+    "..."
+  ]
+}
