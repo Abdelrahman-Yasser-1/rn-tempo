@@ -106,6 +106,8 @@ One topic per file in `ai/rules/`; the examples there are the source of truth.
 
 Skills, commands and subagents are in `ai/skills`, `ai/commands` and `ai/agents`. After editing anything in `ai/`, run `yarn ai:sync` and commit the generated files.
 
+MCP servers are configured in `.mcp.json` (copied to `.cursor/mcp.json` by `yarn ai:sync`). Packages run through `npx` are pinned to an exact version older than 24 hours and are bumped deliberately, never with `latest`.
+
 ## Specs flow
 
 Features are spec-driven: `specs/<feature>/{spec.md, design.md, tasks.md}`.
