@@ -46,7 +46,7 @@ module.exports = {
   // scripts/ uses node:test (`yarn test:ai-log`); e2e/ is Maestro.
   testPathIgnorePatterns: ['/node_modules/', '/scripts/', '/e2e/'],
   // Polyfills must exist before any module is evaluated.
-  setupFiles: ['react-native-unistyles/mocks'],
+  setupFiles: ['react-native-unistyles/mocks', '<rootDir>/src/theme/unistyles.ts'],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   moduleNameMapper: {
     ...reactNativePreset.moduleNameMapper,
