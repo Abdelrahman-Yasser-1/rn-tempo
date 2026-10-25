@@ -1,0 +1,43 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "rangeStrategy": "pin",
+  "minimumReleaseAge": "1 day",
+  "schedule": ["before 6am on monday"],
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "description": "React Native core, its scoped packages and the community CLI move together",
+      "groupName": "react-native",
+      "matchPackageNames": ["react-native", "@react-native/*", "@react-native-community/cli*"]
+    },
+    {
+      "groupName": "react-navigation",
+      "matchPackageNames": ["@react-navigation/*"]
+    },
+    {
+      "groupName": "testing",
+      "matchPackageNames": ["jest", "@types/jest", "@testing-library/*", "test-renderer", "msw"]
+    },
+    {
+      "groupName": "storybook",
+      "matchPackageNames": ["storybook", "@storybook/*"]
+    },
+    {
+      "groupName": "eslint",
+      "matchPackageNames": [
+        "eslint",
+        "@eslint/*",
+        "eslint-plugin-*",
+        "eslint-config-*",
+        "typescript-eslint"
+      ]
+    },
+    {
+      "description": "Automerge devDependency minor and patch updates once CI passes",
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true
+    }
+  ]
+}
