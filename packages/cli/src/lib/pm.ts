@@ -5,14 +5,14 @@ import { execa } from 'execa';
 
 import { pathExists } from './fs-utils.ts';
 
-export type RunOptions = { cwd: string; json?: boolean };
+export type RunOptions = { cwd: string; json?: boolean; env?: Record<string, string> };
 
 /** Runs a command, streaming its output (to stderr with `--json`, so stdout stays machine-readable). */
 export type Runner = (command: string, args: readonly string[], options: RunOptions) => Promise<void>;
 
 /** Default runner: execa with inherited, streaming output. */
-export const run: Runner = async (command, args, { cwd, json }) => {
-  await execa(command, [...args], { cwd, stdio: json ? ['ignore', 2, 2] : 'inherit' });
+export const run: Runner = async (command, args, { cwd, json, env }) => {
+  await execa(command, [...args], { cwd, env, stdio: json ? ['ignore', 2, 2] : 'inherit' });
 };
 
 /** `yarn install` in the project. */
@@ -29,12 +29,19 @@ export async function installPods(cwd: string, options: { json?: boolean; runner
   return true;
 }
 
-/** `git init`, then stage and commit everything with the given message. */
+/** `git init` (quiet). */
+export async function gitInit(cwd: string, options: { json?: boolean; runner?: Runner } = {}): Promise<void> {
+  await (options.runner ?? run)('git', ['init', '-q'], { cwd, json: options.json });
+}
+
+/**
+ * Stages everything and commits. Lefthook is disabled for this one commit (`LEFTHOOK=0`): the
+ * scaffold is a machine-made snapshot, and the hooks would lint a tree that has not been installed yet.
+ */
 export async function gitInitialCommit(cwd: string, message: string, options: { json?: boolean; runner?: Runner } = {}): Promise<void> {
   const runner = options.runner ?? run;
-  await runner('git', ['init', '-q'], { cwd, json: options.json });
   await runner('git', ['add', '-A'], { cwd, json: options.json });
-  await runner('git', ['commit', '-q', '-m', message], { cwd, json: options.json });
+  await runner('git', ['commit', '-q', '-m', message], { cwd, json: options.json, env: { LEFTHOOK: '0' } });
 }
 
 /** Runs a project script through yarn (`yarn <script> ...args`). */
