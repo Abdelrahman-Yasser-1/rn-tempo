@@ -35,9 +35,30 @@ export function toPascalCase(name) {
   return /^\d/.test(pascal) ? `_${pascal}` : pascal;
 }
 
-/** Quotes a key only when it is not a valid identifier. */
+const SAFE_FILE_NAME = /^[a-z0-9][\w.-]*$/i;
+const IDENTIFIER = /^[a-z_$][\w$]*$/i;
+
+/** JSON-escaped string literal using single quotes (matches prettier, so output stays stable). */
+function quote(value) {
+  const escaped = JSON.stringify(value).slice(1, -1).replaceAll("'", "\\'");
+  return "'" + escaped + "'";
+}
+
+/** Quotes a key only when it is not a valid identifier; the quoting is escaped, never raw. */
 function toKey(name) {
-  return /^[a-z_$][\w$]*$/i.test(name) ? name : `'${name}'`;
+  return IDENTIFIER.test(name) ? name : quote(name);
+}
+
+/** Rejects file names that could break out of the generated source. */
+export function assertSafeAsset(file, name) {
+  if (!SAFE_FILE_NAME.test(file)) {
+    throw new Error(`assets:sync: unsafe asset file name ${JSON.stringify(file)}`);
+  }
+  if (!IDENTIFIER.test(toPascalCase(name))) {
+    throw new Error(
+      `assets:sync: asset ${JSON.stringify(file)} does not map to a valid identifier`,
+    );
+  }
 }
 
 /** Lists asset base names (without extension) for a registry, sorted for stable output. */
@@ -46,7 +67,11 @@ export function listAssets(folder, extensions) {
   return files
     .filter((file) => extensions.includes(path.extname(file).toLowerCase()))
     .sort((a, b) => a.localeCompare(b))
-    .map((file) => ({ file, name: path.basename(file, path.extname(file)) }));
+    .map((file) => {
+      const name = path.basename(file, path.extname(file));
+      assertSafeAsset(file, name);
+      return { file, name };
+    });
 }
 
 /** Renders the registry source for one folder. */
@@ -54,7 +79,7 @@ export function renderRegistry(registry, assets) {
   const lines = [HEADER, ''];
   if (registry.mode === 'import') {
     for (const { file, name } of assets) {
-      lines.push(`import ${toPascalCase(name)} from './${file}';`);
+      lines.push(`import ${toPascalCase(name)} from ${quote('./' + file)};`);
     }
     if (assets.length > 0) lines.push('');
   }
@@ -63,7 +88,8 @@ export function renderRegistry(registry, assets) {
   } else {
     lines.push(`export const ${registry.mapName} = {`);
     for (const { file, name } of assets) {
-      const value = registry.mode === 'import' ? toPascalCase(name) : `require('./${file}')`;
+      const value =
+        registry.mode === 'import' ? toPascalCase(name) : `require(${quote('./' + file)})`;
       lines.push(`  ${toKey(name)}: ${value},`);
     }
     lines.push('} as const;', '');
