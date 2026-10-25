@@ -10,7 +10,7 @@
     "start": "next start",
     "postinstall": "fumadocs-mdx",
     "lint": "eslint .",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "typecheck": "fumadocs-mdx && next typegen && tsc --noEmit"
   },
   "dependencies": {
