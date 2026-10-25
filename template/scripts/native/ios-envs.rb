@@ -34,22 +34,30 @@ OptionParser.new do |o|
   o.on('--project PATH', 'Path to the .xcodeproj') { |v| options[:project] = v }
   o.on('--target NAME', 'App target name') { |v| options[:target] = v }
   o.on('--envs LIST', 'Comma separated key:Suffix pairs, e.g. dev:Dev,staging:Staging,prod:Prod') { |v| options[:envs] = v }
+  o.on('--remove LIST', 'Comma separated key:Suffix pairs to remove (configurations, xcconfigs, scheme), e.g. qa:Qa') { |v| options[:remove] = v }
   o.on('--bundle-id ID', "Production bundle identifier (default #{BASE_BUNDLE_ID})") { |v| options[:bundle_id] = v }
 end.parse!
 
-%i[project target envs].each do |key|
+%i[project target].each do |key|
   abort "Missing --#{key}" unless options[key]
 end
+abort 'Missing --envs (or --remove)' unless options[:envs] || options[:remove]
 
 project_path = File.expand_path(options[:project])
 ios_dir = File.dirname(project_path)
 target_name = options[:target]
-envs = options[:envs].split(',').map do |pair|
-  key, suffix = pair.split(':')
-  abort "Invalid --envs entry '#{pair}' (expected key:Suffix)" if key.to_s.empty? || suffix.to_s.empty?
 
-  { key: key, suffix: suffix }
+def parse_pairs(list, flag)
+  list.split(',').map do |pair|
+    key, suffix = pair.split(':')
+    abort "Invalid #{flag} entry '#{pair}' (expected key:Suffix)" if key.to_s.empty? || suffix.to_s.empty?
+
+    { key: key, suffix: suffix }
+  end
 end
+
+envs = parse_pairs(options[:envs].to_s, '--envs')
+removals = parse_pairs(options[:remove].to_s, '--remove')
 
 def meta_for(env, bundle_id)
   base = ENV_META.fetch(env[:key]) do
@@ -68,6 +76,33 @@ end
 
 project = Xcodeproj::Project.open(project_path)
 target = project.targets.find { |t| t.name == target_name } || abort("Target #{target_name} not found")
+
+# 0. Removals (idempotent): build configurations, xcconfig files and references, shared scheme.
+removals.each do |env|
+  names = %w[Debug Release].map { |base| "#{base}-#{env[:suffix]}" }
+  [project, target].each do |owner|
+    list = owner.build_configuration_list
+    list.build_configurations.select { |c| names.include?(c.name) }.each(&:remove_from_project)
+    remaining = list.build_configurations.map(&:name)
+    if names.include?(list.default_configuration_name)
+      list.default_configuration_name = remaining.grep(/\ARelease/).last || remaining.last
+    end
+  end
+
+  config_group = project.main_group.find_subpath('Config', false)
+  %w[shared debug release].each do |kind|
+    file_name = "#{env[:suffix]}.#{kind}.xcconfig"
+    config_group&.files&.select { |f| f.path == file_name }&.each(&:remove_from_project)
+    FileUtils.rm_f(File.join(ios_dir, 'Config', file_name))
+  end
+  FileUtils.rm_f(File.join(project_path, 'xcshareddata', 'xcschemes', "#{target_name}-#{env[:suffix]}.xcscheme"))
+end
+
+if envs.empty?
+  project.save
+  puts "Removed #{removals.map { |e| "#{target_name}-#{e[:suffix]}" }.join(', ')}"
+  exit
+end
 
 # 1. Build configurations (project + target level), cloned from Debug / Release.
 def clone_configuration(list_owner, name, type, source)
