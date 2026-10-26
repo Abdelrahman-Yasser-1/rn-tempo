@@ -1,7 +1,8 @@
 name: AI changes report
 
-# Posts one sticky comment on each PR listing the AI sessions behind it: tool, model, prompts
-# (collapsed) and the commits that carry the AI-Session trailer. Needs only read access to the
+# Posts one sticky comment on each PR summarising its AI-assisted commits, built from commit
+# trailers only (AI-Assisted: <tool>/<model>): the count, a grouping per tool/model and the commits
+# in each group. Session logs are local only and are never read. Needs only read access to the
 # contents plus write access to PR comments. Skipped for forks (their token is read-only).
 on:
   pull_request:
@@ -34,48 +35,26 @@ jobs:
         run: |
           node --input-type=module - <<'NODE'
           import { execFileSync } from 'node:child_process';
-          import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+          import { writeFileSync } from 'node:fs';
 
           const { BASE_SHA, HEAD_SHA } = process.env;
-          const MAX_PROMPTS = 3000;
           const MAX_TOTAL = 60000;
           const git = (...args) => execFileSync('git', args, { encoding: 'utf8' });
 
           const commits = git(
             'log', `${BASE_SHA}..${HEAD_SHA}`,
-            '--format=%h%x1f%s%x1f%(trailers:key=AI-Assisted,valueonly,separator=%x2C)%x1f%(trailers:key=AI-Session,valueonly,separator=%x2C)%x1e',
+            '--format=%h%x1f%s%x1f%(trailers:key=AI-Assisted,valueonly,separator=%x2C)%x1e',
           )
             .split('\x1e')
             .map((record) => record.trim())
             .filter(Boolean)
             .map((record) => {
-              const [sha, subject, tool, session] = record.split('\x1f').map((part) => part.trim());
-              return { sha, subject, tool, session };
+              const [sha, subject, tool] = record.split('\x1f').map((part) => part.trim());
+              return { sha, subject, tool };
             });
           const assisted = commits.filter((commit) => commit.tool);
 
-          const changed = git('diff', '--name-only', '--diff-filter=AM', `${BASE_SHA}...${HEAD_SHA}`, '--', '.ai/sessions/')
-            .split('\n')
-            .filter((file) => file.endsWith('.md'));
-          const sessionFiles = [...new Set([...changed, ...assisted.map((commit) => commit.session).filter(Boolean)])]
-            .filter((file) => existsSync(file));
-
-          function frontmatter(text) {
-            const block = /^---\r?\n([\s\S]*?)\r?\n---/.exec(text)?.[1] ?? '';
-            return Object.fromEntries(
-              block.split('\n').map((line) => {
-                const colon = line.indexOf(':');
-                return [line.slice(0, colon).trim(), line.slice(colon + 1).trim().replace(/^(["'])(.*)\1$/, '$2')];
-              }),
-            );
-          }
-          function section(text, title) {
-            const start = text.indexOf(`## ${title}`);
-            if (start === -1) return '';
-            const rest = text.slice(start + title.length + 3);
-            const end = rest.search(/^## /m);
-            return (end === -1 ? rest : rest.slice(0, end)).trim();
-          }
+          // Subjects are rendered inside a code fence that is longer than any run of ~ they contain.
           const fence = (text) => {
             const longest = Math.max(0, ...(text.match(/~+/g) ?? []).map((run) => run.length));
             return '~'.repeat(Math.max(4, longest + 1));
@@ -83,32 +62,19 @@ jobs:
           const block = (text) => `${fence(text)}text\n${text}\n${fence(text)}`;
           const clip = (text, max) => (text.length > max ? `${text.slice(0, max)}\n... (truncated)` : text);
 
+          const groups = new Map();
+          for (const commit of assisted) {
+            groups.set(commit.tool, [...(groups.get(commit.tool) ?? []), commit]);
+          }
+
           let body = '## AI changes\n\n';
-          body += `${assisted.length} of ${commits.length} commit${commits.length === 1 ? '' : 's'} in this PR ${assisted.length === 1 ? 'is' : 'are'} AI-assisted; ${sessionFiles.length} session log${sessionFiles.length === 1 ? '' : 's'}.\n\n`;
-          if (sessionFiles.length === 0 && assisted.length === 0) {
-            body += 'No AI sessions were recorded for this PR.\n';
+          body += `${assisted.length} of ${commits.length} commit${commits.length === 1 ? '' : 's'} in this PR ${assisted.length === 1 ? 'is' : 'are'} AI-assisted.\n\n`;
+          if (assisted.length === 0) {
+            body += 'No AI-Assisted trailers were found in this PR.\n';
           }
-          for (const file of sessionFiles) {
-            const text = readFileSync(file, 'utf8');
-            const meta = frontmatter(text);
-            const prompts = section(text, 'Prompts');
-            const promptCount = (prompts.match(/^### /gm) ?? []).length;
-            const summary = section(text, 'Summary');
-            body += `### \`${meta.tool ?? 'unknown'}\` / \`${meta.model ?? 'unknown'}\`\n\n`;
-            body += `- Session: \`${file}\`\n- Author: \`${(meta.author ?? 'unknown').replaceAll('`', "'")}\`\n- Spec: ${meta.spec && meta.spec !== 'null' ? `\`${meta.spec}\`` : 'none'}\n`;
-            const own = assisted.filter((commit) => commit.session === file);
-            if (own.length > 0) {
-              body += `- Commits:\n${own.map((commit) => `  - \`${commit.sha}\` ${commit.subject}`).join('\n')}\n`;
-            }
-            body += '\n';
-            if (summary) {
-              body += `<details><summary>Summary</summary>\n\n${block(clip(summary, 1500))}\n\n</details>\n\n`;
-            }
-            body += `<details><summary>Prompts (${promptCount})</summary>\n\n${block(clip(prompts || '(none logged)', MAX_PROMPTS))}\n\n</details>\n\n`;
-          }
-          const unlinked = assisted.filter((commit) => !sessionFiles.includes(commit.session));
-          if (unlinked.length > 0) {
-            body += `### Commits whose session log is not in this PR\n\n${unlinked.map((commit) => `- \`${commit.sha}\` ${commit.subject} (${commit.tool})`).join('\n')}\n`;
+          for (const [tool, own] of groups) {
+            body += `### ${tool.replaceAll('`', "'")} (${own.length})\n\n`;
+            body += `${block(own.map((commit) => `${commit.sha} ${commit.subject}`).join('\n'))}\n\n`;
           }
           writeFileSync('ai-report.md', clip(body, MAX_TOTAL));
           NODE
