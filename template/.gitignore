@@ -82,3 +82,7 @@ yarn-error.log
 
 # eslint-plugin-project-structure cache
 projectStructure.cache.json
+
+# AI session logs and pointer: local only, never committed
+.ai/sessions/
+.ai/.current.json

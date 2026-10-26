@@ -31,7 +31,8 @@ out/
 *.p12
 *.mobileprovision
 
-# AI session pointer (session logs themselves are committed)
+# AI session logs and pointer: local only, never committed
+.ai/sessions/
 .ai/.current.json
 template/.ai/.current.json
 
