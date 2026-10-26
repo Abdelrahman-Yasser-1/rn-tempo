@@ -1,4 +1,5 @@
 const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
+const { withRozenite } = require('@rozenite/metro');
 
 const defaultConfig = getDefaultConfig(__dirname);
 const { assetExts, sourceExts } = defaultConfig.resolver;
@@ -8,7 +9,8 @@ const { assetExts, sourceExts } = defaultConfig.resolver;
  * https://reactnative.dev/docs/metro
  *
  * SVGs are imported as React components through react-native-svg-transformer.
- * Storybook and Rozenite wrappers are added by their workstreams (WS4, WS3).
+ * Rozenite (DevTools plugins for TanStack Query, MMKV and network) is on outside production
+ * bundles. The Storybook wrapper is added by WS4.
  *
  * @type {import('@react-native/metro-config').MetroConfig}
  */
@@ -22,4 +24,6 @@ const config = {
   },
 };
 
-module.exports = mergeConfig(defaultConfig, config);
+module.exports = withRozenite(mergeConfig(defaultConfig, config), {
+  enabled: process.env.NODE_ENV !== 'production',
+});
