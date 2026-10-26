@@ -13,6 +13,7 @@ function createSteps(overrides: Partial<BootstrapSteps> = {}) {
     initStorage: track('initStorage', Promise.resolve()),
     initTheme: track('initTheme', undefined),
     initI18n: track('initI18n', Promise.resolve()),
+    initFallbackI18n: track('initFallbackI18n', Promise.resolve()),
     initSecurity: track('initSecurity', Promise.resolve({ isSafe: true, reasons: [] })),
     initAuth: track('initAuth', Promise.resolve()),
     initRemoteConfig: track('initRemoteConfig', Promise.resolve(DEFAULT_APP_CONFIG)),
@@ -51,7 +52,16 @@ describe('runBootstrap', () => {
       blockReason: 'startupError',
       securityReasons: undefined,
     });
-    expect(calls).toEqual(['hideSplash']);
+    expect(calls).toEqual(['initFallbackI18n', 'hideSplash']);
+  });
+
+  test('AC-8: a failing fallback i18n does not change the blocked result', async () => {
+    const { steps } = createSteps({
+      initStorage: jest.fn(() => Promise.reject(new Error('keychain'))),
+      initFallbackI18n: jest.fn(() => Promise.reject(new Error('i18n'))),
+    });
+
+    await expect(runBootstrap(steps)).resolves.toMatchObject({ blockReason: 'startupError' });
   });
 
   test('AC-8: a theme failure is non-fatal', async () => {

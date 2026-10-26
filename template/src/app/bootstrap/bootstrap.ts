@@ -1,3 +1,4 @@
+import { initI18nInstance } from '@services/i18n/i18n';
 import { logger } from '@services/logger/logger';
 import type { AppConfig } from '@services/remote-config/appConfig';
 import { initStorage } from '@services/storage/storage';
@@ -22,6 +23,8 @@ export type BootstrapSteps = {
   initStorage: () => Promise<void>;
   initTheme: () => void;
   initI18n: () => Promise<void>;
+  /** Best-effort `en` init so blocking screens can show text when the normal path failed early. */
+  initFallbackI18n: () => Promise<void>;
   initSecurity: () => Promise<SecurityResult>;
   initAuth: () => Promise<void>;
   initRemoteConfig: () => Promise<AppConfig>;
@@ -33,6 +36,7 @@ export const defaultSteps: BootstrapSteps = {
   initStorage,
   initTheme,
   initI18n,
+  initFallbackI18n: () => initI18nInstance('en'),
   initSecurity,
   initAuth,
   initRemoteConfig,
@@ -45,13 +49,23 @@ const blocked = (
   securityReasons?: SecurityReason[],
 ): BootstrapResult => ({ status: 'blocked', blockReason, securityReasons });
 
+/** A startup failure screen needs translations even if language resolution (storage) failed. */
+async function blockedWithStartupError(steps: BootstrapSteps): Promise<BootstrapResult> {
+  try {
+    await steps.initFallbackI18n();
+  } catch (error) {
+    logger.warn('Fallback i18n initialisation failed', error);
+  }
+  return blocked('startupError');
+}
+
 async function run(steps: BootstrapSteps): Promise<BootstrapResult> {
   // 1. Storage is required by everything below; failing here is fatal.
   try {
     await steps.initStorage();
   } catch (error) {
     logger.error('Storage initialisation failed', error);
-    return blocked('startupError');
+    return blockedWithStartupError(steps);
   }
   try {
     steps.initTheme();
@@ -64,7 +78,7 @@ async function run(steps: BootstrapSteps): Promise<BootstrapResult> {
     await steps.initI18n();
   } catch (error) {
     logger.error('i18n initialisation failed', error);
-    return blocked('startupError');
+    return blockedWithStartupError(steps);
   }
 
   // 3. Security before any network request.
@@ -84,7 +98,7 @@ async function run(steps: BootstrapSteps): Promise<BootstrapResult> {
     await steps.initAuth();
   } catch (error) {
     logger.error('Auth initialisation failed', error);
-    return blocked('startupError');
+    return blockedWithStartupError(steps);
   }
 
   // 6-7. Remote config never throws (defaults on failure); the gate decides the entry screen.

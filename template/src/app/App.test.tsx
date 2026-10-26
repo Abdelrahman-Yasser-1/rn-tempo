@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react-native';
+import { act, render, screen, userEvent } from '@testing-library/react-native';
 import { http, HttpResponse } from 'msw';
 import { Linking } from 'react-native';
 import BootSplash from 'react-native-bootsplash';
@@ -16,6 +16,7 @@ import {
 import { server } from '@test-utils/msw/server';
 
 import { App } from './App';
+import { defaultSteps } from './bootstrap/bootstrap';
 import { useSecurityStore } from './bootstrap/securityStore';
 
 const configUrl = `${ENV.API_BASE_URL}${ENV.APP_CONFIG_PATH}`;
@@ -27,6 +28,10 @@ beforeEach(async () => {
   useAuthStore.setState({ status: 'unknown', user: null, pendingLink: null });
   useSecurityStore.setState({ compromisedReasons: [] });
   jest.mocked(BootSplash.hide).mockClear();
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
 });
 
 describe('App', () => {
@@ -104,5 +109,19 @@ describe('App', () => {
     expect(
       await screen.findByRole('header', { name: 'Security issue detected' }),
     ).toBeOnTheScreen();
+  });
+
+  test('AC-8: a failed bootstrap shows the startup error screen, and Retry recovers', async () => {
+    jest
+      .spyOn(defaultSteps, 'initStorage')
+      .mockRejectedValueOnce(new Error('keychain unavailable'));
+    const user = userEvent.setup();
+    await render(<App />);
+
+    expect(await screen.findByRole('header', { name: 'Something went wrong' })).toBeOnTheScreen();
+    await user.press(screen.getByRole('button', { name: 'Try again' }));
+
+    expect(await screen.findByText('Login')).toBeOnTheScreen();
+    expect(BootSplash.hide).toHaveBeenCalledTimes(2);
   });
 });

@@ -21,5 +21,7 @@ export async function initI18nInstance(language: string): Promise<void> {
     interpolation: { escapeValue: false },
     // Resources are bundled, so initialisation can complete synchronously.
     initAsync: false,
+    // No Suspense boundary exists above the blocking screens; never suspend on a not-ready instance.
+    react: { useSuspense: false },
   });
 }
