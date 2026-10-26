@@ -2294,3 +2294,13 @@ Recorded by the integrator during WS0. Where this list and the plan disagree, **
 34. **Rate limits:**
     - Long agent runs may stop on a rate limit. Commit early and often so work survives.
     - The AI session pointer goes stale after 12h. Run `yarn ai:start …` again when resuming the next day.
+
+**WS3 decisions**
+
+41. **WS3 core infrastructure decisions (2026-10-26):**
+    - **New dependency:** `react-native-get-random-values@2.0.0` (exact pin). Hermes in RN 0.88 has no `crypto.getRandomValues`, which the MMKV encryption key needs (C15). `index.js` imports it first. Run `cd template/ios && bundle exec pod install` after pulling.
+    - **MMKV key:** 24 random bytes, base64 encoded (32 ASCII chars, 192 bits), used with AES-256. MMKV accepts at most 32 key bytes, so C15's 64-char hex key is not possible.
+    - **Device mock mode:** MSW does not run on device (`msw@3.0.3` ships no `msw/native`, and the interceptors need Web Streams that Hermes lacks). MSW stays **test-only**. One framework-neutral route table (`src/test-utils/msw/routes/`) feeds both the Jest MSW handlers and `src/services/http/devMockAdapter.ts`, a dependency-free axios adapter used only when `__DEV__ && ENV.API_MOCKING` (lazy `require` in `client.ts`, so release bundles drop it). New routes are written once, in the table.
+    - **`APP_VERSION`:** supersedes amendment 13. `babel/inline-app-version.js` replaces `__APP_VERSION__` with the `package.json` version at build time, so the dependency list is not bundled.
+    - **Babel:** `@babel/preset-env` (already declared) enables only `transform-export-namespace-from`, which Zod 4 needs under Metro.
+    - **Android 17 (API 37) emulators** ask for the `ACCESS_LOCAL_NETWORK` ("nearby devices") permission; denying it blocks the app from reaching Metro at `10.0.2.2`. Grant it with `adb shell pm grant <applicationId> android.permission.ACCESS_LOCAL_NETWORK` (e.g. `com.rntempo.app.dev`).

@@ -1,3 +1,6 @@
+// Hermes has no crypto.getRandomValues; the storage encryption key needs it, so load this first.
+import 'react-native-get-random-values';
+
 // Unistyles must be configured before any StyleSheet.create call runs.
 import './src/theme/unistyles';
 
