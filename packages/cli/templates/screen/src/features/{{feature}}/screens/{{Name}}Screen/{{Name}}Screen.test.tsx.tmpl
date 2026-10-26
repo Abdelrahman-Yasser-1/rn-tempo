@@ -1,0 +1,12 @@
+import { renderWithProviders } from '@test-utils/renderWithProviders';
+import { screen } from '@testing-library/react-native';
+
+import { {{Name}}Screen } from './{{Name}}Screen';
+
+describe('{{Name}}Screen', () => {
+  it('AC-1: renders the screen', async () => {
+    await renderWithProviders(<{{Name}}Screen />);
+
+    expect(screen.getByTestId('{{name_kebab}}-screen')).toBeTruthy();
+  });
+});

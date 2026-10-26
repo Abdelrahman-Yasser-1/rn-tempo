@@ -1,0 +1,20 @@
+import { useQuery } from '@tanstack/react-query';
+
+import { {{FEATURE_UPPER}}_STALE_TIME_MS } from '../constants';
+import type { {{FeatureName}}Item } from '../types';
+
+import { {{featureCamel}}Keys } from './keys';
+
+/** Example fetcher: replace the body with a request through @services/http once the endpoint exists. */
+async function fetch{{FeatureName}}List(): Promise<readonly {{FeatureName}}Item[]> {
+  return [];
+}
+
+/** Loads the list of {{feature}} items. */
+export function use{{FeatureName}}ListQuery() {
+  return useQuery({
+    queryKey: {{featureCamel}}Keys.list(),
+    queryFn: fetch{{FeatureName}}List,
+    staleTime: {{FEATURE_UPPER}}_STALE_TIME_MS,
+  });
+}

@@ -1,0 +1,18 @@
+import { Screen, Text } from '@shared/components';
+import { useTranslation } from 'react-i18next';
+import { View } from 'react-native';
+
+import { styles } from './styles';
+
+/** {{Name}} screen of the {{feature}} feature. */
+export function {{Name}}Screen() {
+  const { t } = useTranslation('{{feature}}');
+
+  return (
+    <Screen testID="{{name_kebab}}-screen">
+      <View style={styles.container}>
+        <Text variant="h2">{t('screens.{{name}}.title')}</Text>
+      </View>
+    </Screen>
+  );
+}
