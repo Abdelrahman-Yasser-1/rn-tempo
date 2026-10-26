@@ -1,9 +1,35 @@
 {
+  "forceUpdate": {
+    "message": "This version of the app is no longer supported. Please update to continue.",
+    "title": "Update required",
+    "updateButton": "Update"
+  },
   "linking": {
     "openFailed": "We couldn't open that link."
   },
+  "maintenance": {
+    "message": "The app is undergoing maintenance. Please try again in a few minutes.",
+    "retryButton": "Retry",
+    "title": "We'll be right back"
+  },
+  "notFound": {
+    "homeButton": "Go home",
+    "message": "The page you're looking for doesn't exist or has moved.",
+    "title": "Page not found"
+  },
   "placeholder": {
     "subtitle": "This screen is not built yet."
+  },
+  "security": {
+    "closeButton": "Close",
+    "message": "For your protection, the app can't continue on this device.",
+    "reason": {
+      "debugMode": "A debugger is attached to the app.",
+      "hookDetected": "Runtime tampering was detected.",
+      "jailbroken": "This device appears to be rooted or jailbroken.",
+      "ssl": "The connection to the server could not be verified."
+    },
+    "title": "Security issue detected"
   },
   "tabs": {
     "home": "Home",
