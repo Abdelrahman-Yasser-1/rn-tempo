@@ -68,13 +68,20 @@ export const httpClient = axios.create({
   adapter,
 });
 
-/** Adds base URL, Authorization, Accept-Language and x-request-id to an outgoing request. */
-export function decorateRequest(config: InternalAxiosRequestConfig): InternalAxiosRequestConfig {
-  // @tempo-feature:ssl-pinning:start
+// @tempo-feature:ssl-pinning:start
+/** Throws while pinning is enforced but not yet initialized; shared by every outgoing client. */
+function assertPinningReady(): void {
   if (ENV.SSL_PINNING_ENABLED && !isPinningReady()) {
     // Closes the race where a request fires before pinning is enforced during bootstrap.
     throw new Error('CERT_PINNING_NOT_READY: request blocked until SSL pinning is initialized');
   }
+}
+// @tempo-feature:ssl-pinning:end
+
+/** Adds base URL, Authorization, Accept-Language and x-request-id to an outgoing request. */
+export function decorateRequest(config: InternalAxiosRequestConfig): InternalAxiosRequestConfig {
+  // @tempo-feature:ssl-pinning:start
+  assertPinningReady();
   // @tempo-feature:ssl-pinning:end
   config.baseURL = resolveBaseUrl();
   const accessToken = tokenStore.getAccessToken();
@@ -101,6 +108,14 @@ const RefreshResponseSchema = z.object({ accessToken: z.string(), refreshToken: 
 
 // A bare instance: sharing httpClient would re-enter these interceptors and could loop.
 const refreshClient = axios.create({ timeout: ENV.API_TIMEOUT_MS, adapter });
+
+// @tempo-feature:ssl-pinning:start
+// Refresh must not leave the device before pinning is enforced, but it gets no Authorization header.
+refreshClient.interceptors.request.use((config) => {
+  assertPinningReady();
+  return config;
+});
+// @tempo-feature:ssl-pinning:end
 
 let unauthorizedHandler: (() => void) | undefined;
 
