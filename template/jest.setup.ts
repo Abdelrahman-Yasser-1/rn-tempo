@@ -1,5 +1,8 @@
 import 'react-native-gesture-handler/jestSetup';
 
+import { cleanup } from '@testing-library/react-native';
+
+import { queryClient } from '@services/http/queryClient';
 import { server } from '@test-utils/msw/server';
 
 // Native modules are mocked once here; individual tests override behavior with jest.mocked().
@@ -16,6 +19,11 @@ jest.mock(
   'react-native-safe-area-context',
   () => jest.requireActual<{ default: object }>('react-native-safe-area-context/jest/mock').default,
 );
+jest.mock('@gorhom/bottom-sheet', () => jest.requireActual<object>('@gorhom/bottom-sheet/mock'));
+// Rozenite talks to the React Native DevTools frontend, which does not exist under Jest.
+jest.mock('@rozenite/mmkv-plugin', () => ({ useMMKVDevTools: jest.fn() }));
+jest.mock('@rozenite/network-activity-plugin', () => ({ useNetworkActivityDevTools: jest.fn() }));
+jest.mock('@rozenite/tanstack-query-plugin', () => ({ useTanStackQueryDevTools: jest.fn() }));
 jest.mock('jail-monkey', () => ({
   __esModule: true,
   default: {
@@ -44,8 +52,12 @@ beforeAll(() => {
   server.listen({ onUnhandledFrame: 'error' });
 });
 
-afterEach(() => {
+afterEach(async () => {
+  // Unmount first (awaited): live Query observers keep stale/gc timers that stall Jest's exit.
+  await cleanup();
   server.resetHandlers();
+  // Clearing cancels the 5-minute gc timers that would otherwise keep the Jest process alive.
+  queryClient.clear();
   // Tests that swap the keychain via jest.doMock bring their own fake without this helper.
   jest
     .requireMock<{ resetKeychainMock?: () => void }>('react-native-keychain')
@@ -53,5 +65,7 @@ afterEach(() => {
 });
 
 afterAll(() => {
+  // After RNTL's unmount cleanup, so gc timers started by unmounting observers are cancelled too.
+  queryClient.clear();
   server.close();
 });

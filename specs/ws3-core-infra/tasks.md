@@ -12,6 +12,6 @@ Format: `- [ ] T<task id> <summary>`. Tick a box in the same commit that complet
 - [x] T3.8 Linking service
 - [x] T3.9 Navigation
 - [x] T3.10 Bootstrap
-- [ ] T3.11 App-level screens
-- [ ] T3.12 App composition
+- [x] T3.11 App-level screens
+- [x] T3.12 App composition
 - [x] T3.13 Network status

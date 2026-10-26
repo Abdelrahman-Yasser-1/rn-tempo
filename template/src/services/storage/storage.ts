@@ -103,3 +103,8 @@ export const storage = {
   remove,
   clearAll,
 };
+
+/** The raw MMKV instance for dev tooling (Rozenite inspector). Do not use for app data. */
+export function getStorageForDevTools(): MMKV {
+  return getInstance();
+}
