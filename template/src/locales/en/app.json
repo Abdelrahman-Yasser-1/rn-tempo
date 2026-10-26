@@ -1,1 +1,5 @@
-{}
+{
+  "linking": {
+    "openFailed": "We couldn't open that link."
+  }
+}
