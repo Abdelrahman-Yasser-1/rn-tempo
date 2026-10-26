@@ -1,2 +1,2 @@
-// Barrel (contract C4). Filled by later workstreams.
-export {};
+// Barrel (contract C4).
+export { usePressFeedback } from './usePressFeedback';
