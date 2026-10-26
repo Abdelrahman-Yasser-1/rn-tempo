@@ -7,8 +7,12 @@ import { ENV } from '@config/env';
 import { useAuthStore } from '@features/auth';
 import { queryClient } from '@services/http/queryClient';
 import { tokenStore } from '@services/secure-storage/tokenStore';
-import { mockAppConfig } from '@test-utils/msw/handlers/appConfig';
-import { MOCK_ACCESS_TOKEN, MOCK_REFRESH_TOKEN, mockUser } from '@test-utils/msw/handlers/auth';
+import {
+  MOCK_ACCESS_TOKEN,
+  MOCK_REFRESH_TOKEN,
+  mockAppConfig,
+  mockUser,
+} from '@test-utils/msw/routes';
 import { server } from '@test-utils/msw/server';
 
 import { App } from './App';

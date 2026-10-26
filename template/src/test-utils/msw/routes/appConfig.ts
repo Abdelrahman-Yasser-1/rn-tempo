@@ -1,4 +1,4 @@
-import { http, HttpResponse } from 'msw';
+import type { MockRoute } from './types';
 
 /** Mock-only endpoint (contract C13): nothing blocks, no flag overrides. */
 export const mockAppConfig = {
@@ -12,4 +12,6 @@ export const mockAppConfig = {
   },
 };
 
-export const appConfigHandlers = [http.get('*/app-config', () => HttpResponse.json(mockAppConfig))];
+export const appConfigRoutes: MockRoute[] = [
+  { method: 'get', path: '/app-config', resolve: () => ({ status: 200, body: mockAppConfig }) },
+];
