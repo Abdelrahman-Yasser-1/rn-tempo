@@ -1,0 +1,11 @@
+---
+title: "ADR-011: Yarn 4 with node-modules linker and a 24h age gate"
+description: "Yarn 4 with node-modules linker and a 24h age gate"
+---
+
+- **Status:** accepted · 2026-10-24
+
+## Decision
+- **Yarn 4.18** with `nodeLinker: node-modules`, since React Native needs a real `node_modules`.
+- **Age gate:** Yarn's default `npmMinimalAgeGate` (24h) stays on, so freshly published, possibly compromised versions can't be installed. "Latest" therefore means the newest version older than 24 hours.
+- **Config package links:** shared config packages are linked into `template/` with `link:`, so the template lockfile doesn't churn when plugins change.

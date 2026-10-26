@@ -1,0 +1,21 @@
+{
+  "title": "Architecture decisions",
+  "description": "Why the template made the choices it did.",
+  "icon": "scale",
+  "pages": [
+    "index",
+    "001-monorepo-layout",
+    "002-zustand-tanstack-query",
+    "003-unistyles",
+    "004-typescript-6",
+    "005-eslint-10-flat-config",
+    "006-maestro",
+    "007-own-cli-feature-markers",
+    "008-ai-session-tracking",
+    "009-static-navigation",
+    "010-app-config-endpoint",
+    "011-yarn4",
+    "012-no-expo-modules",
+    "013-babel-7"
+  ]
+}

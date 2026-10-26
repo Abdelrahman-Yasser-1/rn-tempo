@@ -1,0 +1,9 @@
+{
+  "title": "Recipes",
+  "description": "Things deliberately left out of the template, with the code to add them.",
+  "icon": "chef-hat",
+  "pages": [
+    "index",
+    "..."
+  ]
+}

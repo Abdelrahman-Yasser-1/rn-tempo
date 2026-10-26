@@ -1,0 +1,64 @@
+---
+title: Overview
+description: The layers of the template and the choices behind them.
+---
+
+RN Tempo is one repository with four deliverables:
+
+| Part | Path | Role |
+| --- | --- | --- |
+| Template app | `template/` | React Native 0.88 app that every new project starts from |
+| CLI | `packages/cli` | `create-tempo-app` and `tempo`, which generate and manage projects |
+| Shared configs | `packages/{eslint-config,prettier-config,tsconfig,commitlint-config}` | Published, linked into the template with `link:` |
+| Contracts | `packages/contracts` | JSON schemas and the feature-marker utilities shared by all of the above |
+| Docs | `docs/` | This site |
+
+`template/` is a standalone app with its own lockfile, not a workspace ([ADR-001](/docs/adr/001-monorepo-layout)).
+
+## Inside the app
+
+<Mermaid
+  chart={`flowchart TB
+  app[app: providers, bootstrap, app screens]
+  nav[navigation]
+  feat[features/*: api, screens, store]
+  ui[shared components and hooks]
+  core[shared utils, types, constants]
+  svc[services: http, storage, logger, ...]
+  theme[theme and assets]
+  cfg[config: typed env]
+  app --> nav
+  nav --> feat
+  feat --> ui
+  feat --> svc
+  ui --> core
+  svc --> core
+  ui --> theme
+  svc --> cfg
+  core --> cfg`}
+/>
+
+Code flows downward only. The arrows are enforced by ESLint, see [Boundaries](/docs/architecture/boundaries).
+
+## The main choices
+
+| Area | Choice | Decision |
+| --- | --- | --- |
+| Client state | Zustand | [ADR-002](/docs/adr/002-zustand-tanstack-query) |
+| Server state | TanStack Query | [ADR-002](/docs/adr/002-zustand-tanstack-query) |
+| Styling | Unistyles 3 | [ADR-003](/docs/adr/003-unistyles) |
+| Navigation | React Navigation 7, static API | [ADR-009](/docs/adr/009-static-navigation) |
+| Remote config | `/app-config` endpoint | [ADR-010](/docs/adr/010-app-config-endpoint) |
+| E2E | Maestro | [ADR-006](/docs/adr/006-maestro) |
+| Modules | Own CLI with feature markers | [ADR-007](/docs/adr/007-own-cli-feature-markers) |
+
+## Typed configuration
+
+Everything environment specific enters through one validated object:
+
+<AnnotatedCode file="template/src/config/constants.ts">
+  <Note line={4}>The version comes from `package.json`, so native and JS never disagree.</Note>
+  <Note line={7}>Only the prod bundle ID is stored; environments add their suffix natively.</Note>
+</AnnotatedCode>
+
+See [Run the environments](/docs/getting-started/run-envs) for `src/config/env.ts`.

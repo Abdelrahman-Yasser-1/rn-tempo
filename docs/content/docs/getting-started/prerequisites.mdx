@@ -1,0 +1,39 @@
+---
+title: Prerequisites
+description: The tools you need before creating or running an RN Tempo project.
+---
+
+RN Tempo is a plain React Native CLI app (no Expo modules, see [ADR-012](/docs/adr/012-no-expo-modules)), so you need the standard native toolchains plus a few pinned tools.
+
+## All platforms
+
+| Tool | Version | Why |
+| --- | --- | --- |
+| Node.js | 24 (LTS), `>=24.3.0` | The template ships an `.nvmrc` with `24` |
+| Yarn | 4.18.1 through Corepack | `packageManager` is pinned in `package.json` |
+| Git | any recent version | Commit hooks (lefthook) and the AI session log need it |
+
+```bash
+nvm use          # reads .nvmrc
+corepack enable  # activates the pinned Yarn
+```
+
+<Callout title="24 hour age gate" type="info">
+  Yarn refuses package versions published less than 24 hours ago (`npmMinimalAgeGate`). If an install says a version is "quarantined", wait a day or pin the previous release. See [ADR-011](/docs/adr/011-yarn4).
+</Callout>
+
+## Android
+
+- Android Studio with the Android SDK and an emulator (the repo is developed against a Pixel 9 image).
+- JDK 17 or newer, and `ANDROID_HOME` set.
+
+## iOS (macOS only)
+
+- Xcode with the iOS Simulator runtime.
+- Ruby and Bundler. CocoaPods is installed through the template's `Gemfile`:
+
+```bash
+cd ios && bundle install
+```
+
+Then continue with [Create a project](/docs/getting-started/create-project).

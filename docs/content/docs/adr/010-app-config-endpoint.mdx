@@ -1,0 +1,13 @@
+---
+title: "ADR-010: Remote app config via an HTTP endpoint, Firebase as a recipe"
+description: "Remote app config via an HTTP endpoint, Firebase as a recipe"
+---
+
+- **Status:** accepted · 2026-10-24
+
+## Context
+Force-update, maintenance mode and feature flags need remote values. Firebase Remote Config needs real config files per env, so a template build without them would fail.
+
+## Decision
+- `GET /app-config` returns `{ minSupportedVersion, latestVersion, maintenance, flags, storeUrls }`. It is mocked by MSW, falls back to safe local defaults, and never blocks startup.
+- Firebase Remote Config is a docs recipe that implements the same interface.

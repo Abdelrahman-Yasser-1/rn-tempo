@@ -1,0 +1,9 @@
+{
+  "title": "Upgrades",
+  "description": "What changed in each template version and how to upgrade.",
+  "icon": "arrow-up-circle",
+  "pages": [
+    "index",
+    "..."
+  ]
+}
