@@ -3442,7 +3442,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mswjs/interceptors@npm:0.45.9, @mswjs/interceptors@npm:^0.45.6":
+"@mswjs/interceptors@npm:^0.45.6":
   version: 0.45.9
   resolution: "@mswjs/interceptors@npm:0.45.9"
   dependencies:
@@ -14220,7 +14220,6 @@ __metadata:
     "@gorhom/bottom-sheet": "npm:5.2.14"
     "@hookform/resolvers": "npm:6.0.0"
     "@ls-lint/ls-lint": "npm:2.3.2"
-    "@mswjs/interceptors": "npm:0.45.9"
     "@react-native-community/cli": "npm:20.2.0"
     "@react-native-community/cli-platform-android": "npm:20.2.0"
     "@react-native-community/cli-platform-ios": "npm:20.2.0"
