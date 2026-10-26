@@ -1,13 +1,13 @@
 /* eslint-disable no-restricted-imports -- test double screens render plain RN Text */
 import { useRoute } from '@react-navigation/native';
-import { render, screen } from '@testing-library/react-native';
+import { act, render, screen, waitFor } from '@testing-library/react-native';
 import { Linking, Text } from 'react-native';
 
 import { useAuthStore } from '@features/auth';
 import { initI18nInstance } from '@services/i18n/i18n';
 import { createUser } from '@test-utils/factories/user';
 
-import { linking } from './linking';
+import { linking, startPendingLinkResume } from './linking';
 import { createRootNavigator } from './RootNavigator';
 
 function Named() {
@@ -54,6 +54,25 @@ describe('RootNavigator', () => {
     await render(<Navigation linking={linking} />);
 
     expect(await screen.findByText('screen:Home')).toBeOnTheScreen();
+  });
+
+  test('AC-9: a protected link while signed out opens Login, then Settings after sign-in', async () => {
+    initialUrl.mockResolvedValue('tempo-dev://settings');
+    const stop = startPendingLinkResume();
+
+    await render(<Navigation linking={linking} />);
+    expect(await screen.findByText('screen:Login')).toBeOnTheScreen();
+    expect(useAuthStore.getState().pendingLink).toBe('tempo-dev://settings');
+
+    await act(async () => {
+      await useAuthStore.getState().signIn({ accessToken: 'a', refreshToken: 'r' }, createUser());
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('screen:Settings')).toBeOnTheScreen();
+    });
+    expect(useAuthStore.getState().pendingLink).toBeNull();
+    stop();
   });
 
   test.each([
