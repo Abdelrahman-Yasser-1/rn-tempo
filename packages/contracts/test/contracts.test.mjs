@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Ajv2020 from 'ajv/dist/2020.js';
@@ -53,12 +53,15 @@ describe('.tempo.json', () => {
 
 describe('AI session logs', () => {
   const dir = path.join(repo, '.ai/sessions');
-  const files = readdirSync(dir).filter((f) => f.endsWith('.md'));
+  // Session logs are local only (gitignored), so the directory usually does not exist in CI.
+  const files = existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith('.md')) : [];
 
-  it.each(files)('%s frontmatter matches the schema', (file) => {
-    const { meta } = parseSession(readFileSync(path.join(dir, file), 'utf8'));
-    expect(validateSession(meta), JSON.stringify(validateSession.errors)).toBe(true);
-  });
+  if (files.length === 0) it.skip('local session logs match the schema (none present)', () => {});
+  else
+    it.each(files)('%s frontmatter matches the schema', (file) => {
+      const { meta } = parseSession(readFileSync(path.join(dir, file), 'utf8'));
+      expect(validateSession(meta), JSON.stringify(validateSession.errors)).toBe(true);
+    });
 });
 
 describe('markers', () => {
