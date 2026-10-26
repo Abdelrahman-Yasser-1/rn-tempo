@@ -28,6 +28,8 @@ module.exports = {
     ],
   ],
   plugins: [
+    // Inlines `__APP_VERSION__` (src/config/constants.ts) from package.json.
+    './babel/inline-app-version',
     // Unistyles must see every file under src/ to wire styles to the C++ shadow tree.
     ['react-native-unistyles/plugin', { root: 'src' }],
     [
