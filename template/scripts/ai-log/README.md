@@ -7,7 +7,7 @@ These scripts keep a local log per AI session in `.ai/sessions/` and add trailer
 | `session-start.mjs` | Claude Code `SessionStart` hook, or `yarn ai:start --tool <tool> --model <model> [--spec specs/<x>]` | Creates the session log and the `.ai/.current.json` pointer (gitignored) |
 | `prompt.mjs`        | Claude Code `UserPromptSubmit` hook, or `yarn ai:prompt "<text>"`                                    | Appends the prompt, redacted, to `## Prompts`                            |
 | `session-stop.mjs`  | Claude Code `Stop` hook, or `yarn ai:stop --summary "<text>"`                                        | Updates end time, commits, files and `## Summary`                        |
-| `add-trailers.mjs`  | lefthook `prepare-commit-msg`                                                                        | Adds `AI-Assisted` and `Spec` trailers (no `AI-Session`)                   |
+| `add-trailers.mjs`  | lefthook `prepare-commit-msg`                                                                        | Adds `AI-Assisted` and `Spec` trailers (no `AI-Session`)                 |
 | `report.mjs`        | `yarn ai:report [--since 30d]`                                                                       | AI-assisted commit stats per tool/model and author                       |
 | `lint-edited.mjs`   | Claude Code `PostToolUse` hook                                                                       | Runs eslint and prettier on files the agent edits                        |
 
