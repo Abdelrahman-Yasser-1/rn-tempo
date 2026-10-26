@@ -1,0 +1,42 @@
+---
+title: Troubleshooting
+description: Fixes for the problems people hit first.
+---
+
+## The app shows a red box about a missing TurboModule
+
+Stale React Native codegen. `ios/build` holds codegen output written by `pod install`; if it was deleted, regenerate it:
+
+```bash
+cd ios && bundle exec pod install
+```
+
+Never delete `ios/build`.
+
+## The Android app cannot reach Metro
+
+Debug builds need Metro, and the emulator needs a reverse port:
+
+```bash
+adb reverse tcp:8081 tcp:8081
+```
+
+## The splash screen never goes away
+
+The splash stays until the app calls `BootSplash.hide({ fade: true })` at the end of bootstrap. The temporary `App.tsx` does not do that yet; the app shell workstream (WS3) adds it.
+
+## `yarn install` says a version is quarantined
+
+The 24 hour age gate (`npmMinimalAgeGate`). Pick the newest release older than a day, or wait. See [Prerequisites](/docs/getting-started/prerequisites).
+
+## A `prodRelease` build fails on signing
+
+Expected. Provide the `TEMPO_UPLOAD_*` properties, or for local testing only pass `-PtempoAllowDebugSigning=true`.
+
+## ESLint reports an import boundary error
+
+You imported across layers that are not allowed to talk. See [Boundaries](/docs/architecture/boundaries) for the matrix.
+
+## A commit is rejected
+
+Commit messages must follow `type(scope): subject` with a scope from the allowed list, and a gitleaks scan runs on staged files.
