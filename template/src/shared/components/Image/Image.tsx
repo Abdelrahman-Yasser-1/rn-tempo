@@ -1,4 +1,4 @@
-import FastImage from '@d11/react-native-fast-image';
+import FastImage, { type ImageStyle } from '@d11/react-native-fast-image';
 import { useState } from 'react';
 import { View } from 'react-native';
 
@@ -7,6 +7,8 @@ import { Icon } from '../Icon';
 import { styles } from './styles';
 import type { ImageProps } from './types';
 
+// fast-image's ImageStyle extends RN's FlexStyle, which RN 0.88 no longer exports, so its type
+// rejects sizing keys at compile time. They are valid at runtime, hence the cast on the fill style.
 /**
  * Cached image (fast-image). The surface-colored container is the placeholder while loading, and
  * a fallback icon replaces the image if loading fails.
@@ -44,7 +46,7 @@ export function Image({
           testID={testID ? `${testID}.image` : undefined}
           source={source}
           resizeMode={resizeMode}
-          style={[styles.image, style]}
+          style={[styles.image as unknown as ImageStyle, style]}
           onError={() => {
             setHasFailed(true);
           }}

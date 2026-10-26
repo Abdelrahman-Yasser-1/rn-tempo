@@ -13,8 +13,8 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.surfaceVariant,
   }),
   image: {
-    width: '100%',
-    height: '100%',
+    width: '100%' as const,
+    height: '100%' as const,
   },
   fallback: {
     position: 'absolute',
