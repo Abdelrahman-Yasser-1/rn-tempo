@@ -16,6 +16,19 @@ jest.mock(
   'react-native-safe-area-context',
   () => jest.requireActual<{ default: object }>('react-native-safe-area-context/jest/mock').default,
 );
+jest.mock('jail-monkey', () => ({
+  __esModule: true,
+  default: {
+    isJailBroken: jest.fn(() => false),
+    isDebuggedMode: jest.fn(() => Promise.resolve(false)),
+    hookDetected: jest.fn(() => false),
+  },
+}));
+jest.mock('react-native-ssl-public-key-pinning', () => ({
+  isSslPinningAvailable: jest.fn(() => true),
+  initializeSslPinning: jest.fn(() => Promise.resolve()),
+  addSslPinningErrorListener: jest.fn(),
+}));
 jest.mock('react-native-bootsplash', () => ({
   __esModule: true,
   default: {
