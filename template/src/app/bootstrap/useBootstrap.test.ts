@@ -42,12 +42,12 @@ describe('useBootstrap', () => {
   });
 
   test('AC-8: registers the unauthorized handler that signs the user out', async () => {
-    await tokenStore.setTokens({ accessToken: 'a', refreshToken: 'r' });
-    useAuthStore.setState({ status: 'signedIn' });
     await renderHook(() => useBootstrap());
     await waitFor(() => {
       expect(BootSplash.hide).toHaveBeenCalled();
     });
+    // Simulate a session whose refresh token the server no longer accepts.
+    await tokenStore.setTokens({ accessToken: 'stale', refreshToken: 'revoked' });
     useAuthStore.setState({ status: 'signedIn' });
 
     await act(async () => {

@@ -66,6 +66,11 @@
     },
     "title": "Security issue detected"
   },
+  "startupError": {
+    "message": "The app couldn't start. Please try again.",
+    "retryButton": "Try again",
+    "title": "Something went wrong"
+  },
   "tabs": {
     "home": "Home",
     "profile": "Profile",
