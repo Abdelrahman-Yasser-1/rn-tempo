@@ -10,7 +10,7 @@ Format: `- [ ] T<task id> <summary>`. Tick a box in the same commit that complet
 - [x] T3.6 Security services
 - [x] T3.7 Remote config and flags
 - [x] T3.8 Linking service
-- [ ] T3.9 Navigation
+- [x] T3.9 Navigation
 - [ ] T3.10 Bootstrap
 - [ ] T3.11 App-level screens
 - [ ] T3.12 App composition
