@@ -38,3 +38,6 @@ template/.ai/.current.json
 
 # logs
 *.log
+
+# eslint-plugin-project-structure cache (written on every lint run)
+projectStructure.cache.json
