@@ -5,8 +5,6 @@ output:
 pre-commit:
   parallel: false
   commands:
-    stage-ai-session:
-      run: node template/scripts/ai-log/stage-session.mjs
     gitleaks:
       run: gitleaks git --staged --redact --no-banner || { echo "gitleaks failed or is missing (brew install gitleaks)"; exit 1; }
 

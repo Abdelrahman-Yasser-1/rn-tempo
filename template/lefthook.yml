@@ -23,8 +23,6 @@ pre-commit:
       run: echo 'Refusing to commit secrets {staged_files}' && exit 1
     gitleaks:
       run: gitleaks git --staged --redact --no-banner
-    stage-ai-session:
-      run: node scripts/ai-log/stage-session.mjs
 prepare-commit-msg:
   commands:
     ai-trailers:

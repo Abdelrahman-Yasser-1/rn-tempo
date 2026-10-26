@@ -166,10 +166,10 @@ export function stopSession({ summary = '', transcriptPath = null, now = new Dat
   return current;
 }
 
-/** Trailer lines for the active, fresh session — or [] when tracking does not apply. */
+/** Trailer lines (AI-Assisted, optional Spec) for the active, fresh session — or [] when tracking does not apply. */
 export function trailersFor(current, now = Date.now()) {
   if (!current || isStale(current, now) || process.env.AI_TRACKING === 'off') return [];
-  const lines = [`AI-Assisted: ${current.tool}/${current.model}`, `AI-Session: ${current.file}`];
+  const lines = [`AI-Assisted: ${current.tool}/${current.model}`];
   if (current.spec) lines.push(`Spec: ${current.spec}`);
   return lines;
 }
