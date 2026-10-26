@@ -3,6 +3,7 @@ import { delay, http, HttpResponse } from 'msw';
 import { ENV } from '@config/env';
 import { initI18nInstance } from '@services/i18n/i18n';
 import { tokenStore } from '@services/secure-storage/tokenStore';
+import * as pinning from '@services/security/pinning/pinning';
 import { STORAGE_KEYS } from '@services/storage/keys';
 import { initStorage, storage } from '@services/storage/storage';
 import { server } from '@test-utils/msw/server';
@@ -242,6 +243,23 @@ describe('httpClient token refresh', () => {
 
     expect(refreshCalls).toBe(0);
     expect(unauthorized).toHaveBeenCalledTimes(1);
+    jest.restoreAllMocks();
+  });
+
+  test('a refresh blocked by pinning rejects without reaching the network or signing out', async () => {
+    jest.replaceProperty(ENV, 'SSL_PINNING_ENABLED', true);
+    // The original request passes the gate; the refresh that follows does not.
+    jest.spyOn(pinning, 'isPinningReady').mockReturnValueOnce(true).mockReturnValue(false);
+    const calls: string[] = [];
+    server.use(protectedHandler(calls), refreshHandler());
+
+    await expect(httpClient.get('/secure')).rejects.toMatchObject({
+      message: expect.stringContaining('CERT_PINNING_NOT_READY') as string,
+    });
+
+    expect(refreshCalls).toBe(0);
+    expect(unauthorized).not.toHaveBeenCalled();
+    expect(tokenStore.getRefreshToken()).toBe('ref-old');
     jest.restoreAllMocks();
   });
 
