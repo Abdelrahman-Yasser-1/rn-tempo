@@ -1,0 +1,11 @@
+import { useCallback, useState } from 'react';
+
+/** Describe what use{{Name}} does and who should call it. */
+export function use{{Name}}() {
+  const [count, setCount] = useState(0);
+  const increment = useCallback(() => {
+    setCount((value) => value + 1);
+  }, []);
+
+  return { count, increment };
+}

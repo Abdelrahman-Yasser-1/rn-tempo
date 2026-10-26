@@ -1,0 +1,6 @@
+<manifest>
+  <!-- @tempo-feature:device-integrity:start -->
+  <uses-permission android:name="x" />
+  <!-- @tempo-feature:device-integrity:end -->
+  <application />
+</manifest>

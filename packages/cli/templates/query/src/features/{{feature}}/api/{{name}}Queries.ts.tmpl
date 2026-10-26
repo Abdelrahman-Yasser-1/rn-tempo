@@ -1,0 +1,14 @@
+import { useQuery } from '@tanstack/react-query';
+
+/** Example fetcher: replace the body with a request through @services/http. */
+async function fetch{{Name}}(): Promise<readonly string[]> {
+  return [];
+}
+
+/** Query key of {{name}}. Move it into keys.ts when other code needs to invalidate it. */
+const {{name}}QueryKey = ['{{feature}}', '{{name_kebab}}'] as const;
+
+/** Loads {{name}} for the {{feature}} feature. */
+export function use{{Name}}Query() {
+  return useQuery({ queryKey: {{name}}QueryKey, queryFn: fetch{{Name}} });
+}
