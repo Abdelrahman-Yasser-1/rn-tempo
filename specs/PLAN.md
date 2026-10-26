@@ -2304,3 +2304,8 @@ Recorded by the integrator during WS0. Where this list and the plan disagree, **
     - **`APP_VERSION`:** supersedes amendment 13. `babel/inline-app-version.js` replaces `__APP_VERSION__` with the `package.json` version at build time, so the dependency list is not bundled.
     - **Babel:** `@babel/preset-env` (already declared) enables only `transform-export-namespace-from`, which Zod 4 needs under Metro.
     - **Android 17 (API 37) emulators** ask for the `ACCESS_LOCAL_NETWORK` ("nearby devices") permission; denying it blocks the app from reaching Metro at `10.0.2.2`. Grant it with `adb shell pm grant <applicationId> android.permission.ACCESS_LOCAL_NETWORK` (e.g. `com.rntempo.app.dev`).
+
+## Amendments after WS3 (2026-10-26)
+
+42. **AI session logs are local only** (`.ai/sessions/` is gitignored). Commits carry `AI-Assisted` and `Spec` trailers, with no `AI-Session`. The commitlint `ai-session-trailer` rule is removed. The PR AI report is built from trailers. This overrides C9's "committed" logs, the AI-Session trailer and the stage-session hook.
+43. **For every remaining workstream:** implement all functionality first, then write the tests at the end of the workstream, before the PR is marked ready. During the implementation phase, the draft PR's CI may be red on tests, coverage or the structure rules that require test/story files. It must be green before `gh pr ready`. This overrides A1.8's "tests in the same or next commit".
