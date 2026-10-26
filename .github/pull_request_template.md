@@ -7,7 +7,7 @@
 specs/<…> (AC IDs covered: AC-1, AC-2)
 
 ## AI assistance
-- [ ] AI-assisted — sessions: .ai/sessions/…
+- [ ] AI-assisted (commits carry AI-Assisted trailers)
 
 ## Verification
 <!-- commands + trimmed output; for UI: screenshots/recordings on iOS + Android, light + dark, en + ar -->

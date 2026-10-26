@@ -12,7 +12,6 @@ const NOISE_PATTERNS: readonly RegExp[] = [
   /\.png$/,
   /\.pbxproj$/,
   /(?:^|\/)src\/assets\/[^/]+\/index\.ts$/,
-  /(?:^|\/)\.ai\/sessions\//,
 ];
 
 const isNoise = (file: string): boolean => NOISE_PATTERNS.some((pattern) => pattern.test(file));

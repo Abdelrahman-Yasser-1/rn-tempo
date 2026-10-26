@@ -11,13 +11,13 @@ Guide for every contributor, human or AI agent, working on **this repo** (the te
 | Path | What |
 | --- | --- |
 | `template/` | RN 0.88 app = the template (own `yarn.lock`, not a workspace) |
-| `packages/commitlint-config` | Conventional Commits + scopes + `ai-session-trailer` rule |
+| `packages/commitlint-config` | Conventional Commits + scopes |
 | `packages/contracts` | JSON schemas (`.tempo.json`, feature manifests, AI session logs) + feature-marker utils |
 | `packages/{eslint-config,prettier-config,tsconfig}` | Shared configs (WS1) |
 | `packages/cli` | `create-tempo-app` / `tempo` (WS5, WS12) |
 | `docs/` | Fumadocs site (WS6, WS13), deployed on Vercel |
 | `specs/` | Plan, workstream specs, ADRs |
-| `.ai/sessions/` | AI session logs for this repo |
+| `.ai/sessions/` | Local AI session logs (gitignored, never committed) |
 
 ## Commands
 | Where | Command | Purpose |
@@ -42,7 +42,7 @@ Guide for every contributor, human or AI agent, working on **this repo** (the te
 ## Commits and AI tracking
 - Format: `type(scope): subject`. Scopes are in `packages/commitlint-config/index.mjs`, and a scope is required.
 - Claude Code logs sessions automatically through `.claude/settings.json` hooks. Other tools: `cd template && yarn ai:start --tool <tool> --model <model> --spec specs/ws<N>-<slug>`, then `yarn ai:prompt "<prompt>"` per prompt and `yarn ai:stop --summary "<summary>"` at the end.
-- While a session is active, commits get `AI-Assisted`, `AI-Session` and `Spec` trailers, and the session log is staged with them.
+- While a session is active, commits get `AI-Assisted` and `Spec` trailers (no `AI-Session`). Session logs stay local in `.ai/sessions/` (gitignored): never commit or `git add -f` them.
 - Never edit another session's log.
 
 ## PRs

@@ -27,13 +27,12 @@ While an AI session is active (`.ai/.current.json`, under 12 h old and `AI_TRACK
 
 ```
 AI-Assisted: claude-code/claude-sonnet-5-5
-AI-Session: .ai/sessions/2026-10-24-2115-claude-code-ab12cd.md
 Spec: specs/ws3-core-infra
 ```
 
-- `Spec:` appears only if the session has a spec. commitlint rejects `AI-Assisted` without a matching, existing `AI-Session` file.
+- `Spec:` appears only if the session has a spec. There is no `AI-Session` trailer: session logs live in `.ai/sessions/` but are gitignored and never committed or linked.
 - Claude Code starts and stops sessions through `.claude/settings.json` hooks. Other tools run `yarn ai:start --tool <tool> --model <model> [--spec specs/<feature>]`, `yarn ai:prompt "<text>"` per prompt, and `yarn ai:stop --summary "<text>"` at the end (the `/log` command does this).
-- Never edit a session log another session created. Never write the trailers by hand.
+- Never commit or `git add -f` anything under `.ai/sessions/`. Never edit a session log another session created. Never write the trailers by hand.
 
 ```
 # ✅

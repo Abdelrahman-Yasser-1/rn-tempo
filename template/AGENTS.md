@@ -122,11 +122,11 @@ Features are spec-driven: `specs/<feature>/{spec.md, design.md, tasks.md}`.
 
 ## AI session logging
 
-Every AI-assisted change is tracked with the prompts behind it, in `.ai/sessions/`.
+AI sessions are logged locally in `.ai/sessions/`. The logs are gitignored and never committed.
 
 - Claude Code logs automatically through `.claude/settings.json` hooks.
 - Other tools: `yarn ai:start --tool <tool> --model <model> [--spec specs/<feature>]`, then `yarn ai:prompt "<prompt>"` per prompt and `yarn ai:stop --summary "<summary>"` at the end (or the `/log` command).
-- While a session is active, commits get `AI-Assisted`, `AI-Session` and `Spec` trailers and the session log is staged. commitlint rejects trailers without a matching session file.
+- While a session is active, commits get `AI-Assisted` and `Spec` trailers (no `AI-Session`). Never commit or `git add -f` a session log.
 - The session pointer expires after 12 hours; start again when resuming.
 - Prompts are redacted (tokens, keys, emails); do not paste secrets. Set `ai.logPrompts` in `.tempo.json` to `summary` or `off` to log less.
 - Never edit a session log created by another session.

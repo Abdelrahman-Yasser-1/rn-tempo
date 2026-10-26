@@ -11,4 +11,4 @@ Interpret $ARGUMENTS and run from the project root:
 - `prompt <text>`: `yarn ai:prompt "<text>"`
 - `stop <summary>`: `yarn ai:stop --summary "<summary>"`
 
-The session pointer expires after 12 hours; start again when resuming. Never edit session logs created by other sessions.
+The session pointer expires after 12 hours; start again when resuming. Logs are local only (gitignored); never commit them. Never edit session logs created by other sessions.
