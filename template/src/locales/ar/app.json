@@ -1,5 +1,13 @@
 {
   "linking": {
     "openFailed": "تعذّر فتح هذا الرابط."
+  },
+  "placeholder": {
+    "subtitle": "لم يتم بناء هذه الشاشة بعد."
+  },
+  "tabs": {
+    "home": "الرئيسية",
+    "profile": "الملف الشخصي",
+    "settings": "الإعدادات"
   }
 }

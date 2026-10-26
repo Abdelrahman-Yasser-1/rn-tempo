@@ -1,5 +1,13 @@
 {
   "linking": {
     "openFailed": "We couldn't open that link."
+  },
+  "placeholder": {
+    "subtitle": "This screen is not built yet."
+  },
+  "tabs": {
+    "home": "Home",
+    "profile": "Profile",
+    "settings": "Settings"
   }
 }
