@@ -169,6 +169,68 @@ describe('httpClient token refresh', () => {
     expect(refreshCalls).toBe(1);
   });
 
+  test('a server error during refresh rejects as SERVER and keeps the session', async () => {
+    const calls: string[] = [];
+    server.use(protectedHandler(calls), refreshHandler(500));
+
+    await expect(httpClient.get('/secure')).rejects.toMatchObject({ code: 'SERVER', status: 500 });
+
+    expect(unauthorized).not.toHaveBeenCalled();
+    expect(tokenStore.getAccessToken()).toBe('old');
+    expect(tokenStore.getRefreshToken()).toBe('ref-old');
+  });
+
+  test('a network error during refresh rejects as NETWORK and keeps the session', async () => {
+    const calls: string[] = [];
+    server.use(
+      protectedHandler(calls),
+      http.post(`${ENV.API_BASE_URL}/auth/refresh`, () => {
+        refreshCalls += 1;
+        return HttpResponse.error();
+      }),
+    );
+
+    await expect(httpClient.get('/secure')).rejects.toMatchObject({ code: 'NETWORK' });
+
+    expect(refreshCalls).toBe(1);
+    expect(unauthorized).not.toHaveBeenCalled();
+    expect(tokenStore.getRefreshToken()).toBe('ref-old');
+  });
+
+  test('a malformed refresh response signs out', async () => {
+    const calls: string[] = [];
+    server.use(
+      protectedHandler(calls),
+      http.post(`${ENV.API_BASE_URL}/auth/refresh`, () => {
+        refreshCalls += 1;
+        return HttpResponse.json({ accessToken: 'new' });
+      }),
+    );
+
+    await expect(httpClient.get('/secure')).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
+
+    expect(refreshCalls).toBe(1);
+    expect(unauthorized).toHaveBeenCalledTimes(1);
+  });
+
+  test('concurrent 401s share one transient refresh failure without signing out', async () => {
+    const calls: string[] = [];
+    server.use(protectedHandler(calls), refreshHandler(503));
+
+    const results = await Promise.allSettled([
+      httpClient.get('/secure'),
+      httpClient.get('/secure'),
+      httpClient.get('/secure'),
+    ]);
+
+    for (const result of results) {
+      expect(result).toMatchObject({ status: 'rejected', reason: { code: 'SERVER' } });
+    }
+    expect(refreshCalls).toBe(1);
+    expect(unauthorized).not.toHaveBeenCalled();
+    expect(tokenStore.getRefreshToken()).toBe('ref-old');
+  });
+
   test('AC-4: with no refresh token a 401 signs out without calling the refresh endpoint', async () => {
     jest.spyOn(tokenStore, 'getRefreshToken').mockReturnValue(null);
     server.use(
