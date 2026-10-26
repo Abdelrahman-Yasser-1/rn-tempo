@@ -1,0 +1,14 @@
+import { Text } from '@shared/components';
+import { View } from 'react-native';
+
+import { styles } from './styles';
+import type { {{Name}}Props } from './types';
+
+/** {{Name}} component of the {{feature}} feature. */
+export function {{Name}}({ label, testID }: Readonly<{{Name}}Props>) {
+  return (
+    <View style={styles.container} testID={testID}>
+      <Text variant="body">{label}</Text>
+    </View>
+  );
+}

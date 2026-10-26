@@ -1,0 +1,6 @@
+/** Query keys of the {{feature}} feature. Keep them here so invalidation stays predictable. */
+export const {{featureCamel}}Keys = {
+  all: ['{{feature}}'] as const,
+  list: () => [...{{featureCamel}}Keys.all, 'list'] as const,
+  detail: (id: number) => [...{{featureCamel}}Keys.all, 'detail', id] as const,
+};
