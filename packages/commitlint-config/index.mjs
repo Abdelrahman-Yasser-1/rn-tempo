@@ -1,5 +1,3 @@
-import aiSessionTrailer from './rules/ai-session-trailer.mjs';
-
 export const TYPES = ['feat', 'fix', 'docs', 'style', 'refactor', 'perf', 'test', 'build', 'ci', 'chore', 'revert'];
 
 /** Scopes shared by every RN-TEMPO project. Projects add their own feature names via `createConfig`. */
@@ -22,13 +20,11 @@ export const SCOPES = [
 export function createConfig({ extraScopes = [] } = {}) {
   return {
     extends: ['@commitlint/config-conventional'],
-    plugins: [{ rules: { 'ai-session-trailer': aiSessionTrailer } }],
     rules: {
       'type-enum': [2, 'always', TYPES],
       'scope-enum': [2, 'always', [...SCOPES, ...extraScopes]],
       'scope-empty': [2, 'never'],
       'header-max-length': [2, 'always', 100],
-      'ai-session-trailer': [2, 'always'],
     },
   };
 }
