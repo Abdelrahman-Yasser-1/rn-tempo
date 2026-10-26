@@ -8,6 +8,7 @@ import { UnistylesRuntime } from 'react-native-unistyles';
 import { useAuthStore } from '@features/auth';
 import { i18n, initI18nInstance } from '@services/i18n/i18n';
 import type { Language } from '@services/i18n/languageManager';
+import { initStorage } from '@services/storage/storage';
 
 import { createUser } from './factories/user';
 
@@ -35,6 +36,7 @@ export async function renderWithProviders(
   options: Readonly<RenderWithProvidersOptions> = {},
 ) {
   const queryClient = createTestQueryClient();
+  await initStorage();
   await initI18nInstance(options.language ?? 'en');
   if (options.authenticated !== undefined) {
     useAuthStore.setState({

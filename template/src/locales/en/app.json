@@ -1,4 +1,39 @@
 {
+  "debug": {
+    "apiUrl": {
+      "clear": "Clear",
+      "hint": "Saved to storage. Applies after restarting the app. Leave empty to use the build default.",
+      "save": "Save",
+      "title": "API base URL override"
+    },
+    "data": {
+      "clearQueryCache": "Clear query cache",
+      "clearStorage": "Clear storage",
+      "clearTokens": "Clear tokens (sign out)",
+      "title": "Data"
+    },
+    "done": "Done",
+    "env": {
+      "apiBaseUrl": "API base URL",
+      "appEnv": "Environment",
+      "bundleId": "Bundle ID",
+      "platform": "Platform",
+      "title": "Environment",
+      "version": "Version"
+    },
+    "flags": {
+      "reset": "Reset overrides",
+      "title": "Feature flags"
+    },
+    "pushToken": {
+      "placeholder": "Not available yet. Push notifications are not part of the template.",
+      "title": "Push token"
+    },
+    "storybook": {
+      "hint": "Set STORYBOOK_ENABLED=true in the env file and restart to launch Storybook instead of the app.",
+      "title": "Storybook"
+    }
+  },
   "forceUpdate": {
     "message": "This version of the app is no longer supported. Please update to continue.",
     "title": "Update required",

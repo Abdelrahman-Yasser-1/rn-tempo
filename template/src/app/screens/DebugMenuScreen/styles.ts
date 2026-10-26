@@ -1,0 +1,47 @@
+import { StyleSheet } from 'react-native-unistyles';
+
+export const styles = StyleSheet.create((theme) => ({
+  container: { flex: 1, backgroundColor: theme.colors.background },
+  content: { padding: theme.spacing.lg, gap: theme.spacing.xl },
+  section: {
+    gap: theme.spacing.sm,
+    padding: theme.spacing.lg,
+    borderRadius: theme.radii.lg,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  sectionTitle: { ...theme.typography.title, color: theme.colors.textPrimary },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: theme.spacing.md,
+    minHeight: 44,
+  },
+  label: { ...theme.typography.bodySmall, color: theme.colors.textSecondary },
+  value: { ...theme.typography.label, color: theme.colors.textPrimary, flexShrink: 1 },
+  hint: { ...theme.typography.caption, color: theme.colors.textSecondary },
+  input: {
+    ...theme.typography.body,
+    minHeight: 44,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.radii.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    color: theme.colors.textPrimary,
+    backgroundColor: theme.colors.background,
+  },
+  buttons: { flexDirection: 'row', gap: theme.spacing.sm, flexWrap: 'wrap' },
+  button: {
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: theme.spacing.lg,
+    borderRadius: theme.radii.md,
+    backgroundColor: theme.colors.primary,
+  },
+  buttonSecondary: { backgroundColor: theme.colors.surfaceVariant },
+  buttonLabel: { ...theme.typography.button, color: theme.colors.onPrimary },
+  buttonLabelSecondary: { color: theme.colors.onSurfaceVariant },
+  done: { ...theme.typography.label, color: theme.colors.success },
+}));
