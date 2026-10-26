@@ -1,0 +1,12 @@
+import { renderWithProviders } from '@test-utils/renderWithProviders';
+import { screen } from '@testing-library/react-native';
+
+import { {{Name}} } from './{{Name}}';
+
+describe('{{Name}}', () => {
+  it('renders its label', async () => {
+    await renderWithProviders(<{{Name}} label="Hello" testID="{{name_kebab}}" />);
+
+    expect(screen.getByTestId('{{name_kebab}}')).toBeTruthy();
+  });
+});

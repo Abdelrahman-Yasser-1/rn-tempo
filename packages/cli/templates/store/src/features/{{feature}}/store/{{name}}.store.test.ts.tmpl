@@ -1,0 +1,20 @@
+import { use{{Name}}Store } from './{{name}}.store';
+
+describe('{{name}} store', () => {
+  beforeEach(() => {
+    use{{Name}}Store.getState().reset();
+  });
+
+  it('increments the count', () => {
+    use{{Name}}Store.getState().increment();
+
+    expect(use{{Name}}Store.getState().count).toBe(1);
+  });
+
+  it('resets the count', () => {
+    use{{Name}}Store.getState().increment();
+    use{{Name}}Store.getState().reset();
+
+    expect(use{{Name}}Store.getState().count).toBe(0);
+  });
+});
