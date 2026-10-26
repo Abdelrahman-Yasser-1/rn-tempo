@@ -109,29 +109,50 @@ export function setUnauthorizedHandler(handler: (() => void) | undefined): void 
   unauthorizedHandler = handler;
 }
 
-async function performRefresh(): Promise<string | null> {
+type RefreshOutcome =
+  | { kind: 'ok' }
+  // The session is gone: the refresh token was rejected or the reply is unusable.
+  | { kind: 'expired' }
+  // The session may still be valid: keep it and let the caller retry later.
+  | { kind: 'transient'; error: unknown };
+
+// Statuses that mean the server no longer accepts the refresh token.
+const DEFINITIVE_REFRESH_STATUSES = new Set([400, 401, 403]);
+
+function isDefinitiveRefreshFailure(error: unknown): boolean {
+  const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+  return status !== undefined && DEFINITIVE_REFRESH_STATUSES.has(status);
+}
+
+async function performRefresh(): Promise<RefreshOutcome> {
   const refreshToken = tokenStore.getRefreshToken();
   if (!refreshToken) {
-    return null;
+    return { kind: 'expired' };
   }
+  let data: unknown;
   try {
     const response = await refreshClient.post(
       REFRESH_PATH,
       { refreshToken },
       { baseURL: resolveBaseUrl() },
     );
-    const tokens = RefreshResponseSchema.parse(response.data);
-    await tokenStore.setTokens(tokens);
-    return tokens.accessToken;
-  } catch {
-    return null;
+    data = response.data;
+  } catch (error) {
+    // No response (offline, timeout) or a 5xx says nothing about the session itself.
+    return isDefinitiveRefreshFailure(error) ? { kind: 'expired' } : { kind: 'transient', error };
   }
+  const tokens = RefreshResponseSchema.safeParse(data);
+  if (!tokens.success) {
+    return { kind: 'expired' };
+  }
+  await tokenStore.setTokens(tokens.data);
+  return { kind: 'ok' };
 }
 
-let refreshInFlight: Promise<string | null> | undefined;
+let refreshInFlight: Promise<RefreshOutcome> | undefined;
 
-// Single-flight: concurrent 401s all await the same refresh instead of each starting one.
-function refreshAccessToken(): Promise<string | null> {
+// Single-flight: concurrent 401s all await the same refresh and share its outcome.
+function refreshAccessToken(): Promise<RefreshOutcome> {
   refreshInFlight ??= performRefresh().finally(() => {
     refreshInFlight = undefined;
   });
@@ -159,11 +180,16 @@ async function handleUnauthorized(error: unknown): Promise<never> {
   const currentToken = tokenStore.getAccessToken();
   const sentToken = sentHeader.slice(BEARER_PREFIX.length);
   // Another request may already have refreshed while this one was in flight.
-  const nextToken =
-    currentToken !== null && currentToken !== sentToken ? currentToken : await refreshAccessToken();
-  if (!nextToken) {
-    unauthorizedHandler?.();
-    throw error;
+  if (currentToken === null || currentToken === sentToken) {
+    const outcome = await refreshAccessToken();
+    if (outcome.kind === 'expired') {
+      unauthorizedHandler?.();
+      throw error;
+    }
+    if (outcome.kind === 'transient') {
+      // Rejecting with the refresh error keeps the tokens; the final interceptor normalizes it.
+      throw outcome.error;
+    }
   }
   config.isRetry = true;
   return httpClient.request(config);
