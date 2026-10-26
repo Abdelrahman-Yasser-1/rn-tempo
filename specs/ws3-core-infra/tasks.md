@@ -14,4 +14,4 @@ Format: `- [ ] T<task id> <summary>`. Tick a box in the same commit that complet
 - [x] T3.10 Bootstrap
 - [ ] T3.11 App-level screens
 - [ ] T3.12 App composition
-- [ ] T3.13 Network status
+- [x] T3.13 Network status
