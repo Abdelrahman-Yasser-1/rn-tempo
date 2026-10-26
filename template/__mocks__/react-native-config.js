@@ -17,4 +17,8 @@ function parseEnvFile(path) {
   return values;
 }
 
-module.exports = { __esModule: true, default: parseEnvFile(join(__dirname, '..', '.env.dev')) };
+const values = parseEnvFile(join(__dirname, '..', '.env.dev'));
+// Tests mock the network with MSW, not the in-app dev adapter that API_MOCKING=true enables.
+values.API_MOCKING = 'false';
+
+module.exports = { __esModule: true, default: values };

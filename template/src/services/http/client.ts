@@ -1,4 +1,4 @@
-import axios, { type InternalAxiosRequestConfig } from 'axios';
+import axios, { type AxiosAdapter, type InternalAxiosRequestConfig } from 'axios';
 import { z } from 'zod';
 
 import { ENV, isProd } from '@config/env';
@@ -41,8 +41,30 @@ export function resetBaseUrlCache(): void {
   resolvedBaseUrl = undefined;
 }
 
+/**
+ * Dev builds with `API_MOCKING=true` answer from the shared mock route table instead of the
+ * network. The `require` sits inside the `__DEV__` branch, which Metro folds away in release
+ * bundles, so the adapter and its routes never ship.
+ */
+function resolveAdapter(): AxiosAdapter | undefined {
+  if (!(__DEV__ && ENV.API_MOCKING)) {
+    return undefined;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- guarded require keeps the mock adapter out of release bundles
+  const { createDevMockAdapter } = require('./devMockAdapter') as {
+    createDevMockAdapter: () => AxiosAdapter;
+  };
+  return createDevMockAdapter();
+}
+
+const adapter = resolveAdapter();
+
 /** The app's axios instance: auth, language and correlation headers are added per request. */
-export const httpClient = axios.create({ baseURL: ENV.API_BASE_URL, timeout: ENV.API_TIMEOUT_MS });
+export const httpClient = axios.create({
+  baseURL: ENV.API_BASE_URL,
+  timeout: ENV.API_TIMEOUT_MS,
+  adapter,
+});
 
 /** Adds base URL, Authorization, Accept-Language and x-request-id to an outgoing request. */
 export function decorateRequest(config: InternalAxiosRequestConfig): InternalAxiosRequestConfig {
@@ -76,7 +98,7 @@ const REFRESH_PATH = '/auth/refresh';
 const RefreshResponseSchema = z.object({ accessToken: z.string(), refreshToken: z.string() });
 
 // A bare instance: sharing httpClient would re-enter these interceptors and could loop.
-const refreshClient = axios.create({ timeout: ENV.API_TIMEOUT_MS });
+const refreshClient = axios.create({ timeout: ENV.API_TIMEOUT_MS, adapter });
 
 let unauthorizedHandler: (() => void) | undefined;
 
