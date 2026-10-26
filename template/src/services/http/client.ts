@@ -47,14 +47,16 @@ export function resetBaseUrlCache(): void {
  * bundles, so the adapter and its routes never ship.
  */
 function resolveAdapter(): AxiosAdapter | undefined {
-  if (!(__DEV__ && ENV.API_MOCKING)) {
-    return undefined;
+  // Keep the `require` directly inside this exact `if`: Metro only folds `__DEV__` conditions in
+  // this shape, and a release bundle must not contain the adapter or its routes.
+  if (__DEV__ && ENV.API_MOCKING) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- guarded require keeps the mock adapter out of release bundles
+    const { createDevMockAdapter } = require('./devMockAdapter') as {
+      createDevMockAdapter: () => AxiosAdapter;
+    };
+    return createDevMockAdapter();
   }
-  // eslint-disable-next-line @typescript-eslint/no-require-imports -- guarded require keeps the mock adapter out of release bundles
-  const { createDevMockAdapter } = require('./devMockAdapter') as {
-    createDevMockAdapter: () => AxiosAdapter;
-  };
-  return createDevMockAdapter();
+  return undefined;
 }
 
 const adapter = resolveAdapter();
