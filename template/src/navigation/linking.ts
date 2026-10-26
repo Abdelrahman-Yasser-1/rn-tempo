@@ -79,6 +79,39 @@ export function interceptLink(url: string | null | undefined): string | null {
   return null;
 }
 
+// React Navigation's own "open this URL" callback, captured in `subscribe` so a parked link can be
+// replayed through the normal deep link pipeline once the user signs in.
+let emitLink: ((url: string) => void) | undefined;
+
+/** Replays the parked deep link, if any. Returns whether one was emitted. */
+export function resumePendingLink(): boolean {
+  const { pendingLink, setPendingLink } = useAuthStore.getState();
+  if (pendingLink === null || emitLink === undefined) {
+    return false;
+  }
+  setPendingLink(null);
+  emitLink(pendingLink);
+  return true;
+}
+
+let stopResuming: (() => void) | undefined;
+
+/**
+ * Starts replaying the parked link whenever the session becomes `signedIn`. The replay is deferred
+ * one macrotask so the protected navigator group has mounted. Idempotent; returns a stop function.
+ */
+export function startPendingLinkResume(): () => void {
+  stopResuming ??= useAuthStore.subscribe((state, previous) => {
+    if (state.status === 'signedIn' && previous.status !== 'signedIn') {
+      setTimeout(resumePendingLink, 0);
+    }
+  });
+  return () => {
+    stopResuming?.();
+    stopResuming = undefined;
+  };
+}
+
 /** Linking options for the static `Navigation` component (paths come from each screen's `linking`). */
 export const linking = {
   enabled: true,
@@ -87,6 +120,7 @@ export const linking = {
     return interceptLink(await Linking.getInitialURL());
   },
   subscribe(listener: (url: string) => void): () => void {
+    emitLink = listener;
     const subscription = Linking.addEventListener('url', ({ url }) => {
       const next = interceptLink(url);
       if (next !== null) {
@@ -94,6 +128,7 @@ export const linking = {
       }
     });
     return () => {
+      emitLink = undefined;
       subscription.remove();
     };
   },
