@@ -21,19 +21,6 @@ const config = {
   resolver: {
     assetExts: assetExts.filter((ext) => ext !== 'svg'),
     sourceExts: [...sourceExts, 'svg'],
-    // The MSW interceptors default to their Node build (`http`, `net`); the dev mock mode needs the
-    // `browser` build, which only relies on fetch/XMLHttpRequest. Scoped so no other package changes.
-    resolveRequest: (context, moduleName, platform) =>
-      context.resolveRequest(
-        moduleName.startsWith('@mswjs/interceptors')
-          ? {
-              ...context,
-              unstable_conditionNames: [...context.unstable_conditionNames, 'browser'],
-            }
-          : context,
-        moduleName,
-        platform,
-      ),
   },
 };
 
