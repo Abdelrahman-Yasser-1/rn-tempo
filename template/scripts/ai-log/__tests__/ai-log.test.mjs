@@ -155,7 +155,6 @@ describe('trailers', () => {
     const current = startSession({ tool: 'cursor', model: 'gpt-x', spec: 'specs/auth' });
     assert.deepEqual(trailersFor(current), [
       `AI-Assisted: cursor/gpt-x`,
-      `AI-Session: ${current.file}`,
       'Spec: specs/auth',
     ]);
     const stale = { ...current, startedAt: new Date(Date.now() - 13 * 3600_000).toISOString() };
@@ -172,7 +171,8 @@ describe('trailers', () => {
     run();
     run();
     const text = readFileSync(msg, 'utf8');
-    assert.equal((text.match(/AI-Session:/g) ?? []).length, 1);
+    assert.equal((text.match(/AI-Assisted:/g) ?? []).length, 1);
+    assert.doesNotMatch(text, /AI-Session:/);
     assert.match(text, /AI-Assisted: cursor\/gpt-x/);
   });
 
