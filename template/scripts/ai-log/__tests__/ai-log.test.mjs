@@ -153,10 +153,7 @@ describe('trailers', () => {
 
   it('builds trailers only for fresh sessions', () => {
     const current = startSession({ tool: 'cursor', model: 'gpt-x', spec: 'specs/auth' });
-    assert.deepEqual(trailersFor(current), [
-      `AI-Assisted: cursor/gpt-x`,
-      'Spec: specs/auth',
-    ]);
+    assert.deepEqual(trailersFor(current), [`AI-Assisted: cursor/gpt-x`, 'Spec: specs/auth']);
     const stale = { ...current, startedAt: new Date(Date.now() - 13 * 3600_000).toISOString() };
     assert.deepEqual(trailersFor(stale), []);
   });
