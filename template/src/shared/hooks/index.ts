@@ -1,2 +1,22 @@
-// Barrel (contract C4). Filled by later workstreams.
-export {};
+// Barrel (contract C4).
+export { useAppState } from './useAppState';
+export { useBackHandler } from './useBackHandler';
+export { useCountdown } from './useCountdown';
+export { useDebounce } from './useDebounce';
+export { useDebouncedCallback } from './useDebouncedCallback';
+export { useDisclosure } from './useDisclosure';
+export { useInterval } from './useInterval';
+export { useIsOnline } from './useIsOnline';
+export { useKeyboard } from './useKeyboard';
+export { useLatest } from './useLatest';
+export { useMountEffect } from './useMountEffect';
+export { useOnFocus } from './useOnFocus';
+export { usePermissions } from './usePermissions';
+export type { PermissionStatus } from './usePermissions';
+export { usePressFeedback } from './usePressFeedback';
+export { usePrevious } from './usePrevious';
+export { useReducedMotion } from './useReducedMotion';
+export { useRefreshOnFocus } from './useRefreshOnFocus';
+export { useRTL } from './useRTL';
+export { useThrottle } from './useThrottle';
+export { useToggle } from './useToggle';

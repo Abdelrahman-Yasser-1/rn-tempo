@@ -1,1 +1,21 @@
-{}
+{
+  "email": {
+    "invalid": "Enter a valid email address.",
+    "required": "Enter your email address."
+  },
+  "name": {
+    "tooLong": "Use at most 50 characters.",
+    "tooShort": "Enter at least 2 characters."
+  },
+  "otp": {
+    "invalid": "Enter the 6-digit code."
+  },
+  "password": {
+    "needsLetter": "Include at least one letter.",
+    "needsNumber": "Include at least one number.",
+    "tooShort": "Use at least 8 characters."
+  },
+  "phone": {
+    "invalid": "Enter a valid phone number with country code."
+  }
+}
