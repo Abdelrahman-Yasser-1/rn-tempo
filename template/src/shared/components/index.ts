@@ -7,6 +7,7 @@ export * from './FormTextField';
 export * from './Icon';
 export * from './IconButton';
 export * from './Image';
+export * from './OTPInput';
 export * from './Row';
 export * from './Screen';
 export * from './Spacer';
