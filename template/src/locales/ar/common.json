@@ -3,6 +3,13 @@
     "hidePassword": "إخفاء كلمة المرور",
     "showPassword": "إظهار كلمة المرور"
   },
+  "errorState": {
+    "retry": "إعادة المحاولة",
+    "title": "حدث خطأ ما"
+  },
+  "loader": {
+    "label": "جارٍ التحميل"
+  },
   "otp": {
     "digit": "الرقم {{index}} من {{total}}"
   },

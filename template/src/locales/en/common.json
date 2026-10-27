@@ -3,6 +3,13 @@
     "hidePassword": "Hide password",
     "showPassword": "Show password"
   },
+  "errorState": {
+    "retry": "Retry",
+    "title": "Something went wrong"
+  },
+  "loader": {
+    "label": "Loading"
+  },
   "otp": {
     "digit": "Digit {{index}} of {{total}}"
   },
