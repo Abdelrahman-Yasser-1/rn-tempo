@@ -9,3 +9,9 @@ export type RadioGroupProps = Readonly<
     children: ReactNode;
   }
 >;
+
+export type RadioGroupContextValue = {
+  value: string | undefined;
+  disabled: boolean;
+  onChange: (value: string) => void;
+};
