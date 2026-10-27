@@ -14,6 +14,7 @@ export * from './Radio';
 export * from './RadioGroup';
 export * from './Row';
 export * from './Screen';
+export * from './Select';
 export * from './Spacer';
 export * from './Switch';
 export * from './Text';
