@@ -3,6 +3,10 @@
     "hidePassword": "إخفاء كلمة المرور",
     "showPassword": "إظهار كلمة المرور"
   },
+  "dialog": {
+    "cancel": "إلغاء",
+    "confirm": "تأكيد"
+  },
   "errorState": {
     "retry": "إعادة المحاولة",
     "title": "حدث خطأ ما"
@@ -10,11 +14,17 @@
   "loader": {
     "label": "جارٍ التحميل"
   },
+  "modal": {
+    "close": "إغلاق"
+  },
   "otp": {
     "digit": "الرقم {{index}} من {{total}}"
   },
   "select": {
     "close": "إغلاق",
     "placeholder": "اختر خيارًا"
+  },
+  "sheet": {
+    "close": "إغلاق"
   }
 }

@@ -3,6 +3,10 @@
     "hidePassword": "Hide password",
     "showPassword": "Show password"
   },
+  "dialog": {
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  },
   "errorState": {
     "retry": "Retry",
     "title": "Something went wrong"
@@ -10,11 +14,17 @@
   "loader": {
     "label": "Loading"
   },
+  "modal": {
+    "close": "Close"
+  },
   "otp": {
     "digit": "Digit {{index}} of {{total}}"
   },
   "select": {
     "close": "Close",
     "placeholder": "Select an option"
+  },
+  "sheet": {
+    "close": "Close"
   }
 }
