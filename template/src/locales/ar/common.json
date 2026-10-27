@@ -3,19 +3,33 @@
     "hidePassword": "إخفاء كلمة المرور",
     "showPassword": "إظهار كلمة المرور"
   },
+  "connection": {
+    "message": "تحتاج هذه الشاشة إلى الإنترنت. أعد الاتصال للمتابعة.",
+    "retry": "تحقق مرة أخرى",
+    "title": "لا يوجد اتصال"
+  },
   "dialog": {
     "cancel": "إلغاء",
     "confirm": "تأكيد"
   },
+  "errorBoundary": {
+    "restart": "إعادة تشغيل التطبيق"
+  },
   "errorState": {
     "retry": "إعادة المحاولة",
     "title": "حدث خطأ ما"
+  },
+  "header": {
+    "back": "رجوع"
   },
   "loader": {
     "label": "جارٍ التحميل"
   },
   "modal": {
     "close": "إغلاق"
+  },
+  "offline": {
+    "banner": "أنت غير متصل بالإنترنت"
   },
   "otp": {
     "digit": "الرقم {{index}} من {{total}}"
