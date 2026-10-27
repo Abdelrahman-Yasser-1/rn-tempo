@@ -15,6 +15,7 @@ export * from './DetailsShimmer';
 export * from './Dialog';
 export * from './Divider';
 export * from './EmptyState';
+export * from './ErrorBoundary';
 export * from './ErrorState';
 export * from './FormTextField';
 export * from './Header';
