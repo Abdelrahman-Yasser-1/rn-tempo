@@ -3,19 +3,33 @@
     "hidePassword": "Hide password",
     "showPassword": "Show password"
   },
+  "connection": {
+    "message": "This screen needs the internet. Reconnect to continue.",
+    "retry": "Check again",
+    "title": "No connection"
+  },
   "dialog": {
     "cancel": "Cancel",
     "confirm": "Confirm"
   },
+  "errorBoundary": {
+    "restart": "Restart app"
+  },
   "errorState": {
     "retry": "Retry",
     "title": "Something went wrong"
+  },
+  "header": {
+    "back": "Back"
   },
   "loader": {
     "label": "Loading"
   },
   "modal": {
     "close": "Close"
+  },
+  "offline": {
+    "banner": "You are offline"
   },
   "otp": {
     "digit": "Digit {{index}} of {{total}}"
