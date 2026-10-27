@@ -7,9 +7,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { queryClient } from '@services/http/queryClient';
 import { i18n } from '@services/i18n/i18n';
-import { ToastHost } from '@shared/components';
+import { ErrorBoundary, ToastHost } from '@shared/components';
 
-import { ErrorBoundary } from './ErrorBoundary';
 import { styles } from './styles';
 
 type Props = { children: ReactNode };
