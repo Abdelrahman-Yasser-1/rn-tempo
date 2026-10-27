@@ -2,6 +2,7 @@
 export * from './Avatar';
 export * from './Badge';
 export * from './Bone';
+export * from './BottomSheet';
 export * from './Box';
 export * from './Button';
 export * from './Card';
