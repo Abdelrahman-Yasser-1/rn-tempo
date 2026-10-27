@@ -32,3 +32,4 @@ export * from './Spacer';
 export * from './Switch';
 export * from './Text';
 export * from './TextField';
+export * from './ToastHost';

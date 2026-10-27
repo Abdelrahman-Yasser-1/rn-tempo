@@ -4,10 +4,10 @@ import type { ReactNode } from 'react';
 import { I18nextProvider } from 'react-i18next';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import Toast from 'react-native-toast-message';
 
 import { queryClient } from '@services/http/queryClient';
 import { i18n } from '@services/i18n/i18n';
+import { ToastHost } from '@shared/components';
 
 import { ErrorBoundary } from './ErrorBoundary';
 import { styles } from './styles';
@@ -27,7 +27,7 @@ export function AppProviders({ children }: Readonly<Props>) {
             <ErrorBoundary>
               <BottomSheetModalProvider>
                 {children}
-                <Toast />
+                <ToastHost />
               </BottomSheetModalProvider>
             </ErrorBoundary>
           </I18nextProvider>
