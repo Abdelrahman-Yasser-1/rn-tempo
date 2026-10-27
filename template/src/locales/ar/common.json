@@ -1,1 +1,13 @@
-{}
+{
+  "a11y": {
+    "hidePassword": "إخفاء كلمة المرور",
+    "showPassword": "إظهار كلمة المرور"
+  },
+  "otp": {
+    "digit": "الرقم {{index}} من {{total}}"
+  },
+  "select": {
+    "close": "إغلاق",
+    "placeholder": "اختر خيارًا"
+  }
+}
