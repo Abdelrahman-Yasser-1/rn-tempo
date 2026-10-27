@@ -37,6 +37,7 @@ describe('Text', () => {
   });
 
   it('resolves a tx key (the key itself when no translation exists)', async () => {
+    // @ts-expect-error -- deliberately not a real key
     await renderWithProviders(<Text tx="common.missingKeyForTest" />);
     expect(screen.getByText('common.missingKeyForTest')).toBeOnTheScreen();
   });
