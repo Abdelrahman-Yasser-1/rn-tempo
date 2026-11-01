@@ -6,5 +6,5 @@ Format: `- [ ] T<task id> <summary>`. Tick a box in the same commit that complet
 - [ ] T5.2 lib modules
 - [ ] T5.3 `create-tempo-app <name>`
 - [ ] T5.4 `tempo` commands
-- [ ] T5.5 Generators
+- [x] T5.5 Generators
 - [ ] T5.6 `doctor`
