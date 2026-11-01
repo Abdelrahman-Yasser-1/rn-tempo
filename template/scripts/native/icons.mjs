@@ -34,8 +34,13 @@ function loadProject() {
     const environments = meta.envs.map((env) => ({
       flavor: env.name,
       // Same naming as ios-envs.rb: prod owns the plain AppIcon set, other envs get AppIcon-<Name>.
-      iosSet: env.name === 'prod' ? 'AppIcon' : `AppIcon-${env.name.charAt(0).toUpperCase()}${env.name.slice(1)}`,
-      badge: env.badge ? { text: env.badge, color: BADGE_COLORS[env.name] ?? NEUTRAL_BADGE_COLOR } : null,
+      iosSet:
+        env.name === 'prod'
+          ? 'AppIcon'
+          : `AppIcon-${env.name.charAt(0).toUpperCase()}${env.name.slice(1)}`,
+      badge: env.badge
+        ? { text: env.badge, color: BADGE_COLORS[env.name] ?? NEUTRAL_BADGE_COLOR }
+        : null,
     }));
     return { iosApp: meta.app.name, environments };
   } catch {
@@ -92,7 +97,8 @@ function ribbonSvg(canvas, box, badge, clipRadius) {
   const paths = letters
     .map((letter, index) => {
       const x = startX + index * (GLYPH_WIDTH + GLYPH_GAP) * scale;
-      if (!GLYPHS[letter]) throw new Error(`icons.mjs: no glyph for badge letter "${letter}"; add it to GLYPHS`);
+      if (!GLYPHS[letter])
+        throw new Error(`icons.mjs: no glyph for badge letter "${letter}"; add it to GLYPHS`);
       return `<path transform="translate(${x} ${startY}) scale(${scale})" d="${GLYPHS[letter]}"/>`;
     })
     .join('');
