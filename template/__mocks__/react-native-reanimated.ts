@@ -65,8 +65,14 @@ export function useReducedMotion(): boolean {
   return false;
 }
 
+/** Gesture Handler wraps its own components with this; returning the component is enough here. */
+export function createAnimatedComponent<T>(component: T): T {
+  return component;
+}
+
 /* eslint-disable import-x/no-default-export -- the mock must mirror the library's default export */
 export default {
   View: RNView,
   ScrollView: RNScrollView,
+  createAnimatedComponent,
 };
