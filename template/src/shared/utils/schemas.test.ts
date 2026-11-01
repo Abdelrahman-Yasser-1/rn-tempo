@@ -1,6 +1,11 @@
 import { emailSchema, nameSchema, otpSchema, passwordSchema, phoneSchema } from './schemas';
 
-function messageFor(schema: { safeParse: (value: unknown) => { success: boolean; error?: { issues: { message: string }[] } } }, value: unknown) {
+function messageFor(
+  schema: {
+    safeParse: (value: unknown) => { success: boolean; error?: { issues: { message: string }[] } };
+  },
+  value: unknown,
+) {
   const result = schema.safeParse(value);
   return result.success ? undefined : result.error?.issues[0]?.message;
 }

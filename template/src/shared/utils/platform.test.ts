@@ -17,5 +17,4 @@ describe('select', () => {
   it('falls back to default when the platform has no entry', () => {
     expect(select({ android: 'android-value', default: 'fallback' })).toBe('fallback');
   });
-
 });

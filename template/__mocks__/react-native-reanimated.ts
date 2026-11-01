@@ -44,7 +44,6 @@ export function interpolate(
   return outStart + Math.min(Math.max(progress, 0), 1) * (outEnd - outStart);
 }
 
- 
 /** Shimmer reads these at module scope; values only need to exist, nothing animates under Jest. */
 export const Easing = {
   linear: (value: number) => value,

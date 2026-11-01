@@ -7,7 +7,13 @@ import { Dialog } from './Dialog';
 describe('Dialog', () => {
   it('renders title, message and the default confirm and cancel buttons', async () => {
     await renderWithProviders(
-      <Dialog visible title="Sign out?" message="You will need to log in again." onConfirm={jest.fn()} onCancel={jest.fn()} />,
+      <Dialog
+        visible
+        title="Sign out?"
+        message="You will need to log in again."
+        onConfirm={jest.fn()}
+        onCancel={jest.fn()}
+      />,
     );
     expect(screen.getByRole('header', { name: 'Sign out?' })).toBeOnTheScreen();
     expect(screen.getByText('You will need to log in again.')).toBeOnTheScreen();
@@ -17,7 +23,14 @@ describe('Dialog', () => {
 
   it('uses custom labels when given', async () => {
     await renderWithProviders(
-      <Dialog visible title="Delete" confirmLabel="Delete" cancelLabel="Keep" onConfirm={jest.fn()} onCancel={jest.fn()} />,
+      <Dialog
+        visible
+        title="Delete"
+        confirmLabel="Delete"
+        cancelLabel="Keep"
+        onConfirm={jest.fn()}
+        onCancel={jest.fn()}
+      />,
     );
     expect(screen.getByRole('button', { name: 'Delete' })).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Keep' })).toBeOnTheScreen();
@@ -47,7 +60,9 @@ describe('Dialog', () => {
   });
 
   it('renders nothing when not visible', async () => {
-    await renderWithProviders(<Dialog visible={false} title="Gone" onConfirm={jest.fn()} onCancel={jest.fn()} />);
+    await renderWithProviders(
+      <Dialog visible={false} title="Gone" onConfirm={jest.fn()} onCancel={jest.fn()} />,
+    );
     expect(screen.queryByRole('header', { name: 'Gone' })).not.toBeOnTheScreen();
   });
 });

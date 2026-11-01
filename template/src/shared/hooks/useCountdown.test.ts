@@ -9,7 +9,7 @@ async function tick(seconds: number) {
   for (let index = 0; index < seconds; index += 1) {
     await actAsync(() => {
       jest.advanceTimersByTime(1000);
-    })
+    });
   }
 }
 
@@ -32,11 +32,11 @@ describe('useCountdown', () => {
     const { result } = await renderHook(() => useCountdown(3));
     await actAsync(() => {
       result.current.start();
-    })
+    });
     expect(result.current.isRunning).toBe(true);
     await actAsync(() => {
       jest.advanceTimersByTime(1000);
-    })
+    });
     expect(result.current.remaining).toBe(2);
     await tick(2);
     expect(result.current.remaining).toBe(0);
@@ -48,15 +48,15 @@ describe('useCountdown', () => {
     await actAsync(() => {
       result.current.start();
       jest.advanceTimersByTime(1000);
-    })
+    });
     await actAsync(() => {
       result.current.reset();
-    })
+    });
     expect(result.current.remaining).toBe(3);
     expect(result.current.isRunning).toBe(false);
     await actAsync(() => {
       jest.advanceTimersByTime(5000);
-    })
+    });
     expect(result.current.remaining).toBe(3);
   });
 
@@ -64,12 +64,12 @@ describe('useCountdown', () => {
     const { result } = await renderHook(() => useCountdown(2));
     await actAsync(() => {
       result.current.start();
-    })
+    });
     await tick(2);
     expect(result.current.remaining).toBe(0);
     await actAsync(() => {
       result.current.start();
-    })
+    });
     expect(result.current.remaining).toBe(2);
   });
 });

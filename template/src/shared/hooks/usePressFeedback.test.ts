@@ -20,7 +20,7 @@ describe('usePressFeedback', () => {
     const { result, rerender } = await renderHook(() => usePressFeedback());
     await actAsync(() => {
       result.current.handlers.onPressIn();
-    })
+    });
     await rerender(undefined);
     expect(result.current.animatedStyle).toMatchObject({
       opacity: closeTo(0.7),
@@ -29,7 +29,7 @@ describe('usePressFeedback', () => {
 
     await actAsync(() => {
       result.current.handlers.onPressOut();
-    })
+    });
     await rerender(undefined);
     expect(result.current.animatedStyle).toMatchObject({
       opacity: closeTo(1),

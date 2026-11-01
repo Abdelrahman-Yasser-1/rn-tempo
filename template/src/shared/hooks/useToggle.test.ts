@@ -10,7 +10,7 @@ describe('useToggle', () => {
     expect(result.current[0]).toBe(false);
     await actAsync(() => {
       result.current[1]();
-    })
+    });
     expect(result.current[0]).toBe(true);
   });
 
@@ -23,11 +23,11 @@ describe('useToggle', () => {
     const { result } = await renderHook(() => useToggle());
     await actAsync(() => {
       result.current[2](true);
-    })
+    });
     expect(result.current[0]).toBe(true);
     await actAsync(() => {
       result.current[2](false);
-    })
+    });
     expect(result.current[0]).toBe(false);
   });
 });

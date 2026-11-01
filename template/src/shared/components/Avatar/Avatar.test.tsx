@@ -32,11 +32,15 @@ describe('Avatar', () => {
       <Avatar name="Ada Lovelace" source={{ uri: 'https://example.com/ada.png' }} testID="av" />,
     );
     expect(screen.getByTestId('av.image', { includeHiddenElements: true })).toBeOnTheScreen();
-    expect(screen.queryByTestId('av.initials', { includeHiddenElements: true })).not.toBeOnTheScreen();
+    expect(
+      screen.queryByTestId('av.initials', { includeHiddenElements: true }),
+    ).not.toBeOnTheScreen();
   });
 
   it('tags the initials with a testID suffix', async () => {
     await renderWithProviders(<Avatar name="Grace Hopper" testID="av" />);
-    expect(screen.getByTestId('av.initials', { includeHiddenElements: true })).toHaveTextContent('GH');
+    expect(screen.getByTestId('av.initials', { includeHiddenElements: true })).toHaveTextContent(
+      'GH',
+    );
   });
 });

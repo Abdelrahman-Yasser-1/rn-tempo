@@ -1,9 +1,4 @@
-import {
-  formatCurrency,
-  formatDate,
-  formatNumber,
-  formatRelativeTime,
-} from './format';
+import { formatCurrency, formatDate, formatNumber, formatRelativeTime } from './format';
 
 const NOW = new Date(2026, 9, 27, 12, 0, 0);
 
