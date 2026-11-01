@@ -44,6 +44,23 @@ export function interpolate(
   return outStart + Math.min(Math.max(progress, 0), 1) * (outEnd - outStart);
 }
 
+ 
+/** Shimmer reads these at module scope; values only need to exist, nothing animates under Jest. */
+export const Easing = {
+  linear: (value: number) => value,
+  ease: (value: number) => value,
+};
+
+export const ReduceMotion = { Never: 'never', Always: 'always', System: 'system' } as const;
+
+export function withRepeat<T>(animation: T): T {
+  return animation;
+}
+
+export function cancelAnimation(): void {
+  // Nothing runs under Jest, so there is nothing to cancel.
+}
+
 // eslint-disable-next-line @eslint-react/no-unnecessary-use-prefix -- name mirrors the Reanimated export
 export function useReducedMotion(): boolean {
   return false;
