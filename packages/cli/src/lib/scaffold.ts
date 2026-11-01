@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { CliError } from './errors.ts';
@@ -74,6 +74,7 @@ async function mergeLocaleKey(file: string, keyPath: readonly string[], value: s
   const last = keyPath.at(-1) ?? '';
   if (last in cursor) return false;
   cursor[last] = value;
+  await mkdir(path.dirname(file), { recursive: true });
   await writeFile(file, `${JSON.stringify(sortKeys(data), null, 2)}\n`);
   return true;
 }
@@ -91,9 +92,8 @@ async function addScreenLocale(projectDir: string, vars: TemplateVars, dryRun: b
   return updated;
 }
 
-/** `tempo g screen`: screen folder, locale keys, feature barrel export and (optionally) the route. */
-export async function generateScreen(name: string, feature: string, options: ScaffoldOptions): Promise<ScaffoldResult> {
-  await requireFeature(options.projectDir, feature);
+/** Screen files, locale keys, barrel export and route. The caller checks that the feature exists. */
+async function writeScreen(name: string, feature: string, options: ScaffoldOptions): Promise<ScaffoldResult> {
   const vars = buildVars(name, feature, options.date);
   const rendered = await renderTemplateDir({ ...options, dirName: 'screen', vars });
   const updated: string[] = [];
@@ -119,6 +119,12 @@ export async function generateScreen(name: string, feature: string, options: Sca
   return { created: rendered.created, updated, followUps, register };
 }
 
+/** `tempo g screen`: screen folder, locale keys, feature barrel export and (optionally) the route. */
+export async function generateScreen(name: string, feature: string, options: ScaffoldOptions): Promise<ScaffoldResult> {
+  await requireFeature(options.projectDir, feature);
+  return writeScreen(name, feature, options);
+}
+
 /** `tempo g feature`: the C5 feature tree, locales, specs and a first screen. */
 export async function generateFeature(feature: string, options: ScaffoldOptions): Promise<ScaffoldResult> {
   const vars = buildVars(feature, feature, options.date);
@@ -126,7 +132,8 @@ export async function generateFeature(feature: string, options: ScaffoldOptions)
     throw new CliError(`Feature "${vars.feature}" already exists (use --force to overwrite files)`, { code: 'FILE_EXISTS' });
   }
   const base = await renderTemplateDir({ ...options, dirName: 'feature', vars });
-  const screen = await generateScreen(feature, feature, { ...options, force: true });
+  // The feature folder does not exist yet on a dry run, so skip the existence check here.
+  const screen = await writeScreen(feature, feature, { ...options, force: true });
   const scope = vars.feature;
   const namespace = options.dryRun
     ? { updated: [], notes: [] }
