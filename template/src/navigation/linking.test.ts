@@ -1,6 +1,10 @@
+import { ENV } from '@config/env';
 import { useAuthStore } from '@features/auth';
 
 import { interceptLink, isPublicPath, linkingPrefixes, toPath } from './linking';
+
+// The scheme is renamed per project, so tests read it from the env instead of hard-coding it.
+const SCHEME = `${ENV.DEEP_LINK_SCHEME}://`;
 
 beforeEach(() => {
   useAuthStore.setState({ status: 'signedOut', user: null, pendingLink: null });
@@ -8,16 +12,16 @@ beforeEach(() => {
 
 describe('linking prefixes', () => {
   test('use the dev scheme from .env.dev and no https host when none is configured', () => {
-    expect(linkingPrefixes).toEqual(['tempo-dev://']);
+    expect(linkingPrefixes).toEqual([SCHEME]);
   });
 });
 
 describe('toPath', () => {
   test.each([
-    ['tempo-dev://settings', 'settings'],
-    ['tempo-dev://settings/theme/', 'settings/theme'],
-    ['tempo-dev:///items/1?ref=push#top', 'items/1'],
-    ['tempo-dev://', ''],
+    [`${SCHEME}settings`, 'settings'],
+    [`${SCHEME}settings/theme/`, 'settings/theme'],
+    [`${SCHEME}/items/1?ref=push#top`, 'items/1'],
+    [SCHEME, ''],
   ])('%s becomes "%s"', (url, expected) => {
     expect(toPath(url)).toBe(expected);
   });
@@ -43,18 +47,18 @@ describe('interceptLink', () => {
   test('passes everything through when signed in', () => {
     useAuthStore.setState({ status: 'signedIn' });
 
-    expect(interceptLink('tempo-dev://settings')).toBe('tempo-dev://settings');
+    expect(interceptLink(`${SCHEME}settings`)).toBe(`${SCHEME}settings`);
     expect(useAuthStore.getState().pendingLink).toBeNull();
   });
 
   test('AC-9: parks a protected link when signed out and returns null', () => {
-    expect(interceptLink('tempo-dev://items/7')).toBeNull();
+    expect(interceptLink(`${SCHEME}items/7`)).toBeNull();
 
-    expect(useAuthStore.getState().pendingLink).toBe('tempo-dev://items/7');
+    expect(useAuthStore.getState().pendingLink).toBe(`${SCHEME}items/7`);
   });
 
   test('lets auth links through when signed out', () => {
-    expect(interceptLink('tempo-dev://login')).toBe('tempo-dev://login');
+    expect(interceptLink(`${SCHEME}login`)).toBe(`${SCHEME}login`);
     expect(useAuthStore.getState().pendingLink).toBeNull();
   });
 
