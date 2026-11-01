@@ -4,7 +4,7 @@ import path from 'node:path';
 import { CliError } from './errors.ts';
 import { pathExists } from './fs-utils.ts';
 import { buildVars, renderTemplateDir, toKebab, toPascal, type TemplateVars } from './generate.ts';
-import { registerRoute, type RegisterResult } from './register.ts';
+import { registerNamespace, registerRoute, type RegisterResult } from './register.ts';
 import { readTempoJson } from './tempo-json.ts';
 
 export type ScaffoldOptions = {
@@ -52,6 +52,16 @@ async function appendLine(file: string, line: string): Promise<boolean> {
 
 type Json = Record<string, unknown>;
 
+/** Alphabetical keys at every level, the order `i18next-cli extract` writes (keeps `i18n:check` clean). */
+function sortKeys(value: Json): Json {
+  const sorted: Json = {};
+  for (const key of Object.keys(value).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))) {
+    const child = value[key];
+    sorted[key] = typeof child === 'object' && child !== null && !Array.isArray(child) ? sortKeys(child as Json) : child;
+  }
+  return sorted;
+}
+
 /** Sets `value` at a dotted path in a locale file, keeping existing keys. Returns true when it changed. */
 async function mergeLocaleKey(file: string, keyPath: readonly string[], value: string): Promise<boolean> {
   const data: Json = (await pathExists(file)) ? (JSON.parse(await readFile(file, 'utf8')) as Json) : {};
@@ -64,7 +74,7 @@ async function mergeLocaleKey(file: string, keyPath: readonly string[], value: s
   const last = keyPath.at(-1) ?? '';
   if (last in cursor) return false;
   cursor[last] = value;
-  await writeFile(file, `${JSON.stringify(data, null, 2)}\n`);
+  await writeFile(file, `${JSON.stringify(sortKeys(data), null, 2)}\n`);
   return true;
 }
 
@@ -118,14 +128,17 @@ export async function generateFeature(feature: string, options: ScaffoldOptions)
   const base = await renderTemplateDir({ ...options, dirName: 'feature', vars });
   const screen = await generateScreen(feature, feature, { ...options, force: true });
   const scope = vars.feature;
+  const namespace = options.dryRun
+    ? { updated: [], notes: [] }
+    : await registerNamespace(options.projectDir, scope, vars.FeatureName);
   const followUps = [
     ...screen.followUps,
     `Add "${scope}" to extraScopes in commitlint.config.mjs so commits can use the ${scope} scope`,
-    `Register the "${scope}" i18n namespace where resources are declared (src/services/i18n)`,
+    ...namespace.notes,
     `Fill in specs/${scope}/spec.md and set status: approved before implementing`,
     'Run yarn verify',
   ];
-  return { created: [...base.created, ...screen.created], updated: screen.updated, followUps, register: screen.register };
+  return { created: [...base.created, ...screen.created], updated: [...screen.updated, ...namespace.updated], followUps, register: screen.register };
 }
 
 /** `tempo g component`: feature component, or shared component (+ story when storybook is enabled). */
