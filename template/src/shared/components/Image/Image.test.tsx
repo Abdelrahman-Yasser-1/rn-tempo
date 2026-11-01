@@ -7,6 +7,14 @@ import { Image } from './Image';
 
 const SOURCE = { uri: 'https://example.com/photo.png' };
 
+/** Fails the native load; FastImage reports it through its `onFastImageError` prop. */
+function failNativeLoad() {
+  // The image container is hidden from screen readers until it fails, so testID is the handle.
+  // eslint-disable-next-line no-restricted-syntax -- decorative native view: testID is the only handle
+  const nativeImage = screen.getByTestId('pic.image', { includeHiddenElements: true });
+  void fireEvent(nativeImage, 'fastImageError');
+}
+
 describe('Image', () => {
   it('is an informative image when given an accessibilityLabel', async () => {
     await renderWithProviders(<Image source={SOURCE} accessibilityLabel="Sunset" />);
@@ -33,16 +41,10 @@ describe('Image', () => {
 
   it('swaps in the default fallback icon when loading fails', async () => {
     await renderWithProviders(<Image source={SOURCE} testID="pic" accessibilityLabel="Broken" />);
-    // Fails the native load; FastImage reports it through its `onFastImageError` prop.
-    // eslint-disable-next-line no-restricted-syntax -- image has no role until it fails
-    void fireEvent(
-      screen.getByTestId('pic.image', { includeHiddenElements: true }),
-      'fastImageError',
-    );
+    failNativeLoad();
     // eslint-disable-next-line no-restricted-syntax -- fallback wrapper has no role
-    expect(
-      await screen.findByTestId('pic.fallback', { includeHiddenElements: true }),
-    ).toBeOnTheScreen();
+    const fallback = await screen.findByTestId('pic.fallback', { includeHiddenElements: true });
+    expect(fallback).toBeOnTheScreen();
     expect(screen.getByRole('image', { name: 'Broken' })).toBeOnTheScreen();
   });
 
@@ -55,12 +57,7 @@ describe('Image', () => {
         fallback={<Text>No photo</Text>}
       />,
     );
-    // Fails the native load; FastImage reports it through its `onFastImageError` prop.
-    // eslint-disable-next-line no-restricted-syntax -- image has no role until it fails
-    void fireEvent(
-      screen.getByTestId('pic.image', { includeHiddenElements: true }),
-      'fastImageError',
-    );
+    failNativeLoad();
     expect(await screen.findByText('No photo')).toBeOnTheScreen();
   });
 });
