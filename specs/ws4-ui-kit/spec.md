@@ -71,7 +71,7 @@ None. If anything is ambiguous, STOP and ask the integrator.
 | `IconButton` | Requires `accessibilityLabel` |
 | `TextField` | `label`, `placeholder`, `helperText`, `errorText`, `secureTextEntry` with an eye toggle, `left`/`right` adornments, `forwardRef`. Shows the error with `accessibilityLiveRegion="polite"`. |
 | `FormTextField` | react-hook-form `Controller` wrapper: `name`, `control`, `rules` via Zod resolver at the form level. Error message translated from a validation key. |
-| `OTPInput` | Length prop (default 6); auto-advance; paste support; `textContentType="oneTimeCode"` / `autoComplete="sms-otp"` |
+| `OtpInput` | Length prop (default 6); auto-advance; paste support; `textContentType="oneTimeCode"` / `autoComplete="sms-otp"` |
 | `Checkbox`, `Radio` + `RadioGroup`, `Switch`, `Chip` | — |
 | `Select` | Opens a BottomSheet list |
 
@@ -93,7 +93,7 @@ None. If anything is ambiguous, STOP and ask the integrator.
 
 **4.5 Hooks** (`shared/hooks`, each with a test)
 
-`useDebounce`, `useDebouncedCallback`, `useThrottle`, `useInterval`, `useCountdown(seconds)` (returns `{remaining, isRunning, start, reset}`), `useToggle`, `useDisclosure`, `usePrevious`, `useMountEffect`, `useAppState`, `useIsOnline`, `useKeyboard` (`{isVisible, height}`), `useBackHandler(handler)`, `useReducedMotion`, `useRefreshOnFocus(refetch)` (TanStack pattern: skip first focus), `useOnFocus`, `useRTL`, `usePermissions` (thin wrapper over `PermissionsAndroid` and iOS no-op guidance; **no** react-native-permissions dep — document the recipe).
+`useDebounce`, `useDebouncedCallback`, `useThrottle`, `useInterval`, `useCountdown(seconds)` (returns `{remaining, isRunning, start, reset}`), `useToggle`, `useDisclosure`, `usePrevious`, `useMountEffect`, `useAppState`, `useIsOnline`, `useKeyboard` (`{isVisible, height}`), `useBackHandler(handler)`, `useReducedMotion`, `useRefreshOnFocus(refetch)` (TanStack pattern: skip first focus), `useOnFocus`, `useRtl`, `usePermissions` (thin wrapper over `PermissionsAndroid` and iOS no-op guidance; **no** react-native-permissions dep — document the recipe).
 
 - **Commits:** `feat(hooks): add timing hooks`, `feat(hooks): add state hooks`, `feat(hooks): add device and app hooks`.
 

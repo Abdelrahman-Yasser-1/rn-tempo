@@ -26,7 +26,7 @@ export * from './ListItem';
 export * from './ListShimmer';
 export * from './Loader';
 export * from './Modal';
-export * from './OTPInput';
+export * from './OtpInput';
 export * from './OfflineBanner';
 export * from './Radio';
 export * from './RadioGroup';

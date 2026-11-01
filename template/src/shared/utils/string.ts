@@ -32,7 +32,7 @@ export function maskEmail(email: string): string {
   return at <= 0 ? email : email.charAt(0) + MASK.repeat(at - 1) + email.slice(at);
 }
 
-/** Keeps the last 4 digits: "+201234567890" becomes "+*********7890". */
+/** Keeps the last 4 digits: "+201234567890" becomes "+********7890". */
 export function maskPhone(phone: string): string {
   const visible = 4;
   if (phone.length <= visible) {

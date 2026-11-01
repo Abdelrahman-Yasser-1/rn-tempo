@@ -17,6 +17,6 @@ export { usePressFeedback } from './usePressFeedback';
 export { usePrevious } from './usePrevious';
 export { useReducedMotion } from './useReducedMotion';
 export { useRefreshOnFocus } from './useRefreshOnFocus';
-export { useRTL } from './useRTL';
+export { useRtl } from './useRtl';
 export { useThrottle } from './useThrottle';
 export { useToggle } from './useToggle';
