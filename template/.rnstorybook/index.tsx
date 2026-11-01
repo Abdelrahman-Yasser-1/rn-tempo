@@ -1,7 +1,36 @@
+// Entry point when Metro runs with STORYBOOK_ENABLED=true: withStorybook swaps index.js for this
+// file, so it repeats the app entry's early imports and registers under the same app name.
+import 'react-native-get-random-values';
+
+import '../src/theme/unistyles';
+
+import { useEffect, useState } from 'react';
+import { AppRegistry } from 'react-native';
+
+import { initI18nInstance } from '@services/i18n/i18n';
+import { getInitialLanguage } from '@services/i18n/languageManager';
+import { initStorage } from '@services/storage/storage';
+
+import { name as appName } from '../app.json';
+
 import { view } from './storybook.requires';
 
 // Selection is not persisted: no AsyncStorage dependency (the template uses MMKV only).
 const StorybookUIRoot = view.getStorybookUI({});
 
-// eslint-disable-next-line import-x/no-default-export -- Storybook loads this file through its default export
-export default StorybookUIRoot;
+/** Components read storage and translations, so both are ready before any story renders. */
+function StorybookApp() {
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    void (async () => {
+      await initStorage();
+      await initI18nInstance(getInitialLanguage());
+      setIsReady(true);
+    })();
+  }, []);
+
+  return isReady ? <StorybookUIRoot /> : null;
+}
+
+AppRegistry.registerComponent(appName, () => StorybookApp);
