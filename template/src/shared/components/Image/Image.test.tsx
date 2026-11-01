@@ -1,0 +1,56 @@
+import { fireEvent, screen } from '@testing-library/react-native';
+import { Text } from 'react-native';
+
+import { renderWithProviders } from '@test-utils/renderWithProviders';
+
+import { Image } from './Image';
+
+const SOURCE = { uri: 'https://example.com/photo.png' };
+
+describe('Image', () => {
+  it('is an informative image when given an accessibilityLabel', async () => {
+    await renderWithProviders(<Image source={SOURCE} accessibilityLabel="Sunset" />);
+    expect(screen.getByRole('image', { name: 'Sunset' })).toBeOnTheScreen();
+  });
+
+  it('is hidden from screen readers when decorative', async () => {
+    // Decorative images have no role, so the container is only reachable by testID.
+     
+    await renderWithProviders(<Image source={SOURCE} testID="pic" />);
+    // eslint-disable-next-line no-restricted-syntax -- decorative element: testID is the only handle
+    expect(screen.getByTestId('pic', { includeHiddenElements: true })).toHaveProp(
+      'accessibilityElementsHidden',
+      true,
+    );
+  });
+
+  it('applies the requested size to its container', async () => {
+    await renderWithProviders(<Image source={SOURCE} width={120} height={80} accessibilityLabel="A" />);
+    expect(screen.getByRole('image', { name: 'A' })).toHaveStyle({ width: 120, height: 80 });
+  });
+
+  it('swaps in the default fallback icon when loading fails', async () => {
+    await renderWithProviders(<Image source={SOURCE} testID="pic" accessibilityLabel="Broken" />);
+    // Fails the native load; FastImage reports it through its `onFastImageError` prop.
+    // eslint-disable-next-line no-restricted-syntax -- image has no role until it fails
+    void fireEvent(screen.getByTestId('pic.image', { includeHiddenElements: true }), 'fastImageError');
+    // eslint-disable-next-line no-restricted-syntax -- fallback wrapper has no role
+    expect(await screen.findByTestId('pic.fallback', { includeHiddenElements: true })).toBeOnTheScreen();
+    expect(screen.getByRole('image', { name: 'Broken' })).toBeOnTheScreen();
+  });
+
+  it('renders a custom fallback when provided', async () => {
+    await renderWithProviders(
+      <Image
+        source={SOURCE}
+        testID="pic"
+        accessibilityLabel="Broken"
+        fallback={<Text>No photo</Text>}
+      />,
+    );
+    // Fails the native load; FastImage reports it through its `onFastImageError` prop.
+    // eslint-disable-next-line no-restricted-syntax -- image has no role until it fails
+    void fireEvent(screen.getByTestId('pic.image', { includeHiddenElements: true }), 'fastImageError');
+    expect(await screen.findByText('No photo')).toBeOnTheScreen();
+  });
+});

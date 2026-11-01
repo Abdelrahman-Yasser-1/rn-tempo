@@ -1,0 +1,36 @@
+import { screen } from '@testing-library/react-native';
+
+import { renderWithProviders } from '@test-utils/renderWithProviders';
+
+import { Loader } from './Loader';
+
+describe('Loader', () => {
+  it('is a busy progress bar', async () => {
+    await renderWithProviders(<Loader />);
+    expect(screen.getByRole('progressbar')).toBeBusy();
+  });
+
+  it('uses the visible label as the accessible name', async () => {
+    await renderWithProviders(<Loader label="Fetching orders" />);
+    expect(screen.getByRole('progressbar', { name: 'Fetching orders' })).toBeOnTheScreen();
+    expect(screen.getByText('Fetching orders')).toBeOnTheScreen();
+  });
+
+  it('falls back to a translated default name when no label is given', async () => {
+    await renderWithProviders(<Loader />);
+    expect(screen.getByRole('progressbar', { name: 'Loading' })).toBeOnTheScreen();
+  });
+
+  it('maps the sm size to a small spinner and lg to a large one', async () => {
+    await renderWithProviders(
+      <>
+        <Loader size="sm" testID="small" />
+        <Loader size="lg" testID="large" />
+      </>,
+    );
+    // eslint-disable-next-line no-restricted-syntax -- ActivityIndicator has no accessible role
+    expect(screen.getByTestId('small.spinner')).toHaveProp('size', 'small');
+    // eslint-disable-next-line no-restricted-syntax -- ActivityIndicator has no accessible role
+    expect(screen.getByTestId('large.spinner')).toHaveProp('size', 'large');
+  });
+});
