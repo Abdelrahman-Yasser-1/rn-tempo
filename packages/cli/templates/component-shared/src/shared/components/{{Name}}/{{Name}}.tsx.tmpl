@@ -1,4 +1,6 @@
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+
+import { Text } from '../Text';
 
 import { styles } from './styles';
 import type { {{Name}}Props } from './types';
@@ -7,7 +9,7 @@ import type { {{Name}}Props } from './types';
 export function {{Name}}({ label, testID }: Readonly<{{Name}}Props>) {
   return (
     <View style={styles.container} testID={testID}>
-      <Text style={styles.label}>{label}</Text>
+      <Text variant="body">{label}</Text>
     </View>
   );
 }

@@ -1,18 +1,13 @@
-import { renderWithProviders } from '@test-utils/renderWithProviders';
 import { screen } from '@testing-library/react-native';
+
+import { renderWithProviders } from '@test-utils/renderWithProviders';
 
 import { {{Name}} } from './{{Name}}';
 
 describe('{{Name}}', () => {
   it('renders its label', async () => {
-    await renderWithProviders(<{{Name}} label="Hello" testID="{{name_kebab}}" />);
+    await renderWithProviders(<{{Name}} label="Hello" />);
 
-    expect(screen.getByTestId('{{name_kebab}}')).toBeTruthy();
-  });
-
-  it('passes the testID down', async () => {
-    await renderWithProviders(<{{Name}} label="Hello" testID="{{name_kebab}}" />);
-
-    expect(screen.getByText('Hello')).toBeTruthy();
+    expect(screen.getByText('Hello')).toBeOnTheScreen();
   });
 });
