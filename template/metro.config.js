@@ -1,7 +1,7 @@
 const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 const { withRozenite } = require('@rozenite/metro');
 // @tempo-feature:storybook:start
-const { withStorybook } = require('@storybook/react-native/metro/withStorybook');
+const { withStorybook } = require('@storybook/react-native/withStorybook');
 // @tempo-feature:storybook:end
 
 const defaultConfig = getDefaultConfig(__dirname);
@@ -30,7 +30,7 @@ const config = {
 let finalConfig = mergeConfig(defaultConfig, config);
 
 // @tempo-feature:storybook:start
-// With STORYBOOK_ENABLED unset, Metro swaps Storybook imports for empty modules.
+// STORYBOOK_ENABLED=true swaps the entry to .rnstorybook/index.tsx; unset, Storybook code is stubbed.
 finalConfig = withStorybook(finalConfig, {
   enabled: process.env.STORYBOOK_ENABLED === 'true',
   configPath: './.rnstorybook',
