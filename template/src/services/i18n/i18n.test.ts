@@ -16,19 +16,18 @@ describe('i18n resources', () => {
     }
   });
 
-  test('includes every contract C11 namespace, including forms', () => {
+  test('includes every contract C11 namespace', () => {
     const namespaces = Object.keys(resources.en);
 
-    expect(namespaces).toHaveLength(10);
     expect(namespaces).toEqual(
       expect.arrayContaining([
         'app',
         'auth',
         'common',
         'errors',
-        'forms',
+        'forms', // @tempo-feature:dynamic-forms
         'home',
-        'items',
+        'items', // @tempo-feature:samples
         'profile',
         'settings',
         'validation',
