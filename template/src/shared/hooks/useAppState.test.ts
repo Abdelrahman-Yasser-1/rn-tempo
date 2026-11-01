@@ -38,7 +38,7 @@ describe('useAppState', () => {
     const listener = addListener.mock.calls.filter(([type]) => type === 'change').at(-1)?.[1];
     await actAsync(() => {
       listener?.('inactive');
-    })
+    });
     expect(result.current).toBe('inactive');
   });
 

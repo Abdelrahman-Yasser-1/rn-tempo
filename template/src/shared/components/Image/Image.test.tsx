@@ -15,7 +15,7 @@ describe('Image', () => {
 
   it('is hidden from screen readers when decorative', async () => {
     // Decorative images have no role, so the container is only reachable by testID.
-     
+
     await renderWithProviders(<Image source={SOURCE} testID="pic" />);
     // eslint-disable-next-line no-restricted-syntax -- decorative element: testID is the only handle
     expect(screen.getByTestId('pic', { includeHiddenElements: true })).toHaveProp(
@@ -25,7 +25,9 @@ describe('Image', () => {
   });
 
   it('applies the requested size to its container', async () => {
-    await renderWithProviders(<Image source={SOURCE} width={120} height={80} accessibilityLabel="A" />);
+    await renderWithProviders(
+      <Image source={SOURCE} width={120} height={80} accessibilityLabel="A" />,
+    );
     expect(screen.getByRole('image', { name: 'A' })).toHaveStyle({ width: 120, height: 80 });
   });
 
@@ -33,9 +35,14 @@ describe('Image', () => {
     await renderWithProviders(<Image source={SOURCE} testID="pic" accessibilityLabel="Broken" />);
     // Fails the native load; FastImage reports it through its `onFastImageError` prop.
     // eslint-disable-next-line no-restricted-syntax -- image has no role until it fails
-    void fireEvent(screen.getByTestId('pic.image', { includeHiddenElements: true }), 'fastImageError');
+    void fireEvent(
+      screen.getByTestId('pic.image', { includeHiddenElements: true }),
+      'fastImageError',
+    );
     // eslint-disable-next-line no-restricted-syntax -- fallback wrapper has no role
-    expect(await screen.findByTestId('pic.fallback', { includeHiddenElements: true })).toBeOnTheScreen();
+    expect(
+      await screen.findByTestId('pic.fallback', { includeHiddenElements: true }),
+    ).toBeOnTheScreen();
     expect(screen.getByRole('image', { name: 'Broken' })).toBeOnTheScreen();
   });
 
@@ -50,7 +57,10 @@ describe('Image', () => {
     );
     // Fails the native load; FastImage reports it through its `onFastImageError` prop.
     // eslint-disable-next-line no-restricted-syntax -- image has no role until it fails
-    void fireEvent(screen.getByTestId('pic.image', { includeHiddenElements: true }), 'fastImageError');
+    void fireEvent(
+      screen.getByTestId('pic.image', { includeHiddenElements: true }),
+      'fastImageError',
+    );
     expect(await screen.findByText('No photo')).toBeOnTheScreen();
   });
 });

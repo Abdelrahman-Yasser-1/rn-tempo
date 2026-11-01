@@ -17,9 +17,12 @@ describe('usePrevious', () => {
   });
 
   it('returns the value from before the latest change', async () => {
-    const { result, rerender } = await renderHook(({ value }: { value: string }) => usePrevious(value), {
-      initialProps: { value: 'a' },
-    });
+    const { result, rerender } = await renderHook(
+      ({ value }: { value: string }) => usePrevious(value),
+      {
+        initialProps: { value: 'a' },
+      },
+    );
     await rerender({ value: 'b' });
     expect(result.current).toBe('a');
     await rerender({ value: 'c' });

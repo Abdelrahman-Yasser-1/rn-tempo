@@ -3,7 +3,6 @@ import { renderHook } from '@testing-library/react-native';
 import { useNetworkStore } from '@services/network/network';
 import { actAsync } from '@test-utils/act';
 
-
 import { useIsOnline } from './useIsOnline';
 
 describe('useIsOnline', () => {
@@ -31,11 +30,11 @@ describe('useIsOnline', () => {
   it('follows the store as connectivity changes', async () => {
     const { result } = await renderHook(() => useIsOnline());
     await actAsync(() => {
-      useNetworkStore.setState({ isConnected: false, isInternetReachable: false })
+      useNetworkStore.setState({ isConnected: false, isInternetReachable: false });
     });
     expect(result.current).toBe(false);
     await actAsync(() => {
-      useNetworkStore.setState({ isConnected: true, isInternetReachable: true })
+      useNetworkStore.setState({ isConnected: true, isInternetReachable: true });
     });
     expect(result.current).toBe(true);
   });

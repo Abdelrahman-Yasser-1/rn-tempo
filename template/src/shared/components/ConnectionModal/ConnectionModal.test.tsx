@@ -55,9 +55,7 @@ describe('ConnectionModal', () => {
   it('refreshes NetInfo and calls onRetry from the retry button', async () => {
     useNetworkStore.setState(OFFLINE);
     const onRetry = jest.fn();
-    const { user } = await renderWithProviders(
-      <ConnectionModal delayMs={0} onRetry={onRetry} />,
-    );
+    const { user } = await renderWithProviders(<ConnectionModal delayMs={0} onRetry={onRetry} />);
     await user.press(await screen.findByRole('button', { name: 'Check again' }));
     expect(NetInfo.refresh).toHaveBeenCalled();
     expect(onRetry).toHaveBeenCalledTimes(1);

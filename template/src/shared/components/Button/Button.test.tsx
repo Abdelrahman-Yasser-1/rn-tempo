@@ -24,9 +24,7 @@ describe('Button', () => {
 
   it('is disabled and ignores presses when disabled', async () => {
     const onPress = jest.fn();
-    const { user } = await renderWithProviders(
-      <Button title="Save" disabled onPress={onPress} />,
-    );
+    const { user } = await renderWithProviders(<Button title="Save" disabled onPress={onPress} />);
     const button = screen.getByRole('button', { name: 'Save' });
     expect(button).toBeDisabled();
     await user.press(button);

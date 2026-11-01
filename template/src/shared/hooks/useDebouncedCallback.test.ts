@@ -19,14 +19,14 @@ describe('useDebouncedCallback', () => {
     await actAsync(() => {
       result.current.run('a');
       result.current.run('b');
-    })
+    });
     await actAsync(() => {
       jest.advanceTimersByTime(199);
-    })
+    });
     expect(callback).not.toHaveBeenCalled();
     await actAsync(() => {
       jest.advanceTimersByTime(1);
-    })
+    });
     expect(callback).toHaveBeenCalledTimes(1);
     expect(callback).toHaveBeenCalledWith('b');
   });
@@ -37,10 +37,10 @@ describe('useDebouncedCallback', () => {
     await actAsync(() => {
       result.current.run();
       result.current.cancel();
-    })
+    });
     await actAsync(() => {
       jest.advanceTimersByTime(500);
-    })
+    });
     expect(callback).not.toHaveBeenCalled();
   });
 
@@ -49,11 +49,11 @@ describe('useDebouncedCallback', () => {
     const { result, unmount } = await renderHook(() => useDebouncedCallback(callback, 200));
     await actAsync(() => {
       result.current.run();
-    })
+    });
     await unmount();
     await actAsync(() => {
       jest.advanceTimersByTime(500);
-    })
+    });
     expect(callback).not.toHaveBeenCalled();
   });
 
@@ -63,15 +63,16 @@ describe('useDebouncedCallback', () => {
     const { result, rerender } = await renderHook(
       ({ fn }: { fn: (...args: unknown[]) => void }) => useDebouncedCallback(fn, 100),
       {
-      initialProps: { fn: first },
-    });
+        initialProps: { fn: first },
+      },
+    );
     await actAsync(() => {
       result.current.run();
-    })
+    });
     await rerender({ fn: second });
     await actAsync(() => {
       jest.advanceTimersByTime(100);
-    })
+    });
     expect(first).not.toHaveBeenCalled();
     expect(second).toHaveBeenCalledTimes(1);
   });

@@ -50,8 +50,15 @@ describe('ErrorBoundary', () => {
         <Boom message="kaboom" />
       </ErrorBoundary>,
     );
-    expect(logError).toHaveBeenCalledWith('Unhandled render error', expect.any(Error), expect.any(String));
-    expect(onError).toHaveBeenCalledWith(expect.objectContaining({ message: 'kaboom' }), expect.any(String));
+    expect(logError).toHaveBeenCalledWith(
+      'Unhandled render error',
+      expect.any(Error),
+      expect.any(String),
+    );
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'kaboom' }),
+      expect.any(String),
+    );
   });
 
   it('restarts the app from the restart action', async () => {

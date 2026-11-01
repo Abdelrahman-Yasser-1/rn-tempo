@@ -19,19 +19,19 @@ describe('useDisclosure', () => {
     const { result } = await renderHook(() => useDisclosure());
     await actAsync(() => {
       result.current.open();
-    })
+    });
     expect(result.current.isOpen).toBe(true);
     await actAsync(() => {
       result.current.close();
-    })
+    });
     expect(result.current.isOpen).toBe(false);
     await actAsync(() => {
       result.current.toggle();
-    })
+    });
     expect(result.current.isOpen).toBe(true);
     await actAsync(() => {
       result.current.toggle();
-    })
+    });
     expect(result.current.isOpen).toBe(false);
   });
 });

@@ -17,25 +17,29 @@ jest.mock('@react-navigation/native', () => ({
 describe('useRefreshOnFocus', () => {
   it('skips the first focus, which is the initial load', async () => {
     const refetch = jest.fn<unknown, []>();
-    await renderHook(() => { useRefreshOnFocus(refetch); });
+    await renderHook(() => {
+      useRefreshOnFocus(refetch);
+    });
     await actAsync(() => {
       mockFocusEffect?.();
-    })
+    });
     expect(refetch).not.toHaveBeenCalled();
   });
 
   it('refetches on every focus after the first', async () => {
     const refetch = jest.fn<unknown, []>();
-    await renderHook(() => { useRefreshOnFocus(refetch); });
+    await renderHook(() => {
+      useRefreshOnFocus(refetch);
+    });
     await actAsync(() => {
       mockFocusEffect?.();
-    })
+    });
     await actAsync(() => {
       mockFocusEffect?.();
-    })
+    });
     await actAsync(() => {
       mockFocusEffect?.();
-    })
+    });
     expect(refetch).toHaveBeenCalledTimes(2);
   });
 });

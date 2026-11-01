@@ -3,7 +3,6 @@ import { AccessibilityInfo } from 'react-native';
 
 import { actAsync } from '@test-utils/act';
 
-
 import { useReducedMotion } from './useReducedMotion';
 
 describe('useReducedMotion', () => {

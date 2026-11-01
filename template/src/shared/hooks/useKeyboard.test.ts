@@ -25,13 +25,13 @@ describe('useKeyboard', () => {
     const { result } = await renderHook(() => useKeyboard());
 
     await actAsync(() => {
-      listenerFor(addListener.mock.calls, 'keyboardWillShow')({ endCoordinates: { height: 300 } })
+      listenerFor(addListener.mock.calls, 'keyboardWillShow')({ endCoordinates: { height: 300 } });
     });
     expect(result.current).toEqual({ isVisible: true, height: 300 });
 
     await actAsync(() => {
       listenerFor(addListener.mock.calls, 'keyboardWillHide')();
-    })
+    });
     expect(result.current).toEqual({ isVisible: false, height: 0 });
   });
 
