@@ -6,9 +6,6 @@ import { queryClient } from '@services/http/queryClient';
 import { server } from '@test-utils/msw/server';
 
 // Native modules are mocked once here; individual tests override behavior with jest.mocked().
-jest.mock('react-native-reanimated', () =>
-  jest.requireActual<object>('react-native-reanimated/mock'),
-);
 jest.mock('react-native-worklets', () =>
   jest.requireActual<object>('react-native-worklets/lib/module/mock'),
 );
