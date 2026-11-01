@@ -82,16 +82,30 @@ function addRouteToTypes(text: string, stack: string, routeName: string): { text
   return { text: insertInBlock(text, block, `${routeName}: undefined;`), changed: true };
 }
 
-function addImport(text: string, line: string): string {
-  if (text.includes(line)) return text;
+const ALIAS_IMPORT = /^import .* from '@(?:features|shared|services|theme|locales|test-utils|app|navigation)\//;
+
+/** Adds `{ name }` from `source`, merging into an existing import and keeping the alias group together. */
+function addImport(text: string, name: string, source: string): string {
   const lines = text.split('\n');
-  const isImport = (value: string) => value.startsWith('import ');
-  const relative = lines.findIndex((value) => isImport(value) && /from '\.\.?\//.test(value));
+  const existing = lines.findIndex((value) => value.startsWith('import {') && value.endsWith(`} from '${source}';`));
+  if (existing !== -1) {
+    const names = /^import \{(.*)\} from/.exec(lines.at(existing) ?? '')?.[1]?.split(',').map((item) => item.trim()) ?? [];
+    if (names.includes(name)) return text;
+    lines[existing] = `import { ${[...names, name].sort().join(', ')} } from '${source}';`;
+    return lines.join('\n');
+  }
+  const line = `import { ${name} } from '${source}';`;
+  const alias = lines.findLastIndex((value) => ALIAS_IMPORT.test(value));
+  if (alias !== -1) {
+    lines.splice(alias + 1, 0, line);
+    return lines.join('\n');
+  }
+  const relative = lines.findIndex((value) => value.startsWith('import ') && /from '\.\.?\//.test(value));
   if (relative !== -1) {
     lines.splice(relative, 0, line, '');
     return lines.join('\n');
   }
-  const last = lines.findLastIndex(isImport);
+  const last = lines.findLastIndex((value) => value.startsWith('import '));
   lines.splice(last + 1, 0, ...(last === -1 ? [line, ''] : ['', line]));
   return lines.join('\n');
 }
@@ -109,7 +123,7 @@ function addScreenToNavigator(text: string, options: RegisterOptions): { text: s
   if (hasKey(text, block, routeName)) return { text, changed: false };
   const entry = `${routeName}: { screen: ${component} },`;
   const withEntry = insertInBlock(text, block, entry);
-  return { text: addImport(withEntry, `import { ${component} } from '${importFrom}';`), changed: true };
+  return { text: addImport(withEntry, component, importFrom), changed: true };
 }
 
 async function navigatorFiles(projectDir: string): Promise<string[]> {
@@ -160,4 +174,31 @@ export async function registerRoute(options: RegisterOptions): Promise<RegisterR
   }
   notes.push(`Could not find the ${stack} stack navigator in ${NAVIGATION_DIR}. ${manualNavigator}`);
   return { updated, notes };
+}
+
+const RESOURCES_FILE = 'src/services/i18n/resources.ts';
+
+/**
+ * Registers a feature's locale files as an i18n namespace in `resources.ts` so `t()` keys are typed.
+ * Idempotent; returns a note instead of failing when the file is not in the expected shape.
+ */
+export async function registerNamespace(projectDir: string, namespace: string, pascal: string): Promise<RegisterResult> {
+  const file = path.join(projectDir, RESOURCES_FILE);
+  const manual = `Register the "${namespace}" i18n namespace in ${RESOURCES_FILE}`;
+  if (!(await pathExists(file))) return { updated: [], notes: [`${RESOURCES_FILE} not found. ${manual}`] };
+  let text = await readFile(file, 'utf8');
+  const importLine = (lang: string) => `import ${lang}${pascal} from '@locales/${lang}/${namespace}.json';`;
+  if (text.includes(importLine('en'))) return { updated: [], notes: [] };
+  for (const lang of ['en', 'ar']) {
+    const lines = text.split('\n');
+    const last = lines.findLastIndex((value) => value.startsWith(`import ${lang}`) && value.includes(`'@locales/${lang}/`));
+    const block = findBlock(text, new RegExp(`^  ${lang}:\\s*\\{`, 'm'));
+    if (last === -1 || !block) return { updated: [], notes: [`Could not update ${RESOURCES_FILE}. ${manual}`] };
+    text = insertInBlock(text, block, `${/^[A-Za-z_]\w*$/.test(namespace) ? namespace : `'${namespace}'`}: ${lang}${pascal},`);
+    const withImport = text.split('\n');
+    withImport.splice(last + 1, 0, importLine(lang));
+    text = withImport.join('\n');
+  }
+  await writeFile(file, text);
+  return { updated: [RESOURCES_FILE], notes: [] };
 }
