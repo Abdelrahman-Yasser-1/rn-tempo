@@ -2,18 +2,18 @@ import type { Meta, StoryObj } from '@storybook/react-native';
 import { useState } from 'react';
 import { action } from 'storybook/actions';
 
-import { OTPInput } from './OTPInput';
-import type { OTPInputProps } from './types';
+import { OtpInput } from './OtpInput';
+import type { OtpInputProps } from './types';
 
-function Stateful(args: OTPInputProps) {
+function Stateful(args: OtpInputProps) {
   const [value, setValue] = useState(args.value);
 
-  return <OTPInput {...args} value={value} onChangeText={setValue} />;
+  return <OtpInput {...args} value={value} onChangeText={setValue} />;
 }
 
 const meta = {
-  title: 'Inputs/OTPInput',
-  component: OTPInput,
+  title: 'Inputs/OtpInput',
+  component: OtpInput,
   args: {
     value: '',
     length: 6,
@@ -23,7 +23,7 @@ const meta = {
     onComplete: action('onComplete'),
   },
   render: (args) => <Stateful {...args} />,
-} satisfies Meta<typeof OTPInput>;
+} satisfies Meta<typeof OtpInput>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

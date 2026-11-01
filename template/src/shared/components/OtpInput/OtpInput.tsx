@@ -7,12 +7,12 @@ import { Box } from '../Box';
 import { Text } from '../Text';
 
 import { styles } from './styles';
-import type { OTPInputProps } from './types';
+import type { OtpInputProps } from './types';
 
 const DEFAULT_LENGTH = 6;
 
 /** Fixed-length one-time-code input: auto-advance, backspace-to-previous and paste/autofill. */
-export function OTPInput({
+export function OtpInput({
   value,
   onChangeText,
   onComplete,
@@ -21,7 +21,7 @@ export function OTPInput({
   disabled: isDisabled = false,
   errorText,
   testID,
-}: OTPInputProps) {
+}: OtpInputProps) {
   const { t } = useTranslation();
   const cellsRef = useRef<(TextInputInstance | null)[]>([]);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);

@@ -5,6 +5,6 @@ import { I18nManager } from 'react-native';
  * restart, so a plain read is correct; no subscription is needed.
  */
 // eslint-disable-next-line @eslint-react/no-unnecessary-use-prefix -- public hook name from the UI kit contract
-export function useRTL(): boolean {
+export function useRtl(): boolean {
   return I18nManager.isRTL;
 }

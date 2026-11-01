@@ -1,4 +1,4 @@
-export type OTPInputProps = Readonly<{
+export type OtpInputProps = Readonly<{
   /** Current code; digits only, at most `length` characters. */
   value: string;
   onChangeText: (value: string) => void;
