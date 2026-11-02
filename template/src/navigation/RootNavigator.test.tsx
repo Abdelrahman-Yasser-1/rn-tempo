@@ -1,5 +1,4 @@
 /* eslint-disable no-restricted-imports -- test double screens render plain RN Text */
-import { useRoute } from '@react-navigation/native';
 import { act, render, screen, waitFor } from '@testing-library/react-native';
 import type { ComponentType } from 'react';
 import { Linking, Text } from 'react-native';
@@ -15,10 +14,6 @@ import { createRootNavigator } from './RootNavigator';
 // The scheme is renamed per project, so tests read it from the env instead of hard-coding it.
 const SCHEME = `${ENV.DEEP_LINK_SCHEME}://`;
 
-function Named() {
-  const { name } = useRoute();
-  return <Text>{`screen:${name}`}</Text>;
-}
 function Fixed({ label }: Readonly<{ label: string }>) {
   return <Text>{`screen:${label}`}</Text>;
 }
@@ -50,6 +45,18 @@ jest.mock('@features/home', () => {
     HomeScreen: () => <MockText>{'screen:Home'}</MockText>,
   };
 });
+// @tempo-feature:samples:start
+jest.mock('@features/items', () => {
+  const { Text: MockText } = jest.requireActual<{ Text: ComponentType<{ children: string }> }>(
+    'react-native',
+  );
+  const { useRoute: useMockRoute } = jest.requireActual<{ useRoute: () => { name: string } }>(
+    '@react-navigation/native',
+  );
+  const Named = () => <MockText>{`screen:${useMockRoute().name}`}</MockText>;
+  return { ItemsListScreen: Named, ItemDetailsScreen: Named, ItemCreateScreen: Named };
+});
+// @tempo-feature:samples:end
 jest.mock('@features/profile', () => {
   const { Text: MockText } = jest.requireActual<{ Text: ComponentType<{ children: string }> }>(
     'react-native',
@@ -72,7 +79,6 @@ jest.mock('@features/settings', () => {
 });
 
 const Navigation = createRootNavigator({
-  Placeholder: Named,
   ForceUpdate: () => <Fixed label="ForceUpdate" />,
   Maintenance: () => <Fixed label="Maintenance" />,
   NotFound: () => <Fixed label="NotFound" />,
