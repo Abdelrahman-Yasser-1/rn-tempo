@@ -9,14 +9,26 @@
   "deleteGlobs": [
     "src/features/items/**",
     "src/locales/*/items.json",
-    "src/test-utils/msw/handlers/products.ts",
+    "src/test-utils/msw/routes/products.ts",
+    "src/test-utils/factories/item.ts",
     "specs/items/**",
     "e2e/flows/items-*.yaml"
   ],
   "dependencies": [],
   "devDependencies": [],
   "envKeys": [],
-  "jsonPatches": [],
+  "jsonPatches": [
+    {
+      "file": "src/locales/en/validation.json",
+      "op": "remove",
+      "path": "/item"
+    },
+    {
+      "file": "src/locales/ar/validation.json",
+      "op": "remove",
+      "path": "/item"
+    }
+  ],
   "postRemove": [],
   "docs": "/docs/features/samples"
 }
