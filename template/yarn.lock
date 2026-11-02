@@ -4673,6 +4673,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@react-native-community/datetimepicker@npm:9.2.2":
+  version: 9.2.2
+  resolution: "@react-native-community/datetimepicker@npm:9.2.2"
+  dependencies:
+    invariant: "npm:^2.2.4"
+  peerDependencies:
+    expo: ">=52.0.0"
+    react: "*"
+    react-native: "*"
+    react-native-windows: "*"
+  peerDependenciesMeta:
+    expo:
+      optional: true
+    react-native-windows:
+      optional: true
+  checksum: 10c0/fc8c5206a5e7d532685752819e0eecea3b4f34944905bf0ec1f3c0f032e914c090b0bcf62d9063293530d6fe92b9631429503fe4e5e4172c3b557f7de7f79576
+  languageName: node
+  linkType: hard
+
 "@react-native-community/netinfo@npm:12.0.1":
   version: 12.0.1
   resolution: "@react-native-community/netinfo@npm:12.0.1"
@@ -4680,6 +4699,13 @@ __metadata:
     react: "*"
     react-native: ">=0.59"
   checksum: 10c0/66c5fab04ef3ffe9b1f2e3578e7d3052a8c3ae327d94fa41f7d95ec4db3de4dd4017bf486013f031cb1aa12909002492474f259ea6212471f730cca39239dd35
+  languageName: node
+  linkType: hard
+
+"@react-native-community/slider@npm:5.2.2":
+  version: 5.2.2
+  resolution: "@react-native-community/slider@npm:5.2.2"
+  checksum: 10c0/8e55d5b89e9c9234b80206b33f3b4c05ca22552a8cddd2fbfdeb523b48053c627e42ea230925c5ca29f861eaa62d153fc464d616fab4231d8536419ec48fd9f6
   languageName: node
   linkType: hard
 
@@ -14241,7 +14267,9 @@ __metadata:
     "@react-native-community/cli": "npm:20.2.0"
     "@react-native-community/cli-platform-android": "npm:20.2.0"
     "@react-native-community/cli-platform-ios": "npm:20.2.0"
+    "@react-native-community/datetimepicker": "npm:9.2.2"
     "@react-native-community/netinfo": "npm:12.0.1"
+    "@react-native-community/slider": "npm:5.2.2"
     "@react-native/babel-preset": "npm:0.88.0"
     "@react-native/jest-preset": "npm:0.88.0"
     "@react-native/metro-config": "npm:0.88.0"
