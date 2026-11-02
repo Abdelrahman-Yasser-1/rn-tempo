@@ -1,4 +1,5 @@
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 
 import type { SettingsStackParamList } from '@navigation/types';
@@ -9,12 +10,11 @@ import { THEME_OPTIONS } from '../../constants';
 
 import { styles } from './styles';
 
-type ThemeScreenProps = Readonly<NativeStackScreenProps<SettingsStackParamList, 'Theme'>>;
-
 const isThemePreference = (value: string): value is ThemePreference =>
   THEME_OPTIONS.some((option) => option === value);
 
-export function ThemeScreen({ navigation }: ThemeScreenProps) {
+export function ThemeScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<SettingsStackParamList, 'Theme'>>();
   const { t } = useTranslation('settings');
   const { preference, setPreference } = useAppTheme();
 

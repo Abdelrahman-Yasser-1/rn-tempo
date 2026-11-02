@@ -1,4 +1,5 @@
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useNavigation, type RouteProp } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
@@ -11,11 +12,12 @@ import { useItemQuery } from '../../api/queries';
 
 import { styles } from './styles';
 
-type ItemDetailsScreenProps = Readonly<NativeStackScreenProps<HomeStackParamList, 'ItemDetails'>>;
+type ItemDetailsScreenProps = Readonly<{ route: RouteProp<HomeStackParamList, 'ItemDetails'> }>;
 
 const IMAGE_HEIGHT = 240;
 
-export function ItemDetailsScreen({ navigation, route }: ItemDetailsScreenProps) {
+export function ItemDetailsScreen({ route }: ItemDetailsScreenProps) {
+  const navigation = useNavigation<NativeStackNavigationProp<HomeStackParamList, 'ItemDetails'>>();
   const { t } = useTranslation('items');
   const { language } = useLanguage();
   const { data, error, isPending, isError, refetch } = useItemQuery(route.params.itemId);

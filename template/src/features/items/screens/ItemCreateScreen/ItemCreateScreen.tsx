@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -12,9 +13,8 @@ import { CreateItemSchema, type CreateItem, type CreateItemInput } from '../../t
 
 import { styles } from './styles';
 
-type ItemCreateScreenProps = Readonly<NativeStackScreenProps<HomeStackParamList, 'ItemCreate'>>;
-
-export function ItemCreateScreen({ navigation }: ItemCreateScreenProps) {
+export function ItemCreateScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<HomeStackParamList, 'ItemCreate'>>();
   const { t } = useTranslation('items');
   const isEnabled = useFeatureFlag('itemsCreateEnabled');
   const createItem = useCreateItemMutation();

@@ -1,4 +1,5 @@
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
@@ -8,9 +9,8 @@ import { Avatar, Button, Header, Screen, Text } from '@shared/components';
 
 import { styles } from './styles';
 
-type ProfileScreenProps = Readonly<NativeStackScreenProps<ProfileStackParamList, 'Profile'>>;
-
-export function ProfileScreen({ navigation }: ProfileScreenProps) {
+export function ProfileScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<ProfileStackParamList, 'Profile'>>();
   const { t } = useTranslation('profile');
   const { data } = useMeQuery();
   const storedUser = useCurrentUser();

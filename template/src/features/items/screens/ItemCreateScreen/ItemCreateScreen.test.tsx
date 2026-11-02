@@ -1,6 +1,5 @@
 import { screen, waitFor } from '@testing-library/react-native';
 import { http, HttpResponse } from 'msw';
-import type { ComponentProps } from 'react';
 
 import { setFlagOverride } from '@services/flags/flagOverrides';
 import { toast } from '@services/toast/toast';
@@ -11,18 +10,20 @@ import { itemKeys } from '../../api/keys';
 
 import { ItemCreateScreen } from './ItemCreateScreen';
 
-type ItemCreateProps = ComponentProps<typeof ItemCreateScreen>;
+const mockNavigation = { navigate: jest.fn(), goBack: jest.fn(), reset: jest.fn() };
+jest.mock('@react-navigation/native', () => ({
+  ...jest.requireActual<Record<string, unknown>>('@react-navigation/native'),
+  useNavigation: () => mockNavigation,
+}));
 
-function makeNavigation() {
-  return { navigate: jest.fn(), reset: jest.fn(), goBack: jest.fn() };
-}
+beforeEach(() => {
+  mockNavigation.navigate.mockClear();
+  mockNavigation.goBack.mockClear();
+  mockNavigation.reset.mockClear();
+});
 
-async function renderCreate(navigation = makeNavigation()) {
-  const props = {
-    navigation,
-    route: { key: 'ItemCreate', name: 'ItemCreate' },
-  } as unknown as ItemCreateProps;
-  return renderWithProviders(<ItemCreateScreen {...props} />);
+async function renderCreate() {
+  return renderWithProviders(<ItemCreateScreen />);
 }
 
 /** Records the body of every POST /products/add. */
@@ -54,8 +55,7 @@ describe('ItemCreateScreen', () => {
 
   test('AC-5: a valid form creates the item, invalidates the list and goes back', async () => {
     const bodies = recordCreates();
-    const navigation = makeNavigation();
-    const { user, queryClient } = await renderCreate(navigation);
+    const { user, queryClient } = await renderCreate();
     const invalidate = jest.spyOn(queryClient, 'invalidateQueries');
 
     await user.type(screen.getByLabelText('Title'), 'Desk lamp');
@@ -65,7 +65,7 @@ describe('ItemCreateScreen', () => {
     await user.press(screen.getByRole('button', { name: 'Create item' }));
 
     await waitFor(() => {
-      expect(navigation.goBack).toHaveBeenCalledTimes(1);
+      expect(mockNavigation.goBack).toHaveBeenCalledTimes(1);
     });
     expect(bodies).toEqual([
       {
@@ -83,8 +83,7 @@ describe('ItemCreateScreen', () => {
 
   test('an incomplete form shows the field errors and sends no request', async () => {
     const bodies = recordCreates();
-    const navigation = makeNavigation();
-    const { user } = await renderCreate(navigation);
+    const { user } = await renderCreate();
 
     await user.type(screen.getByLabelText('Price (USD)'), '0');
     await user.press(screen.getByRole('button', { name: 'Create item' }));
@@ -94,7 +93,7 @@ describe('ItemCreateScreen', () => {
     expect(screen.getByText('Enter a description.')).toBeOnTheScreen();
     expect(screen.getByText('Enter a category.')).toBeOnTheScreen();
     expect(bodies).toEqual([]);
-    expect(navigation.goBack).not.toHaveBeenCalled();
+    expect(mockNavigation.goBack).not.toHaveBeenCalled();
   });
 
   test('AC-6: with itemsCreateEnabled off, shows the unavailable state and no form', async () => {

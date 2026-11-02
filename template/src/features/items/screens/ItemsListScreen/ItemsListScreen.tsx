@@ -1,4 +1,5 @@
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { FlashList } from '@shopify/flash-list';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -28,11 +29,10 @@ import type { Item } from '../../types';
 
 import { styles } from './styles';
 
-type ItemsListScreenProps = Readonly<NativeStackScreenProps<HomeStackParamList, 'ItemsList'>>;
-
 const THUMBNAIL_SIZE = 48;
 
-export function ItemsListScreen({ navigation }: ItemsListScreenProps) {
+export function ItemsListScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<HomeStackParamList, 'ItemsList'>>();
   const { t } = useTranslation('items');
   const { language } = useLanguage();
   const canCreate = useFeatureFlag('itemsCreateEnabled');

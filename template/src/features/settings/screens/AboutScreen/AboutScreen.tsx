@@ -1,4 +1,5 @@
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { Platform } from 'react-native';
 
@@ -12,8 +13,6 @@ import { useSecretTap } from '../../hooks/useSecretTap';
 
 import { styles } from './styles';
 
-type AboutScreenProps = Readonly<NativeStackScreenProps<SettingsStackParamList, 'About'>>;
-
 const { major, minor, patch } = Platform.constants.reactNativeVersion;
 const REACT_NATIVE_VERSION = `${String(major)}.${String(minor)}.${String(patch)}`;
 
@@ -23,7 +22,8 @@ const openDebugMenu = () => {
   }
 };
 
-export function AboutScreen({ navigation }: AboutScreenProps) {
+export function AboutScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<SettingsStackParamList, 'About'>>();
   const { t } = useTranslation('settings');
   const handleVersionPress = useSecretTap(openDebugMenu);
 

@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -18,11 +19,10 @@ import { DEV_HINT_CREDENTIALS } from '../../constants';
 
 import { styles } from './styles';
 
-type LoginScreenProps = Readonly<NativeStackScreenProps<AuthStackParamList, 'Login'>>;
-
 const INVALID_CREDENTIALS_CODES = new Set(['VALIDATION', 'UNAUTHORIZED']);
 
-export function LoginScreen({ navigation }: LoginScreenProps) {
+export function LoginScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList, 'Login'>>();
   const { t } = useTranslation('auth');
   const isOnline = useIsOnline();
   const [isOfflineAttempt, setIsOfflineAttempt] = useState(false);

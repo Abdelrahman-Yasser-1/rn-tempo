@@ -1,11 +1,22 @@
 import { act, fireEvent, screen } from '@testing-library/react-native';
-import type { ComponentProps } from 'react';
 
 import { renderWithProviders } from '@test-utils/renderWithProviders';
 
 import { SECRET_TAP_COUNT, SECRET_TAP_WINDOW_MS } from '../../constants';
 
 import { AboutScreen } from './AboutScreen';
+
+const mockNavigation = { navigate: jest.fn(), goBack: jest.fn(), reset: jest.fn() };
+jest.mock('@react-navigation/native', () => ({
+  ...jest.requireActual<Record<string, unknown>>('@react-navigation/native'),
+  useNavigation: () => mockNavigation,
+}));
+
+beforeEach(() => {
+  mockNavigation.navigate.mockClear();
+  mockNavigation.goBack.mockClear();
+  mockNavigation.reset.mockClear();
+});
 
 const mockNavigate = jest.fn<undefined, [string]>();
 
@@ -18,15 +29,8 @@ jest.mock('@navigation/navigationRef', () => ({
   },
 }));
 
-type AboutProps = ComponentProps<typeof AboutScreen>;
-
-function makeNavigation() {
-  return { navigate: jest.fn(), reset: jest.fn(), goBack: jest.fn() };
-}
-
-async function renderAbout(navigation = makeNavigation()) {
-  const props = { navigation, route: { key: 'About', name: 'About' } } as unknown as AboutProps;
-  return renderWithProviders(<AboutScreen {...props} />);
+async function renderAbout() {
+  return renderWithProviders(<AboutScreen />);
 }
 
 /** Presses the version row once, then lets `gapMs` of fake time pass before the next press. */

@@ -1,5 +1,4 @@
 import { screen, waitFor } from '@testing-library/react-native';
-import type { ComponentProps } from 'react';
 
 import { useAuthStore } from '@features/auth';
 import { createUser } from '@test-utils/factories/user';
@@ -7,18 +6,20 @@ import { renderWithProviders } from '@test-utils/renderWithProviders';
 
 import { SettingsScreen } from './SettingsScreen';
 
-type SettingsProps = ComponentProps<typeof SettingsScreen>;
+const mockNavigation = { navigate: jest.fn(), goBack: jest.fn(), reset: jest.fn() };
+jest.mock('@react-navigation/native', () => ({
+  ...jest.requireActual<Record<string, unknown>>('@react-navigation/native'),
+  useNavigation: () => mockNavigation,
+}));
 
-function makeNavigation() {
-  return { navigate: jest.fn(), reset: jest.fn(), goBack: jest.fn() };
-}
+beforeEach(() => {
+  mockNavigation.navigate.mockClear();
+  mockNavigation.goBack.mockClear();
+  mockNavigation.reset.mockClear();
+});
 
-async function renderSettings(navigation = makeNavigation()) {
-  const props = {
-    navigation,
-    route: { key: 'Settings', name: 'Settings' },
-  } as unknown as SettingsProps;
-  return renderWithProviders(<SettingsScreen {...props} />);
+async function renderSettings() {
+  return renderWithProviders(<SettingsScreen />);
 }
 
 beforeEach(() => {
@@ -36,17 +37,16 @@ describe('SettingsScreen', () => {
   });
 
   test('AC-1: the Language, Theme and About rows open their screens', async () => {
-    const navigation = makeNavigation();
-    const { user } = await renderSettings(navigation);
+    const { user } = await renderSettings();
 
     await user.press(screen.getByText('Language'));
-    expect(navigation.navigate).toHaveBeenLastCalledWith('Language');
+    expect(mockNavigation.navigate).toHaveBeenLastCalledWith('Language');
 
     await user.press(screen.getByText('Theme'));
-    expect(navigation.navigate).toHaveBeenLastCalledWith('Theme');
+    expect(mockNavigation.navigate).toHaveBeenLastCalledWith('Theme');
 
     await user.press(screen.getByText('About'));
-    expect(navigation.navigate).toHaveBeenLastCalledWith('About');
+    expect(mockNavigation.navigate).toHaveBeenLastCalledWith('About');
   });
 
   test('AC-5: cancelling the log-out dialog keeps the user signed in', async () => {

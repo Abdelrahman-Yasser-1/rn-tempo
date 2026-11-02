@@ -1,6 +1,5 @@
 import { screen, waitFor } from '@testing-library/react-native';
 import { http, HttpResponse } from 'msw';
-import type { ComponentProps } from 'react';
 
 import { authKeys, useAuthStore } from '@features/auth';
 import { toast } from '@services/toast/toast';
@@ -10,7 +9,17 @@ import { renderWithProviders } from '@test-utils/renderWithProviders';
 
 import { EditProfileScreen } from './EditProfileScreen';
 
-type EditProfileProps = ComponentProps<typeof EditProfileScreen>;
+const mockNavigation = { navigate: jest.fn(), goBack: jest.fn(), reset: jest.fn() };
+jest.mock('@react-navigation/native', () => ({
+  ...jest.requireActual<Record<string, unknown>>('@react-navigation/native'),
+  useNavigation: () => mockNavigation,
+}));
+
+beforeEach(() => {
+  mockNavigation.navigate.mockClear();
+  mockNavigation.goBack.mockClear();
+  mockNavigation.reset.mockClear();
+});
 
 const ORIGINAL = createUser({
   firstName: 'Ada',
@@ -18,16 +27,8 @@ const ORIGINAL = createUser({
   email: 'ada@example.test',
 });
 
-function makeNavigation() {
-  return { navigate: jest.fn(), reset: jest.fn(), goBack: jest.fn() };
-}
-
-async function renderEditProfile(navigation = makeNavigation()) {
-  const props = {
-    navigation,
-    route: { key: 'EditProfile', name: 'EditProfile' },
-  } as unknown as EditProfileProps;
-  return renderWithProviders(<EditProfileScreen {...props} />);
+async function renderEditProfile() {
+  return renderWithProviders(<EditProfileScreen />);
 }
 
 /** Records every PUT /users/:id body the screen sends. */
@@ -67,8 +68,7 @@ describe('EditProfileScreen', () => {
 
   test('AC-2: invalid input shows field errors and sends no request', async () => {
     const bodies = recordUpdates();
-    const navigation = makeNavigation();
-    const { user } = await renderEditProfile(navigation);
+    const { user } = await renderEditProfile();
 
     await user.clear(screen.getByLabelText('First name'));
     await user.type(screen.getByLabelText('First name'), 'A');
@@ -79,7 +79,7 @@ describe('EditProfileScreen', () => {
     expect(await screen.findByText('Enter at least 2 characters.')).toBeOnTheScreen();
     expect(screen.getByText('Enter a valid email address.')).toBeOnTheScreen();
     expect(bodies).toEqual([]);
-    expect(navigation.goBack).not.toHaveBeenCalled();
+    expect(mockNavigation.goBack).not.toHaveBeenCalled();
   });
 
   test('AC-3: valid input updates the cache before the server answers, then goes back', async () => {
@@ -97,8 +97,7 @@ describe('EditProfileScreen', () => {
         return HttpResponse.json({ ...ORIGINAL, ...body, id: ORIGINAL.id });
       }),
     );
-    const navigation = makeNavigation();
-    const { user, queryClient } = await renderEditProfile(navigation);
+    const { user, queryClient } = await renderEditProfile();
     queryClient.setQueryData(authKeys.me(), ORIGINAL);
 
     await user.clear(screen.getByLabelText('First name'));
@@ -106,7 +105,7 @@ describe('EditProfileScreen', () => {
     await user.press(screen.getByRole('button', { name: 'Save' }));
 
     await waitFor(() => {
-      expect(navigation.goBack).toHaveBeenCalledTimes(1);
+      expect(mockNavigation.goBack).toHaveBeenCalledTimes(1);
     });
     expect(queryClient.getQueryData(authKeys.me())).toMatchObject({ firstName: 'Augusta' });
     expect(useAuthStore.getState().user).toMatchObject({ firstName: 'Augusta' });
@@ -120,8 +119,7 @@ describe('EditProfileScreen', () => {
 
   test('AC-3: the saved body carries the edited values', async () => {
     const bodies = recordUpdates();
-    const navigation = makeNavigation();
-    const { user } = await renderEditProfile(navigation);
+    const { user } = await renderEditProfile();
 
     await user.clear(screen.getByLabelText('Last name'));
     await user.type(screen.getByLabelText('Last name'), 'Byron');
@@ -135,15 +133,14 @@ describe('EditProfileScreen', () => {
       lastName: 'Byron',
       email: 'ada@example.test',
     });
-    expect(navigation.goBack).toHaveBeenCalledTimes(1);
+    expect(mockNavigation.goBack).toHaveBeenCalledTimes(1);
   });
 
   test('AC-4: a failed save rolls the cache and user back and shows an error toast', async () => {
     server.use(
       http.put('*/users/:id', () => HttpResponse.json({ message: 'boom' }, { status: 500 })),
     );
-    const navigation = makeNavigation();
-    const { user, queryClient } = await renderEditProfile(navigation);
+    const { user, queryClient } = await renderEditProfile();
     queryClient.setQueryData(authKeys.me(), ORIGINAL);
 
     await user.clear(screen.getByLabelText('First name'));

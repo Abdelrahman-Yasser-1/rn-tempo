@@ -10,13 +10,20 @@ import { ItemDetailsScreen } from './ItemDetailsScreen';
 
 type ItemDetailsProps = ComponentProps<typeof ItemDetailsScreen>;
 
-function makeNavigation() {
-  return { navigate: jest.fn(), reset: jest.fn(), goBack: jest.fn() };
-}
+const mockNavigation = { navigate: jest.fn(), goBack: jest.fn(), reset: jest.fn() };
+jest.mock('@react-navigation/native', () => ({
+  ...jest.requireActual<Record<string, unknown>>('@react-navigation/native'),
+  useNavigation: () => mockNavigation,
+}));
 
-async function renderDetails(itemId: number, navigation = makeNavigation()) {
+beforeEach(() => {
+  mockNavigation.navigate.mockClear();
+  mockNavigation.goBack.mockClear();
+  mockNavigation.reset.mockClear();
+});
+
+async function renderDetails(itemId: number) {
   const props = {
-    navigation,
     route: { key: 'ItemDetails', name: 'ItemDetails', params: { itemId } },
   } as unknown as ItemDetailsProps;
   return renderWithProviders(<ItemDetailsScreen {...props} />);

@@ -1,6 +1,5 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { http, HttpResponse } from 'msw';
-import type { ComponentProps } from 'react';
 
 import { setFlagOverride } from '@services/flags/flagOverrides';
 import { useNetworkStore } from '@services/network/network';
@@ -12,18 +11,20 @@ import { ITEMS_PAGE_SIZE, SEARCH_DEBOUNCE_MS } from '../../constants';
 
 import { ItemsListScreen } from './ItemsListScreen';
 
-type ItemsListProps = ComponentProps<typeof ItemsListScreen>;
+const mockNavigation = { navigate: jest.fn(), goBack: jest.fn(), reset: jest.fn() };
+jest.mock('@react-navigation/native', () => ({
+  ...jest.requireActual<Record<string, unknown>>('@react-navigation/native'),
+  useNavigation: () => mockNavigation,
+}));
 
-function makeNavigation() {
-  return { navigate: jest.fn(), reset: jest.fn(), goBack: jest.fn() };
-}
+beforeEach(() => {
+  mockNavigation.navigate.mockClear();
+  mockNavigation.goBack.mockClear();
+  mockNavigation.reset.mockClear();
+});
 
-async function renderItemsList(navigation = makeNavigation()) {
-  const props = {
-    navigation,
-    route: { key: 'ItemsList', name: 'ItemsList' },
-  } as unknown as ItemsListProps;
-  return renderWithProviders(<ItemsListScreen {...props} />);
+async function renderItemsList() {
+  return renderWithProviders(<ItemsListScreen />);
 }
 
 /** Every request the list makes, as its path plus query string. */
@@ -81,13 +82,12 @@ describe('ItemsListScreen', () => {
   });
 
   test('pressing an item opens its details', async () => {
-    const navigation = makeNavigation();
-    const { user } = await renderItemsList(navigation);
+    const { user } = await renderItemsList();
     await screen.findByText('Product 1');
 
     await user.press(screen.getByLabelText('Product 1'));
 
-    expect(navigation.navigate).toHaveBeenCalledWith('ItemDetails', { itemId: 1 });
+    expect(mockNavigation.navigate).toHaveBeenCalledWith('ItemDetails', { itemId: 1 });
   });
 
   test('AC-1: reaching the end of the list loads the next page of 20', async () => {
@@ -174,12 +174,11 @@ describe('ItemsListScreen', () => {
   });
 
   test('AC-6: the create button is shown while itemsCreateEnabled is on', async () => {
-    const navigation = makeNavigation();
-    const { user } = await renderItemsList(navigation);
+    const { user } = await renderItemsList();
 
     await user.press(screen.getByRole('button', { name: 'Create item' }));
 
-    expect(navigation.navigate).toHaveBeenCalledWith('ItemCreate');
+    expect(mockNavigation.navigate).toHaveBeenCalledWith('ItemCreate');
   });
 
   test('AC-6: the create button is hidden while itemsCreateEnabled is off', async () => {

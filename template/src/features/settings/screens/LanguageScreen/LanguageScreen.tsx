@@ -1,4 +1,5 @@
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -11,9 +12,8 @@ import { LANGUAGE_OPTIONS } from '../../constants';
 
 import { styles } from './styles';
 
-type LanguageScreenProps = Readonly<NativeStackScreenProps<SettingsStackParamList, 'Language'>>;
-
-export function LanguageScreen({ navigation }: LanguageScreenProps) {
+export function LanguageScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<SettingsStackParamList, 'Language'>>();
   const { t } = useTranslation('settings');
   const { language, setLanguage } = useLanguage();
   const [pending, setPending] = useState<Language | null>(null);

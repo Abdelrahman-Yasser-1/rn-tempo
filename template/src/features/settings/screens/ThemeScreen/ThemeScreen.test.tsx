@@ -1,5 +1,4 @@
 import { renderHook, screen } from '@testing-library/react-native';
-import type { ComponentProps } from 'react';
 import { UnistylesRuntime } from 'react-native-unistyles';
 
 import { renderWithProviders } from '@test-utils/renderWithProviders';
@@ -7,15 +6,20 @@ import { configureThemePersistence, initTheme, useAppTheme } from '@theme/index'
 
 import { ThemeScreen } from './ThemeScreen';
 
-type ThemeProps = ComponentProps<typeof ThemeScreen>;
+const mockNavigation = { navigate: jest.fn(), goBack: jest.fn(), reset: jest.fn() };
+jest.mock('@react-navigation/native', () => ({
+  ...jest.requireActual<Record<string, unknown>>('@react-navigation/native'),
+  useNavigation: () => mockNavigation,
+}));
 
-function makeNavigation() {
-  return { navigate: jest.fn(), reset: jest.fn(), goBack: jest.fn() };
-}
+beforeEach(() => {
+  mockNavigation.navigate.mockClear();
+  mockNavigation.goBack.mockClear();
+  mockNavigation.reset.mockClear();
+});
 
-async function renderTheme(navigation = makeNavigation()) {
-  const props = { navigation, route: { key: 'Theme', name: 'Theme' } } as unknown as ThemeProps;
-  return renderWithProviders(<ThemeScreen {...props} />);
+async function renderTheme() {
+  return renderWithProviders(<ThemeScreen />);
 }
 
 /** The stored preference as any other screen would read it through the hook. */

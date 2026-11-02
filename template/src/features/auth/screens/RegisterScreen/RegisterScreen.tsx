@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
@@ -14,9 +15,8 @@ import { FormError } from '../../components/FormError';
 
 import { styles } from './styles';
 
-type RegisterScreenProps = Readonly<NativeStackScreenProps<AuthStackParamList, 'Register'>>;
-
-export function RegisterScreen({ navigation }: RegisterScreenProps) {
+export function RegisterScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList, 'Register'>>();
   const { t } = useTranslation('auth');
   const register = useRegisterMutation();
   const { control, handleSubmit } = useForm<RegisterRequest>({
