@@ -1,1 +1,29 @@
-{}
+{
+  "about": {
+    "environment": "البيئة",
+    "os": "نظام التشغيل",
+    "reactNative": "React Native",
+    "title": "حول التطبيق",
+    "version": "الإصدار"
+  },
+  "language": {
+    "arabic": "العربية",
+    "english": "English",
+    "restartMessage": "قد يُعاد تشغيل التطبيق لتطبيق اللغة الجديدة واتجاه التخطيط.",
+    "restartTitle": "تغيير اللغة؟",
+    "title": "اللغة"
+  },
+  "logout": {
+    "confirm": "تسجيل الخروج",
+    "dialogMessage": "ستحتاج إلى تسجيل الدخول مرة أخرى.",
+    "dialogTitle": "تسجيل الخروج؟",
+    "title": "تسجيل الخروج"
+  },
+  "theme": {
+    "dark": "داكن",
+    "light": "فاتح",
+    "system": "النظام",
+    "title": "المظهر"
+  },
+  "title": "الإعدادات"
+}
