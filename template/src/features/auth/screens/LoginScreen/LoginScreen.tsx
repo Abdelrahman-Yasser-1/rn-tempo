@@ -1,61 +1,18 @@
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { ENV } from '@config/env';
-import type { AuthStackParamList } from '@navigation/types';
-import { normalizeError, getErrorMessageKey } from '@services/http/errors';
 import { Button, FormTextField, Screen, Text } from '@shared/components';
-import { useIsOnline } from '@shared/hooks';
 
-import { useLoginMutation } from '../../api/mutations';
-import { LoginRequestSchema, type LoginRequest } from '../../api/schemas';
 import { FormError } from '../../components/FormError';
 import { DEV_HINT_CREDENTIALS } from '../../constants';
 
 import { styles } from './styles';
-
-const INVALID_CREDENTIALS_CODES = new Set(['VALIDATION', 'UNAUTHORIZED']);
+import { useLoginScreen } from './useLoginScreen';
 
 export function LoginScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList, 'Login'>>();
   const { t } = useTranslation('auth');
-  const isOnline = useIsOnline();
-  const [isOfflineAttempt, setIsOfflineAttempt] = useState(false);
-  const login = useLoginMutation();
-  const { control, handleSubmit } = useForm<LoginRequest>({
-    resolver: zodResolver(LoginRequestSchema),
-    defaultValues: { username: '', password: '' },
-  });
-
-  const submit = handleSubmit((values) => {
-    if (!isOnline) {
-      setIsOfflineAttempt(true);
-      return;
-    }
-    setIsOfflineAttempt(false);
-    login.mutate(values);
-  });
-
-  const onSubmit = () => {
-    void submit();
-  };
-
-  const loginError: unknown = login.error;
-  const isInvalidCredentials =
-    loginError !== null && INVALID_CREDENTIALS_CODES.has(normalizeError(loginError).code);
-  let errorMessage: string | undefined;
-  if (isOfflineAttempt) {
-    errorMessage = t('network', { ns: 'errors' });
-  } else if (loginError !== null) {
-    errorMessage = isInvalidCredentials
-      ? t('login.invalidCredentials')
-      : t(getErrorMessageKey(loginError), { ns: 'errors' });
-  }
+  const vm = useLoginScreen();
 
   return (
     <Screen
@@ -72,7 +29,7 @@ export function LoginScreen() {
         <Text color="textSecondary">{t('login.subtitle')}</Text>
       </View>
       <FormTextField
-        control={control}
+        control={vm.control}
         name="username"
         label={t('login.username')}
         autoCapitalize="none"
@@ -82,38 +39,34 @@ export function LoginScreen() {
         testID="login.username-input"
       />
       <FormTextField
-        control={control}
+        control={vm.control}
         name="password"
         label={t('login.password')}
         secureTextEntry
         autoComplete="current-password"
         returnKeyType="done"
-        onSubmitEditing={onSubmit}
+        onSubmitEditing={vm.onSubmit}
         testID="login.password-input"
       />
-      <FormError message={errorMessage} testID="login.error" />
+      <FormError message={vm.errorMessage} testID="login.error" />
       <Button
         title={t('login.submit')}
         fullWidth
-        loading={login.isPending}
-        onPress={onSubmit}
+        loading={vm.isPending}
+        onPress={vm.onSubmit}
         testID="login.submit-button"
       />
       <View style={styles.links}>
         <Button
           variant="ghost"
           title={t('login.forgotPassword')}
-          onPress={() => {
-            navigation.navigate('ForgotPassword');
-          }}
+          onPress={vm.onForgotPassword}
           testID="login.forgot-password-link"
         />
         <Button
           variant="ghost"
           title={t('login.createAccount')}
-          onPress={() => {
-            navigation.navigate('Register');
-          }}
+          onPress={vm.onRegister}
           testID="login.register-link"
         />
       </View>
