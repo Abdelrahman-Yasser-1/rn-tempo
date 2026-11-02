@@ -26,6 +26,16 @@ describe('RadioGroup', () => {
     expect(screen.getByRole('radio', { name: 'Option A' })).toBeOnTheScreen();
   });
 
+  it('forwards an accessibility label to the radiogroup', async () => {
+    await renderWithProviders(
+      <RadioGroup value="a" onChange={jest.fn()} accessibilityLabel="Plan" testID="group">
+        <Radio value="a" label="Option A" />
+      </RadioGroup>,
+    );
+    // eslint-disable-next-line no-restricted-syntax -- non-accessible container has no role query
+    expect(screen.getByTestId('group')).toHaveProp('accessibilityLabel', 'Plan');
+  });
+
   it('provides its selection through context', async () => {
     await renderWithProviders(
       <RadioGroup value="b" onChange={jest.fn()}>
