@@ -1,14 +1,4 @@
-/** Contract C13 `Item`. The type lives here until WS9 adds the items feature schema. */
-export type Item = {
-  id: number;
-  title: string;
-  description: string;
-  price: number;
-  category: string;
-  thumbnail: string;
-  rating: number;
-  stock: number;
-};
+import type { Item } from '@features/items';
 
 let sequence = 0;
 

@@ -3,6 +3,12 @@
     "invalid": "Enter a valid email address.",
     "required": "Enter your email address."
   },
+  "item": {
+    "categoryRequired": "Enter a category.",
+    "descriptionRequired": "Enter a description.",
+    "priceInvalid": "Enter a price greater than 0.",
+    "titleRequired": "Enter a title."
+  },
   "name": {
     "tooLong": "Use at most 50 characters.",
     "tooShort": "Enter at least 2 characters."
