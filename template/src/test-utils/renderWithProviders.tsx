@@ -1,6 +1,6 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, userEvent } from '@testing-library/react-native';
+import { render, renderHook, userEvent } from '@testing-library/react-native';
 import type { ReactElement, ReactNode } from 'react';
 import { I18nextProvider } from 'react-i18next';
 import { UnistylesRuntime } from 'react-native-unistyles';
@@ -33,11 +33,7 @@ export function createTestQueryClient(): QueryClient {
   });
 }
 
-/** Renders `ui` inside the app providers and returns RNTL's result plus a `userEvent` instance. */
-export async function renderWithProviders(
-  ui: ReactElement,
-  options: Readonly<RenderWithProvidersOptions> = {},
-) {
+async function createProviders(options: Readonly<RenderWithProvidersOptions>) {
   const queryClient = createTestQueryClient();
   await initStorage();
   await initI18nInstance(options.language ?? 'en');
@@ -62,6 +58,25 @@ export async function renderWithProviders(
     );
   }
 
+  return { queryClient, Wrapper };
+}
+
+/** Renders `ui` inside the app providers and returns RNTL's result plus a `userEvent` instance. */
+export async function renderWithProviders(
+  ui: ReactElement,
+  options: Readonly<RenderWithProvidersOptions> = {},
+) {
+  const { queryClient, Wrapper } = await createProviders(options);
   const result = await render(ui, { wrapper: Wrapper });
   return { ...result, queryClient, user: userEvent.setup() };
+}
+
+/** Renders `callback` as a hook inside the app providers and returns RNTL's result plus the query client. */
+export async function renderHookWithProviders<Result>(
+  callback: () => Result,
+  options: Readonly<RenderWithProvidersOptions> = {},
+) {
+  const { queryClient, Wrapper } = await createProviders(options);
+  const result = await renderHook(callback, { wrapper: Wrapper });
+  return { ...result, queryClient };
 }
