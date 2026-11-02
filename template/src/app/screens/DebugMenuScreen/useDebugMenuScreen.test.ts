@@ -130,13 +130,13 @@ describe('useDebugFlag', () => {
       throw new Error('Expected at least one feature flag');
     }
     const { result } = await renderHookWithProviders(() => useDebugFlag(flag));
-    const initial = result.current.isEnabled;
+    const wasEnabled = result.current.isEnabled;
 
     await run(() => {
-      result.current.onChange(!initial);
+      result.current.onChange(!wasEnabled);
     });
 
-    expect(getFlagOverride(flag)).toBe(!initial);
-    expect(result.current.isEnabled).toBe(!initial);
+    expect(getFlagOverride(flag)).toBe(!wasEnabled);
+    expect(result.current.isEnabled).toBe(!wasEnabled);
   });
 });
