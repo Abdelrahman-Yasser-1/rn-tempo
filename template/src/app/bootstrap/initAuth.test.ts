@@ -5,7 +5,8 @@ import { useAuthStore } from '@features/auth';
 import { queryClient } from '@services/http/queryClient';
 import { initI18nInstance } from '@services/i18n/i18n';
 import { tokenStore } from '@services/secure-storage/tokenStore';
-import { initStorage } from '@services/storage/storage';
+import { STORAGE_KEYS } from '@services/storage/keys';
+import { initStorage, storage } from '@services/storage/storage';
 import { createUser } from '@test-utils/factories/user';
 import { server } from '@test-utils/msw/server';
 
@@ -20,12 +21,38 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
+  storage.setBoolean(STORAGE_KEYS.installMarker, true);
   await tokenStore.clear();
   queryClient.clear();
   useAuthStore.setState({ status: 'unknown', user: null, pendingLink: null });
 });
 
 describe('initAuth', () => {
+  test('first launch after a reinstall clears stale keychain tokens and sets the marker', async () => {
+    await tokenStore.setTokens(tokens);
+    storage.remove(STORAGE_KEYS.installMarker);
+    const meSpy = jest.fn(() => HttpResponse.json(createUser()));
+    server.use(http.get(meUrl, meSpy));
+
+    await initAuth();
+
+    expect(useAuthStore.getState().status).toBe('signedOut');
+    expect(tokenStore.hasTokens()).toBe(false);
+    expect(meSpy).not.toHaveBeenCalled();
+    expect(storage.getBoolean(STORAGE_KEYS.installMarker)).toBe(true);
+  });
+
+  test('with the install marker present the stored tokens are kept and /auth/me is called', async () => {
+    const meSpy = jest.fn(() => HttpResponse.json(createUser()));
+    await tokenStore.setTokens(tokens);
+    server.use(http.get(meUrl, meSpy));
+
+    await initAuth();
+
+    expect(meSpy).toHaveBeenCalledTimes(1);
+    expect(useAuthStore.getState().status).toBe('signedIn');
+  });
+
   test('AC-8: no stored token signs out', async () => {
     await initAuth();
 

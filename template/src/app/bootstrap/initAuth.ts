@@ -3,6 +3,8 @@ import { normalizeError } from '@services/http/errors';
 import { request } from '@services/http/request';
 import { logger } from '@services/logger/logger';
 import { tokenStore } from '@services/secure-storage/tokenStore';
+import { STORAGE_KEYS } from '@services/storage/keys';
+import { storage } from '@services/storage/storage';
 
 /**
  * Bootstrap steps 4-5: hydrate tokens from the keychain, then derive the session. With a token we
@@ -13,6 +15,13 @@ import { tokenStore } from '@services/secure-storage/tokenStore';
 export async function initAuth(): Promise<void> {
   const { signIn, signOut } = useAuthStore.getState();
   try {
+    // iOS keeps Keychain items after an uninstall while MMKV is wiped, so a missing marker means a
+    // fresh install: drop any stale tokens before they can sign the previous user in.
+    if (storage.getBoolean(STORAGE_KEYS.installMarker) !== true) {
+      await tokenStore.clear();
+      logger.info('First launch after install: cleared stale keychain tokens');
+      storage.setBoolean(STORAGE_KEYS.installMarker, true);
+    }
     await tokenStore.hydrate();
   } catch (error) {
     logger.warn('Could not read tokens from the keychain', error);
