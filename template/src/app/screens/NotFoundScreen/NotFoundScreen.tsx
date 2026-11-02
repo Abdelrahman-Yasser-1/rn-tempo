@@ -1,24 +1,13 @@
-import { CommonActions, useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 
-import { useAuthStatus } from '@features/auth';
-
 import { MessageButton, MessageScreen } from '../MessageScreen';
+
+import { useNotFoundScreen } from './useNotFoundScreen';
 
 /** Fallback for unknown deep links (`*`): one button back to the right root for the session. */
 export function NotFoundScreen() {
   const { t } = useTranslation('app');
-  const navigation = useNavigation();
-  const status = useAuthStatus();
-
-  const goHome = (): void => {
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: status === 'signedIn' ? 'Main' : 'Auth' }],
-      }),
-    );
-  };
+  const { goHome } = useNotFoundScreen();
 
   return (
     <MessageScreen
