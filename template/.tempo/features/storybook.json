@@ -15,7 +15,9 @@
     "@storybook/react-native",
     "storybook",
     "@storybook/addon-ondevice-controls",
-    "@storybook/addon-ondevice-actions"
+    "@storybook/addon-ondevice-actions",
+    "@react-native-community/datetimepicker",
+    "@react-native-community/slider"
   ],
   "envKeys": [
     "STORYBOOK_ENABLED"
@@ -32,6 +34,8 @@
       "path": "/scripts/storybook:generate"
     }
   ],
-  "postRemove": [],
+  "postRemove": [
+    "pods"
+  ],
   "docs": "/docs/features/storybook"
 }
