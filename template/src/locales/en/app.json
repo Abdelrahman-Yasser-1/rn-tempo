@@ -52,6 +52,24 @@
     "message": "The page you're looking for doesn't exist or has moved.",
     "title": "Page not found"
   },
+  "onboarding": {
+    "getStarted": "Get started",
+    "next": "Next",
+    "pageLabel": "Page {{current}} of {{total}}",
+    "skip": "Skip",
+    "slide1": {
+      "body": "A production-ready starting point for your next app.",
+      "title": "Welcome"
+    },
+    "slide2": {
+      "body": "Switch between English and Arabic, with full right-to-left support.",
+      "title": "Your language, your way"
+    },
+    "slide3": {
+      "body": "Sign in or create an account to get started.",
+      "title": "Ready to go"
+    }
+  },
   "placeholder": {
     "subtitle": "This screen is not built yet."
   },
