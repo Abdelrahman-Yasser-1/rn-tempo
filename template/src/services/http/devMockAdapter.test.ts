@@ -61,7 +61,7 @@ describe('createDevMockAdapter', () => {
     const fallback = fallbackAdapter();
     const client = clientWith(createDevMockAdapter({ fallback, latencyMs: 0 }));
 
-    const response = await client.get('/products/1');
+    const response = await client.get('/unmocked/endpoint');
 
     expect(response.data).toBe('real');
     expect(fallback).toHaveBeenCalledTimes(1);
