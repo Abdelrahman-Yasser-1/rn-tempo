@@ -57,8 +57,8 @@ Code flows downward only. The arrows are enforced by ESLint, see [Boundaries](/d
 Everything environment specific enters through one validated object:
 
 <AnnotatedCode file="template/src/config/constants.ts">
-  <Note line={4}>The version comes from `package.json`, so native and JS never disagree.</Note>
-  <Note line={7}>Only the prod bundle ID is stored; environments add their suffix natively.</Note>
+  <Note line={2}>The version comes from `package.json`, so native and JS never disagree.</Note>
+  <Note line={5}>Only the prod bundle ID is stored; environments add their suffix natively.</Note>
 </AnnotatedCode>
 
 See [Run the environments](/docs/getting-started/run-envs) for `src/config/env.ts`.
