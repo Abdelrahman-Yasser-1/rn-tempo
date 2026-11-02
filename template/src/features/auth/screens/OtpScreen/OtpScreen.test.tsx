@@ -52,12 +52,17 @@ async function tickSeconds(seconds: number) {
   }
 }
 
+/** The toast is not under test here; the spy only records calls. */
+function silenceToast(): void {
+  // Intentionally empty.
+}
+
 describe('OtpScreen', () => {
   let toastSpy: jest.SpyInstance;
 
   beforeEach(() => {
     // Replace the real toast: its visibility timers would outlive the test.
-    toastSpy = jest.spyOn(toast, 'show').mockImplementation(() => {});
+    toastSpy = jest.spyOn(toast, 'show').mockImplementation(silenceToast);
   });
 
   afterEach(() => {
