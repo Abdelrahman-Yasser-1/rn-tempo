@@ -2309,3 +2309,10 @@ Recorded by the integrator during WS0. Where this list and the plan disagree, **
 
 42. **AI session logs are local only** (`.ai/sessions/` is gitignored). Commits carry `AI-Assisted` and `Spec` trailers, with no `AI-Session`. The commitlint `ai-session-trailer` rule is removed. The PR AI report is built from trailers. This overrides C9's "committed" logs, the AI-Session trailer and the stage-session hook.
 43. **For every remaining workstream:** implement all functionality first, then write the tests at the end of the workstream, before the PR is marked ready. During the implementation phase, the draft PR's CI may be red on tests, coverage or the structure rules that require test/story files. It must be green before `gh pr ready`. This overrides A1.8's "tests in the same or next commit".
+
+## Amendments after WS9 (2026-11-02)
+
+44. **Screens read navigation from `useNavigation()`.** React Navigation 7's static API renders screens with only `{ route }` as props, so a `navigation` prop is always undefined at runtime. Tests mock `useNavigation` from `@react-navigation/native`; they never inject a `navigation` prop. `src/navigation/ItemsNavigation.test.tsx` renders a real stack as a regression guard.
+45. **Install marker (C15):** MMKV key `app.install-marker`. iOS keeps Keychain items after uninstall while MMKV is wiped, so `initAuth` clears stored tokens when the marker is missing, then sets it.
+46. **Device tour before ready:** every UI workstream runs a Maestro tour on the iOS simulator and the Android emulator (clean install, en + ar, light + dark) before its PR is marked ready. Unit tests alone missed amendment 44.
+47. **Mock products** use `https://dummyjson.com/image/200x200?text=<title>` thumbnails so dev mock mode shows real images.
