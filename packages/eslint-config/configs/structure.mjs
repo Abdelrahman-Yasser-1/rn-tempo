@@ -14,10 +14,12 @@ const folder = (name, children) => ({
 
 const camelFiles = [file('{camelCase}.ts'), file('{camelCase}.test.ts'), file('{camelCase}.d.ts')];
 
-/** `<X>Screen/` folders: screen, its test and a barrel are mandatory (contract C5). */
+/** `<X>Screen/` folders: screen, its test and a barrel are mandatory (contract C5); the logic hook is optional. */
 const screenFolders = folder('{PascalCase}Screen', [
   file('{FolderName}.tsx', ['{NodeName}.test.tsx', 'index.ts']),
   file('{FolderName}.test.tsx'),
+  file('use{FolderName}.ts'),
+  file('use{FolderName}.test.ts'),
   file('styles.ts'),
   file('index.ts'),
 ]);
@@ -30,6 +32,8 @@ const featureChildren = [
     folder('{PascalCase}', [
       file('{FolderName}.tsx', ['index.ts']),
       file('{FolderName}.test.tsx'),
+      file('use{FolderName}.ts'),
+      file('use{FolderName}.test.ts'),
       file('index.ts'),
       file('styles.ts'),
       file('types.ts'),
@@ -48,6 +52,8 @@ const sharedComponent = folder('{PascalCase}', [
   file('{FolderName}.tsx', ['{NodeName}.test.tsx', '{NodeName}.stories.tsx', 'index.ts']),
   file('{FolderName}.test.tsx'),
   file('{FolderName}.stories.tsx'),
+  file('use{FolderName}.ts'),
+  file('use{FolderName}.test.ts'),
   file('styles.ts'),
   file('types.ts'),
   file('index.ts'),

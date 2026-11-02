@@ -80,3 +80,46 @@ export function restrictionsConfig() {
     },
   ];
 }
+
+const SCREEN_LOGIC_MESSAGE = 'Move screen logic into use<Name>Screen.ts (WS9b convention).';
+
+/**
+ * Screen views stay presentational (WS9b): logic imports are warned about. Uses the
+ * typescript-eslint rule so type-only imports stay allowed and the core rule block above is
+ * not overwritten.
+ */
+export function screenLogicConfig() {
+  return [
+    {
+      name: 'rn-tempo/restrictions/screen-logic',
+      files: ['src/**/screens/**/*Screen.tsx'],
+      rules: {
+        '@typescript-eslint/no-restricted-imports': [
+          'warn',
+          {
+            paths: [
+              { name: 'react-hook-form', message: SCREEN_LOGIC_MESSAGE, allowTypeImports: true },
+              {
+                name: '@tanstack/react-query',
+                message: SCREEN_LOGIC_MESSAGE,
+                allowTypeImports: true,
+              },
+              {
+                name: '@react-navigation/native',
+                importNames: ['useNavigation', 'useRoute', 'useFocusEffect'],
+                message: SCREEN_LOGIC_MESSAGE,
+                allowTypeImports: true,
+              },
+              {
+                name: 'react',
+                importNames: ['useState', 'useEffect', 'useReducer'],
+                message: SCREEN_LOGIC_MESSAGE,
+                allowTypeImports: true,
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ];
+}

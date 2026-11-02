@@ -5,7 +5,7 @@ import { baseConfig } from './configs/base.mjs';
 import { qualityConfig } from './configs/quality.mjs';
 import { reactConfig } from './configs/react.mjs';
 import { reactNativeConfig } from './configs/react-native.mjs';
-import { restrictionsConfig } from './configs/restrictions.mjs';
+import { restrictionsConfig, screenLogicConfig } from './configs/restrictions.mjs';
 import { structureConfig } from './configs/structure.mjs';
 import { testsConfig } from './configs/tests.mjs';
 
@@ -20,6 +20,7 @@ export function createConfig({ root, structure = false }) {
     ...reactNativeConfig(),
     ...qualityConfig(root),
     ...restrictionsConfig(),
+    ...screenLogicConfig(),
     ...testsConfig(),
     ...(structure ? [...boundariesConfig(root), ...structureConfig(root)] : []),
     eslintConfigPrettier,

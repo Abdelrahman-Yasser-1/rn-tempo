@@ -1,14 +1,15 @@
-import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { Label } from '@shared/components';
 
+import { useHomeScreen } from './useHomeScreen';
+
 export function HomeScreen() {
-  const { t } = useTranslation();
+  const vm = useHomeScreen();
 
   return (
     <View testID="home" accessibilityRole="none">
-      <Label text={t('home.title')} isActive={false} />
+      <Label text={vm.title} isActive={false} />
     </View>
   );
 }
