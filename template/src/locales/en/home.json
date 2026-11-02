@@ -1,1 +1,7 @@
-{}
+{
+  "browseItems": "Browse items",
+  "browseItemsHint": "Explore the sample catalog.",
+  "greeting": "Hello, {{name}}",
+  "greetingFallback": "Hello",
+  "title": "Home"
+}
