@@ -11,14 +11,39 @@ import { useCountdown } from '@shared/hooks';
 import { maskEmail } from '@shared/utils';
 
 import { useResendOtpMutation, useVerifyOtpMutation } from '../../api/mutations';
+import { OtpRouteParamsSchema, type OtpPurpose } from '../../api/schemas';
 import { OTP_LENGTH, OTP_RESEND_SECONDS } from '../../constants';
 
 import { styles } from './styles';
 
 type OtpScreenProps = Readonly<NativeStackScreenProps<AuthStackParamList, 'Otp'>>;
 
+type OtpFormProps = Readonly<{
+  navigation: OtpScreenProps['navigation'];
+  target: string;
+  purpose: OtpPurpose;
+}>;
+
+/** Guards against missing or forged deep-link params; only parsed values reach the form. */
 export function OtpScreen({ navigation, route }: OtpScreenProps) {
-  const { target, purpose } = route.params;
+  const params = OtpRouteParamsSchema.safeParse(route.params);
+  const isValid = params.success;
+
+  useEffect(() => {
+    if (!isValid) {
+      navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+    }
+  }, [isValid, navigation]);
+
+  if (!params.success) {
+    return null;
+  }
+  return (
+    <OtpForm navigation={navigation} target={params.data.target} purpose={params.data.purpose} />
+  );
+}
+
+function OtpForm({ navigation, target, purpose }: OtpFormProps) {
   const { t } = useTranslation('auth');
   const [code, setCode] = useState('');
   const [isCodeRejected, setIsCodeRejected] = useState(false);

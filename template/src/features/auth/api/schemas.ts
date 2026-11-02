@@ -41,6 +41,8 @@ export const RegisterResponseSchema = z.object({ id: z.number() });
 export const ForgotPasswordRequestSchema = z.object({ email: emailSchema });
 
 export const OtpPurposeSchema = z.enum(['register', 'reset-password']);
+/** Route params of Otp; validated because `tempo-dev://otp` is a public deep link. */
+export const OtpRouteParamsSchema = z.object({ target: emailSchema, purpose: OtpPurposeSchema });
 
 export const OtpVerifyResponseSchema = z.object({ success: z.boolean() });
 
