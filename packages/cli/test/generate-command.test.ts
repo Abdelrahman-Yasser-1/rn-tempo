@@ -64,6 +64,8 @@ describe('tempo g <kind> --json', () => {
       'src/features/items/screens/DetailScreen/DetailScreen.tsx',
       'src/features/items/screens/DetailScreen/index.ts',
       'src/features/items/screens/DetailScreen/styles.ts',
+      'src/features/items/screens/DetailScreen/useDetailScreen.test.ts',
+      'src/features/items/screens/DetailScreen/useDetailScreen.ts',
     ]);
     expect(json.updated).toEqual(expect.arrayContaining(['src/features/items/index.ts', 'src/locales/en/items.json']));
     expect(json.register?.updated).toEqual(['src/navigation/types.ts']);

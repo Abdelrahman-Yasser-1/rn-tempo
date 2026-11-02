@@ -1,0 +1,11 @@
+import { renderHook } from '@testing-library/react-native';
+
+import { use{{Name}}Screen } from './use{{Name}}Screen';
+
+describe('use{{Name}}Screen', () => {
+  it('exposes the screen title', async () => {
+    const { result } = await renderHook(() => use{{Name}}Screen());
+
+    expect(result.current.title).toBe('{{Name}}');
+  });
+});

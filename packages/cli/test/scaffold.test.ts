@@ -32,6 +32,8 @@ const FEATURE_WALLET_FILES = [
   'src/features/wallet/screens/WalletScreen/WalletScreen.tsx',
   'src/features/wallet/screens/WalletScreen/index.ts',
   'src/features/wallet/screens/WalletScreen/styles.ts',
+  'src/features/wallet/screens/WalletScreen/useWalletScreen.test.ts',
+  'src/features/wallet/screens/WalletScreen/useWalletScreen.ts',
   'src/features/wallet/types/index.ts',
   'src/locales/ar/wallet.json',
   'src/locales/en/wallet.json',
@@ -116,6 +118,8 @@ describe('scaffold generators', () => {
         'src/features/items/screens/DetailScreen/DetailScreen.tsx',
         'src/features/items/screens/DetailScreen/index.ts',
         'src/features/items/screens/DetailScreen/styles.ts',
+        'src/features/items/screens/DetailScreen/useDetailScreen.test.ts',
+        'src/features/items/screens/DetailScreen/useDetailScreen.ts',
       ]);
       expect(sorted(result.updated)).toEqual([
         'src/features/items/index.ts',
@@ -124,7 +128,7 @@ describe('scaffold generators', () => {
         'src/navigation/types.ts',
       ]);
       expect(JSON.parse(await read('src/locales/en/items.json')).screens.detail.title).toBe('Detail');
-      expect(await read('src/features/items/screens/DetailScreen/DetailScreen.tsx')).toContain("t('screens.detail.title')");
+      expect(await read('src/features/items/screens/DetailScreen/useDetailScreen.ts')).toContain("t('screens.detail.title')");
     });
 
     it('throws FEATURE_NOT_FOUND when the feature does not exist', async () => {
