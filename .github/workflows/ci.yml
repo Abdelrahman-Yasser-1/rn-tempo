@@ -27,6 +27,18 @@ jobs:
       - run: yarn test
       - run: yarn typecheck
 
+  cli-e2e:
+    name: CLI e2e (feature add round-trip)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - run: corepack enable
+      - run: yarn install --immutable
+      - run: yarn workspace create-tempo-app test:e2e
+
   template-js:
     name: Template (typecheck, tests)
     runs-on: ubuntu-latest
