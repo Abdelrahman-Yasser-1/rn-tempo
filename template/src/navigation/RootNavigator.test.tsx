@@ -1,6 +1,7 @@
 /* eslint-disable no-restricted-imports -- test double screens render plain RN Text */
 import { useRoute } from '@react-navigation/native';
 import { act, render, screen, waitFor } from '@testing-library/react-native';
+import type { ComponentType } from 'react';
 import { Linking, Text } from 'react-native';
 
 import { ENV } from '@config/env';
@@ -37,6 +38,36 @@ jest.mock('@features/auth', () => {
     RegisterScreen: stub('Register'),
     ForgotPasswordScreen: stub('ForgotPassword'),
     OtpScreen: stub('Otp'),
+  };
+});
+
+// Real tab screens need app providers; they become stubs that name their route.
+jest.mock('@features/home', () => {
+  const { Text: MockText } = jest.requireActual<{ Text: ComponentType<{ children: string }> }>(
+    'react-native',
+  );
+  return {
+    HomeScreen: () => <MockText>{'screen:Home'}</MockText>,
+  };
+});
+jest.mock('@features/profile', () => {
+  const { Text: MockText } = jest.requireActual<{ Text: ComponentType<{ children: string }> }>(
+    'react-native',
+  );
+  return {
+    ProfileScreen: () => <MockText>{'screen:Profile'}</MockText>,
+    EditProfileScreen: () => <MockText>{'screen:EditProfile'}</MockText>,
+  };
+});
+jest.mock('@features/settings', () => {
+  const { Text: MockText } = jest.requireActual<{ Text: ComponentType<{ children: string }> }>(
+    'react-native',
+  );
+  return {
+    SettingsScreen: () => <MockText>{'screen:Settings'}</MockText>,
+    LanguageScreen: () => <MockText>{'screen:Language'}</MockText>,
+    ThemeScreen: () => <MockText>{'screen:Theme'}</MockText>,
+    AboutScreen: () => <MockText>{'screen:About'}</MockText>,
   };
 });
 

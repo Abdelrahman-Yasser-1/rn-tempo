@@ -21,6 +21,36 @@ import { defaultSteps } from './bootstrap/bootstrap';
 import { useSecurityStore } from './bootstrap/securityStore';
 
 // Real auth screens are covered by their own tests; here they are stubs named after their route.
+// Real tab screens need app providers; they become stubs that name their route.
+jest.mock('@features/home', () => {
+  const { Text: MockText } = jest.requireActual<{ Text: ComponentType<{ children: string }> }>(
+    'react-native',
+  );
+  return {
+    HomeScreen: () => <MockText>Home</MockText>,
+  };
+});
+jest.mock('@features/profile', () => {
+  const { Text: MockText } = jest.requireActual<{ Text: ComponentType<{ children: string }> }>(
+    'react-native',
+  );
+  return {
+    ProfileScreen: () => <MockText>Profile</MockText>,
+    EditProfileScreen: () => <MockText>EditProfile</MockText>,
+  };
+});
+jest.mock('@features/settings', () => {
+  const { Text: MockText } = jest.requireActual<{ Text: ComponentType<{ children: string }> }>(
+    'react-native',
+  );
+  return {
+    SettingsScreen: () => <MockText>Settings</MockText>,
+    LanguageScreen: () => <MockText>Language</MockText>,
+    ThemeScreen: () => <MockText>Theme</MockText>,
+    AboutScreen: () => <MockText>About</MockText>,
+  };
+});
+
 jest.mock('@features/onboarding', () => ({
   OnboardingScreen: () => null,
   useShouldShowOnboarding: () => false,
@@ -73,8 +103,7 @@ describe('App', () => {
         .signIn({ accessToken: MOCK_ACCESS_TOKEN, refreshToken: MOCK_REFRESH_TOKEN }, mockUser);
     });
 
-    expect(await screen.findByText('This screen is not built yet.')).toBeOnTheScreen();
-    expect(screen.getAllByText('Home').length).toBeGreaterThan(0);
+    expect((await screen.findAllByText('Home')).length).toBeGreaterThan(0);
   });
 
   test('AC-9: a stored session skips Login and opens Home', async () => {
