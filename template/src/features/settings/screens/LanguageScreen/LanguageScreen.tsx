@@ -1,44 +1,24 @@
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { SettingsStackParamList } from '@navigation/types';
-import { isSupportedLanguage, type Language } from '@services/i18n/languageManager';
-import { useLanguage } from '@services/i18n/useLanguage';
 import { Dialog, Header, Radio, RadioGroup, Screen } from '@shared/components';
 
 import { LANGUAGE_OPTIONS } from '../../constants';
 
 import { styles } from './styles';
+import { useLanguageScreen } from './useLanguageScreen';
 
 export function LanguageScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<SettingsStackParamList, 'Language'>>();
   const { t } = useTranslation('settings');
-  const { language, setLanguage } = useLanguage();
-  const [pending, setPending] = useState<Language | null>(null);
+  const vm = useLanguageScreen();
 
   const languageNames = { en: t('language.english'), ar: t('language.arabic') };
 
-  const handleChange = (value: string) => {
-    if (isSupportedLanguage(value) && value !== language) {
-      setPending(value);
-    }
-  };
-
-  const handleConfirm = () => {
-    if (pending !== null) {
-      void setLanguage(pending);
-    }
-    setPending(null);
-  };
-
   return (
     <Screen preset="scroll" contentContainerStyle={styles.content} testID="language-screen">
-      <Header title={t('language.title')} onBack={navigation.goBack} testID="language.header" />
+      <Header title={t('language.title')} onBack={vm.onBack} testID="language.header" />
       <RadioGroup
-        value={language}
-        onChange={handleChange}
+        value={vm.language}
+        onChange={vm.onChange}
         accessibilityLabel={t('language.title')}
         testID="language.group"
       >
@@ -52,13 +32,11 @@ export function LanguageScreen() {
         ))}
       </RadioGroup>
       <Dialog
-        visible={pending !== null}
+        visible={vm.isConfirmVisible}
         title={t('language.restartTitle')}
         message={t('language.restartMessage')}
-        onConfirm={handleConfirm}
-        onCancel={() => {
-          setPending(null);
-        }}
+        onConfirm={vm.onConfirm}
+        onCancel={vm.onCancel}
         testID="language.dialog"
       />
     </Screen>
