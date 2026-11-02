@@ -83,6 +83,7 @@ describe('createProject (end to end, local template, no network, no install)', (
     expect(await pathExists(path.join(dir, 'android/app/src/main/java/io/acme/shop/MainActivity.kt'))).toBe(true);
     const pkg = JSON.parse(await readFile(path.join(dir, 'package.json'), 'utf8')) as { devDependencies: Record<string, string> };
     expect(pkg.devDependencies['@rn-tempo/tsconfig']).toBe('0.0.0');
+    expect(pkg.devDependencies['create-tempo-app']).toBe('0.0.0'); // exact pin, so `yarn tempo` works
     expect(calls).toEqual([]); // nothing to run: no env diff, no install
   });
 
@@ -100,6 +101,12 @@ describe('createProject (end to end, local template, no network, no install)', (
     expect(gradle).toContain('qa {');
     expect(calls.at(-1)).toBe('AcmeShop: node scripts/native/icons.mjs');
     expect(await pathExists(path.join(result.dir, '.env.qa'))).toBe(true);
+  });
+
+  it('pins the CLI version exactly as a devDependency of the new project', async () => {
+    const result = await createProject(base({ cliVersion: '1.4.2' }));
+    const pkg = JSON.parse(await readFile(path.join(result.dir, 'package.json'), 'utf8')) as { devDependencies: Record<string, string> };
+    expect(pkg.devDependencies['create-tempo-app']).toBe('1.4.2');
   });
 
   it('adds required features and reports them', async () => {
