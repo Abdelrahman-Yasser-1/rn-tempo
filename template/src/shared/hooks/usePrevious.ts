@@ -1,14 +1,19 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 
-/** Value from the previous render; `undefined` on the first one. */
+/**
+ * Value from before the latest change of `value`; `undefined` until it first changes.
+ * It is correct in the same render the value changes (no one-render lag).
+ */
 export function usePrevious<T>(value: T): T | undefined {
-  const [previous, setPrevious] = useState<T | undefined>(undefined);
-  const valueRef = useRef(value);
+  const [state, setState] = useState<{ current: T; previous: T | undefined }>({
+    current: value,
+    previous: undefined,
+  });
 
-  useEffect(() => {
-    setPrevious(valueRef.current);
-    valueRef.current = value;
-  }, [value]);
+  if (!Object.is(state.current, value)) {
+    setState({ current: value, previous: state.current });
+    return state.current;
+  }
 
-  return previous;
+  return state.previous;
 }

@@ -72,4 +72,16 @@ describe('useCountdown', () => {
     });
     expect(result.current.remaining).toBe(2);
   });
+
+  it('stops at zero when several ticks fire before React commits', async () => {
+    const { result } = await renderHook(() => useCountdown(3));
+    await actAsync(() => {
+      result.current.start();
+    });
+    await actAsync(() => {
+      jest.advanceTimersByTime(3000);
+    });
+    expect(result.current.remaining).toBe(0);
+    expect(result.current.isRunning).toBe(false);
+  });
 });

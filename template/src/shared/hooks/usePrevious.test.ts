@@ -28,4 +28,28 @@ describe('usePrevious', () => {
     await rerender({ value: 'c' });
     expect(result.current).toBe('b');
   });
+
+  it('has the previous value in the same render the value changes', async () => {
+    const seen: (string | undefined)[] = [];
+    const { rerender } = await renderHook(
+      ({ value }: { value: string }) => {
+        const previous = usePrevious(value);
+        seen.push(previous);
+        return previous;
+      },
+      { initialProps: { value: 'a' } },
+    );
+    await rerender({ value: 'b' });
+    expect(seen[1]).toBe('a');
+  });
+
+  it('keeps the previous value across re-renders with an unchanged value', async () => {
+    const { result, rerender } = await renderHook(
+      ({ value }: { value: string }) => usePrevious(value),
+      { initialProps: { value: 'a' } },
+    );
+    await rerender({ value: 'b' });
+    await rerender({ value: 'b' });
+    expect(result.current).toBe('a');
+  });
 });
