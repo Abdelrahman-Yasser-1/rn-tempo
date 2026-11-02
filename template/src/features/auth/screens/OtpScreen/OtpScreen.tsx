@@ -35,12 +35,9 @@ export function OtpScreen({ navigation, route }: OtpScreenProps) {
     }
   }, [isValid, navigation]);
 
-  if (!params.success) {
-    return null;
-  }
-  return (
+  return params.success ? (
     <OtpForm navigation={navigation} target={params.data.target} purpose={params.data.purpose} />
-  );
+  ) : null;
 }
 
 function OtpForm({ navigation, target, purpose }: OtpFormProps) {
