@@ -42,11 +42,11 @@ async function requireFeature(projectDir: string, feature: string): Promise<void
   }
 }
 
-async function appendLine(file: string, line: string): Promise<boolean> {
+async function appendLine(file: string, line: string, dryRun = false): Promise<boolean> {
   const text = (await pathExists(file)) ? await readFile(file, 'utf8') : '';
   if (text.includes(line)) return false;
   const cleaned = text.replace(/^export \{\};\n?/m, '');
-  await writeFile(file, `${cleaned}${cleaned === '' || cleaned.endsWith('\n') ? '' : '\n'}${line}\n`);
+  if (!dryRun) await writeFile(file, `${cleaned}${cleaned === '' || cleaned.endsWith('\n') ? '' : '\n'}${line}\n`);
   return true;
 }
 
@@ -63,7 +63,7 @@ function sortKeys(value: Json): Json {
 }
 
 /** Sets `value` at a dotted path in a locale file, keeping existing keys. Returns true when it changed. */
-async function mergeLocaleKey(file: string, keyPath: readonly string[], value: string): Promise<boolean> {
+async function mergeLocaleKey(file: string, keyPath: readonly string[], value: string, dryRun = false): Promise<boolean> {
   const data: Json = (await pathExists(file)) ? (JSON.parse(await readFile(file, 'utf8')) as Json) : {};
   let cursor = data;
   for (const key of keyPath.slice(0, -1)) {
@@ -74,8 +74,10 @@ async function mergeLocaleKey(file: string, keyPath: readonly string[], value: s
   const last = keyPath.at(-1) ?? '';
   if (last in cursor) return false;
   cursor[last] = value;
-  await mkdir(path.dirname(file), { recursive: true });
-  await writeFile(file, `${JSON.stringify(sortKeys(data), null, 2)}\n`);
+  if (!dryRun) {
+    await mkdir(path.dirname(file), { recursive: true });
+    await writeFile(file, `${JSON.stringify(sortKeys(data), null, 2)}\n`);
+  }
   return true;
 }
 
@@ -83,11 +85,7 @@ async function addScreenLocale(projectDir: string, vars: TemplateVars, dryRun: b
   const updated: string[] = [];
   for (const lang of ['en', 'ar']) {
     const rel = `src/locales/${lang}/${vars.feature}.json`;
-    if (dryRun) {
-      updated.push(rel);
-    } else if (await mergeLocaleKey(path.join(projectDir, rel), ['screens', vars.name, 'title'], vars.Name)) {
-      updated.push(rel);
-    }
+    if (await mergeLocaleKey(path.join(projectDir, rel), ['screens', vars.name, 'title'], vars.Name, dryRun)) updated.push(rel);
   }
   return updated;
 }
@@ -98,24 +96,24 @@ async function writeScreen(name: string, feature: string, options: ScaffoldOptio
   const rendered = await renderTemplateDir({ ...options, dirName: 'screen', vars });
   const updated: string[] = [];
   const followUps: string[] = [];
-  let register: RegisterResult | undefined;
-  if (!options.dryRun) {
-    const barrel = path.join(options.projectDir, 'src/features', vars.feature, 'index.ts');
-    if (await appendLine(barrel, `export { ${vars.Name}Screen } from './screens/${vars.Name}Screen';`)) {
-      updated.push(`src/features/${vars.feature}/index.ts`);
-    }
-    updated.push(...(await addScreenLocale(options.projectDir, vars, false)));
-    register = await registerRoute({
-      projectDir: options.projectDir,
-      stack: options.stack ?? 'Home',
-      routeName: vars.Name,
-      component: `${vars.Name}Screen`,
-      importFrom: `@features/${vars.feature}`,
-      navigator: options.register === true,
-    });
-    updated.push(...register.updated);
-    followUps.push(...register.notes);
+  const dryRun = options.dryRun === true;
+  const barrel = path.join(options.projectDir, 'src/features', vars.feature, 'index.ts');
+  if (await appendLine(barrel, `export { ${vars.Name}Screen } from './screens/${vars.Name}Screen';`, dryRun)) {
+    updated.push(`src/features/${vars.feature}/index.ts`);
   }
+  updated.push(...(await addScreenLocale(options.projectDir, vars, dryRun)));
+  const register = await registerRoute({
+    projectDir: options.projectDir,
+    stack: options.stack ?? 'Home',
+    routeName: vars.Name,
+    component: `${vars.Name}Screen`,
+    importFrom: `@features/${vars.feature}`,
+    navigator: options.register === true,
+    linkPath: toKebab(vars.Name),
+    dryRun,
+  });
+  updated.push(...register.updated);
+  followUps.push(...register.notes);
   return { created: rendered.created, updated, followUps, register };
 }
 
@@ -135,9 +133,7 @@ export async function generateFeature(feature: string, options: ScaffoldOptions)
   // The feature folder does not exist yet on a dry run, so skip the existence check here.
   const screen = await writeScreen(feature, feature, { ...options, force: true });
   const scope = vars.feature;
-  const namespace = options.dryRun
-    ? { updated: [], notes: [] }
-    : await registerNamespace(options.projectDir, scope, vars.FeatureName);
+  const namespace = await registerNamespace(options.projectDir, scope, vars.FeatureName, options.dryRun === true);
   const followUps = [
     ...screen.followUps,
     `Add "${scope}" to extraScopes in commitlint.config.mjs so commits can use the ${scope} scope`,
@@ -160,9 +156,9 @@ export async function generateComponent(name: string, feature: string | undefine
     skip: (rel) => !withStories && rel.endsWith('.stories.tsx'),
   });
   const updated: string[] = [];
-  if (feature === undefined && !options.dryRun) {
+  if (feature === undefined) {
     const barrel = path.join(options.projectDir, 'src/shared/components/index.ts');
-    if (await appendLine(barrel, `export { ${vars.Name} } from './${vars.Name}';`)) updated.push('src/shared/components/index.ts');
+    if (await appendLine(barrel, `export { ${vars.Name} } from './${vars.Name}';`, options.dryRun)) updated.push('src/shared/components/index.ts');
   }
   return { created: rendered.created, updated, followUps: [] };
 }
@@ -174,9 +170,9 @@ export async function generateHook(name: string, feature: string | undefined, op
   const vars = buildVars(bare, feature ?? 'shared', options.date);
   const rendered = await renderTemplateDir({ ...options, dirName: feature === undefined ? 'hook-shared' : 'hook', vars });
   const updated: string[] = [];
-  if (feature === undefined && !options.dryRun) {
+  if (feature === undefined) {
     const barrel = path.join(options.projectDir, 'src/shared/hooks/index.ts');
-    if (await appendLine(barrel, `export { use${vars.Name} } from './use${vars.Name}';`)) updated.push('src/shared/hooks/index.ts');
+    if (await appendLine(barrel, `export { use${vars.Name} } from './use${vars.Name}';`, options.dryRun)) updated.push('src/shared/hooks/index.ts');
   }
   return { created: rendered.created, updated, followUps: [] };
 }

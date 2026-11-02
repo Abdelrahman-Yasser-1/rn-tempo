@@ -52,6 +52,7 @@ describe('scaffold generators', () => {
     await mkdir(path.join(dir, 'src/navigation'), { recursive: true });
     await cp(path.join(FIXTURES_DIR, 'navigation/types.ts'), path.join(dir, 'src/navigation/types.ts'));
     await cp(path.join(FIXTURES_DIR, 'navigation/stacks.ts'), path.join(dir, 'src/navigation/stacks.ts'));
+    await cp(path.join(FIXTURES_DIR, 'navigation/linking.ts'), path.join(dir, 'src/navigation/linking.ts'));
     await mkdir(path.join(dir, 'src/services/i18n'), { recursive: true });
     await cp(path.join(TEMPLATE_DIR, 'src/services/i18n/resources.ts'), path.join(dir, 'src/services/i18n/resources.ts'));
   });
@@ -100,6 +101,9 @@ describe('scaffold generators', () => {
 
       const real = await generateFeature('wallet', options());
       expect(sorted(preview.created)).toEqual(sorted(real.created));
+      expect(sorted(preview.updated)).toEqual(sorted(real.updated));
+      expect(preview.updated).toContain('src/services/i18n/resources.ts');
+      expect(preview.followUps).toEqual(real.followUps);
     });
   });
 
@@ -146,10 +150,11 @@ describe('scaffold generators', () => {
 
     it('with register, adds the route to the ParamList and the navigator', async () => {
       const result = await generateScreen('Detail', 'items', options({ register: true }));
-      expect(result.register?.updated).toEqual(['src/navigation/types.ts', 'src/navigation/stacks.ts']);
+      expect(result.register?.updated).toEqual(['src/navigation/types.ts', 'src/navigation/stacks.ts', 'src/navigation/linking.ts']);
       expect(result.followUps).toEqual([]);
       expect(await read('src/navigation/types.ts')).toContain('  Detail: undefined;');
-      expect(await read('src/navigation/stacks.ts')).toContain('Detail: { screen: DetailScreen },');
+      expect(await read('src/navigation/stacks.ts')).toContain('Detail: { screen: DetailScreen, linking: LINK_PATHS.Detail },');
+      expect(await read('src/navigation/linking.ts')).toContain("  Detail: 'detail',");
     });
 
     it('without register, leaves navigation alone and returns a follow-up note', async () => {
@@ -240,6 +245,27 @@ describe('scaffold generators', () => {
   });
 
   describe('dry-run', () => {
+    it('previews barrels, locales, route registration and deep links exactly like a real run', async () => {
+      const before = await snapshot();
+      const preview = await generateScreen('Detail', 'items', options({ dryRun: true, register: true }));
+      expect(await snapshot()).toEqual(before);
+      expect(sorted(preview.updated)).toEqual([
+        'src/features/items/index.ts',
+        'src/locales/ar/items.json',
+        'src/locales/en/items.json',
+        'src/navigation/linking.ts',
+        'src/navigation/stacks.ts',
+        'src/navigation/types.ts',
+      ]);
+      const real = await generateScreen('Detail', 'items', options({ register: true }));
+      expect(sorted(preview.updated)).toEqual(sorted(real.updated));
+
+      const shared = await generateComponent('Chip', undefined, options({ dryRun: true }));
+      expect(shared.updated).toEqual(['src/shared/components/index.ts']);
+      const hook = await generateHook('useThing', undefined, options({ dryRun: true }));
+      expect(hook.updated).toEqual(['src/shared/hooks/index.ts']);
+    });
+
     it('writes nothing for screen, component, hook, store and query', async () => {
       const before = await snapshot();
       await generateScreen('Detail', 'items', options({ dryRun: true, register: true }));
