@@ -9,13 +9,14 @@ const CATEGORIES = ['beauty', 'fragrances', 'furniture', 'groceries'] as const;
 
 /** Pure builder: item `n` is always the same, so tests can rely on ids, titles and categories. */
 function buildItem(n: number): Item {
+  const title = `Product ${String(n)}`;
   return {
     id: n,
-    title: `Product ${String(n)}`,
+    title,
     description: `Description of product ${String(n)}`,
     price: 5 + n,
     category: CATEGORIES[(n - 1) % CATEGORIES.length] ?? 'beauty',
-    thumbnail: `https://cdn.dummyjson.com/product-images/${String(n)}/thumbnail.webp`,
+    thumbnail: `https://dummyjson.com/image/200x200?text=${encodeURIComponent(title)}`,
     rating: 3 + (n % 20) / 10,
     stock: 10 + (n % 50),
   };
