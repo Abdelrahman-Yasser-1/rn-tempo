@@ -1,5 +1,6 @@
 export { ForgotPasswordScreen } from './screens/ForgotPasswordScreen';
 export { LoginScreen } from './screens/LoginScreen';
+export { OtpScreen } from './screens/OtpScreen';
 export { RegisterScreen } from './screens/RegisterScreen';
 export { authKeys } from './api/keys';
 export { useMeQuery } from './api/queries';

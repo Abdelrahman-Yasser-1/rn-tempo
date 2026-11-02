@@ -52,7 +52,6 @@ export const OtpResendResponseSchema = z.object({
 export const SuccessResponseSchema = z.object({ success: z.boolean() });
 
 export type LoginRequest = z.infer<typeof LoginRequestSchema>;
-export type LoginResponse = z.infer<typeof LoginResponseSchema>;
 export type RegisterRequest = z.infer<typeof RegisterRequestSchema>;
 export type ForgotPasswordRequest = z.infer<typeof ForgotPasswordRequestSchema>;
 export type OtpPurpose = z.infer<typeof OtpPurposeSchema>;

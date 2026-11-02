@@ -3,7 +3,6 @@
   "entry": ["index.js", "src/app/App.tsx", "src/app/providers/DevTools.tsx", "src/**/index.ts"],
   "project": ["src/**/*.{ts,tsx}"],
   "ignoreDependencies": [
-    "@hookform/resolvers",
     "@shopify/flash-list",
     "@babel/runtime",
     "babel-jest"
