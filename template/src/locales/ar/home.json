@@ -1,1 +1,7 @@
-{}
+{
+  "browseItems": "تصفّح العناصر",
+  "browseItemsHint": "استكشف الكتالوج التجريبي.",
+  "greeting": "مرحبًا، {{name}}",
+  "greetingFallback": "مرحبًا",
+  "title": "الرئيسية"
+}
