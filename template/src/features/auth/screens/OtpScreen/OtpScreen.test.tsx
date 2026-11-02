@@ -11,18 +11,22 @@ import { OtpScreen } from './OtpScreen';
 
 type OtpProps = ComponentProps<typeof OtpScreen>;
 
+const mockNavigation = { navigate: jest.fn(), goBack: jest.fn(), reset: jest.fn() };
+jest.mock('@react-navigation/native', () => ({
+  ...jest.requireActual<Record<string, unknown>>('@react-navigation/native'),
+  useNavigation: () => mockNavigation,
+}));
+
+beforeEach(() => {
+  mockNavigation.navigate.mockClear();
+  mockNavigation.goBack.mockClear();
+  mockNavigation.reset.mockClear();
+});
+
 const TARGET = 'emily@example.test';
 
-function makeNavigation() {
-  return { navigate: jest.fn(), reset: jest.fn(), goBack: jest.fn() };
-}
-
-async function renderOtp(
-  purpose: 'register' | 'reset-password' = 'reset-password',
-  navigation = makeNavigation(),
-) {
+async function renderOtp(purpose: 'register' | 'reset-password' = 'reset-password') {
   const props = {
-    navigation,
     route: { key: 'Otp', name: 'Otp', params: { target: TARGET, purpose } },
   } as unknown as OtpProps;
   const view = await renderWithProviders(<OtpScreen {...props} />);
@@ -103,8 +107,7 @@ describe('OtpScreen', () => {
   });
 
   test('AC-9: entering 123456 shows a success toast and resets the stack to Login', async () => {
-    const navigation = makeNavigation();
-    await renderOtp('reset-password', navigation);
+    await renderOtp('reset-password');
 
     // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent returns an act promise
     await fireEvent.changeText(firstDigit(), '123456');
@@ -117,12 +120,11 @@ describe('OtpScreen', () => {
         }),
       );
     });
-    expect(navigation.reset).toHaveBeenCalledWith({ index: 0, routes: [{ name: 'Login' }] });
+    expect(mockNavigation.reset).toHaveBeenCalledWith({ index: 0, routes: [{ name: 'Login' }] });
   });
 
   test('a register code shows the account-created toast', async () => {
-    const navigation = makeNavigation();
-    await renderOtp('register', navigation);
+    await renderOtp('register');
 
     // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent returns an act promise
     await fireEvent.changeText(firstDigit(), '123456');
@@ -135,8 +137,7 @@ describe('OtpScreen', () => {
   });
 
   test('a wrong code shows the invalid-code error and clears the input', async () => {
-    const navigation = makeNavigation();
-    await renderOtp('reset-password', navigation);
+    await renderOtp('reset-password');
 
     // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent returns an act promise
     await fireEvent.changeText(firstDigit(), '000000');
@@ -144,20 +145,18 @@ describe('OtpScreen', () => {
     expect(await screen.findByText('That code is incorrect. Try again.')).toBeOnTheScreen();
     expect(firstDigit()).toHaveDisplayValue('');
     expect(toastSpy).not.toHaveBeenCalled();
-    expect(navigation.reset).not.toHaveBeenCalled();
+    expect(mockNavigation.reset).not.toHaveBeenCalled();
   });
 
   test('forged route params reset the stack to Login and render nothing', async () => {
-    const navigation = makeNavigation();
     const props = {
-      navigation,
       route: { key: 'Otp', name: 'Otp', params: { target: 'nope', purpose: 'admin' } },
     } as unknown as OtpProps;
 
     await renderWithProviders(<OtpScreen {...props} />);
 
     await waitFor(() => {
-      expect(navigation.reset).toHaveBeenCalledWith({ index: 0, routes: [{ name: 'Login' }] });
+      expect(mockNavigation.reset).toHaveBeenCalledWith({ index: 0, routes: [{ name: 'Login' }] });
     });
     expect(screen.queryByText('Enter the code')).not.toBeOnTheScreen();
   });

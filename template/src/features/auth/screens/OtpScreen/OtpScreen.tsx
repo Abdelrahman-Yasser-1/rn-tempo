@@ -1,4 +1,5 @@
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useNavigation, type RouteProp } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
@@ -16,16 +17,17 @@ import { OTP_LENGTH, OTP_RESEND_SECONDS } from '../../constants';
 
 import { styles } from './styles';
 
-type OtpScreenProps = Readonly<NativeStackScreenProps<AuthStackParamList, 'Otp'>>;
+type OtpScreenProps = Readonly<{ route: RouteProp<AuthStackParamList, 'Otp'> }>;
 
 type OtpFormProps = Readonly<{
-  navigation: OtpScreenProps['navigation'];
+  navigation: NativeStackNavigationProp<AuthStackParamList, 'Otp'>;
   target: string;
   purpose: OtpPurpose;
 }>;
 
 /** Guards against missing or forged deep-link params; only parsed values reach the form. */
-export function OtpScreen({ navigation, route }: OtpScreenProps) {
+export function OtpScreen({ route }: OtpScreenProps) {
+  const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList, 'Otp'>>();
   const params = OtpRouteParamsSchema.safeParse(route.params);
   const isValid = params.success;
 

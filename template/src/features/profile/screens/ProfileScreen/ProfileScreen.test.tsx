@@ -1,6 +1,5 @@
 import { screen } from '@testing-library/react-native';
 import { http, HttpResponse } from 'msw';
-import type { ComponentProps } from 'react';
 
 import { useAuthStore } from '@features/auth';
 import { useNetworkStore } from '@services/network/network';
@@ -10,18 +9,20 @@ import { renderWithProviders } from '@test-utils/renderWithProviders';
 
 import { ProfileScreen } from './ProfileScreen';
 
-type ProfileProps = ComponentProps<typeof ProfileScreen>;
+const mockNavigation = { navigate: jest.fn(), goBack: jest.fn(), reset: jest.fn() };
+jest.mock('@react-navigation/native', () => ({
+  ...jest.requireActual<Record<string, unknown>>('@react-navigation/native'),
+  useNavigation: () => mockNavigation,
+}));
 
-function makeNavigation() {
-  return { navigate: jest.fn(), reset: jest.fn(), goBack: jest.fn() };
-}
+beforeEach(() => {
+  mockNavigation.navigate.mockClear();
+  mockNavigation.goBack.mockClear();
+  mockNavigation.reset.mockClear();
+});
 
-async function renderProfile(navigation = makeNavigation()) {
-  const props = {
-    navigation,
-    route: { key: 'Profile', name: 'Profile' },
-  } as unknown as ProfileProps;
-  return renderWithProviders(<ProfileScreen {...props} />);
+async function renderProfile() {
+  return renderWithProviders(<ProfileScreen />);
 }
 
 beforeEach(() => {
@@ -61,13 +62,12 @@ describe('ProfileScreen', () => {
   });
 
   test('the Edit profile button opens EditProfile', async () => {
-    const navigation = makeNavigation();
     useAuthStore.setState({ status: 'signedIn', user: createUser() });
     server.use(http.get('*/auth/me', () => HttpResponse.json(createUser())));
-    const { user } = await renderProfile(navigation);
+    const { user } = await renderProfile();
 
     await user.press(screen.getByRole('button', { name: 'Edit profile' }));
 
-    expect(navigation.navigate).toHaveBeenCalledWith('EditProfile');
+    expect(mockNavigation.navigate).toHaveBeenCalledWith('EditProfile');
   });
 });

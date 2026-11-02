@@ -1,6 +1,5 @@
 import { screen, waitFor } from '@testing-library/react-native';
 import { http, HttpResponse } from 'msw';
-import type { ComponentProps } from 'react';
 
 import { useNetworkStore } from '@services/network/network';
 import { tokenStore } from '@services/secure-storage/tokenStore';
@@ -12,15 +11,20 @@ import { useAuthStore } from '../../store/auth.store';
 
 import { LoginScreen } from './LoginScreen';
 
-type LoginProps = ComponentProps<typeof LoginScreen>;
+const mockNavigation = { navigate: jest.fn(), goBack: jest.fn(), reset: jest.fn() };
+jest.mock('@react-navigation/native', () => ({
+  ...jest.requireActual<Record<string, unknown>>('@react-navigation/native'),
+  useNavigation: () => mockNavigation,
+}));
 
-function makeNavigation() {
-  return { navigate: jest.fn(), reset: jest.fn(), goBack: jest.fn() };
-}
+beforeEach(() => {
+  mockNavigation.navigate.mockClear();
+  mockNavigation.goBack.mockClear();
+  mockNavigation.reset.mockClear();
+});
 
-async function renderLogin(navigation = makeNavigation()) {
-  const props = { navigation, route: { key: 'Login', name: 'Login' } } as unknown as LoginProps;
-  const view = await renderWithProviders(<LoginScreen {...props} />);
+async function renderLogin() {
+  const view = await renderWithProviders(<LoginScreen />);
   return view;
 }
 
@@ -112,13 +116,12 @@ describe('LoginScreen', () => {
   });
 
   test('the forgot-password and create-account links navigate', async () => {
-    const navigation = makeNavigation();
-    const { user } = await renderLogin(navigation);
+    const { user } = await renderLogin();
 
     await user.press(screen.getByRole('button', { name: 'Forgot password?' }));
-    expect(navigation.navigate).toHaveBeenLastCalledWith('ForgotPassword');
+    expect(mockNavigation.navigate).toHaveBeenLastCalledWith('ForgotPassword');
 
     await user.press(screen.getByRole('button', { name: 'Create account' }));
-    expect(navigation.navigate).toHaveBeenLastCalledWith('Register');
+    expect(mockNavigation.navigate).toHaveBeenLastCalledWith('Register');
   });
 });

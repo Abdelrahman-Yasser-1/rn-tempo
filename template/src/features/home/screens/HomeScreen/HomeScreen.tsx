@@ -1,4 +1,5 @@
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
@@ -9,9 +10,8 @@ import { useRefreshOnFocus } from '@shared/hooks';
 
 import { styles } from './styles';
 
-type HomeScreenProps = Readonly<NativeStackScreenProps<HomeStackParamList, 'Home'>>;
-
-export function HomeScreen({ navigation }: HomeScreenProps) {
+export function HomeScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<HomeStackParamList, 'Home'>>();
   const { t } = useTranslation('home');
   const { data, refetch } = useMeQuery();
   const user = useCurrentUser();

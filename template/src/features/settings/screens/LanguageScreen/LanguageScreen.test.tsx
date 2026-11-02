@@ -1,23 +1,24 @@
 import { screen, waitFor } from '@testing-library/react-native';
-import type { ComponentProps } from 'react';
 
 import * as languageManager from '@services/i18n/languageManager';
 import { renderWithProviders } from '@test-utils/renderWithProviders';
 
 import { LanguageScreen } from './LanguageScreen';
 
-type LanguageProps = ComponentProps<typeof LanguageScreen>;
+const mockNavigation = { navigate: jest.fn(), goBack: jest.fn(), reset: jest.fn() };
+jest.mock('@react-navigation/native', () => ({
+  ...jest.requireActual<Record<string, unknown>>('@react-navigation/native'),
+  useNavigation: () => mockNavigation,
+}));
 
-function makeNavigation() {
-  return { navigate: jest.fn(), reset: jest.fn(), goBack: jest.fn() };
-}
+beforeEach(() => {
+  mockNavigation.navigate.mockClear();
+  mockNavigation.goBack.mockClear();
+  mockNavigation.reset.mockClear();
+});
 
-async function renderLanguage(navigation = makeNavigation()) {
-  const props = {
-    navigation,
-    route: { key: 'Language', name: 'Language' },
-  } as unknown as LanguageProps;
-  return renderWithProviders(<LanguageScreen {...props} />, { language: 'en' });
+async function renderLanguage() {
+  return renderWithProviders(<LanguageScreen />, { language: 'en' });
 }
 
 const ARABIC = 'العربية';

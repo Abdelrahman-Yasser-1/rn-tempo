@@ -1,13 +1,22 @@
 import { screen, waitFor } from '@testing-library/react-native';
 import { http, HttpResponse } from 'msw';
-import type { ComponentProps } from 'react';
 
 import { server } from '@test-utils/msw/server';
 import { renderWithProviders } from '@test-utils/renderWithProviders';
 
 import { RegisterScreen } from './RegisterScreen';
 
-type RegisterProps = ComponentProps<typeof RegisterScreen>;
+const mockNavigation = { navigate: jest.fn(), goBack: jest.fn(), reset: jest.fn() };
+jest.mock('@react-navigation/native', () => ({
+  ...jest.requireActual<Record<string, unknown>>('@react-navigation/native'),
+  useNavigation: () => mockNavigation,
+}));
+
+beforeEach(() => {
+  mockNavigation.navigate.mockClear();
+  mockNavigation.goBack.mockClear();
+  mockNavigation.reset.mockClear();
+});
 
 const VALID_FORM = {
   firstName: 'Emily',
@@ -17,16 +26,8 @@ const VALID_FORM = {
   password: 'secret123',
 };
 
-function makeNavigation() {
-  return { navigate: jest.fn(), reset: jest.fn(), goBack: jest.fn() };
-}
-
-async function renderRegister(navigation = makeNavigation()) {
-  const props = {
-    navigation,
-    route: { key: 'Register', name: 'Register' },
-  } as unknown as RegisterProps;
-  const view = await renderWithProviders(<RegisterScreen {...props} />);
+async function renderRegister() {
+  const view = await renderWithProviders(<RegisterScreen />);
   return view;
 }
 
@@ -44,14 +45,13 @@ async function fillForm(
 }
 describe('RegisterScreen', () => {
   test('AC-7: a valid form goes to Otp with purpose register', async () => {
-    const navigation = makeNavigation();
-    const { user } = await renderRegister(navigation);
+    const { user } = await renderRegister();
 
     await fillForm(user);
     await user.press(screen.getByRole('button', { name: 'Continue' }));
 
     await waitFor(() => {
-      expect(navigation.navigate).toHaveBeenCalledWith('Otp', {
+      expect(mockNavigation.navigate).toHaveBeenCalledWith('Otp', {
         target: VALID_FORM.email,
         purpose: 'register',
       });
@@ -61,23 +61,21 @@ describe('RegisterScreen', () => {
   test('mismatched passwords show the mismatch error and send no request', async () => {
     const requests = jest.fn(() => HttpResponse.json({ id: 1 }, { status: 201 }));
     server.use(http.post('*/users/add', requests));
-    const navigation = makeNavigation();
-    const { user } = await renderRegister(navigation);
+    const { user } = await renderRegister();
 
     await fillForm(user, { confirmPassword: `${VALID_FORM.password}-typo` });
     await user.press(screen.getByRole('button', { name: 'Continue' }));
 
     expect(await screen.findByText('Passwords do not match.')).toBeOnTheScreen();
     expect(requests).not.toHaveBeenCalled();
-    expect(navigation.navigate).not.toHaveBeenCalled();
+    expect(mockNavigation.navigate).not.toHaveBeenCalled();
   });
 
   test('a server error keeps the user on the form and shows the mapped message', async () => {
     server.use(
       http.post('*/users/add', () => HttpResponse.json({ message: 'boom' }, { status: 500 })),
     );
-    const navigation = makeNavigation();
-    const { user } = await renderRegister(navigation);
+    const { user } = await renderRegister();
 
     await fillForm(user);
     await user.press(screen.getByRole('button', { name: 'Continue' }));
@@ -85,15 +83,14 @@ describe('RegisterScreen', () => {
     expect(
       await screen.findByText('Something went wrong on our side. Please try again later.'),
     ).toBeOnTheScreen();
-    expect(navigation.navigate).not.toHaveBeenCalled();
+    expect(mockNavigation.navigate).not.toHaveBeenCalled();
   });
 
   test('the header back button goes back', async () => {
-    const navigation = makeNavigation();
-    const { user } = await renderRegister(navigation);
+    const { user } = await renderRegister();
 
     await user.press(screen.getByRole('button', { name: 'Back' }));
 
-    expect(navigation.goBack).toHaveBeenCalledTimes(1);
+    expect(mockNavigation.goBack).toHaveBeenCalledTimes(1);
   });
 });

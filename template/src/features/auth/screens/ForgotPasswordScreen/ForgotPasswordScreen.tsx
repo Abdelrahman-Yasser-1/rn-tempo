@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
@@ -14,11 +15,9 @@ import { FormError } from '../../components/FormError';
 
 import { styles } from './styles';
 
-type ForgotPasswordScreenProps = Readonly<
-  NativeStackScreenProps<AuthStackParamList, 'ForgotPassword'>
->;
-
-export function ForgotPasswordScreen({ navigation }: ForgotPasswordScreenProps) {
+export function ForgotPasswordScreen() {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<AuthStackParamList, 'ForgotPassword'>>();
   const { t } = useTranslation('auth');
   const forgotPassword = useForgotPasswordMutation();
   const { control, handleSubmit } = useForm<ForgotPasswordRequest>({

@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -12,11 +13,9 @@ import { UpdateProfileSchema, type UpdateProfile } from '../../api/schemas';
 
 import { styles } from './styles';
 
-type EditProfileScreenProps = Readonly<
-  NativeStackScreenProps<ProfileStackParamList, 'EditProfile'>
->;
-
-export function EditProfileScreen({ navigation }: EditProfileScreenProps) {
+export function EditProfileScreen() {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<ProfileStackParamList, 'EditProfile'>>();
   const { t } = useTranslation('profile');
   const user = useCurrentUser();
   const updateProfile = useUpdateProfileMutation();

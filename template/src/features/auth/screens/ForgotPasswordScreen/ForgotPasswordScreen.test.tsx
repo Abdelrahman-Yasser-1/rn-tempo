@@ -1,36 +1,36 @@
 import { screen, waitFor } from '@testing-library/react-native';
 import { http, HttpResponse } from 'msw';
-import type { ComponentProps } from 'react';
 
 import { server } from '@test-utils/msw/server';
 import { renderWithProviders } from '@test-utils/renderWithProviders';
 
 import { ForgotPasswordScreen } from './ForgotPasswordScreen';
 
-type ForgotPasswordProps = ComponentProps<typeof ForgotPasswordScreen>;
+const mockNavigation = { navigate: jest.fn(), goBack: jest.fn(), reset: jest.fn() };
+jest.mock('@react-navigation/native', () => ({
+  ...jest.requireActual<Record<string, unknown>>('@react-navigation/native'),
+  useNavigation: () => mockNavigation,
+}));
 
-function makeNavigation() {
-  return { navigate: jest.fn(), reset: jest.fn(), goBack: jest.fn() };
-}
+beforeEach(() => {
+  mockNavigation.navigate.mockClear();
+  mockNavigation.goBack.mockClear();
+  mockNavigation.reset.mockClear();
+});
 
-async function renderForgotPassword(navigation = makeNavigation()) {
-  const props = {
-    navigation,
-    route: { key: 'ForgotPassword', name: 'ForgotPassword' },
-  } as unknown as ForgotPasswordProps;
-  const view = await renderWithProviders(<ForgotPasswordScreen {...props} />);
+async function renderForgotPassword() {
+  const view = await renderWithProviders(<ForgotPasswordScreen />);
   return view;
 }
 describe('ForgotPasswordScreen', () => {
   test('AC-8: a valid email goes to Otp with purpose reset-password', async () => {
-    const navigation = makeNavigation();
-    const { user } = await renderForgotPassword(navigation);
+    const { user } = await renderForgotPassword();
 
     await user.type(screen.getByLabelText('Email'), 'emily@example.test');
     await user.press(screen.getByRole('button', { name: 'Send code' }));
 
     await waitFor(() => {
-      expect(navigation.navigate).toHaveBeenCalledWith('Otp', {
+      expect(mockNavigation.navigate).toHaveBeenCalledWith('Otp', {
         target: 'emily@example.test',
         purpose: 'reset-password',
       });
@@ -40,15 +40,14 @@ describe('ForgotPasswordScreen', () => {
   test('an invalid email shows the validation message and sends no request', async () => {
     const requests = jest.fn(() => HttpResponse.json({ success: true }));
     server.use(http.post('*/auth/forgot-password', requests));
-    const navigation = makeNavigation();
-    const { user } = await renderForgotPassword(navigation);
+    const { user } = await renderForgotPassword();
 
     await user.type(screen.getByLabelText('Email'), 'not-an-email');
     await user.press(screen.getByRole('button', { name: 'Send code' }));
 
     expect(await screen.findByText('Enter a valid email address.')).toBeOnTheScreen();
     expect(requests).not.toHaveBeenCalled();
-    expect(navigation.navigate).not.toHaveBeenCalled();
+    expect(mockNavigation.navigate).not.toHaveBeenCalled();
   });
 
   test('a server error shows the mapped message and stays on the screen', async () => {
@@ -57,8 +56,7 @@ describe('ForgotPasswordScreen', () => {
         HttpResponse.json({ message: 'boom' }, { status: 500 }),
       ),
     );
-    const navigation = makeNavigation();
-    const { user } = await renderForgotPassword(navigation);
+    const { user } = await renderForgotPassword();
 
     await user.type(screen.getByLabelText('Email'), 'emily@example.test');
     await user.press(screen.getByRole('button', { name: 'Send code' }));
@@ -66,15 +64,14 @@ describe('ForgotPasswordScreen', () => {
     expect(
       await screen.findByText('Something went wrong on our side. Please try again later.'),
     ).toBeOnTheScreen();
-    expect(navigation.navigate).not.toHaveBeenCalled();
+    expect(mockNavigation.navigate).not.toHaveBeenCalled();
   });
 
   test('the header back button goes back', async () => {
-    const navigation = makeNavigation();
-    const { user } = await renderForgotPassword(navigation);
+    const { user } = await renderForgotPassword();
 
     await user.press(screen.getByRole('button', { name: 'Back' }));
 
-    expect(navigation.goBack).toHaveBeenCalledTimes(1);
+    expect(mockNavigation.goBack).toHaveBeenCalledTimes(1);
   });
 });
