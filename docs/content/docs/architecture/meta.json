@@ -2,8 +2,5 @@
   "title": "Architecture",
   "description": "How the template is organised and why.",
   "icon": "blocks",
-  "pages": [
-    "index",
-    "..."
-  ]
+  "pages": ["index", "overview", "folder-structure", "boundaries", "data-flow"]
 }
