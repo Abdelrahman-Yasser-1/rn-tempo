@@ -1,6 +1,17 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "entry": ["index.js", "src/app/App.tsx", ".rnstorybook/index.tsx"],
+  "entry": ["index.js", "src/app/App.tsx", "src/app/providers/DevTools.tsx", "src/**/index.ts"],
   "project": ["src/**/*.{ts,tsx}"],
-  "ignore": ["src/assets/*/index.ts"]
+  "ignoreDependencies": [
+    "@hookform/resolvers",
+    "@shopify/flash-list",
+    "@babel/runtime",
+    "babel-jest"
+  ],
+  "ignoreBinaries": ["tempo"],
+  "ignoreExportsUsedInFile": true,
+  "ignoreIssues": {
+    "src/navigation/types.ts": ["types"],
+    "src/config/env.ts": ["exports"]
+  }
 }
