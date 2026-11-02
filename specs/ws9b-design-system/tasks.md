@@ -16,4 +16,4 @@ One PR per letter, in order; each PR is device-toured before the next starts.
 - [ ] T9b.K Tooling, scripts & DX (node guard, env parity, verify escalation + --pr, test:node, piped lefthook, link check, bundle check, align-deps, AGENTS.md additions, nested AGENTS, guides)
 - [ ] T9b.L Runtime services & test resilience (integration smoke tests, persist migrations, EnvError, log sinks, storage areas, errors, focus notify, ListLoadingMore, bootstrap graph, link helpers, coverage ratchet, feature READMEs)
 - [ ] T9b.M push-notifications module, native version sync, Fastlane env badge
-- [ ] T9b.N i18n hardening (removeUnusedKeys, Arabic plurals proven, context convention, Intl formatters, no dynamic keys lint, dev missing-key warnings, typed selector if approved)
+- [ ] T9b.N i18n hardening (removeUnusedKeys, Arabic plurals proven, context convention, Intl formatters, no dynamic keys lint, dev missing-key warnings, typed selector)
