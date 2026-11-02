@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { lstat, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -7,7 +7,7 @@ import { commentStylesFor, scanMarkers, stripFeature, type FeatureManifest, type
 import { aiToolsFor, identityOf } from './create.ts';
 import { CliError } from './errors.ts';
 import { fetchTemplate } from './fetch-template.ts';
-import { globToRegExp, isTextFile, pathExists, walk, walkFiles } from './fs-utils.ts';
+import { assertInsideProject, globToRegExp, isTextFile, pathExists, walk, walkFiles } from './fs-utils.ts';
 import { loadManifests, resolveSelection, type ManifestMap } from './manifest.ts';
 import { stripFeaturesInProject } from './markers.ts';
 import { renameProject } from './rename.ts';
@@ -174,10 +174,13 @@ function unescapePointer(segment: string): string {
   return segment.replaceAll('~1', '/').replaceAll('~0', '~');
 }
 
+// Pointers come from manifests in a fetched template; never let them reach the prototype chain.
+const FORBIDDEN_SEGMENTS = new Set(['__proto__', 'constructor', 'prototype']);
+
 function readPointer(document: unknown, segments: readonly string[]): unknown {
   let current = document;
   for (const segment of segments) {
-    if (current === null || typeof current !== 'object') return undefined;
+    if (current === null || typeof current !== 'object' || !Object.hasOwn(current, segment)) return undefined;
     current = (current as Record<string, unknown>)[segment];
   }
   return current;
@@ -191,6 +194,7 @@ export function restoreJsonPointer(target: unknown, source: unknown, pointer: st
   const segments = pointer.split('/').slice(1).map(unescapePointer);
   const last = segments.at(-1);
   if (last === undefined) return 'empty JSON pointer';
+  if (segments.some((segment) => FORBIDDEN_SEGMENTS.has(segment))) return `${pointer} is not an allowed JSON pointer`;
   const value = readPointer(source, segments);
   if (value === undefined) return `${pointer} does not exist in the template`;
   const parent = readPointer(target, segments.slice(0, -1));
@@ -202,7 +206,7 @@ export function restoreJsonPointer(target: unknown, source: unknown, pointer: st
     return 'added';
   }
   const record = parent as Json;
-  if (last in record) return 'present';
+  if (Object.hasOwn(record, last)) return 'present';
   insertOrdered(record, last, value, Object.keys((readPointer(source, segments.slice(0, -1)) ?? {}) as Json));
   return 'added';
 }
@@ -239,6 +243,17 @@ export function restoreEnvKeys(projectText: string, referenceText: string, keys:
 // The pipeline
 // ---------------------------------------------------------------------------------------------
 
+/** The closest ancestor of `dir` (itself included) that exists on disk. */
+async function deepestExisting(dir: string): Promise<string> {
+  let current = dir;
+  while (!(await pathExists(current))) {
+    const up = path.dirname(current);
+    if (up === current) return current;
+    current = up;
+  }
+  return current;
+}
+
 /** Pending file changes: reads see earlier writes, nothing touches the disk until `commit`. */
 class Workspace {
   private readonly pending = new Map<string, string | Buffer>();
@@ -258,15 +273,24 @@ class Workspace {
   }
 
   async write(rel: string, content: string | Buffer): Promise<void> {
+    assertInsideProject(rel, 'file to write');
     if (!(await this.exists(rel))) this.created.add(rel);
     else if (!this.created.has(rel)) this.changed.add(rel);
     this.pending.set(rel, content);
   }
 
   async commit(): Promise<void> {
+    const root = await realpath(this.root);
     for (const [rel, content] of this.pending) {
       const target = path.join(this.root, rel);
+      // A symlinked directory inside the project must not redirect writes (or mkdir) outside it.
+      const parent = await realpath(await deepestExisting(path.dirname(target)));
+      if (parent !== root && !parent.startsWith(`${root}${path.sep}`)) {
+        throw new CliError(`refusing to write ${rel}: its directory resolves outside the project`);
+      }
       await mkdir(path.dirname(target), { recursive: true });
+      const existing = await lstat(target).catch(() => undefined);
+      if (existing?.isSymbolicLink()) throw new CliError(`refusing to write ${rel}: it is a symlink`);
       await writeFile(target, content);
     }
   }
@@ -274,6 +298,7 @@ class Workspace {
 
 /** Files of the prepared template that `deleteGlobs` own (a matched directory expands to its files). */
 async function ownedFiles(templateDir: string, globs: readonly string[]): Promise<string[]> {
+  for (const glob of globs) assertInsideProject(glob, 'deleteGlobs entry');
   const patterns = globs.map(globToRegExp);
   const entries = await walk(templateDir);
   const matches = (rel: string) => patterns.some((pattern) => pattern.test(rel));
@@ -321,6 +346,7 @@ async function restoreDependencies(workspace: Workspace, templateDir: string, ma
 async function restoreJsonPatches(workspace: Workspace, templateDir: string, manifests: readonly FeatureManifest[], conflicts: AddConflict[]): Promise<void> {
   const byFile = new Map<string, string[]>();
   for (const patch of manifests.flatMap((manifest) => manifest.jsonPatches)) {
+    assertInsideProject(patch.file, 'jsonPatches file');
     byFile.set(patch.file, [...(byFile.get(patch.file) ?? []), patch.path]);
   }
   for (const [file, pointers] of byFile) {

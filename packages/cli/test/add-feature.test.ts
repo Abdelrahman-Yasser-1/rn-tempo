@@ -1,4 +1,4 @@
-import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readdir, readFile, symlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -101,6 +101,14 @@ describe('restoreJsonPointer', () => {
     expect(restoreJsonPointer(target, source, '/scripts/missing')).toMatch(/does not exist in the template/);
     expect(restoreJsonPointer({}, source, '/scripts/storybook')).toMatch(/parent/);
   });
+
+  it('refuses pointers that reach the prototype chain', () => {
+    const target = { scripts: {} };
+    const source = JSON.parse('{"scripts":{},"__proto__":{"polluted":true}}') as unknown;
+    expect(restoreJsonPointer(target, source, '/__proto__/polluted')).toMatch(/not an allowed/);
+    expect(restoreJsonPointer(target, source, '/scripts/constructor')).toMatch(/not an allowed/);
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+  });
 });
 
 /** Only the parts of the real template the ssl-pinning module touches; keeps these tests fast. */
@@ -169,6 +177,18 @@ describe('addFeature (small project on a trimmed copy of the template)', () => {
     expect(result.conflicts).toContainEqual({ file: 'src/services/security/pinning/pinning.ts', reason: expect.stringContaining('already exists') });
     const forced = await addFeature({ projectDir: dir, cwd: dir, feature: 'ssl-pinning', template: miniDir, dryRun: true, force: true });
     expect(forced.updated).toContain('src/services/security/pinning/pinning.ts');
+  });
+
+  it('refuses to write through a symlink that leaves the project', async () => {
+    const { dir: outside, cleanup: outsideCleanup } = await makeTempDir('tempo-add-outside');
+    try {
+      await mkdir(path.join(dir, 'src/services'), { recursive: true });
+      await symlink(outside, path.join(dir, 'src/services/security'), 'dir');
+      await expect(addFeature({ projectDir: dir, cwd: dir, feature: 'ssl-pinning', template: miniDir })).rejects.toThrow(/outside the project/);
+      expect(await readdir(outside)).toEqual([]);
+    } finally {
+      await outsideCleanup();
+    }
   });
 
   it('rejects unknown and already enabled features', async () => {
