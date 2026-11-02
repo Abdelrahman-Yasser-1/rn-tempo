@@ -40,7 +40,7 @@ export function createRootNavigator(screens: Readonly<AppScreens>) {
     groups: {
       SignedOut: {
         if: useIsSignedOut,
-        screens: { Auth: createAuthNavigator(screens.Placeholder) },
+        screens: { Auth: createAuthNavigator() },
       },
       SignedIn: {
         if: useIsSignedIn,

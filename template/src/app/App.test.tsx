@@ -1,5 +1,6 @@
 import { act, render, screen, userEvent } from '@testing-library/react-native';
 import { http, HttpResponse } from 'msw';
+import type { ComponentType } from 'react';
 import { Linking } from 'react-native';
 import BootSplash from 'react-native-bootsplash';
 
@@ -18,6 +19,26 @@ import { server } from '@test-utils/msw/server';
 import { App } from './App';
 import { defaultSteps } from './bootstrap/bootstrap';
 import { useSecurityStore } from './bootstrap/securityStore';
+
+// Real auth screens are covered by their own tests; here they are stubs named after their route.
+jest.mock('@features/onboarding', () => ({
+  OnboardingScreen: () => null,
+  useShouldShowOnboarding: () => false,
+}));
+jest.mock('@features/auth', () => {
+  const actual = jest.requireActual<Record<string, unknown>>('@features/auth');
+  const { Text: MockText } = jest.requireActual<{ Text: ComponentType<{ children: string }> }>(
+    'react-native',
+  );
+  const stub = (label: string) => () => <MockText>{label}</MockText>;
+  return {
+    ...actual,
+    LoginScreen: stub('Login'),
+    RegisterScreen: stub('Register'),
+    ForgotPasswordScreen: stub('ForgotPassword'),
+    OtpScreen: stub('Otp'),
+  };
+});
 
 const configUrl = `${ENV.API_BASE_URL}${ENV.APP_CONFIG_PATH}`;
 

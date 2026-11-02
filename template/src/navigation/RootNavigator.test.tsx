@@ -22,6 +22,24 @@ function Fixed({ label }: Readonly<{ label: string }>) {
   return <Text>{`screen:${label}`}</Text>;
 }
 
+// Real auth screens need app providers; this suite only checks routing, so they become named stubs.
+jest.mock('@features/onboarding', () => ({
+  OnboardingScreen: () => null,
+  useShouldShowOnboarding: () => false,
+}));
+jest.mock('@features/auth', () => {
+  const actual = jest.requireActual<Record<string, unknown>>('@features/auth');
+  const { Text: MockText } = jest.requireActual<{ Text: typeof Text }>('react-native');
+  const stub = (label: string) => () => <MockText>{`screen:${label}`}</MockText>;
+  return {
+    ...actual,
+    LoginScreen: stub('Login'),
+    RegisterScreen: stub('Register'),
+    ForgotPasswordScreen: stub('ForgotPassword'),
+    OtpScreen: stub('Otp'),
+  };
+});
+
 const Navigation = createRootNavigator({
   Placeholder: Named,
   ForceUpdate: () => <Fixed label="ForceUpdate" />,
