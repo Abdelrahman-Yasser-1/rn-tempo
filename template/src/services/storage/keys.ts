@@ -5,6 +5,8 @@ export const STORAGE_KEYS = {
   theme: 'app.theme',
   language: 'app.language',
   onboardingCompleted: 'app.onboarding-completed',
+  /** Set on first launch; its absence with tokens present means a reinstall. */
+  installMarker: 'app.install-marker',
   /** Non-prod only: debug-menu API base URL override, applied after a restart. */
   apiBaseUrlOverride: 'app.api-base-url-override',
   /** Prefix for Zustand persisted stores: `zustand.<store-name>`. */
