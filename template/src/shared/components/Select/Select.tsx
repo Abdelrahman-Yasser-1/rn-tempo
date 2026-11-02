@@ -1,6 +1,5 @@
 import { BottomSheetBackdrop, BottomSheetFlatList, BottomSheetModal } from '@gorhom/bottom-sheet';
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
-import { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable } from 'react-native';
 
@@ -13,6 +12,7 @@ import { Text } from '../Text';
 
 import { styles } from './styles';
 import type { SelectOption, SelectProps } from './types';
+import { useSelect } from './useSelect';
 
 const SNAP_POINTS = ['50%'];
 
@@ -65,24 +65,15 @@ export function Select({
   testID,
 }: SelectProps) {
   const { t } = useTranslation();
-  const sheetRef = useRef<BottomSheetModal>(null);
-  const [isOpen, setIsOpen] = useState(false);
+  const { sheetRef, ...vm } = useSelect({ options, value, onChange });
   const isInvalid = errorText !== undefined && errorText !== '';
-  styles.useVariants({ open: isOpen, invalid: isInvalid, disabled: isDisabled });
+  styles.useVariants({ open: vm.isOpen, invalid: isInvalid, disabled: isDisabled });
 
-  const selected = options.find((option) => option.value === value);
+  const selected = vm.selected;
   const message = isInvalid ? errorText : helperText;
   const messageKind = isInvalid ? 'error' : 'helper';
   const title = sheetTitle ?? label;
-  const state = { expanded: isOpen, disabled: isDisabled };
-
-  const handleSelect = useCallback(
-    (next: string) => {
-      onChange(next);
-      sheetRef.current?.dismiss();
-    },
-    [onChange],
-  );
+  const state = { expanded: vm.isOpen, disabled: isDisabled };
 
   return (
     <Box style={styles.root}>
@@ -100,10 +91,7 @@ export function Select({
         testID={testID}
         disabled={isDisabled}
         style={styles.trigger}
-        onPress={() => {
-          setIsOpen(true);
-          sheetRef.current?.present();
-        }}
+        onPress={vm.onOpen}
       >
         <Text
           testID={testID ? `${testID}.value` : undefined}
@@ -135,9 +123,7 @@ export function Select({
         backdropComponent={renderBackdrop}
         backgroundStyle={styles.sheetBackground}
         handleIndicatorStyle={styles.sheetHandle}
-        onDismiss={() => {
-          setIsOpen(false);
-        }}
+        onDismiss={vm.onDismiss}
       >
         <Box style={styles.sheetHeader}>
           <Text variant="title" accessibilityRole="header">
@@ -148,9 +134,7 @@ export function Select({
             icon="close"
             size="sm"
             accessibilityLabel={t('select.close')}
-            onPress={() => {
-              sheetRef.current?.dismiss();
-            }}
+            onPress={vm.onClose}
           />
         </Box>
         <BottomSheetFlatList
@@ -162,7 +146,7 @@ export function Select({
               option={item}
               isSelected={item.value === value}
               testID={testID ? `${testID}.option.${item.value}` : undefined}
-              onSelect={handleSelect}
+              onSelect={vm.onSelect}
             />
           )}
         />
