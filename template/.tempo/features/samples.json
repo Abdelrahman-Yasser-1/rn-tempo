@@ -14,7 +14,9 @@
     "specs/items/**",
     "e2e/flows/items-*.yaml"
   ],
-  "dependencies": [],
+  "dependencies": [
+    "@shopify/flash-list"
+  ],
   "devDependencies": [],
   "envKeys": [],
   "jsonPatches": [
