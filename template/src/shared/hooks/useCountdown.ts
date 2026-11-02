@@ -4,16 +4,18 @@ import { useInterval } from './useInterval';
 
 const TICK_MS = 1000;
 
-/** Counts down from `seconds` once per second after `start()`; `reset()` stops and restores it. */
+/**
+ * Counts down from `seconds` once per second after `start()`; `reset()` stops and restores it.
+ * `isRunning` is derived from the rendered `remaining`, so it turns false the moment it hits 0
+ * even when several ticks land before React commits.
+ */
 export function useCountdown(seconds: number) {
   const [remaining, setRemaining] = useState(seconds);
-  const [isRunning, setIsRunning] = useState(false);
+  const [isStarted, setIsStarted] = useState(false);
+  const isRunning = isStarted && remaining > 0;
 
   useInterval(
     () => {
-      if (remaining <= 1) {
-        setIsRunning(false);
-      }
       setRemaining((current) => Math.max(current - 1, 0));
     },
     isRunning ? TICK_MS : null,
@@ -21,11 +23,11 @@ export function useCountdown(seconds: number) {
 
   const start = useCallback(() => {
     setRemaining((current) => (current <= 0 ? seconds : current));
-    setIsRunning(true);
+    setIsStarted(true);
   }, [seconds]);
 
   const reset = useCallback(() => {
-    setIsRunning(false);
+    setIsStarted(false);
     setRemaining(seconds);
   }, [seconds]);
 
