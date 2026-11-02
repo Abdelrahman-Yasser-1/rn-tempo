@@ -1,6 +1,8 @@
 import { UserSchema } from '@features/auth';
 
+// @tempo-feature:samples:start
 import { createItem } from './item';
+// @tempo-feature:samples:end
 import { createUser } from './user';
 
 describe('factories', () => {
@@ -13,6 +15,7 @@ describe('factories', () => {
     expect(second.id).not.toBe(first.id);
   });
 
+  // @tempo-feature:samples:start
   test('createItem builds unique items with overrides', () => {
     const first = createItem();
     const second = createItem({ price: 1 });
@@ -21,4 +24,5 @@ describe('factories', () => {
     expect(second.id).not.toBe(first.id);
     expect(first.title).toContain('Item');
   });
+  // @tempo-feature:samples:end
 });
