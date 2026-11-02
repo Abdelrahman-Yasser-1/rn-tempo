@@ -15,11 +15,16 @@ export type RegisterOptions = {
   importFrom: string;
   /** Also add the screen to the stack navigator file. */
   navigator: boolean;
+  /** Deep link path for the route (kebab-case, e.g. `balance-details`); needs `navigator`. */
+  linkPath?: string;
+  /** Compute and report the updates without writing anything. */
+  dryRun?: boolean;
 };
 
 export type RegisterResult = { updated: string[]; notes: string[] };
 
 const TYPES_FILE = 'src/navigation/types.ts';
+const LINKING_FILE = 'src/navigation/linking.ts';
 const NAVIGATION_DIR = 'src/navigation';
 
 /** Index of the `}` that closes the `{` at `open`, ignoring braces in strings and comments. */
@@ -110,7 +115,20 @@ function addImport(text: string, name: string, source: string): string {
   return lines.join('\n');
 }
 
-function addScreenToNavigator(text: string, options: RegisterOptions): { text: string; changed: boolean } | null {
+/** The navigator entry; wrapped over several lines when it would pass the 100 column print width. */
+function screenEntry(block: Block, routeName: string, component: string, withLinking: boolean): string {
+  if (!withLinking) return `${routeName}: { screen: ${component} },`;
+  const oneLine = `${routeName}: { screen: ${component}, linking: LINK_PATHS.${routeName} },`;
+  if (block.indent.length + 2 + oneLine.length <= 100) return oneLine;
+  const inner = `${block.indent}    `;
+  return `${routeName}: {\n${inner}screen: ${component},\n${inner}linking: LINK_PATHS.${routeName},\n${block.indent}  },`;
+}
+
+function addScreenToNavigator(
+  text: string,
+  options: RegisterOptions,
+  withLinking: boolean,
+): { text: string; changed: boolean } | null {
   const { stack, routeName, component, importFrom } = options;
   const fn = new RegExp(`function create${stack}(?:Stack|Navigator)\\s*\\([^)]*\\)[^{]*\\{`);
   const fnMatch = fn.exec(text);
@@ -121,9 +139,21 @@ function addScreenToNavigator(text: string, options: RegisterOptions): { text: s
   const offset = fnMatch.index;
   const block: Block = { open: screens.open + offset, close: screens.close + offset, indent: screens.indent };
   if (hasKey(text, block, routeName)) return { text, changed: false };
-  const entry = `${routeName}: { screen: ${component} },`;
-  const withEntry = insertInBlock(text, block, entry);
-  return { text: addImport(withEntry, component, importFrom), changed: true };
+  const withEntry = insertInBlock(text, block, screenEntry(block, routeName, component, withLinking));
+  const withScreen = addImport(withEntry, component, importFrom);
+  return { text: withLinking ? addImport(withScreen, 'LINK_PATHS', './linking') : withScreen, changed: true };
+}
+
+type LinkResult = { text: string; changed: boolean; conflict?: string };
+
+/** Adds `Route: 'path'` to the `LINK_PATHS` map of `linking.ts`; null when the map is not found. */
+function addLinkPath(text: string, routeName: string, linkPath: string): LinkResult | null {
+  const block = findBlock(text, /export const LINK_PATHS\s*=\s*\{/);
+  if (!block) return null;
+  if (hasKey(text, block, routeName)) return { text, changed: false };
+  const used = new RegExp(`:\\s*'${linkPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}'`).test(text.slice(block.open, block.close));
+  if (used) return { text, changed: false, conflict: `Deep link path "${linkPath}" is already used in ${LINKING_FILE}` };
+  return { text: insertInBlock(text, block, `${routeName}: '${linkPath}',`), changed: true };
 }
 
 async function navigatorFiles(projectDir: string): Promise<string[]> {
@@ -139,6 +169,9 @@ async function navigatorFiles(projectDir: string): Promise<string[]> {
  */
 export async function registerRoute(options: RegisterOptions): Promise<RegisterResult> {
   const { projectDir, stack, routeName, component, importFrom } = options;
+  const save = async (rel: string, text: string) => {
+    if (options.dryRun !== true) await writeFile(path.join(projectDir, rel), text);
+  };
   const updated: string[] = [];
   const notes: string[] = [];
   const manualHint = `Add "${routeName}: undefined;" to ${stack}StackParamList in ${TYPES_FILE}`;
@@ -149,7 +182,7 @@ export async function registerRoute(options: RegisterOptions): Promise<RegisterR
     if (result === null) {
       notes.push(`Could not find ${stack}StackParamList in ${TYPES_FILE}. ${manualHint}`);
     } else if (result.changed) {
-      await writeFile(typesPath, result.text);
+      await save(TYPES_FILE, result.text);
       updated.push(TYPES_FILE);
     }
   } else {
@@ -161,14 +194,38 @@ export async function registerRoute(options: RegisterOptions): Promise<RegisterR
     notes.push(`${manualNavigator}, or re-run with --register`);
     return { updated, notes };
   }
+
+  // Deep link first: the navigator entry only references LINK_PATHS when the path was registered.
+  let linked = false;
+  let linkingText: string | null = null;
+  let linkNote: string | null = null;
+  if (options.linkPath !== undefined) {
+    const manualLink = `Add "${routeName}: '${options.linkPath}'" to LINK_PATHS in ${LINKING_FILE} and set linking: LINK_PATHS.${routeName} on the route`;
+    const linkingPath = path.join(projectDir, LINKING_FILE);
+    const result = (await pathExists(linkingPath)) ? addLinkPath(await readFile(linkingPath, 'utf8'), routeName, options.linkPath) : null;
+    if (result === null) {
+      linkNote = `Could not find LINK_PATHS in ${LINKING_FILE}, so no deep link was added. ${manualLink}`;
+    } else if (result.conflict !== undefined) {
+      linkNote = `${result.conflict}, so no deep link was added. ${manualLink}`;
+    } else {
+      linked = true;
+      if (result.changed) linkingText = result.text;
+    }
+  }
+
   for (const name of await navigatorFiles(projectDir)) {
     const rel = `${NAVIGATION_DIR}/${name}`;
     const file = path.join(projectDir, rel);
-    const result = addScreenToNavigator(await readFile(file, 'utf8'), options);
+    const result = addScreenToNavigator(await readFile(file, 'utf8'), options, linked);
     if (result === null) continue;
     if (result.changed) {
-      await writeFile(file, result.text);
+      await save(rel, result.text);
       updated.push(rel);
+    }
+    if (linkNote !== null) notes.push(linkNote);
+    if (linkingText !== null && result.changed) {
+      await save(LINKING_FILE, linkingText);
+      updated.push(LINKING_FILE);
     }
     return { updated, notes };
   }
@@ -182,7 +239,7 @@ const RESOURCES_FILE = 'src/services/i18n/resources.ts';
  * Registers a feature's locale files as an i18n namespace in `resources.ts` so `t()` keys are typed.
  * Idempotent; returns a note instead of failing when the file is not in the expected shape.
  */
-export async function registerNamespace(projectDir: string, namespace: string, pascal: string): Promise<RegisterResult> {
+export async function registerNamespace(projectDir: string, namespace: string, pascal: string, dryRun = false): Promise<RegisterResult> {
   const file = path.join(projectDir, RESOURCES_FILE);
   const manual = `Register the "${namespace}" i18n namespace in ${RESOURCES_FILE}`;
   if (!(await pathExists(file))) return { updated: [], notes: [`${RESOURCES_FILE} not found. ${manual}`] };
@@ -199,6 +256,6 @@ export async function registerNamespace(projectDir: string, namespace: string, p
     withImport.splice(last + 1, 0, importLine(lang));
     text = withImport.join('\n');
   }
-  await writeFile(file, text);
+  if (!dryRun) await writeFile(file, text);
   return { updated: [RESOURCES_FILE], notes: [] };
 }

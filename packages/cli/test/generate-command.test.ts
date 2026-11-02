@@ -31,6 +31,7 @@ describe('tempo g <kind> --json', () => {
     await mkdir(path.join(dir, 'src/navigation'), { recursive: true });
     await cp(path.join(FIXTURES_DIR, 'navigation/types.ts'), path.join(dir, 'src/navigation/types.ts'));
     await cp(path.join(FIXTURES_DIR, 'navigation/stacks.ts'), path.join(dir, 'src/navigation/stacks.ts'));
+    await cp(path.join(FIXTURES_DIR, 'navigation/linking.ts'), path.join(dir, 'src/navigation/linking.ts'));
     stdout = [];
     stderr = [];
     vi.spyOn(process.stdout, 'write').mockImplementation((chunk: string | Uint8Array) => {
@@ -76,9 +77,28 @@ describe('tempo g <kind> --json', () => {
     await runCommand(generateCommand, { rawArgs: ['component', 'Badge', '--json', '--dry-run', '--cwd', dir] });
 
     const json = jsonStdout();
-    expect(json).toMatchObject({ ok: true, kind: 'component', dryRun: true, updated: [] });
+    expect(json).toMatchObject({ ok: true, kind: 'component', dryRun: true, updated: ['src/shared/components/index.ts'] });
     expect(json.created).toContain('src/shared/components/Badge/Badge.tsx');
     expect(await pathExists(path.join(dir, 'src/shared/components/Badge'))).toBe(false);
+  });
+
+  it('lists secondary updates (barrel, locales, routes, deep link) for a screen dry run', async () => {
+    await runCommand(generateCommand, {
+      rawArgs: ['screen', 'BalanceDetails', '--feature', 'items', '--register', '--json', '--dry-run', '--cwd', dir],
+    });
+
+    const json = jsonStdout();
+    expect(json).toMatchObject({ ok: true, kind: 'screen', dryRun: true });
+    expect([...(json.updated ?? [])].sort()).toEqual([
+      'src/features/items/index.ts',
+      'src/locales/ar/items.json',
+      'src/locales/en/items.json',
+      'src/navigation/linking.ts',
+      'src/navigation/stacks.ts',
+      'src/navigation/types.ts',
+    ]);
+    expect(json.register?.updated).toEqual(['src/navigation/types.ts', 'src/navigation/stacks.ts', 'src/navigation/linking.ts']);
+    expect(await pathExists(path.join(dir, 'src/features/items/screens/BalanceDetailsScreen'))).toBe(false);
   });
 
   it('prints an ok: false error document with the error code when the run fails', async () => {
