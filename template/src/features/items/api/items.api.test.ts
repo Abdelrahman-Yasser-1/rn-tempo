@@ -79,11 +79,13 @@ describe('useItemsInfiniteQuery paging', () => {
 
     for (const expectedSkip of [20, 40, 60, 80]) {
       expect(result.current.hasNextPage).toBe(true);
-      // Query-core commits pages on a timer, so the wait for it runs inside the same act.
       await act(async () => {
         await result.current.fetchNextPage();
       });
-      expect(result.current.data?.pages.at(-1)?.skip).toBe(expectedSkip);
+      // Query-core commits pages on a timer; on slow CI runners that lands after the act.
+      await waitFor(() => {
+        expect(result.current.data?.pages.at(-1)?.skip).toBe(expectedSkip);
+      });
     }
 
     expect(result.current.data?.pages).toHaveLength(5);
