@@ -1,51 +1,16 @@
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
-import type { AuthStackParamList } from '@navigation/types';
-import { getErrorMessageKey } from '@services/http/errors';
 import { Button, FormTextField, Header, Screen, Text } from '@shared/components';
 
-import { useRegisterMutation } from '../../api/mutations';
-import { RegisterRequestSchema, type RegisterRequest } from '../../api/schemas';
 import { FormError } from '../../components/FormError';
 
 import { styles } from './styles';
+import { useRegisterScreen } from './useRegisterScreen';
 
 export function RegisterScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList, 'Register'>>();
   const { t } = useTranslation('auth');
-  const register = useRegisterMutation();
-  const { control, handleSubmit } = useForm<RegisterRequest>({
-    resolver: zodResolver(RegisterRequestSchema),
-    defaultValues: {
-      firstName: '',
-      lastName: '',
-      username: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-    },
-  });
-
-  const submit = handleSubmit((values) => {
-    register.mutate(values, {
-      onSuccess: () => {
-        navigation.navigate('Otp', { target: values.email, purpose: 'register' });
-      },
-    });
-  });
-
-  const onSubmit = () => {
-    void submit();
-  };
-
-  const registerError: unknown = register.error;
-  const errorMessage =
-    registerError === null ? undefined : t(getErrorMessageKey(registerError), { ns: 'errors' });
+  const vm = useRegisterScreen();
 
   return (
     <Screen
@@ -55,7 +20,7 @@ export function RegisterScreen() {
       contentContainerStyle={styles.content}
       testID="register-screen"
     >
-      <Header title={t('header.register')} onBack={navigation.goBack} testID="register.header" />
+      <Header title={t('header.register')} onBack={vm.onBack} testID="register.header" />
       <View>
         <Text variant="h1" accessibilityRole="header">
           {t('register.title')}
@@ -63,7 +28,7 @@ export function RegisterScreen() {
         <Text color="textSecondary">{t('register.subtitle')}</Text>
       </View>
       <FormTextField
-        control={control}
+        control={vm.control}
         name="firstName"
         label={t('register.firstName')}
         autoComplete="given-name"
@@ -71,7 +36,7 @@ export function RegisterScreen() {
         testID="register.first-name-input"
       />
       <FormTextField
-        control={control}
+        control={vm.control}
         name="lastName"
         label={t('register.lastName')}
         autoComplete="family-name"
@@ -79,7 +44,7 @@ export function RegisterScreen() {
         testID="register.last-name-input"
       />
       <FormTextField
-        control={control}
+        control={vm.control}
         name="username"
         label={t('register.username')}
         autoCapitalize="none"
@@ -89,7 +54,7 @@ export function RegisterScreen() {
         testID="register.username-input"
       />
       <FormTextField
-        control={control}
+        control={vm.control}
         name="email"
         label={t('register.email')}
         keyboardType="email-address"
@@ -100,7 +65,7 @@ export function RegisterScreen() {
         testID="register.email-input"
       />
       <FormTextField
-        control={control}
+        control={vm.control}
         name="password"
         label={t('register.password')}
         secureTextEntry
@@ -109,21 +74,21 @@ export function RegisterScreen() {
         testID="register.password-input"
       />
       <FormTextField
-        control={control}
+        control={vm.control}
         name="confirmPassword"
         label={t('register.confirmPassword')}
         secureTextEntry
         autoComplete="new-password"
         returnKeyType="done"
-        onSubmitEditing={onSubmit}
+        onSubmitEditing={vm.onSubmit}
         testID="register.confirm-password-input"
       />
-      <FormError message={errorMessage} testID="register.error" />
+      <FormError message={vm.errorMessage} testID="register.error" />
       <Button
         title={t('register.submit')}
         fullWidth
-        loading={register.isPending}
-        onPress={onSubmit}
+        loading={vm.isPending}
+        onPress={vm.onSubmit}
         testID="register.submit-button"
       />
     </Screen>
