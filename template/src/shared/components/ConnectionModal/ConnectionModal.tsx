@@ -1,9 +1,5 @@
-import NetInfo from '@react-native-community/netinfo';
-import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
-
-import { useIsOnline } from '@shared/hooks';
 
 import { Button } from '../Button';
 import { Icon } from '../Icon';
@@ -12,8 +8,7 @@ import { Text } from '../Text';
 
 import { styles } from './styles';
 import type { ConnectionModalProps } from './types';
-
-const DEFAULT_DELAY_MS = 5000;
+import { useConnectionModal } from './useConnectionModal';
 
 /** The modal is not dismissable; it only closes when the connection returns. */
 function ignoreClose(): void {
@@ -24,36 +19,12 @@ function ignoreClose(): void {
  * Blocking "no connection" modal for flows that cannot work offline. It appears once the device
  * has been offline for `delayMs` and closes by itself when the connection returns.
  */
-export function ConnectionModal({
-  enabled: isEnabled = true,
-  delayMs = DEFAULT_DELAY_MS,
-  onRetry,
-  testID,
-}: ConnectionModalProps) {
+export function ConnectionModal({ testID, ...props }: ConnectionModalProps) {
   const { t } = useTranslation();
-  const isOnline = useIsOnline();
-  const [hasWaited, setHasWaited] = useState(false);
-  const isGuarding = isEnabled && !isOnline;
-
-  useEffect(() => {
-    const timer = isGuarding
-      ? setTimeout(() => {
-          setHasWaited(true);
-        }, delayMs)
-      : undefined;
-    return () => {
-      clearTimeout(timer);
-      setHasWaited(false);
-    };
-  }, [isGuarding, delayMs]);
+  const { isVisible, onRetryPress } = useConnectionModal(props);
 
   return (
-    <Modal
-      visible={isGuarding && hasWaited}
-      dismissable={false}
-      onClose={ignoreClose}
-      testID={testID}
-    >
+    <Modal visible={isVisible} dismissable={false} onClose={ignoreClose} testID={testID}>
       <View style={styles.content}>
         <Icon name="wifi-off" size={48} color="error" />
         <Text variant="title" align="center" accessibilityRole="header">
@@ -66,10 +37,7 @@ export function ConnectionModal({
           testID={testID ? `${testID}.retry` : undefined}
           title={t('connection.retry')}
           leftIcon="refresh"
-          onPress={() => {
-            void NetInfo.refresh();
-            onRetry?.();
-          }}
+          onPress={onRetryPress}
         />
       </View>
     </Modal>

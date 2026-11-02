@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TextInput } from 'react-native';
 import { useUnistyles } from 'react-native-unistyles';
@@ -9,6 +8,7 @@ import { Text } from '../Text';
 
 import { styles } from './styles';
 import type { TextFieldProps } from './types';
+import { useTextField } from './useTextField';
 
 type PasswordToggleProps = Readonly<{
   isRevealed: boolean;
@@ -54,8 +54,13 @@ export function TextField({
   ...rest
 }: TextFieldProps) {
   const { theme } = useUnistyles();
-  const [isFocused, setIsFocused] = useState(false);
-  const [isRevealed, setIsRevealed] = useState(false);
+  const {
+    isFocused,
+    isRevealed,
+    onFocus: handleFocus,
+    onBlur: handleBlur,
+    onToggleReveal,
+  } = useTextField({ onFocus, onBlur });
   const isInvalid = errorText !== undefined && errorText !== '';
   styles.useVariants({ focused: isFocused, invalid: isInvalid, disabled: isDisabled });
 
@@ -66,9 +71,7 @@ export function TextField({
       testID={testID ? `${testID}.toggle` : undefined}
       isRevealed={isRevealed}
       isDisabled={isDisabled}
-      onToggle={() => {
-        setIsRevealed((isShown) => !isShown);
-      }}
+      onToggle={onToggleReveal}
     />
   ) : (
     right
@@ -96,14 +99,8 @@ export function TextField({
           editable={!isDisabled}
           secureTextEntry={isSecure && !isRevealed}
           style={styles.input}
-          onFocus={(event) => {
-            setIsFocused(true);
-            onFocus?.(event);
-          }}
-          onBlur={(event) => {
-            setIsFocused(false);
-            onBlur?.(event);
-          }}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
         />
         {endAdornment !== undefined && endAdornment !== null && (
           <Box style={styles.adornment}>{endAdornment}</Box>
