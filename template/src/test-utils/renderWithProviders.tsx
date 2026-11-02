@@ -23,10 +23,13 @@ export type RenderWithProvidersOptions = {
   language?: Language;
 };
 
-/** Fresh client per test: no retries and an infinite gcTime so data survives until assertions run. */
+/** Fresh client per test: no retries; infinite gcTime keeps data for assertions and schedules no gc timers. */
 export function createTestQueryClient(): QueryClient {
   return new QueryClient({
-    defaultOptions: { queries: { retry: false, gcTime: Infinity }, mutations: { retry: false } },
+    defaultOptions: {
+      queries: { retry: false, gcTime: Infinity },
+      mutations: { retry: false, gcTime: Infinity },
+    },
   });
 }
 
