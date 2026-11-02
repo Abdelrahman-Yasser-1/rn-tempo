@@ -13,7 +13,7 @@ import { gitInit, gitInitialCommit, installPods, yarnInstall, type Runner } from
 import { removeFeatures, type PostRemoveStep } from './remove-feature.ts';
 import { isValidAppName, isValidBundleId, kebabCase, renameProject, type AppIdentity } from './rename.ts';
 import { readTempoJson, writeTempoJson } from './tempo-json.ts';
-import { rewriteWorkspaceLinks } from './workspace-links.ts';
+import { addCliDevDependency, rewriteWorkspaceLinks } from './workspace-links.ts';
 
 export const BUILT_IN_ENVS = ['dev', 'staging', 'prod'] as const;
 
@@ -63,7 +63,7 @@ export function defaultEnvIdentity(name: string, app: { name: string; displayNam
   return { displayName: full.displayName, scheme: full.scheme };
 }
 
-function identityOf(tempo: TempoJson): AppIdentity {
+export function identityOf(tempo: TempoJson): AppIdentity {
   return {
     name: tempo.app.name,
     displayName: tempo.app.displayName,
@@ -173,6 +173,7 @@ export async function createProject(options: CreateOptions): Promise<CreateResul
   };
   await writeTempoJson(options.dir, finalJson);
   await rewriteWorkspaceLinks(options.dir);
+  await addCliDevDependency(options.dir, options.cliVersion);
   step('metadata');
 
   // 6. git, install, pods
