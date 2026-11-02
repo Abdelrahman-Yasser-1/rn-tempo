@@ -1,1 +1,10 @@
-{}
+{
+  "avatarLabel": "Profile photo",
+  "edit": "Edit profile",
+  "editTitle": "Edit profile",
+  "email": "Email",
+  "firstName": "First name",
+  "lastName": "Last name",
+  "save": "Save",
+  "title": "Profile"
+}
