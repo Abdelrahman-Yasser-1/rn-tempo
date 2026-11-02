@@ -11,6 +11,7 @@
     "src/locales/*/items.json",
     "src/test-utils/msw/routes/products.ts",
     "src/test-utils/factories/item.ts",
+    "src/navigation/ItemsNavigation.test.tsx",
     "specs/items/**",
     "e2e/flows/items-*.yaml"
   ],
