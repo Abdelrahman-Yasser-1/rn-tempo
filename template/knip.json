@@ -2,7 +2,7 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "entry": ["index.js", "src/app/App.tsx", "src/app/providers/DevTools.tsx", "src/**/index.ts"],
   "project": ["src/**/*.{ts,tsx}"],
-  "ignoreDependencies": ["@babel/runtime", "babel-jest"],
+  "ignoreDependencies": ["babel-jest"],
   "ignoreBinaries": ["tempo"],
   "ignoreExportsUsedInFile": true,
   "ignoreIssues": {
