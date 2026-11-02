@@ -35,4 +35,6 @@ pre-push:
   commands:
     test:
       run: yarn jest --ci --changedSince=origin/main --passWithNoTests
-# `tempo doctor --ci` joins pre-push once the CLI is published (WS5).
+    doctor:
+      # `create-tempo-app` is an exact-pinned devDependency; skip quietly when it is not installed.
+      run: if [ -x node_modules/.bin/tempo ]; then yarn tempo doctor --ci; else echo 'tempo CLI not installed, skipping'; fi
