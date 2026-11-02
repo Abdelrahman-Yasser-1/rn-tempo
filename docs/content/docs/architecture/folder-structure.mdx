@@ -89,7 +89,7 @@ The complete skeleton from contract C5. Folders marked with `<name>` repeat once
         <Folder name="api"><File name="<name>.api.ts" /><File name="queries.ts" /><File name="mutations.ts" /><File name="keys.ts" /><File name="schemas.ts" /></Folder>
         <Folder name="components"><Folder name="<PascalName>"><File name="<PascalName>.tsx" /><File name="index.ts" /></Folder></Folder>
         <Folder name="hooks"><File name="use<Name>.ts" /></Folder>
-        <Folder name="screens"><Folder name="<Name>Screen"><File name="<Name>Screen.tsx" /><File name="styles.ts" /><File name="index.ts" /></Folder></Folder>
+        <Folder name="screens"><Folder name="<Name>Screen"><File name="<Name>Screen.tsx" /><File name="use<Name>Screen.ts" /><File name="use<Name>Screen.test.ts" /><File name="<Name>Screen.test.tsx" /><File name="styles.ts" /><File name="index.ts" /></Folder></Folder>
         <Folder name="store"><File name="<name>.store.ts" /></Folder>
         <Folder name="types"><File name="index.ts" /></Folder>
         <Folder name="utils" />
@@ -123,6 +123,7 @@ Each top-level folder has an alias (`@app/*`, `@navigation/*`, `@features/*`, `@
 
 ## Naming rules
 
+- A screen's logic lives in `use<Name>Screen.ts` (navigation, forms, queries, state, effects, error mapping) and is tested with `renderHook` in `use<Name>Screen.test.ts`. The view `<Name>Screen.tsx` only calls the hook and lays out JSX; `<Name>Screen.test.tsx` keeps the render tests. Shared and feature components use `use<Name>.ts` the same way.
 - Directories are kebab-case. Component and screen directories are PascalCase.
 - `.tsx` files are PascalCase. `.ts` files are camelCase: hooks `useX.ts`, stores `x.store.ts`, API files `x.api.ts`.
 - Booleans start with `is`, `has`, `should`, `can`, `did`, `will`, `show`, `hide`, and similar.

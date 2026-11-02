@@ -26,11 +26,22 @@ config/      env.ts constants.ts
 test-utils/  renderWithProviders.tsx  msw/  factories/
 ```
 
-- A screen folder `<Name>Screen/` must hold `<Name>Screen.tsx`, `<Name>Screen.test.tsx`, `styles.ts` and `index.ts`.
-- A shared component folder must hold `<Name>.tsx`, `<Name>.test.tsx`, `<Name>.stories.tsx`, `styles.ts`, `types.ts` and `index.ts`.
-- A feature component folder holds `<Name>.tsx`, `index.ts`, and optionally `<Name>.test.tsx`, `styles.ts`, `types.ts`.
+- A screen folder `<Name>Screen/` must hold `<Name>Screen.tsx`, `<Name>Screen.test.tsx`, `styles.ts` and `index.ts`. It may also hold `use<Name>Screen.ts` and `use<Name>Screen.test.ts` (see "Screen logic hooks").
+- A shared component folder must hold `<Name>.tsx`, `<Name>.test.tsx`, `<Name>.stories.tsx`, `styles.ts`, `types.ts` and `index.ts`, and may hold `use<Name>.ts` with `use<Name>.test.ts`.
+- A feature component folder holds `<Name>.tsx`, `index.ts`, and optionally `<Name>.test.tsx`, `styles.ts`, `types.ts`, `use<Name>.ts`, `use<Name>.test.ts`.
 - `services/` may nest **one** kebab-case level (`src/services/security/pinning/`). Two levels is an error.
 - Unknown folders or files under `src/` are errors. Do not invent new top-level folders.
+
+## Screen logic hooks
+
+A screen with logic splits into a view and a hook:
+
+- `<Name>Screen.tsx` calls `const vm = use<Name>Screen()` (or `use<Name>Screen(route)`) and renders layout only: JSX, styles, testIDs, static labels via `useTranslation`.
+- `use<Name>Screen.ts` holds all logic and returns a flat view-model: values, `isX`/`hasX` booleans, `onX` handlers and logic-derived strings such as `errorMessage`. That covers `useNavigation`, `useRoute`, `useForm`, queries and mutations, `useState`/`useEffect`/`useReducer`, timers, error mapping, toasts, feature flags, store selectors and `useMemo`.
+- `use<Name>Screen.test.ts` tests the hook with `renderHook`; `<Name>Screen.test.tsx` keeps the AC render tests.
+- If the view-model contains a ref, destructure it out (`const { listRef, ...vm } = use<Name>Screen()`), because `react-hooks/refs` flags refs inside objects.
+- Screens with only static content need no hook. Shared and feature components use `use<Name>.ts` the same way.
+- Lint warns when a `*Screen.tsx` imports `react-hook-form`, `@tanstack/react-query`, `useNavigation`/`useRoute`/`useFocusEffect`, or `useState`/`useEffect`/`useReducer`.
 
 ## Path aliases
 

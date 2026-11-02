@@ -50,14 +50,15 @@ Run everything from the project root.
 5. Every UI string goes through i18n, in both `en` and `ar`.
 6. Style with Unistyles tokens only; no color literals, magic numbers, inline styles, or `StyleSheet` from `react-native`. Use `start`/`end`, not `left`/`right`.
 7. Compose UI from `@shared/components`; raw `Text`, `Image`, `Button`, `TextInput` and Touchables are lint errors outside `src/shared/components`.
-8. Component props are `Readonly<Props>`; use `type`, never `interface`.
-9. Server data lives in TanStack Query, client state in Zustand; tokens never go in stores or MMKV.
-10. All HTTP goes through `request()` with a Zod schema; env through `ENV` from `@config/env`; storage through `@services/storage`.
-11. Accessibility props, 44x44 targets and `testID` conventions on every interactive component.
-12. Every new util, hook, store, service, component and screen has a test. Query with `getByRole`; mock the network with MSW; spec'd tests start with `AC-n:`.
-13. Use generators (`yarn tempo g ...`) instead of hand-creating files when available.
-14. Small Conventional Commits `type(scope): subject` (scope required, about 200 lines max, each one green); never `--no-verify`.
-15. Run `yarn verify:changed` before finishing and `yarn verify` before pushing; never claim done with failing checks.
+8. Screens render, hooks think: a screen's logic (navigation, forms, queries, state, effects, error mapping) lives in `use<Name>Screen.ts` next to the view and is tested with `renderHook`; the view only lays out JSX.
+9. Component props are `Readonly<Props>`; use `type`, never `interface`.
+10. Server data lives in TanStack Query, client state in Zustand; tokens never go in stores or MMKV.
+11. All HTTP goes through `request()` with a Zod schema; env through `ENV` from `@config/env`; storage through `@services/storage`.
+12. Accessibility props, 44x44 targets and `testID` conventions on every interactive component.
+13. Every new util, hook, store, service, component and screen has a test. Query with `getByRole`; mock the network with MSW; spec'd tests start with `AC-n:`.
+14. Use generators (`yarn tempo g ...`) instead of hand-creating files when available.
+15. Small Conventional Commits `type(scope): subject` (scope required, about 200 lines max, each one green); never `--no-verify`.
+16. Run `yarn verify:changed` before finishing and `yarn verify` before pushing; never claim done with failing checks.
 
 Also: check library APIs with context7 for the **pinned** version, never from memory. Dependencies are exact pins; add, remove or upgrade them only when the task says so, in a separate `deps` commit. Never commit secrets.
 
