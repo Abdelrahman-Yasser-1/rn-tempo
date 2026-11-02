@@ -1,1 +1,26 @@
-{}
+{
+  "create": {
+    "category": "الفئة",
+    "description": "الوصف",
+    "price": "السعر (دولار أمريكي)",
+    "submit": "إنشاء العنصر",
+    "success": "تم إنشاء العنصر",
+    "title": "عنصر جديد",
+    "titleLabel": "العنوان",
+    "unavailable": "إنشاء العناصر غير متاح حاليًا."
+  },
+  "details": {
+    "category": "الفئة: {{category}}",
+    "rating": "التقييم: {{rating}} / 5",
+    "stock": "المتوفر: {{stock}}",
+    "title": "العنصر"
+  },
+  "list": {
+    "create": "إنشاء عنصر",
+    "emptyMessage": "جرّب بحثًا مختلفًا.",
+    "emptyTitle": "لم يتم العثور على عناصر",
+    "searchLabel": "ابحث في العناصر",
+    "searchPlaceholder": "ابحث في العناصر",
+    "title": "العناصر"
+  }
+}

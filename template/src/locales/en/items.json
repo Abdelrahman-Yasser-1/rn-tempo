@@ -1,1 +1,26 @@
-{}
+{
+  "create": {
+    "category": "Category",
+    "description": "Description",
+    "price": "Price (USD)",
+    "submit": "Create item",
+    "success": "Item created",
+    "title": "New item",
+    "titleLabel": "Title",
+    "unavailable": "Creating items is not available right now."
+  },
+  "details": {
+    "category": "Category: {{category}}",
+    "rating": "Rating: {{rating}} / 5",
+    "stock": "In stock: {{stock}}",
+    "title": "Item"
+  },
+  "list": {
+    "create": "Create item",
+    "emptyMessage": "Try a different search.",
+    "emptyTitle": "No items found",
+    "searchLabel": "Search items",
+    "searchPlaceholder": "Search items",
+    "title": "Items"
+  }
+}
