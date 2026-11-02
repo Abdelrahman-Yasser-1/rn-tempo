@@ -1,22 +1,16 @@
-import { useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, View } from 'react-native';
 
 import { APP_BUNDLE_ID, APP_VERSION } from '@config/constants';
 import { ENV } from '@config/env';
-import { useAuthStore } from '@features/auth';
-import { clearFlagOverrides, setFlagOverride } from '@services/flags/flagOverrides';
-import { FLAG_DEFAULTS, type FlagKey } from '@services/flags/flags';
-import { useFeatureFlag } from '@services/flags/useFeatureFlag';
+import type { FlagKey } from '@services/flags/flags';
 import { resolveBaseUrl } from '@services/http/client';
-import { queryClient } from '@services/http/queryClient';
-import { STORAGE_KEYS } from '@services/storage/keys';
-import { storage } from '@services/storage/storage';
 import { Button, Screen, Switch, Text, TextField } from '@shared/components';
 
 import { styles } from './styles';
+import { FLAG_KEYS, useDebugFlag, useDebugMenuScreen } from './useDebugMenuScreen';
 
-const FLAG_KEYS = Object.keys(FLAG_DEFAULTS) as FlagKey[];
 const BUNDLE_SUFFIX: Record<typeof ENV.APP_ENV, string> = {
   dev: '.dev',
   staging: '.staging',
@@ -70,14 +64,12 @@ function Action({ label, onPress, testID, isSecondary = false }: Readonly<Action
 }
 
 function FlagRow({ flag }: Readonly<{ flag: FlagKey }>) {
-  const isEnabled = useFeatureFlag(flag);
+  const { isEnabled, onChange } = useDebugFlag(flag);
   return (
     <View style={styles.row}>
       <Switch
         label={flag}
-        onValueChange={(isOn) => {
-          setFlagOverride(flag, isOn);
-        }}
+        onValueChange={onChange}
         testID={`debug-menu.flag.${flag}`}
         value={isEnabled}
       />
@@ -88,11 +80,7 @@ function FlagRow({ flag }: Readonly<{ flag: FlagKey }>) {
 /** Non-prod only. Environment info, API URL override, flag overrides and data reset tools. */
 export function DebugMenuScreen() {
   const { t } = useTranslation('app');
-  const [apiUrl, setApiUrl] = useState(storage.getString(STORAGE_KEYS.apiBaseUrlOverride) ?? '');
-  const [doneMessage, setDoneMessage] = useState('');
-  const markDone = (): void => {
-    setDoneMessage(t('debug.done'));
-  };
+  const vm = useDebugMenuScreen();
 
   return (
     <Screen contentContainerStyle={styles.content} preset="scroll" testID="debug-menu-screen">
@@ -116,10 +104,10 @@ export function DebugMenuScreen() {
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="url"
-          onChangeText={setApiUrl}
+          onChangeText={vm.onApiUrlChange}
           placeholder={ENV.API_BASE_URL}
           testID="debug-menu.api-url-input"
-          value={apiUrl}
+          value={vm.apiUrl}
         />
         <Text color="textSecondary" variant="caption">
           {t('debug.apiUrl.hint')}
@@ -127,25 +115,13 @@ export function DebugMenuScreen() {
         <View style={styles.buttons}>
           <Action
             label={t('debug.apiUrl.save')}
-            onPress={() => {
-              const trimmed = apiUrl.trim();
-              if (trimmed === '') {
-                storage.remove(STORAGE_KEYS.apiBaseUrlOverride);
-              } else {
-                storage.setString(STORAGE_KEYS.apiBaseUrlOverride, trimmed);
-              }
-              markDone();
-            }}
+            onPress={vm.onApiUrlSave}
             testID="debug-menu.api-url-save"
           />
           <Action
             isSecondary
             label={t('debug.apiUrl.clear')}
-            onPress={() => {
-              storage.remove(STORAGE_KEYS.apiBaseUrlOverride);
-              setApiUrl('');
-              markDone();
-            }}
+            onPress={vm.onApiUrlClear}
             testID="debug-menu.api-url-clear"
           />
         </View>
@@ -159,7 +135,7 @@ export function DebugMenuScreen() {
           <Action
             isSecondary
             label={t('debug.flags.reset')}
-            onPress={clearFlagOverrides}
+            onPress={vm.onResetFlags}
             testID="debug-menu.flags-reset"
           />
         </View>
@@ -169,32 +145,23 @@ export function DebugMenuScreen() {
         <View style={styles.buttons}>
           <Action
             label={t('debug.data.clearStorage')}
-            onPress={() => {
-              storage.clearAll();
-              markDone();
-            }}
+            onPress={vm.onClearStorage}
             testID="debug-menu.clear-storage"
           />
           <Action
             label={t('debug.data.clearQueryCache')}
-            onPress={() => {
-              queryClient.clear();
-              markDone();
-            }}
+            onPress={vm.onClearQueryCache}
             testID="debug-menu.clear-query-cache"
           />
           <Action
             label={t('debug.data.clearTokens')}
-            onPress={() => {
-              void useAuthStore.getState().signOut();
-              markDone();
-            }}
+            onPress={vm.onClearTokens}
             testID="debug-menu.clear-tokens"
           />
         </View>
-        {doneMessage === '' ? null : (
+        {vm.doneMessage === '' ? null : (
           <Text color="success" variant="label">
-            {doneMessage}
+            {vm.doneMessage}
           </Text>
         )}
       </Section>
