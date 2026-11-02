@@ -1,4 +1,3 @@
-import type { QueryClient } from '@tanstack/react-query';
 import { screen, waitFor } from '@testing-library/react-native';
 import { http, HttpResponse } from 'msw';
 import type { ComponentProps } from 'react';
@@ -22,24 +21,12 @@ function makeNavigation() {
   return { navigate: jest.fn(), reset: jest.fn(), goBack: jest.fn() };
 }
 
-// Mutations schedule 5-minute gc timers on the per-test client; releasing it lets Jest exit.
-/** clear() leaves each mutation's 5-minute gc timer running; destroy() cancels it first. */
-function releaseClient(client: QueryClient | undefined) {
-  for (const mutation of client?.getMutationCache().getAll() ?? []) {
-    mutation.destroy();
-  }
-  client?.clear();
-}
-
-let renderedClient: QueryClient | undefined;
-
 async function renderRegister(navigation = makeNavigation()) {
   const props = {
     navigation,
     route: { key: 'Register', name: 'Register' },
   } as unknown as RegisterProps;
   const view = await renderWithProviders(<RegisterScreen {...props} />);
-  renderedClient = view.queryClient;
   return view;
 }
 
@@ -55,12 +42,6 @@ async function fillForm(
   await user.type(screen.getByLabelText('Password'), values.password);
   await user.type(screen.getByLabelText('Confirm password'), values.confirmPassword);
 }
-
-afterEach(() => {
-  releaseClient(renderedClient);
-  renderedClient = undefined;
-});
-
 describe('RegisterScreen', () => {
   test('AC-7: a valid form goes to Otp with purpose register', async () => {
     const navigation = makeNavigation();

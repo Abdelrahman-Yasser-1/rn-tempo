@@ -1,4 +1,3 @@
-import type { QueryClient } from '@tanstack/react-query';
 import { screen, waitFor } from '@testing-library/react-native';
 import { http, HttpResponse } from 'msw';
 import type { ComponentProps } from 'react';
@@ -14,32 +13,14 @@ function makeNavigation() {
   return { navigate: jest.fn(), reset: jest.fn(), goBack: jest.fn() };
 }
 
-// Mutations schedule 5-minute gc timers on the per-test client; releasing it lets Jest exit.
-/** clear() leaves each mutation's 5-minute gc timer running; destroy() cancels it first. */
-function releaseClient(client: QueryClient | undefined) {
-  for (const mutation of client?.getMutationCache().getAll() ?? []) {
-    mutation.destroy();
-  }
-  client?.clear();
-}
-
-let renderedClient: QueryClient | undefined;
-
 async function renderForgotPassword(navigation = makeNavigation()) {
   const props = {
     navigation,
     route: { key: 'ForgotPassword', name: 'ForgotPassword' },
   } as unknown as ForgotPasswordProps;
   const view = await renderWithProviders(<ForgotPasswordScreen {...props} />);
-  renderedClient = view.queryClient;
   return view;
 }
-
-afterEach(() => {
-  releaseClient(renderedClient);
-  renderedClient = undefined;
-});
-
 describe('ForgotPasswordScreen', () => {
   test('AC-8: a valid email goes to Otp with purpose reset-password', async () => {
     const navigation = makeNavigation();

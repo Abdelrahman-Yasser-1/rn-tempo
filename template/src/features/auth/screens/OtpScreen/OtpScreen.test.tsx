@@ -1,4 +1,3 @@
-import type { QueryClient } from '@tanstack/react-query';
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { http, HttpResponse } from 'msw';
 import type { ComponentProps } from 'react';
@@ -18,16 +17,6 @@ function makeNavigation() {
   return { navigate: jest.fn(), reset: jest.fn(), goBack: jest.fn() };
 }
 
-/** clear() leaves each mutation's 5-minute gc timer running; destroy() cancels it first. */
-function releaseClient(client: QueryClient | undefined) {
-  for (const mutation of client?.getMutationCache().getAll() ?? []) {
-    mutation.destroy();
-  }
-  client?.clear();
-}
-
-let renderedClient: QueryClient | undefined;
-
 async function renderOtp(
   purpose: 'register' | 'reset-password' = 'reset-password',
   navigation = makeNavigation(),
@@ -37,7 +26,6 @@ async function renderOtp(
     route: { key: 'Otp', name: 'Otp', params: { target: TARGET, purpose } },
   } as unknown as OtpProps;
   const view = await renderWithProviders(<OtpScreen {...props} />);
-  renderedClient = view.queryClient;
   return view;
 }
 
@@ -67,8 +55,6 @@ describe('OtpScreen', () => {
 
   afterEach(() => {
     toastSpy.mockRestore();
-    releaseClient(renderedClient);
-    renderedClient = undefined;
   });
 
   describe('countdown', () => {
@@ -168,8 +154,7 @@ describe('OtpScreen', () => {
       route: { key: 'Otp', name: 'Otp', params: { target: 'nope', purpose: 'admin' } },
     } as unknown as OtpProps;
 
-    const view = await renderWithProviders(<OtpScreen {...props} />);
-    renderedClient = view.queryClient;
+    await renderWithProviders(<OtpScreen {...props} />);
 
     await waitFor(() => {
       expect(navigation.reset).toHaveBeenCalledWith({ index: 0, routes: [{ name: 'Login' }] });
