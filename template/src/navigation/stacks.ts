@@ -1,13 +1,24 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { ComponentType } from 'react';
 
+import { HomeScreen } from '@features/home';
+import { EditProfileScreen, ProfileScreen } from '@features/profile';
+import { AboutScreen, LanguageScreen, SettingsScreen, ThemeScreen } from '@features/settings';
+
 import { LINK_PATHS } from './linking';
 
-/** Home tab stack. Item routes belong to the `samples` module (contract C12). */
+// Screens render the shared Header themselves, so native headers stay hidden in every stack.
+const stackScreenOptions = { headerShown: false } as const;
+
+/**
+ * Home tab stack. Item routes belong to the `samples` module (contract C12); `placeholder` stands
+ * in for them until the items feature is wired.
+ */
 export function createHomeStack(placeholder: ComponentType) {
   return createNativeStackNavigator({
+    screenOptions: stackScreenOptions,
     screens: {
-      Home: { screen: placeholder, linking: LINK_PATHS.Home },
+      Home: { screen: HomeScreen, linking: LINK_PATHS.Home },
       // @tempo-feature:samples:start
       ItemsList: { screen: placeholder, linking: LINK_PATHS.ItemsList },
       ItemCreate: { screen: placeholder, linking: LINK_PATHS.ItemCreate },
@@ -21,23 +32,25 @@ export function createHomeStack(placeholder: ComponentType) {
 }
 
 /** Profile tab stack. */
-export function createProfileStack(placeholder: ComponentType) {
+export function createProfileStack() {
   return createNativeStackNavigator({
+    screenOptions: stackScreenOptions,
     screens: {
-      Profile: { screen: placeholder, linking: LINK_PATHS.Profile },
-      EditProfile: { screen: placeholder, linking: LINK_PATHS.EditProfile },
+      Profile: { screen: ProfileScreen, linking: LINK_PATHS.Profile },
+      EditProfile: { screen: EditProfileScreen, linking: LINK_PATHS.EditProfile },
     },
   });
 }
 
 /** Settings tab stack. */
-export function createSettingsStack(placeholder: ComponentType) {
+export function createSettingsStack() {
   return createNativeStackNavigator({
+    screenOptions: stackScreenOptions,
     screens: {
-      Settings: { screen: placeholder, linking: LINK_PATHS.Settings },
-      Language: { screen: placeholder, linking: LINK_PATHS.Language },
-      Theme: { screen: placeholder, linking: LINK_PATHS.Theme },
-      About: { screen: placeholder, linking: LINK_PATHS.About },
+      Settings: { screen: SettingsScreen, linking: LINK_PATHS.Settings },
+      Language: { screen: LanguageScreen, linking: LINK_PATHS.Language },
+      Theme: { screen: ThemeScreen, linking: LINK_PATHS.Theme },
+      About: { screen: AboutScreen, linking: LINK_PATHS.About },
     },
   });
 }
