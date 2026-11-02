@@ -7,6 +7,7 @@ import '../src/theme/unistyles';
 import { useEffect, useState } from 'react';
 import { AppRegistry } from 'react-native';
 
+import { hideSplash } from '@app/bootstrap/splash';
 import { initI18nInstance } from '@services/i18n/i18n';
 import { getInitialLanguage } from '@services/i18n/languageManager';
 import { initStorage } from '@services/storage/storage';
@@ -27,7 +28,9 @@ function StorybookApp() {
       await initStorage();
       await initI18nInstance(getInitialLanguage());
       setIsReady(true);
-    })();
+    })()
+      // The app's bootstrap normally hides the native splash; this entry replaces it.
+      .finally(() => void hideSplash());
   }, []);
 
   return isReady ? <StorybookUIRoot /> : null;
