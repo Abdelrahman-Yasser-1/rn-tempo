@@ -15,12 +15,10 @@ import { DebugMenuScreen } from './screens/DebugMenuScreen';
 import { ForceUpdateScreen } from './screens/ForceUpdateScreen';
 import { MaintenanceScreen } from './screens/MaintenanceScreen';
 import { NotFoundScreen } from './screens/NotFoundScreen';
-import { PlaceholderScreen } from './screens/PlaceholderScreen';
 import { SecurityErrorScreen } from './screens/SecurityErrorScreen';
 import { StartupErrorScreen } from './screens/StartupErrorScreen';
 
 const Navigation = createRootNavigator({
-  Placeholder: PlaceholderScreen,
   ForceUpdate: ForceUpdateScreen,
   Maintenance: MaintenanceScreen,
   NotFound: NotFoundScreen,

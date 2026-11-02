@@ -1,5 +1,4 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import type { ComponentType } from 'react';
 
 import { i18n } from '@services/i18n/i18n';
 import { Icon } from '@shared/components';
@@ -10,12 +9,12 @@ import { createHomeStack, createProfileStack, createSettingsStack } from './stac
  * Three tabs, each with its own stack. Options are functions so labels are translated at render
  * time (after i18n init), not at module load.
  */
-export function createMainTabs(placeholder: ComponentType) {
+export function createMainTabs() {
   return createBottomTabNavigator({
     screenOptions: { headerShown: false },
     screens: {
       HomeTab: {
-        screen: createHomeStack(placeholder),
+        screen: createHomeStack(),
         options: () => ({
           tabBarLabel: i18n.t('tabs.home', { ns: 'app' }),
           tabBarIcon: ({ focused: isFocused }) => (

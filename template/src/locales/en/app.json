@@ -70,9 +70,6 @@
       "title": "Ready to go"
     }
   },
-  "placeholder": {
-    "subtitle": "This screen is not built yet."
-  },
   "security": {
     "closeButton": "Close",
     "message": "For your protection, the app can't continue on this device.",

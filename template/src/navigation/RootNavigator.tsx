@@ -24,8 +24,6 @@ declare global {
  * may not import `app` (eslint boundaries).
  */
 export type AppScreens = {
-  /** Stand-in for feature screens that do not exist yet. */
-  Placeholder: ComponentType;
   ForceUpdate: ComponentType;
   Maintenance: ComponentType;
   NotFound: ComponentType;
@@ -44,7 +42,7 @@ export function createRootNavigator(screens: Readonly<AppScreens>) {
       },
       SignedIn: {
         if: useIsSignedIn,
-        screens: { Main: createMainTabs(screens.Placeholder) },
+        screens: { Main: createMainTabs() },
       },
       Status: {
         screens: {
