@@ -1,23 +1,13 @@
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { useLogout } from '@features/auth';
-import type { SettingsStackParamList } from '@navigation/types';
-import { useLanguage } from '@services/i18n/useLanguage';
 import { Dialog, Header, Icon, ListItem, Screen } from '@shared/components';
-import { useAppTheme } from '@theme/index';
 
 import { styles } from './styles';
+import { useSettingsScreen } from './useSettingsScreen';
 
 export function SettingsScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<SettingsStackParamList, 'Settings'>>();
   const { t } = useTranslation('settings');
-  const { language } = useLanguage();
-  const { preference } = useAppTheme();
-  const logout = useLogout();
-  const [isLogoutVisible, setIsLogoutVisible] = useState(false);
+  const vm = useSettingsScreen();
 
   const languageNames = { en: t('language.english'), ar: t('language.arabic') };
   const themeNames = { system: t('theme.system'), light: t('theme.light'), dark: t('theme.dark') };
@@ -27,26 +17,22 @@ export function SettingsScreen() {
       <Header title={t('title')} testID="settings.header" />
       <ListItem
         title={t('language.title')}
-        subtitle={languageNames[language]}
+        subtitle={languageNames[vm.language]}
         left={<Icon name="globe" />}
         showChevron
         showDivider
         accessibilityRole="button"
-        onPress={() => {
-          navigation.navigate('Language');
-        }}
+        onPress={vm.onLanguage}
         testID="settings.language"
       />
       <ListItem
         title={t('theme.title')}
-        subtitle={themeNames[preference]}
+        subtitle={themeNames[vm.preference]}
         left={<Icon name="moon" />}
         showChevron
         showDivider
         accessibilityRole="button"
-        onPress={() => {
-          navigation.navigate('Theme');
-        }}
+        onPress={vm.onTheme}
         testID="settings.theme"
       />
       <ListItem
@@ -55,33 +41,24 @@ export function SettingsScreen() {
         showChevron
         showDivider
         accessibilityRole="button"
-        onPress={() => {
-          navigation.navigate('About');
-        }}
+        onPress={vm.onAbout}
         testID="settings.about"
       />
       <ListItem
         title={t('logout.title')}
         left={<Icon name="logout" color="error" />}
         accessibilityRole="button"
-        onPress={() => {
-          setIsLogoutVisible(true);
-        }}
+        onPress={vm.onLogoutPress}
         testID="settings.logout"
       />
       <Dialog
-        visible={isLogoutVisible}
+        visible={vm.isLogoutVisible}
         title={t('logout.dialogTitle')}
         message={t('logout.dialogMessage')}
         confirmLabel={t('logout.confirm')}
         destructive
-        onConfirm={() => {
-          setIsLogoutVisible(false);
-          void logout();
-        }}
-        onCancel={() => {
-          setIsLogoutVisible(false);
-        }}
+        onConfirm={vm.onLogoutConfirm}
+        onCancel={vm.onLogoutCancel}
         testID="settings.logout-dialog"
       />
     </Screen>
