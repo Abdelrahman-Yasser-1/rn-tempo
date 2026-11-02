@@ -1,15 +1,15 @@
 import { Linking, Platform } from 'react-native';
-import Toast from 'react-native-toast-message';
 
 import { queryClient } from '@services/http/queryClient';
 import { i18n } from '@services/i18n/i18n';
 import { logger } from '@services/logger/logger';
 import { DEFAULT_APP_CONFIG, type AppConfig } from '@services/remote-config/appConfig';
 import { APP_CONFIG_QUERY_KEY } from '@services/remote-config/remoteConfig';
+import { toast } from '@services/toast/toast';
 
-/** Tells the user a link could not be opened. WS4 (task 4.x): route through services/toast. */
+/** Tells the user a link could not be opened. */
 function showOpenFailed(): void {
-  Toast.show({ type: 'error', text1: i18n.t('linking.openFailed', { ns: 'app' }) });
+  toast.show({ type: 'error', title: i18n.t('linking.openFailed', { ns: 'app' }) });
 }
 
 /** Opens a URL after `canOpenURL`; never throws, and toasts when it cannot be opened. */
