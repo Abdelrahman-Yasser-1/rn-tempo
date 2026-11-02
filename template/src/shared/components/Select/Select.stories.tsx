@@ -1,7 +1,5 @@
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import type { Meta, StoryObj } from '@storybook/react-native';
 import { useState } from 'react';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { action } from 'storybook/actions';
 
 import { Select } from './Select';
@@ -18,13 +16,7 @@ const OPTIONS = [
 function Stateful(args: SelectProps) {
   const [value, setValue] = useState(args.value);
 
-  return (
-    <GestureHandlerRootView>
-      <BottomSheetModalProvider>
-        <Select {...args} value={value} onChange={setValue} />
-      </BottomSheetModalProvider>
-    </GestureHandlerRootView>
-  );
+  return <Select {...args} value={value} onChange={setValue} />;
 }
 
 const meta = {
