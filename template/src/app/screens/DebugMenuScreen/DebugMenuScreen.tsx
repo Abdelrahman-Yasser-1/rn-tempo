@@ -1,7 +1,6 @@
-/* eslint-disable no-restricted-imports -- WS4 (task 4.x): replace RN primitives with shared Text, Button, Switch and TextField */
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Platform, Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native';
+import { Platform, View } from 'react-native';
 
 import { APP_BUNDLE_ID, APP_VERSION } from '@config/constants';
 import { ENV } from '@config/env';
@@ -13,6 +12,7 @@ import { resolveBaseUrl } from '@services/http/client';
 import { queryClient } from '@services/http/queryClient';
 import { STORAGE_KEYS } from '@services/storage/keys';
 import { storage } from '@services/storage/storage';
+import { Button, Screen, Switch, Text, TextField } from '@shared/components';
 
 import { styles } from './styles';
 
@@ -28,7 +28,7 @@ type SectionProps = { title: string; children: ReactNode };
 function Section({ title, children }: Readonly<SectionProps>) {
   return (
     <View style={styles.section}>
-      <Text accessibilityRole="header" style={styles.sectionTitle}>
+      <Text accessibilityRole="header" variant="title">
         {title}
       </Text>
       {children}
@@ -41,8 +41,10 @@ type InfoRowProps = { label: string; value: string };
 function InfoRow({ label, value }: Readonly<InfoRowProps>) {
   return (
     <View style={styles.row}>
-      <Text style={styles.label}>{label}</Text>
-      <Text selectable style={styles.value}>
+      <Text color="textSecondary" variant="bodySmall">
+        {label}
+      </Text>
+      <Text selectable style={styles.value} variant="label">
         {value}
       </Text>
     </View>
@@ -58,14 +60,12 @@ type ActionProps = {
 
 function Action({ label, onPress, testID, isSecondary = false }: Readonly<ActionProps>) {
   return (
-    <Pressable
-      accessibilityRole="button"
+    <Button
       onPress={onPress}
-      style={[styles.button, isSecondary && styles.buttonSecondary]}
       testID={testID}
-    >
-      <Text style={[styles.buttonLabel, isSecondary && styles.buttonLabelSecondary]}>{label}</Text>
-    </Pressable>
+      title={label}
+      variant={isSecondary ? 'secondary' : 'primary'}
+    />
   );
 }
 
@@ -73,9 +73,8 @@ function FlagRow({ flag }: Readonly<{ flag: FlagKey }>) {
   const isEnabled = useFeatureFlag(flag);
   return (
     <View style={styles.row}>
-      <Text style={styles.value}>{flag}</Text>
       <Switch
-        accessibilityLabel={flag}
+        label={flag}
         onValueChange={(isOn) => {
           setFlagOverride(flag, isOn);
         }}
@@ -96,11 +95,7 @@ export function DebugMenuScreen() {
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.content}
-      style={styles.container}
-      testID="debug-menu-screen"
-    >
+    <Screen contentContainerStyle={styles.content} preset="scroll" testID="debug-menu-screen">
       <Section title={t('debug.env.title')}>
         <InfoRow label={t('debug.env.appEnv')} value={ENV.APP_ENV} />
         <InfoRow label={t('debug.env.version')} value={APP_VERSION} />
@@ -116,18 +111,19 @@ export function DebugMenuScreen() {
       </Section>
 
       <Section title={t('debug.apiUrl.title')}>
-        <TextInput
+        <TextField
           accessibilityLabel={t('debug.apiUrl.title')}
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="url"
           onChangeText={setApiUrl}
           placeholder={ENV.API_BASE_URL}
-          style={styles.input}
           testID="debug-menu.api-url-input"
           value={apiUrl}
         />
-        <Text style={styles.hint}>{t('debug.apiUrl.hint')}</Text>
+        <Text color="textSecondary" variant="caption">
+          {t('debug.apiUrl.hint')}
+        </Text>
         <View style={styles.buttons}>
           <Action
             label={t('debug.apiUrl.save')}
@@ -196,18 +192,26 @@ export function DebugMenuScreen() {
             testID="debug-menu.clear-tokens"
           />
         </View>
-        {doneMessage === '' ? null : <Text style={styles.done}>{doneMessage}</Text>}
+        {doneMessage === '' ? null : (
+          <Text color="success" variant="label">
+            {doneMessage}
+          </Text>
+        )}
       </Section>
 
       {/* @tempo-feature:storybook:start */}
       <Section title={t('debug.storybook.title')}>
-        <Text style={styles.hint}>{t('debug.storybook.hint')}</Text>
+        <Text color="textSecondary" variant="caption">
+          {t('debug.storybook.hint')}
+        </Text>
       </Section>
       {/* @tempo-feature:storybook:end */}
 
       <Section title={t('debug.pushToken.title')}>
-        <Text style={styles.hint}>{t('debug.pushToken.placeholder')}</Text>
+        <Text color="textSecondary" variant="caption">
+          {t('debug.pushToken.placeholder')}
+        </Text>
       </Section>
-    </ScrollView>
+    </Screen>
   );
 }
