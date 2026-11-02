@@ -6,7 +6,7 @@ import { View } from 'react-native';
 
 import type { AuthStackParamList } from '@navigation/types';
 import { getErrorMessageKey } from '@services/http/errors';
-import { Button, FormTextField, Screen, Text } from '@shared/components';
+import { Button, FormTextField, Header, Screen, Text } from '@shared/components';
 
 import { useForgotPasswordMutation } from '../../api/mutations';
 import { ForgotPasswordRequestSchema, type ForgotPasswordRequest } from '../../api/schemas';
@@ -50,6 +50,11 @@ export function ForgotPasswordScreen({ navigation }: ForgotPasswordScreenProps) 
       contentContainerStyle={styles.content}
       testID="forgot-password-screen"
     >
+      <Header
+        title={t('header.forgotPassword')}
+        onBack={navigation.goBack}
+        testID="forgot-password.header"
+      />
       <View>
         <Text variant="h1" accessibilityRole="header">
           {t('forgotPassword.title')}
