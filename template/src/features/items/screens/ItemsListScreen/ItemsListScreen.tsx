@@ -1,13 +1,7 @@
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { FlashList } from '@shopify/flash-list';
-import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
-import type { HomeStackParamList } from '@navigation/types';
-import { useFeatureFlag } from '@services/flags/useFeatureFlag';
-import { useLanguage } from '@services/i18n/useLanguage';
 import {
   EmptyState,
   ErrorState,
@@ -20,42 +14,23 @@ import {
   Screen,
   TextField,
 } from '@shared/components';
-import { useDebounce } from '@shared/hooks';
 import { formatCurrency } from '@shared/utils';
 
-import { useItemsInfiniteQuery } from '../../api/queries';
-import { SEARCH_DEBOUNCE_MS } from '../../constants';
 import type { Item } from '../../types';
 
 import { styles } from './styles';
+import { useItemsListScreen } from './useItemsListScreen';
 
 const THUMBNAIL_SIZE = 48;
 
 export function ItemsListScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<HomeStackParamList, 'ItemsList'>>();
   const { t } = useTranslation('items');
-  const { language } = useLanguage();
-  const canCreate = useFeatureFlag('itemsCreateEnabled');
-  const [search, setSearch] = useState('');
-  const query = useDebounce(search.trim(), SEARCH_DEBOUNCE_MS);
-  const {
-    data,
-    error,
-    isPending,
-    isError,
-    isRefetching,
-    isPlaceholderData,
-    isFetchingNextPage,
-    hasNextPage,
-    fetchNextPage,
-    refetch,
-  } = useItemsInfiniteQuery(query);
-  const items = useMemo(() => data?.pages.flatMap((page) => page.products) ?? [], [data]);
+  const vm = useItemsListScreen();
 
   const renderItem = ({ item, index }: Readonly<{ item: Item; index: number }>) => (
     <ListItem
       title={item.title}
-      subtitle={formatCurrency(item.price, 'USD', language)}
+      subtitle={formatCurrency(item.price, 'USD', vm.language)}
       left={
         <Image
           source={{ uri: item.thumbnail }}
@@ -68,37 +43,27 @@ export function ItemsListScreen() {
       showDivider
       accessibilityLabel={item.title}
       onPress={() => {
-        navigation.navigate('ItemDetails', { itemId: item.id });
+        vm.onItemPress(item.id);
       }}
       testID={`items-list.item-${String(index)}`}
     />
   );
 
-  const loadMore = () => {
-    if (hasNextPage && !isFetchingNextPage) {
-      void fetchNextPage();
-    }
-  };
-
-  const refresh = () => {
-    void refetch();
-  };
-
   let body;
-  if (isPending) {
+  if (vm.isPending) {
     body = <ListShimmer testID="items-list.loading" />;
-  } else if (isError) {
-    body = <ErrorState error={error} onRetry={refresh} testID="items-list.error" />;
+  } else if (vm.isError) {
+    body = <ErrorState error={vm.error} onRetry={vm.onRefresh} testID="items-list.error" />;
   } else {
     body = (
       <FlashList
-        data={items}
+        data={vm.items}
         renderItem={renderItem}
         keyExtractor={(item) => String(item.id)}
-        onEndReached={loadMore}
+        onEndReached={vm.onLoadMore}
         onEndReachedThreshold={0.5}
-        refreshing={isRefetching && !isFetchingNextPage && !isPlaceholderData}
-        onRefresh={refresh}
+        refreshing={vm.isRefreshing}
+        onRefresh={vm.onRefresh}
         ListEmptyComponent={
           <EmptyState
             title={t('list.emptyTitle')}
@@ -107,7 +72,7 @@ export function ItemsListScreen() {
           />
         }
         ListFooterComponent={
-          isFetchingNextPage ? (
+          vm.isFetchingNextPage ? (
             <View style={styles.footer}>
               <Loader testID="items-list.loading-more" />
             </View>
@@ -121,16 +86,14 @@ export function ItemsListScreen() {
     <Screen preset="fixed" testID="items-list-screen">
       <Header
         title={t('list.title')}
-        onBack={navigation.goBack}
+        onBack={vm.onBack}
         right={
-          canCreate ? (
+          vm.canCreate ? (
             <IconButton
               icon="plus"
               variant="ghost"
               accessibilityLabel={t('list.create')}
-              onPress={() => {
-                navigation.navigate('ItemCreate');
-              }}
+              onPress={vm.onCreate}
               testID="items-list.create-button"
             />
           ) : undefined
@@ -139,8 +102,8 @@ export function ItemsListScreen() {
       />
       <View style={styles.search}>
         <TextField
-          value={search}
-          onChangeText={setSearch}
+          value={vm.search}
+          onChangeText={vm.onSearchChange}
           placeholder={t('list.searchPlaceholder')}
           accessibilityLabel={t('list.searchLabel')}
           autoCapitalize="none"

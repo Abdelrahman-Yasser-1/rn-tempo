@@ -1,40 +1,28 @@
-import { useNavigation, type RouteProp } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RouteProp } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import type { HomeStackParamList } from '@navigation/types';
-import { useLanguage } from '@services/i18n/useLanguage';
 import { DetailsShimmer, ErrorState, Header, Image, Screen, Text } from '@shared/components';
 import { formatCurrency, formatNumber } from '@shared/utils';
 
-import { useItemQuery } from '../../api/queries';
-
 import { styles } from './styles';
+import { useItemDetailsScreen } from './useItemDetailsScreen';
 
 type ItemDetailsScreenProps = Readonly<{ route: RouteProp<HomeStackParamList, 'ItemDetails'> }>;
 
 const IMAGE_HEIGHT = 240;
 
 export function ItemDetailsScreen({ route }: ItemDetailsScreenProps) {
-  const navigation = useNavigation<NativeStackNavigationProp<HomeStackParamList, 'ItemDetails'>>();
   const { t } = useTranslation('items');
-  const { language } = useLanguage();
-  const { data, error, isPending, isError, refetch } = useItemQuery(route.params.itemId);
+  const vm = useItemDetailsScreen(route);
+  const { data } = vm;
 
   let body;
-  if (isPending) {
+  if (vm.isError) {
+    body = <ErrorState error={vm.error} onRetry={vm.onRetry} testID="item-details.error" />;
+  } else if (!data) {
     body = <DetailsShimmer testID="item-details.loading" />;
-  } else if (isError) {
-    body = (
-      <ErrorState
-        error={error}
-        onRetry={() => {
-          void refetch();
-        }}
-        testID="item-details.error"
-      />
-    );
   } else {
     body = (
       <View style={styles.body}>
@@ -49,17 +37,17 @@ export function ItemDetailsScreen({ route }: ItemDetailsScreenProps) {
           {data.title}
         </Text>
         <Text variant="title" color="primary" testID="item-details.price">
-          {formatCurrency(data.price, 'USD', language)}
+          {formatCurrency(data.price, 'USD', vm.language)}
         </Text>
         <View style={styles.facts}>
           <Text color="textSecondary" testID="item-details.category">
             {t('details.category', { category: data.category })}
           </Text>
           <Text color="textSecondary" testID="item-details.rating">
-            {t('details.rating', { rating: formatNumber(data.rating, language) })}
+            {t('details.rating', { rating: formatNumber(data.rating, vm.language) })}
           </Text>
           <Text color="textSecondary" testID="item-details.stock">
-            {t('details.stock', { stock: formatNumber(data.stock, language) })}
+            {t('details.stock', { stock: formatNumber(data.stock, vm.language) })}
           </Text>
         </View>
         <Text testID="item-details.description">{data.description}</Text>
@@ -69,7 +57,7 @@ export function ItemDetailsScreen({ route }: ItemDetailsScreenProps) {
 
   return (
     <Screen preset="scroll" contentContainerStyle={styles.content} testID="item-details-screen">
-      <Header title={t('details.title')} onBack={navigation.goBack} testID="item-details.header" />
+      <Header title={t('details.title')} onBack={vm.onBack} testID="item-details.header" />
       {body}
     </Screen>
   );
