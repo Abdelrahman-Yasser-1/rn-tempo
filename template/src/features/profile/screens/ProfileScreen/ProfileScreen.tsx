@@ -1,21 +1,14 @@
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
-import { useCurrentUser, useMeQuery } from '@features/auth';
-import type { ProfileStackParamList } from '@navigation/types';
 import { Avatar, Button, Header, Screen, Text } from '@shared/components';
 
 import { styles } from './styles';
+import { useProfileScreen } from './useProfileScreen';
 
 export function ProfileScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<ProfileStackParamList, 'Profile'>>();
   const { t } = useTranslation('profile');
-  const { data } = useMeQuery();
-  const storedUser = useCurrentUser();
-  const user = data ?? storedUser;
-  const fullName = user ? `${user.firstName} ${user.lastName}` : '';
+  const { user, fullName, onEdit } = useProfileScreen();
 
   return (
     <Screen preset="scroll" contentContainerStyle={styles.content} testID="profile-screen">
@@ -36,14 +29,7 @@ export function ProfileScreen() {
             {user?.email}
           </Text>
         </View>
-        <Button
-          title={t('edit')}
-          fullWidth
-          onPress={() => {
-            navigation.navigate('EditProfile');
-          }}
-          testID="profile.edit-button"
-        />
+        <Button title={t('edit')} fullWidth onPress={onEdit} testID="profile.edit-button" />
       </View>
     </Screen>
   );
