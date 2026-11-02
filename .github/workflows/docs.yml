@@ -1,0 +1,41 @@
+name: Docs
+
+on:
+  pull_request:
+    paths:
+      - 'docs/**'
+      # AnnotatedCode quotes real files, so code changes can break the docs build.
+      - 'template/**'
+      - 'packages/**'
+      - 'yarn.lock'
+      - '.github/workflows/docs.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'template/**'
+      - 'packages/**'
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Docs (lint, test, build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - run: corepack enable
+      - run: yarn install --immutable
+      - run: yarn workspace docs lint
+      - run: yarn workspace docs typecheck
+      - run: yarn workspace docs test
+      # Deploys happen on Vercel (connected by the owner); CI only proves the site builds.
+      - run: yarn workspace docs build

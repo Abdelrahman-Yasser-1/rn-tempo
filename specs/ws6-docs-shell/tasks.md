@@ -6,4 +6,4 @@ Format: `- [ ] T<task id> <summary>`. Tick a box in the same commit that complet
 - [x] T6.2 Information architecture
 - [x] T6.3 Custom MDX components
 - [x] T6.4 Seed pages
-- [ ] T6.5 Deploy
+- [x] T6.5 Deploy
