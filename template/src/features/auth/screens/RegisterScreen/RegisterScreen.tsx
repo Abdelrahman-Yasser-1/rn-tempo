@@ -6,7 +6,7 @@ import { View } from 'react-native';
 
 import type { AuthStackParamList } from '@navigation/types';
 import { getErrorMessageKey } from '@services/http/errors';
-import { Button, FormTextField, Screen, Text } from '@shared/components';
+import { Button, FormTextField, Header, Screen, Text } from '@shared/components';
 
 import { useRegisterMutation } from '../../api/mutations';
 import { RegisterRequestSchema, type RegisterRequest } from '../../api/schemas';
@@ -55,6 +55,7 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
       contentContainerStyle={styles.content}
       testID="register-screen"
     >
+      <Header title={t('header.register')} onBack={navigation.goBack} testID="register.header" />
       <View>
         <Text variant="h1" accessibilityRole="header">
           {t('register.title')}

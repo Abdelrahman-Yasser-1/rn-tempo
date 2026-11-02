@@ -6,7 +6,7 @@ import { View } from 'react-native';
 import type { AuthStackParamList } from '@navigation/types';
 import { getErrorMessageKey } from '@services/http/errors';
 import { toast } from '@services/toast/toast';
-import { Button, OtpInput, Screen, Text } from '@shared/components';
+import { Button, OtpInput, Header, Screen, Text } from '@shared/components';
 import { useCountdown } from '@shared/hooks';
 import { maskEmail } from '@shared/utils';
 
@@ -88,6 +88,7 @@ export function OtpScreen({ navigation, route }: OtpScreenProps) {
       contentContainerStyle={styles.content}
       testID="otp-screen"
     >
+      <Header title={t('header.otp')} onBack={navigation.goBack} testID="otp.header" />
       <View>
         <Text variant="h1" accessibilityRole="header">
           {t('otp.title')}

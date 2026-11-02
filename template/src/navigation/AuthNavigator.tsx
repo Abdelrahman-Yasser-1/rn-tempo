@@ -11,6 +11,7 @@ import { LINK_PATHS } from './linking';
  */
 export function createAuthNavigator() {
   return createNativeStackNavigator({
+    screenOptions: { headerShown: false },
     groups: {
       Onboarding: {
         if: useShouldShowOnboarding,
