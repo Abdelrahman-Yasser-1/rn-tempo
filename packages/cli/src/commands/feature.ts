@@ -3,9 +3,10 @@ import type { FeatureName } from '@rn-tempo/contracts';
 import { FEATURE_NAMES } from '@rn-tempo/contracts';
 import { defineCommand } from 'citty';
 
+import { addFeature, type AddFeatureResult } from '../lib/add-feature.ts';
 import { CliError } from '../lib/errors.ts';
 import { loadManifests, planRemoval } from '../lib/manifest.ts';
-import { commonArgs, resolveCommon, runGuarded } from '../lib/output.ts';
+import { commonArgs, resolveCommon, runGuarded, type Reporter } from '../lib/output.ts';
 import { installPods, yarnRun } from '../lib/pm.ts';
 import { answer, isInteractive } from '../lib/prompt.ts';
 import { removeFeatures } from '../lib/remove-feature.ts';
@@ -73,19 +74,51 @@ const remove = defineCommand({
 });
 
 const add = defineCommand({
-  meta: { name: 'add', description: 'Add a module back (v1: prints the docs link)' },
-  args: { ...commonArgs, name: { type: 'positional', description: 'Module name', required: true } },
+  meta: { name: 'add', description: 'Add a module back: restores its files, marked code, dependencies and env keys' },
+  args: {
+    ...commonArgs,
+    name: { type: 'positional', description: 'Module name', required: true },
+    template: { type: 'string', description: 'Local template folder or giget source (default: the tag of .tempo.json templateVersion)' },
+    force: { type: 'boolean', description: 'Overwrite module files that already exist' },
+    'dry-run': { type: 'boolean', description: 'Print what would change without writing' },
+  },
   async run({ args }) {
     const common = resolveCommon(args);
     await runGuarded(common.json, async (reporter) => {
       const name = asFeature(args.name);
-      const manifests = await loadManifests(common.cwd).catch(() => null);
-      const docs = manifests?.get(name)?.docs ?? `/docs/features/${name}`;
-      reporter.info(`Adding "${name}" back is not automated in v1. Follow the recipe in the docs: ${docs}`);
-      reporter.result({ ok: true, added: false, docs, message: 'feature add is not automated in v1' });
+      const dryRun = Boolean(args['dry-run']);
+      const result = await addFeature({
+        projectDir: common.cwd,
+        cwd: process.cwd(),
+        feature: name,
+        template: args.template,
+        force: Boolean(args.force),
+        dryRun,
+      });
+      if (!common.json) printAddResult(reporter, result);
+      reporter.result({
+        ok: true,
+        feature: result.feature,
+        added: result.added,
+        updated: result.updated,
+        conflicts: result.conflicts,
+        followUps: result.followUps,
+      });
     });
   },
 });
+
+function printAddResult(reporter: Reporter, result: AddFeatureResult): void {
+  const verb = result.dryRun ? 'Would add' : 'Added';
+  reporter.success(`${verb} ${result.features.join(', ')}${result.dryRun ? ' (dry run, nothing written)' : ''}`);
+  for (const file of result.added) reporter.info(`  + ${file}`);
+  for (const file of result.updated) reporter.info(`  ~ ${file}`);
+  for (const conflict of result.conflicts) {
+    reporter.warn(`${conflict.file}: ${conflict.reason}`);
+    if (conflict.region !== undefined) reporter.info(`Merge this by hand:\n${conflict.region}`);
+  }
+  for (const followUp of result.followUps) reporter.info(`Next: ${followUp}`);
+}
 
 export default defineCommand({
   meta: { name: 'feature', description: 'Manage optional modules' },
