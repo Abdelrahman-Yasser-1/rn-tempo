@@ -20,6 +20,7 @@ export function OfflineBanner({ message, testID }: OfflineBannerProps) {
 
   return (
     <View
+      accessible
       accessibilityRole="alert"
       accessibilityLiveRegion="polite"
       testID={testID}

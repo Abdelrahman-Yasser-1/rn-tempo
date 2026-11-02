@@ -22,6 +22,14 @@ describe('OfflineBanner', () => {
     expect(screen.getByText('You are offline')).toBeOnTheScreen();
   });
 
+  it('is announced as a polite alert while offline', async () => {
+    useNetworkStore.setState({ isConnected: false, isInternetReachable: false });
+    await renderWithProviders(<OfflineBanner />);
+    const banner = screen.getByRole('alert');
+    expect(banner).toHaveProp('accessibilityLiveRegion', 'polite');
+    expect(banner).toHaveTextContent('You are offline');
+  });
+
   it('shows a custom message when given', async () => {
     useNetworkStore.setState({ isConnected: false, isInternetReachable: false });
     await renderWithProviders(<OfflineBanner message="Saved offline" />);
