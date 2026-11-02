@@ -1,5 +1,5 @@
 ---
-status: draft
+status: approved
 owner: integrator (strong model), implemented by cheap models
 created: 2026-11-02
 plan: ../PLAN.md
@@ -167,7 +167,7 @@ Sources: Half-Million and https://mensurdurakovic.com/react-i18next-tips-and-tri
    - In `__DEV__`, set `saveMissing: true` with a `missingKeyHandler` that calls `logger.warn`.
    - In release builds, behaviour is unchanged.
    - `debug` turns on only when `LOG_LEVEL=debug`.
-7. **Typed selector API** `t($ => $.login.title)` (i18next ≥ 25 `enableSelector`). **Owner to confirm.** It makes keys rename-safe and IDE-navigable, but changes every `t()` call. A codemod plus a lint rule would keep both styles from mixing. Recommendation: adopt, as the last step of PR N.
+7. **Typed selector API** `t($ => $.login.title)` (i18next ≥ 25 `enableSelector`). **Approved by the owner (2026-11-03).** It makes keys rename-safe and IDE-navigable, but changes every `t()` call. A codemod plus a lint rule would keep both styles from mixing. Done as the last step of PR N.
 
 Skipped in PR N:
 
