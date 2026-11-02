@@ -1,6 +1,7 @@
-/* eslint-disable no-restricted-imports -- WS4 (task 4.x): replace Text/View/Pressable with shared Text, Screen and Button */
 import type { ReactNode } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { View } from 'react-native';
+
+import { Button, Screen, Text } from '@shared/components';
 
 import { styles } from './styles';
 
@@ -20,22 +21,20 @@ type ButtonProps = {
 
 /** Primary action button for `MessageScreen`. */
 export function MessageButton({ label, onPress, testID }: Readonly<ButtonProps>) {
-  return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={styles.button} testID={testID}>
-      <Text style={styles.buttonLabel}>{label}</Text>
-    </Pressable>
-  );
+  return <Button fullWidth onPress={onPress} testID={testID} title={label} />;
 }
 
 /** Full-screen title + message + optional `MessageButton` children, shared by blocking app screens. */
 export function MessageScreen({ testID, title, message, children }: Readonly<Props>) {
   return (
-    <View style={styles.container} testID={testID}>
-      <Text accessibilityRole="header" style={styles.title}>
+    <Screen contentContainerStyle={styles.container} testID={testID}>
+      <Text align="center" variant="h2">
         {title}
       </Text>
-      <Text style={styles.message}>{message}</Text>
+      <Text align="center" color="textSecondary">
+        {message}
+      </Text>
       {children ? <View style={styles.actions}>{children}</View> : null}
-    </View>
+    </Screen>
   );
 }
