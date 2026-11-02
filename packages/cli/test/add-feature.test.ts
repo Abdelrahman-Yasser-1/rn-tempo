@@ -116,7 +116,6 @@ const MINI_TEMPLATE_PATHS = [
   '.tempo',
   '.tempo.json',
   'package.json',
-  '.env',
   '.env.dev',
   '.env.example',
   'src/services/security/pinning',
