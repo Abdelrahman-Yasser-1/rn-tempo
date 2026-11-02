@@ -36,6 +36,9 @@ export const CreateItemSchema = z.object({
   category: z.string().trim().min(1, 'item.categoryRequired'),
 });
 
+/** dummyjson echoes only the sent fields plus the new id, so that is all the app relies on. */
+export const CreatedItemSchema = z.object({ id: z.number() });
+
 /** The form values: `price` is typed text until the schema coerces it. */
 export type CreateItemInput = z.input<typeof CreateItemSchema>;
 export type CreateItem = z.output<typeof CreateItemSchema>;
