@@ -32,6 +32,7 @@ declare module '@testing-library/react-native' {
     getByTestId: (id: string) => unknown;
   };
   export function render(element: import('react').ReactElement): void;
+  export function renderHook<T>(run: () => T): { result: { current: T } };
 }
 declare function describe(name: string, run: () => void): void;
 declare function it(name: string, run: () => void): void;

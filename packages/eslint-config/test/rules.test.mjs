@@ -96,6 +96,16 @@ describe('eslint-config fixtures', () => {
       'react-native/no-inline-styles',
     ],
     ['a high-entropy secret', 'src/shared/utils/secret.ts', 'no-secrets/no-secrets'],
+    [
+      'a stray hook file in a screen folder',
+      'src/features/home/screens/StrayScreen/useFoo.ts',
+      'project-structure/folder-structure',
+    ],
+    [
+      'a screen view importing useForm',
+      'src/features/home/screens/FormScreen/FormScreen.tsx',
+      '@typescript-eslint/no-restricted-imports',
+    ],
     ['getByTestId in a test', 'src/shared/utils/byTestId.test.ts', 'no-restricted-syntax'],
   ];
 
