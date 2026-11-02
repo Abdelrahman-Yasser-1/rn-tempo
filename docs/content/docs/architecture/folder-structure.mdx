@@ -1,0 +1,131 @@
+---
+title: Folder structure
+description: What template/src contains today and the full target structure, with the naming rules.
+---
+
+## What exists today
+
+This is the real `template/src` tree at this point in the build. Most folders hold only a `.gitkeep` until the workstreams that own them land.
+
+<FileTree>
+  <Folder name="src" defaultOpen>
+    <Folder name="app" defaultOpen>
+      <File name="App.tsx" />
+      <File name="App.test.tsx" />
+      <Folder name="bootstrap" />
+      <Folder name="providers" />
+      <Folder name="screens" />
+    </Folder>
+    <Folder name="assets">
+      <Folder name="animations"><File name="index.ts" /></Folder>
+      <Folder name="fonts"><File name="index.ts" /></Folder>
+      <Folder name="icons"><File name="index.ts" /></Folder>
+      <Folder name="icons-source" />
+      <Folder name="images"><File name="index.ts" /></Folder>
+    </Folder>
+    <Folder name="config">
+      <File name="constants.ts" />
+      <File name="env.ts" />
+    </Folder>
+    <Folder name="features" />
+    <Folder name="locales">
+      <Folder name="ar" />
+      <Folder name="en" />
+    </Folder>
+    <Folder name="navigation">
+      <File name="types.ts" />
+    </Folder>
+    <Folder name="services">
+      <Folder name="flags"><File name="flags.ts" /></Folder>
+      <Folder name="http" />
+      <Folder name="i18n" />
+      <Folder name="linking" />
+      <Folder name="logger" />
+      <Folder name="network" />
+      <Folder name="remote-config" />
+      <Folder name="secure-storage" />
+      <Folder name="security" />
+      <Folder name="storage" />
+      <Folder name="toast" />
+    </Folder>
+    <Folder name="shared">
+      <Folder name="components"><File name="index.ts" /></Folder>
+      <Folder name="constants" />
+      <Folder name="hooks"><File name="index.ts" /></Folder>
+      <Folder name="types" />
+      <Folder name="utils"><File name="index.ts" /></Folder>
+    </Folder>
+    <Folder name="test-utils" />
+    <Folder name="theme">
+      <File name="index.ts" />
+      <File name="tokens.ts" />
+    </Folder>
+  </Folder>
+</FileTree>
+
+## Target structure (filled in by WS3, WS4 and WS9)
+
+The complete skeleton from contract C5. Folders marked with `<name>` repeat once per feature, component or screen.
+
+<FileTree>
+  <Folder name="src" defaultOpen>
+    <Folder name="app" defaultOpen>
+      <File name="App.tsx" />
+      <Folder name="providers"><File name="AppProviders.tsx" /></Folder>
+      <Folder name="bootstrap"><File name="useBootstrap.ts" /><File name="initSecurity.ts" /><File name="initAuth.ts" /><File name="initRemoteConfig.ts" /><File name="initI18n.ts" /></Folder>
+      <Folder name="screens"><File name="ForceUpdateScreen" /><File name="MaintenanceScreen" /><File name="NotFoundScreen" /><File name="DebugMenuScreen" /></Folder>
+    </Folder>
+    <Folder name="navigation">
+      <File name="RootNavigator.tsx" />
+      <File name="AuthNavigator.tsx" />
+      <File name="MainTabs.tsx" />
+      <File name="linking.ts" />
+      <File name="types.ts" />
+      <File name="navigationRef.ts" />
+      <File name="useIsSignedIn.ts" />
+    </Folder>
+    <Folder name="features">
+      <Folder name="<kebab-name>" defaultOpen>
+        <Folder name="api"><File name="<name>.api.ts" /><File name="queries.ts" /><File name="mutations.ts" /><File name="keys.ts" /><File name="schemas.ts" /></Folder>
+        <Folder name="components"><Folder name="<PascalName>"><File name="<PascalName>.tsx" /><File name="index.ts" /></Folder></Folder>
+        <Folder name="hooks"><File name="use<Name>.ts" /></Folder>
+        <Folder name="screens"><Folder name="<Name>Screen"><File name="<Name>Screen.tsx" /><File name="styles.ts" /><File name="index.ts" /></Folder></Folder>
+        <Folder name="store"><File name="<name>.store.ts" /></Folder>
+        <Folder name="types"><File name="index.ts" /></Folder>
+        <Folder name="utils" />
+        <File name="constants.ts" />
+        <File name="index.ts" />
+      </Folder>
+    </Folder>
+    <Folder name="shared">
+      <Folder name="components"><Folder name="<PascalName>"><File name="<PascalName>.tsx" /><File name="<PascalName>.stories.tsx" /><File name="styles.ts" /><File name="index.ts" /></Folder></Folder>
+      <Folder name="hooks" />
+      <Folder name="utils" />
+      <Folder name="constants" />
+      <Folder name="types" />
+    </Folder>
+    <Folder name="services"><Folder name="<kebab>" /></Folder>
+    <Folder name="theme"><File name="tokens.ts" /><File name="themes.ts" /><File name="breakpoints.ts" /><File name="unistyles.ts" /><File name="scaling.ts" /><File name="index.ts" /></Folder>
+    <Folder name="assets" />
+    <Folder name="locales"><Folder name="en" /><Folder name="ar" /></Folder>
+    <Folder name="config"><File name="env.ts" /><File name="constants.ts" /></Folder>
+    <Folder name="test-utils"><File name="renderWithProviders.tsx" /><Folder name="msw" /><Folder name="factories" /></Folder>
+  </Folder>
+</FileTree>
+
+## Path aliases
+
+Each top-level folder has an alias (`@app/*`, `@navigation/*`, `@features/*`, `@shared/*`, `@services/*`, `@theme/*`, `@assets/*`, `@locales/*`, `@config/*`, `@test-utils/*`). They are declared in `tsconfig.json` and mirrored in `babel.config.js`:
+
+<AnnotatedCode file="template/tsconfig.json" highlight="5-16">
+  <Note line={4}>Keep these in sync with `babel.config.js`. A mismatch builds in the editor and fails in Metro.</Note>
+</AnnotatedCode>
+
+## Naming rules
+
+- Directories are kebab-case. Component and screen directories are PascalCase.
+- `.tsx` files are PascalCase. `.ts` files are camelCase: hooks `useX.ts`, stores `x.store.ts`, API files `x.api.ts`.
+- Booleans start with `is`, `has`, `should`, `can`, `did`, `will`, `show`, `hide`, and similar.
+- Constants are UPPER_CASE. Enums are forbidden; use `as const` objects and union types.
+- Barrels (`index.ts`) exist only at each feature root, each component or screen folder, and the shared and theme roots.
+- A service folder may nest one kebab-case level (for example `src/services/security/pinning/`), not two.

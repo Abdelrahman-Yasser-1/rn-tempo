@@ -1,0 +1,78 @@
+---
+title: Boundaries
+description: Which layer may import which, enforced by eslint-plugin-boundaries.
+---
+
+The template is split into layers. `eslint-plugin-boundaries` treats every import that is not listed below as an error (`default: 'disallow'`). The matrix comes from `packages/eslint-config/configs/boundaries.mjs`.
+
+## The matrix
+
+An arrow means "may import".
+
+<Mermaid
+  chart={`flowchart LR
+  app --> navigation
+  app --> feature
+  app --> shared_ui[shared-ui]
+  app --> shared_core[shared-core]
+  app --> services
+  app --> theme
+  app --> assets
+  app --> config
+  app --> locales
+  navigation --> feature
+  navigation --> shared_ui
+  navigation --> shared_core
+  navigation --> services
+  navigation --> theme
+  navigation --> config
+  feature --> shared_ui
+  feature --> shared_core
+  feature --> services
+  feature --> theme
+  feature --> assets
+  feature --> config
+  feature -. types only .-> navigation
+  shared_ui --> shared_core
+  shared_ui --> services
+  shared_ui --> theme
+  shared_ui --> assets
+  shared_ui --> config
+  shared_core --> config
+  services --> shared_core
+  services --> config
+  services --> locales`}
+/>
+
+| From | May import |
+| --- | --- |
+| `app` | `app`, `navigation`, `shared-ui`, `shared-core`, `services`, `theme`, `assets`, `config`, `locales`, and any feature through its `index.ts` |
+| `navigation` | `navigation`, `shared-ui`, `shared-core`, `services`, `theme`, `config`, and any feature through its `index.ts` |
+| `features/<name>` | itself, other features through their `index.ts` only, `shared-ui`, `shared-core`, `services`, `theme`, `assets`, `config`, and `navigation/types.ts` / `navigation/navigationRef.ts` |
+| `shared-ui` (`shared/components`, `shared/hooks`) | `shared-ui`, `shared-core`, `services`, `theme`, `assets`, `config` |
+| `shared-core` (`shared/utils`, `shared/types`, `shared/constants`) | `shared-core`, `config` |
+| `services` | `services`, `shared-core`, `config`, `locales` |
+| `theme`, `assets`, `locales`, `config` | themselves only |
+| `test-utils` | everything |
+
+Tests, stories and `test-utils` itself are the only consumers of `src/test-utils`.
+
+## Why
+
+- **Features never reach into each other.** Another feature's code is reachable only through its public `index.ts`, so a feature can be deleted (`tempo feature remove`) without breaking the others.
+- **`shared-core` is pure.** Utilities depend on nothing but config, so they test without mocks.
+- **Navigation is a contract.** Features may import the route types and the navigation ref, never the navigators, which avoids import cycles.
+
+## Reading the rule
+
+The element types are declared once, in folder mode, and the policies follow:
+
+<AnnotatedCode file="packages/eslint-config/configs/boundaries.mjs" highlight="13-25">
+  <Note line={16}>Each architecture layer is an element type. The `feature` pattern captures the feature name.</Note>
+  <Note line={30}>`featureIndexOnly` is how "through its public API" is expressed.</Note>
+  <Note line={119}>`default: 'disallow'`: anything not allowed by a policy is an error.</Note>
+</AnnotatedCode>
+
+<Callout title="Fixing a violation" type="info">
+  Move the shared code down to `shared` or `services`, or expose it from the feature's `index.ts`. Do not disable the rule.
+</Callout>

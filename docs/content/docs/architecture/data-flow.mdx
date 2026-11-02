@@ -1,0 +1,49 @@
+---
+title: Data flow
+description: How data moves from a screen to the network and back.
+---
+
+<Callout title="Target design" type="info">
+  The HTTP client, stores and query layer are built in workstream WS3, and the first features in WS9. This page describes the contract they follow; the detailed walkthrough pages arrive with them in WS13.
+</Callout>
+
+## Server state and client state
+
+- **Server state** (anything fetched) lives in TanStack Query. A feature's `api/` folder holds the request functions, `queries.ts` and `mutations.ts` wrap them in hooks, and `keys.ts` owns the query keys.
+- **Client state** (UI state, session) lives in small Zustand stores, one per feature in `store/`.
+
+The reasoning is in [ADR-002](/docs/adr/002-zustand-tanstack-query).
+
+## A request
+
+<Mermaid
+  chart={`sequenceDiagram
+  participant S as Screen
+  participant H as Query hook
+  participant A as Feature api
+  participant C as services/http client
+  participant N as Network
+  S->>H: useItems()
+  H->>A: fetchItems()
+  A->>C: GET /products
+  C->>N: request + Bearer token
+  N-->>C: 401 (token expired)
+  C->>C: refresh once, queue other requests
+  C->>N: retry
+  N-->>C: 200 JSON
+  C-->>A: parsed response
+  A-->>H: validated with the feature schema
+  H-->>S: data, loading and error state`}
+/>
+
+- The HTTP client in `services/http` attaches the token, refreshes it once on a `401` (parallel requests wait for that single refresh) and retries.
+- Responses are validated with the Zod schemas in the feature's `api/schemas.ts` before they reach a screen.
+- Screens only talk to hooks. They never import the client.
+
+## App start
+
+On launch `useBootstrap` runs the steps in `app/bootstrap` in order: security checks, auth restore, remote config, i18n. The remote config comes from `GET /app-config` and falls back to safe local defaults, so a failing endpoint never blocks startup ([ADR-010](/docs/adr/010-app-config-endpoint)). The splash hides when bootstrap ends.
+
+## Environment
+
+Configuration is read once, validated by Zod and exported as `ENV`. See [Run the environments](/docs/getting-started/run-envs).
