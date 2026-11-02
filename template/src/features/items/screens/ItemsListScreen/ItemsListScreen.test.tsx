@@ -167,7 +167,10 @@ describe('ItemsListScreen', () => {
       await actAsync(() => {
         jest.advanceTimersByTime(1);
       });
-      expect(searches()).toEqual(['/products/search?q=Product+1&limit=20&skip=0']);
+      // The request leaves on the next tick; slow CI runners need the wait.
+      await waitFor(() => {
+        expect(searches()).toEqual(['/products/search?q=Product+1&limit=20&skip=0']);
+      });
     } finally {
       jest.useRealTimers();
     }
