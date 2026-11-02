@@ -3,6 +3,12 @@
     "invalid": "أدخل عنوان بريد إلكتروني صالحًا.",
     "required": "أدخل بريدك الإلكتروني."
   },
+  "item": {
+    "categoryRequired": "أدخل الفئة.",
+    "descriptionRequired": "أدخل الوصف.",
+    "priceInvalid": "أدخل سعرًا أكبر من 0.",
+    "titleRequired": "أدخل العنوان."
+  },
   "name": {
     "tooLong": "استخدم 50 حرفًا على الأكثر.",
     "tooShort": "أدخل حرفين على الأقل."

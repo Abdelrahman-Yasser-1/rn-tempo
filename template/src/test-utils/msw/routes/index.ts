@@ -1,6 +1,9 @@
 import { appConfigRoutes } from './appConfig';
 import { authRoutes } from './auth';
 import { authExtraRoutes } from './authExtra';
+// @tempo-feature:samples:start
+import { productRoutes } from './products';
+// @tempo-feature:samples:end
 import type { MockRoute } from './types';
 import { userRoutes } from './users';
 
@@ -14,5 +17,8 @@ export const routes: MockRoute[] = [
   ...authRoutes,
   ...authExtraRoutes,
   ...userRoutes,
+  // @tempo-feature:samples:start
+  ...productRoutes,
+  // @tempo-feature:samples:end
   ...appConfigRoutes,
 ];
