@@ -1,0 +1,44 @@
+---
+title: Create a project
+description: Create a new app from the template with create-tempo-app, or run the template directly.
+---
+
+<Callout title="The CLI is arriving" type="warn">
+  `create-tempo-app` is built in workstream WS5 and is not published yet. Until then, work from this repository. The commands below are the target flow.
+</Callout>
+
+## With the CLI
+
+```bash
+npx create-tempo-app@next Demo
+```
+
+The CLI asks for the app name, bundle ID and which modules to keep (see the table below), then:
+
+1. copies the template and renames it (`TempoApp` to your app name, `com.rntempo.app` to your bundle ID);
+2. removes the modules you did not select, using the `@tempo-feature` markers and `.tempo/features/*.json` manifests ([ADR-007](/docs/adr/007-own-cli-feature-markers));
+3. writes `.tempo.json`, runs `yarn install` and, on macOS, `pod install`;
+4. initializes git with a first commit.
+
+### Modules
+
+<FeatureBadge name="ssl-pinning" /> <FeatureBadge name="device-integrity" /> <FeatureBadge name="storybook" /> <FeatureBadge name="dynamic-forms" /> <FeatureBadge name="samples" /> <FeatureBadge name="maestro" /> <FeatureBadge name="ci-github" /> <FeatureBadge name="ai-claude" /> <FeatureBadge name="ai-cursor" /> <FeatureBadge name="ai-copilot" />
+
+## From this repository
+
+The `template/` folder is a runnable app with its own lockfile (it is not a workspace, see [ADR-001](/docs/adr/001-monorepo-layout)). Install the repo workspaces first, because the lint configs are linked from `packages/`:
+
+```bash
+yarn install            # repo root
+cd template
+yarn install
+yarn pods               # macOS only
+```
+
+`.tempo.json` in the template records what was generated:
+
+<AnnotatedCode file="template/.tempo.json" highlight="5-9">
+  <Note line={2}>The schema is published with `@rn-tempo/contracts`, so editors validate the file.</Note>
+  <Note line={6}>The app name drives the iOS target and scheme names (`TempoApp-Dev`).</Note>
+  <Note line={8}>The prod bundle ID. Dev and staging add `.dev` and `.staging`.</Note>
+</AnnotatedCode>
