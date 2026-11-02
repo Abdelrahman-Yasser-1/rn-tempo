@@ -1,1 +1,29 @@
-{}
+{
+  "about": {
+    "environment": "Environment",
+    "os": "Operating system",
+    "reactNative": "React Native",
+    "title": "About",
+    "version": "Version"
+  },
+  "language": {
+    "arabic": "العربية",
+    "english": "English",
+    "restartMessage": "The app may restart to apply the new language and layout direction.",
+    "restartTitle": "Change language?",
+    "title": "Language"
+  },
+  "logout": {
+    "confirm": "Log out",
+    "dialogMessage": "You will need to sign in again.",
+    "dialogTitle": "Log out?",
+    "title": "Log out"
+  },
+  "theme": {
+    "dark": "Dark",
+    "light": "Light",
+    "system": "System",
+    "title": "Theme"
+  },
+  "title": "Settings"
+}
