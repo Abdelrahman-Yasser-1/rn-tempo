@@ -11,11 +11,16 @@
     "invalid": "Enter the 6-digit code."
   },
   "password": {
+    "mismatch": "Passwords do not match.",
     "needsLetter": "Include at least one letter.",
     "needsNumber": "Include at least one number.",
+    "required": "Enter your password.",
     "tooShort": "Use at least 8 characters."
   },
   "phone": {
     "invalid": "Enter a valid phone number with country code."
+  },
+  "username": {
+    "required": "Enter your username."
   }
 }
