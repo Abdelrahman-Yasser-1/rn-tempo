@@ -59,6 +59,8 @@ jobs:
       - run: yarn verify
       - run: yarn test:ai-log
       - run: yarn test:ai-sync
+      - run: yarn test:assets
+      - run: yarn assets:check
 
   commitlint:
     name: Commit messages
