@@ -44,7 +44,7 @@ const TRANSFORMED_PACKAGES = [
 module.exports = {
   preset: '@react-native/jest-preset',
   // scripts/ uses node:test (`yarn test:ai-log`); e2e/ is Maestro.
-  testPathIgnorePatterns: ['/node_modules/', '/scripts/', '/e2e/'],
+  testPathIgnorePatterns: ['/node_modules/', '/scripts/', '/e2e/', '/assets-catalog/'],
   // Polyfills must exist before any module is evaluated.
   setupFiles: ['react-native-unistyles/mocks', '<rootDir>/src/theme/unistyles.ts'],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],

@@ -9,3 +9,4 @@ coverage
 .tempo.json
 yarn.lock
 .rnstorybook/storybook.requires.ts
+assets-catalog
