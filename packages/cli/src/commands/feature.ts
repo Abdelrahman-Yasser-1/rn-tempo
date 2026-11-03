@@ -65,7 +65,7 @@ const remove = defineCommand({
       });
       if (!args['skip-post']) {
         if (result.postRemove.includes('pods')) await installPods(common.cwd, { json: common.json });
-        if (result.postRemove.includes('assets-sync')) await yarnRun(common.cwd, 'assets:sync', [], { json: common.json });
+        if (result.postRemove.includes('assets-sync')) await yarnRun(common.cwd, 'assets', [], { json: common.json });
       }
       reporter.success(`Removed ${plan.remove.join(', ')}. Run yarn install to refresh the lockfile.`);
       reporter.result({ ok: true, removed: plan.remove, ...result });

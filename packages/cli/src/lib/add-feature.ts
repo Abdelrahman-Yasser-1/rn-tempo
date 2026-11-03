@@ -479,7 +479,7 @@ export async function addFeature(options: AddFeatureOptions): Promise<AddFeature
     const post = new Set(selected.flatMap((manifest) => manifest.postRemove));
     if (selected.some((manifest) => manifest.dependencies.length + manifest.devDependencies.length > 0)) followUps.push('Run yarn install to update the lockfile');
     if (post.has('pods')) followUps.push('Run pod install in ios/');
-    if (post.has('assets-sync')) followUps.push('Run yarn assets:sync');
+    if (post.has('assets-sync')) followUps.push('Run yarn assets');
     if (conflicts.length > 0) followUps.push('Merge the conflicts by hand (regions are printed), then run tempo doctor');
 
     return {
