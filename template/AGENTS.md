@@ -26,24 +26,25 @@ A React Native app created from RN-TEMPO. Product context, glossary, environment
 
 Run everything from the project root.
 
-| Command                                                 | Purpose                                                              |
-| ------------------------------------------------------- | -------------------------------------------------------------------- |
-| `yarn install && yarn pods`                             | Install JS deps and iOS pods                                         |
-| `yarn start`                                            | Metro                                                                |
-| `yarn ios:dev` / `yarn android:dev`                     | Run the dev app (also `:staging`, `:prod`)                           |
-| `yarn verify`                                           | Typecheck, lint, format check, ls-lint, i18n check, tests            |
-| `yarn verify:changed`                                   | Same checks scoped to changed files (run before finishing)           |
-| `yarn lint:fix` / `yarn format`                         | Auto-fix lint and formatting                                         |
-| `yarn test` / `yarn jest <path>`                        | Jest                                                                 |
-| `yarn typecheck`                                        | `tsc --noEmit`                                                       |
-| `yarn i18n:check`                                       | Locale keys identical in `en` and `ar`, none missing                 |
-| `yarn lint:deadcode`                                    | knip                                                                 |
-| `yarn spec:check`                                       | Every AC of implemented specs is covered by a test                   |
-| `yarn tempo g <kind> ...`                               | Generators (when the CLI is installed; see `ai/rules/generators.md`) |
-| `yarn icons:search <term>` / `yarn icons:add <name>`    | Find and add an icon from the Tabler catalogue (see Add an icon)     |
-| `yarn assets` / `yarn assets:check`                     | Validate `src/assets`, generate (or verify) `src/assets/generated`   |
-| `yarn ai:sync`                                          | Regenerate tool files from `ai/` (after editing `ai/`)               |
-| `yarn ai:start` / `ai:prompt` / `ai:stop` / `ai:report` | AI session logging                                                   |
+| Command                                                    | Purpose                                                              |
+| ---------------------------------------------------------- | -------------------------------------------------------------------- |
+| `yarn install && yarn pods`                                | Install JS deps and iOS pods                                         |
+| `yarn start`                                               | Metro                                                                |
+| `yarn ios:dev` / `yarn android:dev`                        | Run the dev app (also `:staging`, `:prod`)                           |
+| `yarn verify`                                              | Typecheck, lint, format check, ls-lint, i18n check, tests            |
+| `yarn verify:changed`                                      | Same checks scoped to changed files (run before finishing)           |
+| `yarn lint:fix` / `yarn format`                            | Auto-fix lint and formatting                                         |
+| `yarn test` / `yarn jest <path>`                           | Jest                                                                 |
+| `yarn typecheck`                                           | `tsc --noEmit`                                                       |
+| `yarn i18n:check`                                          | Locale keys identical in `en` and `ar`, none missing                 |
+| `yarn lint:deadcode`                                       | knip                                                                 |
+| `yarn spec:check`                                          | Every AC of implemented specs is covered by a test                   |
+| `yarn tempo g <kind> ...`                                  | Generators (when the CLI is installed; see `ai/rules/generators.md`) |
+| `yarn icons:search <term>` / `yarn icons:add <name\|file>` | Find an icon; add your own SVG or a Tabler icon (see Add an icon)    |
+| `yarn icons:prune` (`--restore`)                           | Release builds only: keep just the icons the code uses               |
+| `yarn assets` / `yarn assets:check`                        | Validate `src/assets`, generate (or verify) `src/assets/generated`   |
+| `yarn ai:sync`                                             | Regenerate tool files from `ai/` (after editing `ai/`)               |
+| `yarn ai:start` / `ai:prompt` / `ai:stop` / `ai:report`    | AI session logging                                                   |
 
 ## Folder map
 
@@ -114,7 +115,7 @@ MCP servers are configured in `.mcp.json` (copied to `.cursor/mcp.json` by `yarn
 
 ## Add an icon
 
-`yarn icons:search arrow` -> `yarn icons:add arrow-left` (add `--filled` or `--as <name>`). It copies the SVG from `assets-catalog/` (never bundled) into `src/assets/icons/` and runs `yarn assets`. Commit the SVG and `src/assets/generated/`. Use it only as `<Icon name="arrow-left" />`; directional icons are added to `ICON_MIRRORED_IN_RTL` so they flip in RTL. Details: `ai/rules/assets.md`.
+Every Tabler icon is already in `src/assets/icons/` and in the `IconName` autocomplete: `yarn icons:search arrow`, then `<Icon name="arrow-left" />`. To add one, drop `my-icon.svg` into `src/assets/icons/` and run `yarn assets`, or run `yarn icons:add <tabler-name|path.svg>` (add `--filled` or `--as <name>`); the name is in autocomplete at once. Commit the SVG and `src/assets/generated/`. Directional icons (arrows, chevrons, `logout`, ...) flip in RTL on their own. Release builds prune unused icons (`yarn icons:prune`; names built at runtime go in `src/assets/icons.keep.ts`). Details: `ai/rules/assets.md`.
 
 ## Specs flow
 

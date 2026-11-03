@@ -23,7 +23,7 @@ This workstream fixes those four things before WS10 (dynamic forms) builds on th
 | Source | What we take |
 |---|---|
 | `~/MOS/MOS-MOBILE-APP` (Ministry of Sports app, Saudi brand) | Color scales, IBM Plex Sans Arabic, component inventory and behaviour (not its code style) |
-| `~/GoMoney/icons/{outline,filled}` | The icon catalogue. These are Tabler Icons, MIT, 1,847 SVGs, 24×24, `currentColor` |
+| `~/GoMoney/icons/{outline,filled}` | The icon set that now lives in `src/assets/icons`. These are Tabler Icons, MIT, 1,847 SVGs, 24×24, `currentColor` |
 | `~/Half Million/react-native/Half-Million` | The asset pipeline (`scripts/assets.mjs` + svgr + typed registries), the logger redaction idea, the logical-properties lint idea, vendored AI skills |
 | `github.com/EslamElMeniawy/react-native-temp` | `skip401Urls`, per-feature error boundary, shake-to-open debug menu with network logger |
 
@@ -44,7 +44,10 @@ This workstream fixes those four things before WS10 (dynamic forms) builds on th
    - Semantic `ColorTokens` keep their names, so components do not change.
 2. **Icons:** follow Half-Million's pipeline.
    - The SVG sources stay in the repo, `yarn assets` validates them and generates react-native-svg components with svgr, and the typed `ICONS` registry plus the `IconName` union are generated.
-   - **Bundle-size rule:** the full catalogue lives **outside `src/`** at `template/assets-catalog/icons/{outline,filled}` and is never bundled. Only icons copied into `src/assets/icons/` (by `yarn icons:add <name> [--filled]`) are generated and bundled.
+   - **All icons in `src`, pruned at release (owner decision, 2026-11-03):** the whole Tabler set (about 1,860 icons, outline as `name.svg`, filled as `name-filled.svg`) lives in `src/assets/icons/`. `yarn assets` generates a component for every icon and the full `ICONS` registry, so `IconName` is one union of all names and `<Icon name=... />` autocompletes every icon, including icons added later.
+   - **Easy add:** drop an `.svg` into `src/assets/icons/` and run `yarn assets` (or keep `yarn assets --watch` running; `yarn start` runs `yarn assets` first), or run `yarn icons:add <path-or-tabler-name> [--as <name>] [--filled]` (a path is normalized and copied; a Tabler name is fetched from `@tabler/icons@3.50.0` with `npm pack`). `yarn icons:search <term> [--remote]` finds names.
+   - **Bundle-size rule:** release builds run `yarn icons:prune` (Fastlane build lanes, the `android:*:release`/`bundle` and `ios:*:release` scripts, the CI build workflows), which regenerates `src/assets/generated/` with only the icons a string literal names in `src` plus `ICON_KEEP` (`src/assets/icons.keep.ts`). `IconName` stays whole, `ICONS` becomes a `Partial` record, and `Icon` renders nothing for a missing name. `yarn icons:prune --restore` undoes it. Dev and debug builds are never pruned.
+   - **RTL list:** `ICON_MIRRORED_IN_RTL` is generated into `generated/icons.rtl.ts` from the names (left/right arrows, chevrons, carets and corners without `up`/`down`, plus `login`, `logout`, `send`, `reply`, `forward`, `undo`, `redo`).
 3. **Logic in hooks:** convention plus a lint **warning**.
    - Every screen with logic gets a co-located `use<Name>Screen.ts`.
    - Shared components with logic get `use<Name>.ts`.
@@ -59,7 +62,7 @@ This workstream fixes those four things before WS10 (dynamic forms) builds on th
 |---|---|
 | A | Logic → hooks convention: lint, generators, migrate 22 screens and 4 components |
 | B | DGA tokens and IBM Plex Sans Arabic font |
-| C | Icon pipeline and catalogue: `assets.mjs`, `icons:add`, the `Icon` rework, RTL mirroring, Lucide removal |
+| C | Icon pipeline: `assets.mjs`, all icons in src, `icons:add`, `icons:prune`, the `Icon` rework, RTL mirroring, Lucide removal |
 | D | Component upgrades: Button, TextField family, Toast, Header, Select, Loader, Card, ListItem, EmptyState, Image |
 | E | New display and navigation components |
 | F | New input components and `Form*` wrappers |
@@ -278,7 +281,7 @@ Skipped in PR N:
 
 - **AC-1** Every screen or component with logic has a co-located `use<Name>Screen.ts` / `use<Name>.ts` with tests. Lint warns when a screen view imports `react-hook-form`, `@tanstack/react-query` or `useNavigation`. The CLI generators scaffold the hook.
 - **AC-2** The theme uses DGA scales (SA green brand `#1B8354`) and IBM Plex Sans Arabic on iOS and Android. Text contrast meets WCAG AA in light and dark.
-- **AC-3** `yarn icons:add <name> [--filled]` copies from the catalogue. `yarn assets` / `yarn assets:check` validate and generate. Only `src/assets/icons` is bundled. Directional icons mirror in RTL. The Tabler license ships with the catalogue.
+- **AC-3** Every icon is in `src/assets/icons` and in the `IconName` autocomplete. A dropped-in `.svg` or `yarn icons:add <path-or-name> [--as <name>] [--filled]` is in the autocomplete after `yarn assets`. `yarn assets` / `yarn assets:check` validate and generate. `yarn icons:prune` keeps only the icons the code names, for release builds. Directional icons mirror in RTL from a generated list. The Tabler license ships in `src/assets/icons`.
 - **AC-4** Every row in the mapping above is implemented, recipe'd or skipped as stated. Each component has a story, a test and a11y props, and is RTL-safe.
 - **AC-5** The optional modules (`webview`, `file-picker`, `maps`) add or remove cleanly via the CLI. The `packages/cli` e2e round-trip passes.
 - **AC-6** Every PR passes `yarn verify` plus a Maestro device tour on iOS and Android (en + ar, light + dark) before it is ready (amendment 46).

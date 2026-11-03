@@ -81,7 +81,6 @@ Only `*.test.ts(x)`, `*.stories.tsx` and `src/test-utils/**` may import `@test-u
 | `react-native-keychain`                                                                                                          | `src/services/secure-storage/**` and `src/services/storage/encryptionKey.ts` |
 | `react-native-svg`                                                                                                               | `src/shared/components/Icon/**` (and generated icons)                        |
 | `*.svg` files                                                                                                                    | `src/shared/components/Icon/**` (draw icons with `<Icon />`)                 |
-| `assets-catalog/**`                                                                                                              | nowhere (copy icons with `yarn icons:add`)                                   |
 
 Also: no default exports (`import-x/no-default-export`), no import cycles (`import-x/no-cycle`).
 
