@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { assertInsideProject, globToRegExp } from '../src/lib/fs-utils.ts';
+import { assertInsideProject, globToRegExp, isIgnoredPath } from '../src/lib/fs-utils.ts';
 
 describe('globToRegExp', () => {
   it('matches a directory and everything below for dir/**', () => {
@@ -35,5 +35,15 @@ describe('assertInsideProject', () => {
 
   it.each(['src/x', 'src/a/../b', 'e2e/flows/items-*.yaml', '.claude/**'])('accepts %j', (value) => {
     expect(() => assertInsideProject(value, 'glob')).not.toThrow();
+  });
+});
+
+describe('isIgnoredPath', () => {
+  it('skips session logs and the icon sources and generated components, not the rest of src/assets', () => {
+    expect(isIgnoredPath('.ai/sessions/a.json')).toBe(true);
+    expect(isIgnoredPath('src/assets/icons/home.svg')).toBe(true);
+    expect(isIgnoredPath('src/assets/generated/icons/Home.tsx')).toBe(true);
+    expect(isIgnoredPath('src/assets/generated/icons.registry.ts')).toBe(false);
+    expect(isIgnoredPath('src/assets/icons.keep.ts')).toBe(false);
   });
 });

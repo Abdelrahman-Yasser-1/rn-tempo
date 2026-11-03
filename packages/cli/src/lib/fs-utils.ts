@@ -15,8 +15,16 @@ export const IGNORED_DIRS: ReadonlySet<string> = new Set([
   '.next',
 ]);
 
-/** Project-relative prefixes skipped by content rewrites (session logs are history, not source). */
-export const IGNORED_PREFIXES: readonly string[] = ['.ai/sessions'];
+/**
+ * Project-relative prefixes skipped by walks and content rewrites: session logs are history, not
+ * source, and the icon SVGs and their generated components (about 3,700 files) hold no project
+ * names or feature markers, so scanning them only costs time.
+ */
+export const IGNORED_PREFIXES: readonly string[] = [
+  '.ai/sessions',
+  'src/assets/icons',
+  'src/assets/generated/icons',
+];
 
 const BINARY_EXTENSIONS: ReadonlySet<string> = new Set([
   '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico', '.icns', '.bmp', '.heic', '.pdf',
