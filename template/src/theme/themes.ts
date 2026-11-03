@@ -1,5 +1,3 @@
-import { Platform } from 'react-native';
-
 import { palette } from './palette';
 import { fontPx } from './scaling';
 import {
@@ -18,12 +16,19 @@ import {
 
 type FontWeight = TypographyStyle['fontWeight'];
 
-// Android picks the weight from the family name; iOS System honors fontWeight directly.
-const fontFamilyFor = (weight: FontWeight): string =>
-  Platform.select({
-    ios: 'System',
-    default: weight === '500' || weight === '600' ? 'sans-serif-medium' : 'sans-serif',
-  });
+// One family string per weight, equal to the font file name and PostScript name, so the same value
+// works on iOS (resolved by font name) and Android (resolved by assets/fonts/<name>.ttf). IBM names
+// the Medium and SemiBold PostScript names "Medm" and "SmBld". `fontWeight` stays in each style as
+// the semantic weight: Android ignores it for custom fonts (the family already is the weight) and
+// iOS only uses it to stay within the matched face, so it never changes the rendered face.
+const FONT_FAMILY: Record<FontWeight, string> = {
+  '400': 'IBMPlexSansArabic',
+  '500': 'IBMPlexSansArabic-Medm',
+  '600': 'IBMPlexSansArabic-SmBld',
+  '700': 'IBMPlexSansArabic-Bold',
+};
+
+const fontFamilyFor = (weight: FontWeight): string => FONT_FAMILY[weight];
 
 const typography = Object.fromEntries(
   (Object.keys(typeScale) as TypographyVariant[]).map((variant) => {
