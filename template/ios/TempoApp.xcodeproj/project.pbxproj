@@ -11,10 +11,14 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		2181FAD5BCEAD9FE7A5956BE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 		35BBBC1E4E7A4661B8E49B12 /* BootSplash.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F0C65E656468429DB9CC8E5D /* BootSplash.storyboard */; };
+		6D495C22DCDD54258393DB8C /* IBMPlexSansArabic-SmBld.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2AAC48AF9164C43CB7951C0A /* IBMPlexSansArabic-SmBld.ttf */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		761780EF2CA45674006654EF /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EE2CA45674006654EF /* SceneDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		949F94AAB7F8DB8098AA8F7C /* IBMPlexSansArabic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A2697D0468DF63E5AFD3EEF5 /* IBMPlexSansArabic.ttf */; };
+		AAC14E40BA4331ACD1090AA1 /* IBMPlexSansArabic-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9B63BB17E254CE35A7427ED7 /* IBMPlexSansArabic-Bold.ttf */; };
 		B108707F10574A5AAC07FA8F /* Colors.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FA0B6FE6242E40D2B4491200 /* Colors.xcassets */; };
+		D400F6D08745FB55CA50AC83 /* IBMPlexSansArabic-Medm.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C4C98DE0F9BAA5CFDB3B6CD1 /* IBMPlexSansArabic-Medm.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,6 +29,7 @@
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = TempoApp/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		17B062C35C6537A497E9F513 /* Staging.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = Staging.release.xcconfig; sourceTree = "<group>"; };
 		1842BEBD11B39FC4C9B555BF /* Pods-TempoApp.debug-prod.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TempoApp.debug-prod.xcconfig"; path = "Target Support Files/Pods-TempoApp/Pods-TempoApp.debug-prod.xcconfig"; sourceTree = "<group>"; };
+		2AAC48AF9164C43CB7951C0A /* IBMPlexSansArabic-SmBld.ttf */ = {isa = PBXFileReference; includeInIndex = 1; path = "IBMPlexSansArabic-SmBld.ttf"; sourceTree = "<group>"; };
 		3B4392A12AC88292D35C810B /* Pods-TempoApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TempoApp.debug.xcconfig"; path = "Target Support Files/Pods-TempoApp/Pods-TempoApp.debug.xcconfig"; sourceTree = "<group>"; };
 		41DACCD34CBC7E0141B79E4F /* Pods-TempoApp.debug-staging.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TempoApp.debug-staging.xcconfig"; path = "Target Support Files/Pods-TempoApp/Pods-TempoApp.debug-staging.xcconfig"; sourceTree = "<group>"; };
 		5709B34CF0A7D63546082F79 /* Pods-TempoApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TempoApp.release.xcconfig"; path = "Target Support Files/Pods-TempoApp/Pods-TempoApp.release.xcconfig"; sourceTree = "<group>"; };
@@ -37,9 +42,12 @@
 		8325F9011A35FE4F8B8AC882 /* Pods-TempoApp.release-dev.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TempoApp.release-dev.xcconfig"; path = "Target Support Files/Pods-TempoApp/Pods-TempoApp.release-dev.xcconfig"; sourceTree = "<group>"; };
 		8457ADA25E29FE95E58D2567 /* Pods-TempoApp.release-staging.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TempoApp.release-staging.xcconfig"; path = "Target Support Files/Pods-TempoApp/Pods-TempoApp.release-staging.xcconfig"; sourceTree = "<group>"; };
 		88FEA429B5BC9DB6C14F1C57 /* Dev.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = Dev.release.xcconfig; sourceTree = "<group>"; };
+		9B63BB17E254CE35A7427ED7 /* IBMPlexSansArabic-Bold.ttf */ = {isa = PBXFileReference; includeInIndex = 1; path = "IBMPlexSansArabic-Bold.ttf"; sourceTree = "<group>"; };
 		9DAD177C06B26BD40C08DC87 /* Prod.shared.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = Prod.shared.xcconfig; sourceTree = "<group>"; };
+		A2697D0468DF63E5AFD3EEF5 /* IBMPlexSansArabic.ttf */ = {isa = PBXFileReference; includeInIndex = 1; path = IBMPlexSansArabic.ttf; sourceTree = "<group>"; };
 		B5C1AF6B3B3006220A499AE2 /* Prod.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = Prod.debug.xcconfig; sourceTree = "<group>"; };
 		B9F76E0D3033912B60223A1C /* Pods-TempoApp.release-prod.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TempoApp.release-prod.xcconfig"; path = "Target Support Files/Pods-TempoApp/Pods-TempoApp.release-prod.xcconfig"; sourceTree = "<group>"; };
+		C4C98DE0F9BAA5CFDB3B6CD1 /* IBMPlexSansArabic-Medm.ttf */ = {isa = PBXFileReference; includeInIndex = 1; path = "IBMPlexSansArabic-Medm.ttf"; sourceTree = "<group>"; };
 		CFDD66006E8BA8FF5510FEE0 /* TempoApp.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; name = TempoApp.entitlements; path = TempoApp/TempoApp.entitlements; sourceTree = "<group>"; };
 		D15BC6616E2895F60E9C4B41 /* Staging.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = Staging.debug.xcconfig; sourceTree = "<group>"; };
 		D368A3E1E520F1B8C6F49A7E /* Dev.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = Dev.debug.xcconfig; sourceTree = "<group>"; };
@@ -119,6 +127,7 @@
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
 				648270A9582C57EA12B90852 /* Config */,
+				D337CCD70E998EC2BF6F71B0 /* Fonts */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -147,6 +156,18 @@
 			);
 			path = Pods;
 			sourceTree = "<group>";
+		};
+		D337CCD70E998EC2BF6F71B0 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				9B63BB17E254CE35A7427ED7 /* IBMPlexSansArabic-Bold.ttf */,
+				C4C98DE0F9BAA5CFDB3B6CD1 /* IBMPlexSansArabic-Medm.ttf */,
+				2AAC48AF9164C43CB7951C0A /* IBMPlexSansArabic-SmBld.ttf */,
+				A2697D0468DF63E5AFD3EEF5 /* IBMPlexSansArabic.ttf */,
+			);
+			name = Fonts;
+			path = src/assets/fonts;
+			sourceTree = SOURCE_ROOT;
 		};
 /* End PBXGroup section */
 
@@ -213,6 +234,10 @@
 				2181FAD5BCEAD9FE7A5956BE /* PrivacyInfo.xcprivacy in Resources */,
 				35BBBC1E4E7A4661B8E49B12 /* BootSplash.storyboard in Resources */,
 				B108707F10574A5AAC07FA8F /* Colors.xcassets in Resources */,
+				AAC14E40BA4331ACD1090AA1 /* IBMPlexSansArabic-Bold.ttf in Resources */,
+				D400F6D08745FB55CA50AC83 /* IBMPlexSansArabic-Medm.ttf in Resources */,
+				6D495C22DCDD54258393DB8C /* IBMPlexSansArabic-SmBld.ttf in Resources */,
+				949F94AAB7F8DB8098AA8F7C /* IBMPlexSansArabic.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
