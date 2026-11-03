@@ -115,6 +115,7 @@
     "@storybook/addon-ondevice-actions": "10.7.0",
     "@storybook/addon-ondevice-controls": "10.7.0",
     "@storybook/react-native": "10.7.0",
+    "@svgr/cli": "8.1.0",
     "@testing-library/react-native": "14.1.0",
     "@types/jest": "30.0.0",
     "@types/react": "19.3.0",
