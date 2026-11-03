@@ -166,7 +166,7 @@
 				A2697D0468DF63E5AFD3EEF5 /* IBMPlexSansArabic.ttf */,
 			);
 			name = Fonts;
-			path = src/assets/fonts;
+			path = ../src/assets/fonts;
 			sourceTree = SOURCE_ROOT;
 		};
 /* End PBXGroup section */

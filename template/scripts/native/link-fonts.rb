@@ -10,6 +10,7 @@
 # Never edit project.pbxproj by hand. Usage (from template/): yarn fonts:link
 
 require 'fileutils'
+require 'pathname'
 require 'xcodeproj'
 
 ROOT = File.expand_path('../..', __dir__)
@@ -36,7 +37,7 @@ project = Xcodeproj::Project.open(PROJECT)
 target = project.targets.find { |t| t.name == TARGET } || abort("Target #{TARGET} not found")
 group = project.main_group.find_subpath('Fonts', true)
 group.set_source_tree('SOURCE_ROOT')
-group.set_path('src/assets/fonts')
+group.set_path(Pathname.new(FONT_DIR).relative_path_from(Pathname.new(File.dirname(PROJECT))).to_s) # ../src/assets/fonts
 
 fonts.each do |name|
   ref = group.files.find { |f| f.path == name } || group.new_file(name)
