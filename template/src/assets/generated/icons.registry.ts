@@ -433,7 +433,7 @@ import Atom from './icons/Atom';
 import AugmentedReality2 from './icons/AugmentedReality2';
 import AugmentedRealityOff from './icons/AugmentedRealityOff';
 import AugmentedReality from './icons/AugmentedReality';
-import Auth2fa from './icons/Auth2fa';
+import Auth2Fa from './icons/Auth2Fa';
 import AutomaticGearboxFilled from './icons/AutomaticGearboxFilled';
 import AutomaticGearbox from './icons/AutomaticGearbox';
 import Automation from './icons/Automation';
@@ -454,15 +454,15 @@ import Backpack from './icons/Backpack';
 import Backslash from './icons/Backslash';
 import BackspaceFilled from './icons/BackspaceFilled';
 import Backspace from './icons/Backspace';
-import Badge2k from './icons/Badge2k';
-import Badge3dFilled from './icons/Badge3dFilled';
-import Badge3d from './icons/Badge3d';
-import Badge3k from './icons/Badge3k';
-import Badge4kFilled from './icons/Badge4kFilled';
-import Badge4k from './icons/Badge4k';
-import Badge5k from './icons/Badge5k';
-import Badge8kFilled from './icons/Badge8kFilled';
-import Badge8k from './icons/Badge8k';
+import Badge2K from './icons/Badge2K';
+import Badge3DFilled from './icons/Badge3DFilled';
+import Badge3D from './icons/Badge3D';
+import Badge3K from './icons/Badge3K';
+import Badge4KFilled from './icons/Badge4KFilled';
+import Badge4K from './icons/Badge4K';
+import Badge5K from './icons/Badge5K';
+import Badge8KFilled from './icons/Badge8KFilled';
+import Badge8K from './icons/Badge8K';
 import BadgeAdFilled from './icons/BadgeAdFilled';
 import BadgeAdOff from './icons/BadgeAdOff';
 import BadgeAd from './icons/BadgeAd';
@@ -784,7 +784,7 @@ import BracketsOff from './icons/BracketsOff';
 import Brackets from './icons/Brackets';
 import Braille from './icons/Braille';
 import Brain from './icons/Brain';
-import Brand4chan from './icons/Brand4chan';
+import Brand4Chan from './icons/Brand4Chan';
 import BrandAbstract from './icons/BrandAbstract';
 import BrandAdobeAfterEffect from './icons/BrandAdobeAfterEffect';
 import BrandAdobeIllustrator from './icons/BrandAdobeIllustrator';
@@ -851,7 +851,7 @@ import BrandCampaignmonitor from './icons/BrandCampaignmonitor';
 import BrandCarbon from './icons/BrandCarbon';
 import BrandCashapp from './icons/BrandCashapp';
 import BrandChrome from './icons/BrandChrome';
-import BrandCinema4d from './icons/BrandCinema4d';
+import BrandCinema4D from './icons/BrandCinema4D';
 import BrandCitymapper from './icons/BrandCitymapper';
 import BrandCloudflare from './icons/BrandCloudflare';
 import BrandCodecov from './icons/BrandCodecov';
@@ -1017,7 +1017,7 @@ import CannabisFilled from './icons/CannabisFilled';
 import CapsuleFilled from './icons/CapsuleFilled';
 import CapsuleHorizontalFilled from './icons/CapsuleHorizontalFilled';
 import CaptureFilled from './icons/CaptureFilled';
-import Car4wdFilled from './icons/Car4wdFilled';
+import Car4WdFilled from './icons/Car4WdFilled';
 import CarCraneFilled from './icons/CarCraneFilled';
 import CarFanFilled from './icons/CarFanFilled';
 import CarFilled from './icons/CarFilled';
@@ -2297,7 +2297,7 @@ export const ICONS: Record<IconName, IconComponent> = {
   'augmented-reality-2': AugmentedReality2,
   'augmented-reality-off': AugmentedRealityOff,
   'augmented-reality': AugmentedReality,
-  'auth-2fa': Auth2fa,
+  'auth-2fa': Auth2Fa,
   'automatic-gearbox-filled': AutomaticGearboxFilled,
   'automatic-gearbox': AutomaticGearbox,
   automation: Automation,
@@ -2318,15 +2318,15 @@ export const ICONS: Record<IconName, IconComponent> = {
   backslash: Backslash,
   'backspace-filled': BackspaceFilled,
   backspace: Backspace,
-  'badge-2k': Badge2k,
-  'badge-3d-filled': Badge3dFilled,
-  'badge-3d': Badge3d,
-  'badge-3k': Badge3k,
-  'badge-4k-filled': Badge4kFilled,
-  'badge-4k': Badge4k,
-  'badge-5k': Badge5k,
-  'badge-8k-filled': Badge8kFilled,
-  'badge-8k': Badge8k,
+  'badge-2k': Badge2K,
+  'badge-3d-filled': Badge3DFilled,
+  'badge-3d': Badge3D,
+  'badge-3k': Badge3K,
+  'badge-4k-filled': Badge4KFilled,
+  'badge-4k': Badge4K,
+  'badge-5k': Badge5K,
+  'badge-8k-filled': Badge8KFilled,
+  'badge-8k': Badge8K,
   'badge-ad-filled': BadgeAdFilled,
   'badge-ad-off': BadgeAdOff,
   'badge-ad': BadgeAd,
@@ -2648,7 +2648,7 @@ export const ICONS: Record<IconName, IconComponent> = {
   brackets: Brackets,
   braille: Braille,
   brain: Brain,
-  'brand-4chan': Brand4chan,
+  'brand-4chan': Brand4Chan,
   'brand-abstract': BrandAbstract,
   'brand-adobe-after-effect': BrandAdobeAfterEffect,
   'brand-adobe-illustrator': BrandAdobeIllustrator,
@@ -2715,7 +2715,7 @@ export const ICONS: Record<IconName, IconComponent> = {
   'brand-carbon': BrandCarbon,
   'brand-cashapp': BrandCashapp,
   'brand-chrome': BrandChrome,
-  'brand-cinema-4d': BrandCinema4d,
+  'brand-cinema-4d': BrandCinema4D,
   'brand-citymapper': BrandCitymapper,
   'brand-cloudflare': BrandCloudflare,
   'brand-codecov': BrandCodecov,
@@ -2881,7 +2881,7 @@ export const ICONS: Record<IconName, IconComponent> = {
   'capsule-filled': CapsuleFilled,
   'capsule-horizontal-filled': CapsuleHorizontalFilled,
   'capture-filled': CaptureFilled,
-  'car-4wd-filled': Car4wdFilled,
+  'car-4wd-filled': Car4WdFilled,
   'car-crane-filled': CarCraneFilled,
   'car-fan-filled': CarFanFilled,
   'car-filled': CarFilled,
