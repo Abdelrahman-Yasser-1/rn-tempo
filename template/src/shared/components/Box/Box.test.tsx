@@ -24,7 +24,7 @@ describe('Box', () => {
       padding: 16,
       paddingHorizontal: 24,
       gap: 8,
-      backgroundColor: '#F8FAFC',
+      backgroundColor: '#F9FAFB',
       borderRadius: 8,
     });
   });
