@@ -13,6 +13,8 @@ Style with `StyleSheet.create` from `react-native-unistyles` and theme tokens. N
 - Styles live in a `styles.ts` next to the component (`Button/styles.ts`).
 - `StyleSheet` from `react-native` is **forbidden everywhere**, including `src/shared/components/**`.
 - Lint: `react-native/no-color-literals`, `react-native/no-inline-styles` and `react-native/no-unused-styles` are errors.
+- Use semantic tokens (`theme.colors.*`) first. Reach for `theme.palette` (Saudi primitives such as `palette.sa[600]`) only for component variants that no semantic token covers. No raw hex, ever.
+- Typography uses IBM Plex Sans Arabic via the `typography` variants (family per weight); never set `fontFamily` by hand.
 - Tokens come from `src/theme/tokens.ts`: `colors` (e.g. `primary`, `onPrimary`, `surface`, `textPrimary`, `border`, `error`), `spacing` (`none xxs xs sm md lg xl xxl xxxl` = 0, 2, 4, 8, 12, 16, 24, 32, 48), `radii` (`none sm md lg xl full`), `typography` variants (`display h1 h2 h3 title body bodyStrong bodySmall label caption button`), `shadows` (`boxShadow` strings), `zIndex`.
 - Scaling helpers in `@theme/scaling` (base design 390x844): `px`, `pxH` (clamped at 1.2), `fontPx` (clamped at 1.15), `pxM(size, factor = 0.5)`.
 - RTL-safe: use `start` / `end` (`marginStart`, `paddingEnd`, `start: 0`), never `left` / `right`.
