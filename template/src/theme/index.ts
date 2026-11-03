@@ -1,4 +1,5 @@
 export { breakpoints } from './breakpoints';
+export { palette, type Palette } from './palette';
 export { fontPx, px, pxH, pxM } from './scaling';
 export { darkTheme, lightTheme } from './themes';
 export type {

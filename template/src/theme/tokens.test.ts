@@ -39,9 +39,9 @@ describe.each([
 });
 
 describe('themes', () => {
-  test('keep the plan anchor colors', () => {
-    expect(lightTheme.colors.primary).toBe('#2563EB');
-    expect(darkTheme.colors.background).toBe('#0B1220');
+  test('use the DGA anchor colors', () => {
+    expect(lightTheme.colors.primary).toBe('#1B8354');
+    expect(darkTheme.colors.background).toBe('#0D121C');
   });
 
   test('typography follows the type scale', () => {
