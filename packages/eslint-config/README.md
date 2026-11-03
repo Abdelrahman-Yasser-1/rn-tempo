@@ -6,7 +6,7 @@ Shared [ESLint](https://eslint.org) flat config for RN-TEMPO projects.
 - React (`@eslint-react`, Rules of Hooks) and React Native (`react-native`, `react-native-a11y`, compat-wrapped for ESLint 10)
 - Quality: sonarjs, a curated unicorn set, promise, regexp, jsdoc (services and shared), no-secrets, import-x (order, cycles, no default export), TanStack Query, i18next literal strings
 - Tests: `jest` and `testing-library/react` for `*.test.ts(x)`
-- Restrictions: `Text`/`StyleSheet`/... from `react-native`, `react-native-config`, async-storage, `axios`, MMKV and Keychain may only be imported from their owning module
+- Restrictions: `Text`/`StyleSheet`/... from `react-native`, `react-native-config`, async-storage, `axios`, MMKV, Keychain and `react-native-svg` may only be imported from their owning module (`react-native-svg` only in the `Icon` component). `*.svg` files and `assets-catalog/**` are never imported; icons are drawn with `<Icon name=... />`
 - `structure: true`: import boundaries (`eslint-plugin-boundaries`) and the folder skeleton of contract C5 (`eslint-plugin-project-structure`)
 
 ## Usage

@@ -106,6 +106,13 @@ describe('eslint-config fixtures', () => {
       'src/features/home/screens/FormScreen/FormScreen.tsx',
       '@typescript-eslint/no-restricted-imports',
     ],
+    ['an svg file import', 'src/shared/utils/usesSvgFile.ts', 'no-restricted-imports'],
+    [
+      'react-native-svg outside Icon',
+      'src/features/auth/utils/usesRnSvg.ts',
+      'no-restricted-imports',
+    ],
+    ['an import from assets-catalog', 'src/shared/utils/usesCatalogue.ts', 'no-restricted-imports'],
     ['getByTestId in a test', 'src/shared/utils/byTestId.test.ts', 'no-restricted-syntax'],
   ];
 
