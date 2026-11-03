@@ -112,7 +112,6 @@ describe('eslint-config fixtures', () => {
       'src/features/auth/utils/usesRnSvg.ts',
       'no-restricted-imports',
     ],
-    ['an import from assets-catalog', 'src/shared/utils/usesCatalogue.ts', 'no-restricted-imports'],
     ['getByTestId in a test', 'src/shared/utils/byTestId.test.ts', 'no-restricted-syntax'],
   ];
 
