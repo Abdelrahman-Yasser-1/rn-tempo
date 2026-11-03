@@ -27,21 +27,41 @@ const RESTRICTIONS = {
   },
   axios: { name: 'axios', message: 'Only src/services/http may import axios.' },
   mmkv: { name: 'react-native-mmkv', message: 'Only src/services/storage may import MMKV.' },
+  reactNativeSvg: {
+    name: 'react-native-svg',
+    message: 'Draw icons with <Icon name=... /> from @shared/components; only Icon uses react-native-svg.',
+  },
   keychain: {
     name: 'react-native-keychain',
     message: 'Only src/services/secure-storage (and storage/encryptionKey.ts) may import Keychain.',
   },
 };
 
+// Pattern restrictions, by key. `svgFiles` is skipped by `allowed`; `catalogue` never is.
+const PATTERN_RESTRICTIONS = {
+  svgFiles: {
+    group: ['*.svg', '**/*.svg'],
+    message: 'Use <Icon name=... /> from @shared/components. Add icons with `yarn icons:add`.',
+  },
+  catalogue: {
+    group: ['assets-catalog', 'assets-catalog/**', '**/assets-catalog', '**/assets-catalog/**'],
+    message:
+      'The icon catalogue is never bundled. Copy an icon into src/assets/icons with `yarn icons:add`.',
+  },
+};
+
 /**
  * Builds a `no-restricted-imports` entry that skips the named restrictions.
- * @param {string[]} allowed Keys of RESTRICTIONS that are allowed in the scoped files.
+ * @param {string[]} allowed Keys of RESTRICTIONS or PATTERN_RESTRICTIONS that are allowed in the scoped files.
  */
 function restrict(allowed = []) {
   const paths = Object.entries(RESTRICTIONS)
     .filter(([key]) => !allowed.includes(key))
     .map(([, value]) => value);
-  return ['error', { paths }];
+  const patterns = Object.entries(PATTERN_RESTRICTIONS)
+    .filter(([key]) => !allowed.includes(key))
+    .map(([, value]) => value);
+  return ['error', { paths, patterns }];
 }
 
 /** Import restrictions (error). Each allowed location re-declares the rule without that entry. */
@@ -52,6 +72,12 @@ export function restrictionsConfig() {
       name: 'rn-tempo/restrictions/shared-components',
       files: ['src/shared/components/**'],
       rules: { 'no-restricted-imports': restrict(['reactNative']) },
+    },
+    {
+      // Icon draws the generated react-native-svg components; nothing else does.
+      name: 'rn-tempo/restrictions/icon',
+      files: ['src/shared/components/Icon/**', 'src/assets/generated/**'],
+      rules: { 'no-restricted-imports': restrict(['reactNative', 'reactNativeSvg', 'svgFiles']) },
     },
     {
       name: 'rn-tempo/restrictions/env',

@@ -91,7 +91,7 @@ export const FOLDER_STRUCTURE = {
     folder('services', [folder(KEBAB, [...serviceFiles, folder(KEBAB, serviceFiles)])]),
     folder('theme', camelFiles),
     folder('assets', [
-      folder('(fonts|images|icons|animations)', [file('*'), { name: '*', ruleId: 'free_tree' }]),
+      folder('(fonts|images|icons|animations|generated)', [file('*'), { name: '*', ruleId: 'free_tree' }]),
     ]),
     folder('locales', [folder('[a-z][a-z](-[A-Z][A-Z])?', [file(`${KEBAB}.json`)])]),
     folder('config', camelFiles),
