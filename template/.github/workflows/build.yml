@@ -50,6 +50,10 @@ jobs:
           node-version-file: .nvmrc
           cache: yarn
       - run: yarn install --immutable
+      # Release bundles carry only the icons the code names. The workspace is ephemeral, so no restore;
+      # the Fastlane lanes prune too (and restore), which makes this idempotent.
+      - name: Prune unused icons
+        run: yarn icons:prune
       - uses: actions/setup-java@v6
         with:
           distribution: temurin
@@ -99,6 +103,10 @@ jobs:
           node-version-file: .nvmrc
           cache: yarn
       - run: yarn install --immutable
+      # Release bundles carry only the icons the code names. The workspace is ephemeral, so no restore;
+      # the Fastlane lanes prune too (and restore), which makes this idempotent.
+      - name: Prune unused icons
+        run: yarn icons:prune
       - uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
         with:
           ruby-version: '3.4'
