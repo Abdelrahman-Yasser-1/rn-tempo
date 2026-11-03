@@ -1,3 +1,7 @@
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+
+import { palette } from './palette';
 import { darkTheme, lightTheme } from './themes';
 import { darkColors, lightColors, type ColorTokens } from './tokens';
 
@@ -51,5 +55,44 @@ describe('themes', () => {
     );
     expect(lightTheme.name).toBe('light');
     expect(darkTheme.name).toBe('dark');
+  });
+
+  test('exposes the palette primitives on the theme', () => {
+    expect(lightTheme.palette).toBe(palette);
+    expect(darkTheme.palette).toBe(palette);
+  });
+
+  test('every typography family is a bundled font file', () => {
+    const fontDir = path.join(__dirname, '../assets/fonts');
+    for (const style of Object.values(lightTheme.typography)) {
+      expect(existsSync(path.join(fontDir, `${style.fontFamily}.ttf`))).toBe(true);
+    }
+    expect(lightTheme.typography.display.fontFamily).toBe('IBMPlexSansArabic-Bold');
+    expect(lightTheme.typography.body.fontFamily).toBe('IBMPlexSansArabic');
+  });
+});
+
+describe('token sources', () => {
+  const source = readFileSync(path.join(__dirname, 'tokens.ts'), 'utf8');
+  const flat = Object.values(palette).flatMap((value) =>
+    typeof value === 'string' ? [value] : Object.values(value),
+  );
+
+  test('tokens.ts holds no raw hex literals', () => {
+    expect(source).not.toMatch(/#[0-9a-f]{3,8}\b/i);
+  });
+
+  test.each([
+    ['light', lightColors],
+    ['dark', darkColors],
+  ])('%s opaque colors all come from the palette', (_name, colors) => {
+    for (const [token, value] of Object.entries(colors)) {
+      if (value.startsWith('rgba')) continue;
+      expect([token, flat]).toEqual([token, expect.arrayContaining([value])]);
+    }
+  });
+
+  test('color values snapshot', () => {
+    expect({ light: lightColors, dark: darkColors }).toMatchSnapshot();
   });
 });
