@@ -11,6 +11,7 @@ export default [
       '.rnstorybook/storybook.requires.ts',
       'e2e',
       'scripts/ai-log',
+      'assets-catalog',
     ],
   },
   ...createConfig({ root: import.meta.dirname, structure: true }),
