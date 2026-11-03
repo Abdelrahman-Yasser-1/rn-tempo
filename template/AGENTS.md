@@ -40,6 +40,8 @@ Run everything from the project root.
 | `yarn lint:deadcode`                                    | knip                                                                 |
 | `yarn spec:check`                                       | Every AC of implemented specs is covered by a test                   |
 | `yarn tempo g <kind> ...`                               | Generators (when the CLI is installed; see `ai/rules/generators.md`) |
+| `yarn icons:search <term>` / `yarn icons:add <name>`    | Find and add an icon from the Tabler catalogue (see Add an icon)     |
+| `yarn assets` / `yarn assets:check`                     | Validate `src/assets`, generate (or verify) `src/assets/generated`   |
 | `yarn ai:sync`                                          | Regenerate tool files from `ai/` (after editing `ai/`)               |
 | `yarn ai:start` / `ai:prompt` / `ai:stop` / `ai:report` | AI session logging                                                   |
 
@@ -53,13 +55,13 @@ src/
   shared/       components/ hooks/ utils/ constants/ types/   (feature-agnostic)
   services/<kebab>/  http, storage, secure-storage, security, flags, remote-config, logger, i18n, linking, toast, network
   theme/        tokens, themes, scaling
-  assets/       fonts, images, icons, animations (index.ts generated)
+  assets/       fonts, images, icons, animations, generated/ (built by `yarn assets`)
   locales/      en/<ns>.json, ar/<ns>.json
   config/       env.ts, constants.ts
   test-utils/   renderWithProviders, msw/, factories/
 ai/             sources for all AI tool files (rules, skills, commands, agents)
 specs/          product.md, tech.md, one folder per feature
-scripts/        ai-log, ai-sync, native helpers, verify-changed, spec-check
+scripts/        ai-log, ai-sync, assets and icons-add, native helpers, verify-changed, spec-check
 ```
 
 Aliases: `@app` `@navigation` `@features` `@shared` `@services` `@theme` `@assets` `@locales` `@config` `@test-utils`, each mapping to `src/<name>`.
@@ -103,11 +105,16 @@ One topic per file in `ai/rules/`; the examples there are the source of truth.
 | `commits.md`      | Conventional Commits, scopes, AI trailers                              |
 | `specs.md`        | Spec flow and formats                                                  |
 | `generators.md`   | `yarn tempo g ...`                                                     |
+| `assets.md`       | Icons: add, use, RTL mirroring, the catalogue                          |
 | `verification.md` | Checks to run, definition of done                                      |
 
 Skills, commands and subagents are in `ai/skills`, `ai/commands` and `ai/agents`. After editing anything in `ai/`, run `yarn ai:sync` and commit the generated files.
 
 MCP servers are configured in `.mcp.json` (copied to `.cursor/mcp.json` by `yarn ai:sync`). Packages run through `npx` are pinned to an exact version older than 24 hours and are bumped deliberately, never with `latest`.
+
+## Add an icon
+
+`yarn icons:search arrow` -> `yarn icons:add arrow-left` (add `--filled` or `--as <name>`). It copies the SVG from `assets-catalog/` (never bundled) into `src/assets/icons/` and runs `yarn assets`. Commit the SVG and `src/assets/generated/`. Use it only as `<Icon name="arrow-left" />`; directional icons are added to `ICON_MIRRORED_IN_RTL` so they flip in RTL. Details: `ai/rules/assets.md`.
 
 ## Specs flow
 

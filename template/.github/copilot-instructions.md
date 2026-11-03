@@ -38,6 +38,8 @@ Run everything from the project root.
 | `yarn lint:deadcode`                                    | knip                                                                 |
 | `yarn spec:check`                                       | Every AC of implemented specs is covered by a test                   |
 | `yarn tempo g <kind> ...`                               | Generators (when the CLI is installed; see `ai/rules/generators.md`) |
+| `yarn icons:search <term>` / `yarn icons:add <name>`    | Find and add an icon from the Tabler catalogue (see Add an icon)     |
+| `yarn assets` / `yarn assets:check`                     | Validate `src/assets`, generate (or verify) `src/assets/generated`   |
 | `yarn ai:sync`                                          | Regenerate tool files from `ai/` (after editing `ai/`)               |
 | `yarn ai:start` / `ai:prompt` / `ai:stop` / `ai:report` | AI session logging                                                   |
 
@@ -67,6 +69,7 @@ Also: check library APIs with context7 for the **pinned** version, never from me
 - [a11y](../ai/rules/a11y.md): Accessibility requirements for components and screens, backed by react-native-a11y lint rules.
 - [api](../ai/rules/api.md): Typed, Zod-validated requests through @services/http, query key factories, mutations that invalidate.
 - [architecture](../ai/rules/architecture.md): Folder skeleton, path aliases, barrels and the import-boundary matrix enforced by ESLint.
+- [assets](../ai/rules/assets.md): Icons and images. Sources in src/assets, generated components, the Tabler catalogue, RTL mirroring.
 - [commits](../ai/rules/commits.md): Conventional Commits with required scope, commit size, and the AI session trailers.
 - [generators](../ai/rules/generators.md): Create files with yarn tempo g generators, not by hand, so structure and tests stay valid.
 - [i18n](../ai/rules/i18n.md): Every UI string goes through i18next in en and ar; keys are nested camelCase per namespace.
