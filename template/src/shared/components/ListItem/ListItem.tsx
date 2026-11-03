@@ -50,9 +50,7 @@ export function ListItem({
       </View>
       {right ??
         (shouldShowChevron && onPress !== undefined && (
-          <View style={styles.chevron}>
-            <Icon name="chevron-right" size={20} color="textSecondary" />
-          </View>
+          <Icon name="chevron-right" size="md" color="textSecondary" />
         ))}
     </>
   );

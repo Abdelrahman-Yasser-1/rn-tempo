@@ -1,6 +1,6 @@
 import type { PressableProps } from 'react-native';
 
-import type { IconName } from '@assets/icons';
+import type { IconName } from '@assets/generated/icons.types';
 
 import type { ButtonSize, ButtonVariant } from '../Button';
 

@@ -1,18 +1,15 @@
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
-import { useRtl } from '@shared/hooks';
-
 import { IconButton } from '../IconButton';
 import { Text } from '../Text';
 
 import { styles } from './styles';
 import type { HeaderProps } from './types';
 
-/** Screen header: optional back button (RTL-aware chevron), a title and trailing actions. */
+/** Screen header: optional back button (its chevron mirrors in RTL), a title and trailing actions. */
 export function Header({ title, onBack, backLabel, right, testID }: HeaderProps) {
   const { t } = useTranslation();
-  const isRTL = useRtl();
 
   return (
     <View testID={testID} style={styles.root}>
@@ -20,7 +17,7 @@ export function Header({ title, onBack, backLabel, right, testID }: HeaderProps)
         {onBack !== undefined && (
           <IconButton
             testID={testID ? `${testID}.back` : undefined}
-            icon={isRTL ? 'chevron-right' : 'chevron-left'}
+            icon="chevron-left"
             accessibilityLabel={backLabel ?? t('header.back')}
             onPress={onBack}
           />

@@ -12,6 +12,8 @@ export default [
       'e2e',
       'scripts/ai-log',
       'assets-catalog',
+      // svgr output: default exports and JSX attribute strings, which our rules forbid.
+      'src/assets/generated',
     ],
   },
   ...createConfig({ root: import.meta.dirname, structure: true }),

@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native-unistyles';
 
 import { MIN_TOUCH_TARGET } from '@shared/constants/touch';
 
-export const styles = StyleSheet.create((theme, rt) => ({
+export const styles = StyleSheet.create((theme) => ({
   root: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -23,8 +23,5 @@ export const styles = StyleSheet.create((theme, rt) => ({
   body: {
     flex: 1,
     gap: theme.spacing.xxs,
-  },
-  chevron: {
-    transform: [{ scaleX: rt.rtl ? -1 : 1 }],
   },
 }));

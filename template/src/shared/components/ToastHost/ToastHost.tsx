@@ -4,7 +4,7 @@ import Toast from 'react-native-toast-message';
 import type { ToastConfig, ToastConfigParams } from 'react-native-toast-message';
 import { useUnistyles } from 'react-native-unistyles';
 
-import type { IconName } from '@assets/icons';
+import type { IconName } from '@assets/generated/icons.types';
 import type { ToastType } from '@services/toast/toast';
 import type { ColorTokens } from '@theme/tokens';
 
