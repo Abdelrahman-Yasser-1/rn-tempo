@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 
-import { icons } from '@assets/icons';
+import { ICONS } from '@assets/generated/icons.registry';
 
 import { Box } from '../Box';
 import { Text } from '../Text';
@@ -8,15 +8,15 @@ import { Text } from '../Text';
 import { Icon } from './Icon';
 import type { IconName } from './types';
 
-const ICON_NAMES = Object.keys(icons) as IconName[];
+const ICON_NAMES = Object.keys(ICONS) as IconName[];
 
 const meta = {
   title: 'Primitives/Icon',
   component: Icon,
-  args: { name: 'home', size: 24, color: 'textPrimary' },
+  args: { name: 'home', size: 'lg', color: 'textPrimary' },
   argTypes: {
     name: { control: 'select', options: ICON_NAMES },
-    size: { control: 'number' },
+    size: { control: 'select', options: ['xs', 'sm', 'md', 'lg', 'xl'] },
     color: {
       control: 'select',
       options: ['textPrimary', 'textSecondary', 'primary', 'error', 'success', 'warning'],

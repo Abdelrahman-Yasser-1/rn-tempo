@@ -1,32 +1,26 @@
-import { useUnistyles } from 'react-native-unistyles';
-
-import { icons } from '@assets/icons';
+import { ICONS } from '@assets/generated/icons.registry';
 
 import type { IconProps } from './types';
+import { useIcon } from './useIcon';
 
-const DEFAULT_SIZE = 24;
+const MIRRORED = { transform: [{ scaleX: -1 }] };
 
 /**
- * Registry SVG icon tinted by a color token. Decorative (hidden from screen readers) unless an
- * `accessibilityLabel` is given.
+ * Registry SVG icon tinted by a color token. Directional icons mirror in right-to-left layouts.
+ * Decorative (hidden from screen readers) unless an `accessibilityLabel` is given.
  */
-export function Icon({
-  name,
-  size = DEFAULT_SIZE,
-  color = 'textPrimary',
-  accessibilityLabel,
-  testID,
-}: IconProps) {
-  const { theme } = useUnistyles();
-  const Svg = icons[name];
+export function Icon({ name, size, color, accessibilityLabel, testID }: IconProps) {
+  const Svg = ICONS[name];
+  const { pixels, tint, isMirrored } = useIcon({ name, size, color });
   const isLabelled = accessibilityLabel !== undefined;
 
   return (
     <Svg
       testID={testID}
-      width={size}
-      height={size}
-      color={theme.colors[color]}
+      width={pixels}
+      height={pixels}
+      color={tint}
+      style={isMirrored ? MIRRORED : undefined}
       accessible={isLabelled}
       accessibilityRole={isLabelled ? 'image' : undefined}
       accessibilityLabel={accessibilityLabel}

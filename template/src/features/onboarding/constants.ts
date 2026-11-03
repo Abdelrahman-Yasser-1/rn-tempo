@@ -1,4 +1,4 @@
-import type { IconName } from '@assets/icons';
+import type { IconName } from '@assets/generated/icons.types';
 
 export type Slide = Readonly<{
   id: string;
