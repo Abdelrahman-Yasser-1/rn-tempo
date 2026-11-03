@@ -7,7 +7,14 @@ import { after, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { crc32 } from 'node:zlib';
 
-import { checkAssets, findAssetProblems, generateAssets, svgColors } from '../assets.mjs';
+import {
+  assetsCacheDir,
+  checkAssets,
+  findAssetProblems,
+  generateAssets,
+  isMirroredInRtl,
+  svgColors,
+} from '../assets.mjs';
 
 const ROOT_DIR = fileURLToPath(new URL('../..', import.meta.url));
 const TEMP_DIRS = [];
@@ -66,7 +73,36 @@ describe('asset sources', () => {
     const assetsDir = join(ROOT_DIR, 'src/assets');
 
     assert.deepEqual(findAssetProblems(assetsDir), []);
-    assert.deepEqual(checkAssets(assetsDir, join(assetsDir, 'generated')), []);
+    assert.deepEqual(
+      checkAssets(assetsDir, join(assetsDir, 'generated'), {
+        cacheDir: assetsCacheDir(ROOT_DIR),
+      }),
+      [],
+    );
+  });
+
+  it('allows the license and the readme next to the icons, and nothing else', () => {
+    assert.deepEqual(
+      findAssetProblems(
+        assetsDirWith({ 'icons/LICENSE': 'MIT\n', 'icons/README.md': '# Icons\n' }),
+      ),
+      [],
+    );
+    assert.deepEqual(findAssetProblems(assetsDirWith({ 'icons/NOTES.md': 'x' })), [
+      'icons/NOTES.md: icons/ holds flat .svg files only',
+    ]);
+  });
+
+  it('rejects two icon names that make the same component name', () => {
+    assert.deepEqual(
+      findAssetProblems(
+        assetsDirWith({
+          'icons/dice1.svg': svg('<path fill="#000" d="M1 1h3v3H1z"/>'),
+          'icons/dice-1.svg': svg('<path fill="#000" d="M2 2h3v3H2z"/>'),
+        }),
+      ),
+      ['dice-1, dice1: these icon names make the same component name'],
+    );
   });
 
   it('accepts valid sources', () => {
@@ -191,6 +227,7 @@ describe('generated registries', () => {
 
     assert.deepEqual(generateAssets(assetsDir, generatedDir), {
       icons: 2,
+      keptIcons: 2,
       images: 1,
     });
     assert.match(read('icons.registry.ts'), /'cart-full': CartFull,/);
@@ -221,12 +258,90 @@ describe('generated registries', () => {
     ]);
   });
 
+  it('types the registry, and lists the directional icons for right-to-left layouts', () => {
+    const assetsDir = assetsDirWith({
+      'icons/arrow-left.svg': svg('<path stroke="#000" d="M1 1h3v3H1z"/>'),
+      'icons/arrow-up.svg': svg('<path stroke="#000" d="M2 2h3v3H2z"/>'),
+    });
+    const generatedDir = join(assetsDir, 'generated');
+    generateAssets(assetsDir, generatedDir);
+    const read = (file) => readFileSync(join(generatedDir, file), 'utf8');
+
+    assert.match(
+      read('icons.registry.ts'),
+      /export const ICONS: Record<IconName, IconComponent> = \{/,
+    );
+    assert.match(read('icons.types.ts'), /export type IconComponent = ComponentType<SvgProps>;/);
+    assert.match(
+      read('icons.rtl.ts'),
+      /ICON_MIRRORED_IN_RTL: readonly IconName\[\] = \[\n {2}'arrow-left',\n\];/,
+    );
+  });
+
+  it('prunes to the named icons and keeps IconName whole', () => {
+    const assetsDir = assetsDirWith();
+    const generatedDir = join(assetsDir, 'generated');
+    const read = (file) => readFileSync(join(generatedDir, file), 'utf8');
+
+    assert.deepEqual(
+      generateAssets(assetsDir, generatedDir, { onlyIcons: new Set(['cart-full']) }),
+      {
+        icons: 2,
+        keptIcons: 1,
+        images: 1,
+      },
+    );
+    assert.match(
+      read('icons.registry.ts'),
+      /Partial<Record<IconName, IconComponent>> = \{\n {2}'cart-full': CartFull,\n\};/,
+    );
+    assert.doesNotMatch(read('icons.registry.ts'), /ChevronEnd/);
+    assert.match(read('icons.types.ts'), /\| 'chevron-end'/);
+    assert.throws(() => readFileSync(join(generatedDir, 'icons/ChevronEnd.tsx')), /ENOENT/);
+    assert.ok(checkAssets(assetsDir, generatedDir).length > 0);
+
+    generateAssets(assetsDir, generatedDir);
+    assert.deepEqual(checkAssets(assetsDir, generatedDir), []);
+  });
+
+  it('matches directional names only', () => {
+    const mirrored = [
+      'chevron-left',
+      'arrow-right',
+      'arrow-narrow-left',
+      'arrow-left-filled',
+      'logout',
+      'send-filled',
+      'arrow-forward',
+      'corner-left-circle',
+    ];
+    const kept = [
+      'arrow-up',
+      'arrow-down-left',
+      'arrow-up-right',
+      'chevron-down',
+      'home',
+      'align-left',
+      'arrow-left-up',
+      'sender',
+    ];
+    assert.deepEqual(
+      mirrored.filter((name) => !isMirroredInRtl(name)),
+      [],
+    );
+    assert.deepEqual(
+      kept.filter((name) => isMirroredInRtl(name)),
+      [],
+    );
+  });
+
   it('writes nothing when there are no assets, and refuses invalid sources', () => {
     const emptyDir = mkdtempSync(join(tmpdir(), 'assets-empty-'));
     TEMP_DIRS.push(emptyDir);
 
     assert.deepEqual(generateAssets(emptyDir, join(emptyDir, 'generated')), {
       icons: 0,
+      keptIcons: 0,
       images: 0,
     });
     assert.deepEqual(checkAssets(emptyDir, join(emptyDir, 'generated')), []);

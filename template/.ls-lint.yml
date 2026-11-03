@@ -13,4 +13,4 @@ ls:
     .test.tsx: camelCase | PascalCase
   e2e:
     .yaml: kebab-case
-ignore: [node_modules, android, ios, vendor, coverage, .git, .rnstorybook, assets-catalog]
+ignore: [node_modules, android, ios, vendor, coverage, .git, .rnstorybook, src/assets/generated]

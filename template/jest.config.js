@@ -44,7 +44,7 @@ const TRANSFORMED_PACKAGES = [
 module.exports = {
   preset: '@react-native/jest-preset',
   // scripts/ uses node:test (`yarn test:ai-log`); e2e/ is Maestro.
-  testPathIgnorePatterns: ['/node_modules/', '/scripts/', '/e2e/', '/assets-catalog/'],
+  testPathIgnorePatterns: ['/node_modules/', '/scripts/', '/e2e/'],
   // Polyfills must exist before any module is evaluated.
   setupFiles: ['react-native-unistyles/mocks', '<rootDir>/src/theme/unistyles.ts'],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
@@ -73,6 +73,8 @@ module.exports = {
     '!src/**/*.stories.tsx',
     '!src/**/index.ts',
     '!src/test-utils/**',
+    // svgr output: one component per icon and the registries, built by `yarn assets`.
+    '!src/assets/generated/**',
   ],
   coverageThreshold: {
     global: { lines: 70, branches: 60, functions: 70, statements: 70 },
