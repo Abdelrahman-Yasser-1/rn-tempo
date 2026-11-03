@@ -24,24 +24,25 @@ Condensed from [AGENTS.md](../AGENTS.md); read it for the full guide. Detailed r
 
 Run everything from the project root.
 
-| Command                                                 | Purpose                                                              |
-| ------------------------------------------------------- | -------------------------------------------------------------------- |
-| `yarn install && yarn pods`                             | Install JS deps and iOS pods                                         |
-| `yarn start`                                            | Metro                                                                |
-| `yarn ios:dev` / `yarn android:dev`                     | Run the dev app (also `:staging`, `:prod`)                           |
-| `yarn verify`                                           | Typecheck, lint, format check, ls-lint, i18n check, tests            |
-| `yarn verify:changed`                                   | Same checks scoped to changed files (run before finishing)           |
-| `yarn lint:fix` / `yarn format`                         | Auto-fix lint and formatting                                         |
-| `yarn test` / `yarn jest <path>`                        | Jest                                                                 |
-| `yarn typecheck`                                        | `tsc --noEmit`                                                       |
-| `yarn i18n:check`                                       | Locale keys identical in `en` and `ar`, none missing                 |
-| `yarn lint:deadcode`                                    | knip                                                                 |
-| `yarn spec:check`                                       | Every AC of implemented specs is covered by a test                   |
-| `yarn tempo g <kind> ...`                               | Generators (when the CLI is installed; see `ai/rules/generators.md`) |
-| `yarn icons:search <term>` / `yarn icons:add <name>`    | Find and add an icon from the Tabler catalogue (see Add an icon)     |
-| `yarn assets` / `yarn assets:check`                     | Validate `src/assets`, generate (or verify) `src/assets/generated`   |
-| `yarn ai:sync`                                          | Regenerate tool files from `ai/` (after editing `ai/`)               |
-| `yarn ai:start` / `ai:prompt` / `ai:stop` / `ai:report` | AI session logging                                                   |
+| Command                                                    | Purpose                                                              |
+| ---------------------------------------------------------- | -------------------------------------------------------------------- |
+| `yarn install && yarn pods`                                | Install JS deps and iOS pods                                         |
+| `yarn start`                                               | Metro                                                                |
+| `yarn ios:dev` / `yarn android:dev`                        | Run the dev app (also `:staging`, `:prod`)                           |
+| `yarn verify`                                              | Typecheck, lint, format check, ls-lint, i18n check, tests            |
+| `yarn verify:changed`                                      | Same checks scoped to changed files (run before finishing)           |
+| `yarn lint:fix` / `yarn format`                            | Auto-fix lint and formatting                                         |
+| `yarn test` / `yarn jest <path>`                           | Jest                                                                 |
+| `yarn typecheck`                                           | `tsc --noEmit`                                                       |
+| `yarn i18n:check`                                          | Locale keys identical in `en` and `ar`, none missing                 |
+| `yarn lint:deadcode`                                       | knip                                                                 |
+| `yarn spec:check`                                          | Every AC of implemented specs is covered by a test                   |
+| `yarn tempo g <kind> ...`                                  | Generators (when the CLI is installed; see `ai/rules/generators.md`) |
+| `yarn icons:search <term>` / `yarn icons:add <name\|file>` | Find an icon; add your own SVG or a Tabler icon (see Add an icon)    |
+| `yarn icons:prune` (`--restore`)                           | Release builds only: keep just the icons the code uses               |
+| `yarn assets` / `yarn assets:check`                        | Validate `src/assets`, generate (or verify) `src/assets/generated`   |
+| `yarn ai:sync`                                             | Regenerate tool files from `ai/` (after editing `ai/`)               |
+| `yarn ai:start` / `ai:prompt` / `ai:stop` / `ai:report`    | AI session logging                                                   |
 
 ## Golden rules
 
@@ -69,7 +70,7 @@ Also: check library APIs with context7 for the **pinned** version, never from me
 - [a11y](../ai/rules/a11y.md): Accessibility requirements for components and screens, backed by react-native-a11y lint rules.
 - [api](../ai/rules/api.md): Typed, Zod-validated requests through @services/http, query key factories, mutations that invalidate.
 - [architecture](../ai/rules/architecture.md): Folder skeleton, path aliases, barrels and the import-boundary matrix enforced by ESLint.
-- [assets](../ai/rules/assets.md): Icons and images. Sources in src/assets, generated components, the Tabler catalogue, RTL mirroring.
+- [assets](../ai/rules/assets.md): Icons and images. Sources in src/assets, generated components, every Tabler icon in src, adding icons, pruning at release, RTL mirroring.
 - [commits](../ai/rules/commits.md): Conventional Commits with required scope, commit size, and the AI session trailers.
 - [generators](../ai/rules/generators.md): Create files with yarn tempo g generators, not by hand, so structure and tests stay valid.
 - [i18n](../ai/rules/i18n.md): Every UI string goes through i18next in en and ar; keys are nested camelCase per namespace.
