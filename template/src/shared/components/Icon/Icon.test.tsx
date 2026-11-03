@@ -1,12 +1,13 @@
 import { screen } from '@testing-library/react-native';
 import { I18nManager } from 'react-native';
 
-import { ICONS } from '@assets/generated/icons.registry';
+import { ICON_MIRRORED_IN_RTL } from '@assets/generated/icons.rtl';
+import type { IconName } from '@assets/generated/icons.types';
+import { logger } from '@services/logger/logger';
 import { ICON_SIZES } from '@shared/constants/icon';
 import { renderWithProviders } from '@test-utils/renderWithProviders';
 
 import { Icon } from './Icon';
-import { ICON_MIRRORED_IN_RTL } from './useIcon';
 
 // Decorative icons have no role; the size and mirroring checks read the svg's testID.
 /* eslint-disable no-restricted-syntax -- decorative element: testID is the only handle */
@@ -59,10 +60,26 @@ describe('Icon', () => {
     expect(read('symmetric')).not.toHaveStyle({ transform: [{ scaleX: -1 }] });
   });
 
-  it('lists every directional icon of the registry as mirrored', () => {
-    const directional = Object.keys(ICONS).filter((name) =>
-      /^(?:arrow|chevron|corner|arrows)-.*(?:left|right|back|forward)|^log(?:in|out)/.test(name),
+  it('mirrors the directional icons of the whole set, and not vertical or symmetric ones', () => {
+    expect(ICON_MIRRORED_IN_RTL).toEqual(
+      expect.arrayContaining([
+        'chevron-left',
+        'chevron-right',
+        'logout',
+        'arrow-left',
+        'arrow-right',
+      ]),
     );
-    expect(ICON_MIRRORED_IN_RTL).toEqual(expect.arrayContaining(directional));
+    expect(ICON_MIRRORED_IN_RTL).not.toContain('arrow-up');
+    expect(ICON_MIRRORED_IN_RTL).not.toContain('arrow-down-left');
+    expect(ICON_MIRRORED_IN_RTL).not.toContain('home');
+  });
+
+  it('renders nothing, and warns in development, for a name missing from a pruned registry', async () => {
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(jest.fn());
+    const missing: IconName = 'not-an-icon' as IconName;
+    await renderWithProviders(<Icon name={missing} testID="icon" />);
+    expect(screen.queryByTestId('icon', { includeHiddenElements: true })).not.toBeOnTheScreen();
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('not-an-icon'));
   });
 });

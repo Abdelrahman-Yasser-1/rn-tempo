@@ -1,24 +1,10 @@
-# Icon catalogue
+# Icons
 
-A browsable set of SVG icons. **Nothing here is bundled into the app.** Nothing under `src/` may import from this folder (an ESLint rule enforces it). An icon is only part of the app once it is copied into `src/assets/icons/`:
+The [Tabler Icons](https://tabler.io/icons) set (MIT, see `LICENSE`), version 3.50.0, 24x24, drawn in `currentColor`. Outline icons keep their name (`arrow-left.svg`); filled ones end in `-filled` (`arrow-left-filled.svg`). Every file here becomes an `<Icon name="..." />` after `yarn assets`.
 
-```sh
-yarn icons:search arrow      # list matching catalogue names
-yarn icons:add arrow-left    # copy an outline icon and regenerate
-yarn icons:add heart --filled
-yarn icons:add x --as close  # keep your own name
-```
+Add your own: save a single-color SVG here and run `yarn assets`, or run `yarn icons:add <path-or-tabler-name>`. See `../README.md`.
 
-## Source
-
-[Tabler Icons](https://tabler.io/icons) (MIT, see `LICENSE`), taken from the GoMoney icon set. All icons are 24x24 and use `currentColor`. The metadata comments and the invisible bounding-box path were stripped.
-
-| Folder     | Icons |
-| ---------- | ----- |
-| `outline/` | 812   |
-| `filled/`  | 1053  |
-
-The GoMoney outline set is incomplete (it ends at `brand-kbin`, and the 0-byte `brand-kbin.svg` is skipped). The 19 outline icons the template itself uses (`check`, `chevron-left`, `home`, `world`, ...) were added from the `@tabler/icons` 3.50.0 package in the same cleaned format. Add more the same way when you need them.
+The 20 icons the template uses keep the names they had under Lucide (`close`, `globe`, `info`, ...), so Tabler's `x`, `world` and `info-circle` are not duplicated. The set comes from the GoMoney icon collection with its metadata comments and invisible bounding-box path removed; its outline half was incomplete, so outline icons beyond `brand-kbin` are missing and can be fetched with `yarn icons:add <name>`.
 
 ## Trademarks
 
