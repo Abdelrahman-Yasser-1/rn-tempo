@@ -52,6 +52,8 @@ const sharedComponent = folder('{PascalCase}', [
   file('{FolderName}.tsx', ['{NodeName}.test.tsx', '{NodeName}.stories.tsx', 'index.ts']),
   file('{FolderName}.test.tsx'),
   file('{FolderName}.stories.tsx'),
+  // Extra stories for one component, e.g. IconGallery.stories.tsx (title `Icon/Gallery`).
+  file('{FolderName}{PascalCase}.stories.tsx'),
   file('use{FolderName}.ts'),
   file('use{FolderName}.test.ts'),
   file('styles.ts'),
@@ -91,6 +93,8 @@ export const FOLDER_STRUCTURE = {
     folder('services', [folder(KEBAB, [...serviceFiles, folder(KEBAB, serviceFiles)])]),
     folder('theme', camelFiles),
     folder('assets', [
+      // Icons that `yarn icons:prune` keeps although no string literal names them.
+      file('icons.keep.ts'),
       folder('(fonts|images|icons|animations|generated)', [file('*'), { name: '*', ruleId: 'free_tree' }]),
     ]),
     folder('locales', [folder('[a-z][a-z](-[A-Z][A-Z])?', [file(`${KEBAB}.json`)])]),

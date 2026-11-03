@@ -37,16 +37,12 @@ const RESTRICTIONS = {
   },
 };
 
-// Pattern restrictions, by key. `svgFiles` is skipped by `allowed`; `catalogue` never is.
+// Pattern restrictions, by key; `allowed` skips them like the path restrictions.
 const PATTERN_RESTRICTIONS = {
   svgFiles: {
     group: ['*.svg', '**/*.svg'],
-    message: 'Use <Icon name=... /> from @shared/components. Add icons with `yarn icons:add`.',
-  },
-  catalogue: {
-    group: ['assets-catalog', 'assets-catalog/**', '**/assets-catalog', '**/assets-catalog/**'],
     message:
-      'The icon catalogue is never bundled. Copy an icon into src/assets/icons with `yarn icons:add`.',
+      'Use <Icon name=... /> from @shared/components. Add icons with `yarn icons:add` or by dropping the file into src/assets/icons.',
   },
 };
 
