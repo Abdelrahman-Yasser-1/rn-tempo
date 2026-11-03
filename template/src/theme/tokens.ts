@@ -1,4 +1,6 @@
-// Design token contract (C6). Shapes are fixed; color values live in themes.ts (WS3 task 3.2).
+// Design token contract (C6). Shapes are fixed; color values are built from `palette`.
+
+import { palette } from './palette';
 
 export type ColorTokens = {
   primary: string;
@@ -83,6 +85,8 @@ export type ZIndexKey = 'base' | 'dropdown' | 'sticky' | 'modal' | 'toast';
 export type AppTheme = {
   name: 'light' | 'dark';
   colors: ColorTokens;
+  /** Raw primitives for component variants only (amendment 49); use `colors` first. */
+  palette: typeof palette;
   spacing: typeof spacing;
   radii: typeof radii;
   typography: Record<TypographyVariant, TypographyStyle>;
@@ -95,75 +99,75 @@ export type AppTheme = {
 export const breakpoints = { xs: 0, sm: 360, md: 600, lg: 900, xl: 1200 } as const;
 
 // ---------------------------------------------------------------------------
-// Values (WS3 task 3.2). Shapes above are the C6 contract; do not change them.
-// Every `on*` token is the foreground for its paired container and is verified >= 4.5:1
-// by tokens.test.ts. Palette anchors come from the plan; the rest are derived by analogy.
+// Values (WS9b PR B). Shapes above are the C6 contract; do not change them.
+// Every value is a `palette` reference (no raw hex). Every `on*` token is the foreground for its
+// paired container and is verified >= 4.5:1 by tokens.test.ts.
 // ---------------------------------------------------------------------------
 
 export const lightColors: ColorTokens = {
-  primary: '#2563EB',
-  onPrimary: '#FFFFFF',
-  primaryContainer: '#DBEAFE', // blue-100: tinted fill for selected/primary-tonal surfaces
-  onPrimaryContainer: '#1E3A8A', // blue-900
-  secondary: '#0F766E', // teal-700: accent distinct from primary, white text passes AA
-  onSecondary: '#FFFFFF',
-  background: '#FFFFFF',
-  onBackground: '#0F172A',
-  surface: '#F8FAFC',
-  onSurface: '#0F172A',
-  surfaceVariant: '#F1F5F9', // slate-100: inputs, chips, grouped rows
-  onSurfaceVariant: '#475569',
-  textPrimary: '#0F172A',
-  textSecondary: '#475569',
-  textDisabled: '#94A3B8', // exempt from AA (disabled state)
-  textInverse: '#FFFFFF', // text on primary/dark fills
-  border: '#E2E8F0',
-  divider: '#E2E8F0',
-  focus: '#1D4ED8', // blue-700: keyboard/a11y focus ring
-  success: '#16A34A',
-  onSuccess: '#052E16', // white on #16A34A is only 3.3:1, so dark text is used
-  warning: '#D97706',
-  onWarning: '#1C1917', // white on #D97706 is only 3.2:1
-  error: '#DC2626',
-  onError: '#FFFFFF',
-  info: '#0284C7',
-  onInfo: '#020617', // white on #0284C7 is only 4.1:1, and #082F49 only 3.4:1
-  overlay: 'rgba(15, 23, 42, 0.5)', // modal scrim
-  skeletonBase: '#E2E8F0',
-  skeletonHighlight: '#F1F5F9',
+  primary: palette.sa[600],
+  onPrimary: palette.white,
+  primaryContainer: palette.sa[100],
+  onPrimaryContainer: palette.sa[900],
+  secondary: palette.lavender[600],
+  onSecondary: palette.white,
+  background: palette.white,
+  onBackground: palette.gray[1000],
+  surface: palette.gray[50],
+  onSurface: palette.gray[1000],
+  surfaceVariant: palette.gray[100],
+  onSurfaceVariant: palette.gray[600],
+  textPrimary: palette.gray[1000],
+  textSecondary: palette.gray[700],
+  textDisabled: palette.gray[400], // exempt from AA (disabled state)
+  textInverse: palette.white, // text on primary/dark fills
+  border: palette.gray[300],
+  divider: palette.gray[200],
+  focus: palette.sa[700], // keyboard/a11y focus ring
+  success: palette.success[700], // AA: white on success600 is only 3.9:1, so one step darker
+  onSuccess: palette.white,
+  warning: palette.warning[600],
+  onWarning: palette.gray[1000],
+  error: palette.error[600],
+  onError: palette.white,
+  info: palette.info[600], // white passes AA at 4.57:1
+  onInfo: palette.white,
+  overlay: 'rgba(13, 18, 28, 0.5)', // modal scrim
+  skeletonBase: palette.gray[200],
+  skeletonHighlight: palette.gray[100],
 };
 
 export const darkColors: ColorTokens = {
-  primary: '#60A5FA',
-  onPrimary: '#0B1220',
-  primaryContainer: '#1E3A8A',
-  onPrimaryContainer: '#DBEAFE',
-  secondary: '#5EEAD4', // teal-300
-  onSecondary: '#042F2E',
-  background: '#0B1220',
-  onBackground: '#F1F5F9',
-  surface: '#111827',
-  onSurface: '#F1F5F9',
-  surfaceVariant: '#1F2937',
-  onSurfaceVariant: '#CBD5E1',
-  textPrimary: '#F1F5F9',
-  textSecondary: '#94A3B8',
-  textDisabled: '#64748B',
-  textInverse: '#0F172A',
-  border: '#1F2937',
-  divider: '#273449', // one step lighter than border so rows stay separable on surface
-  focus: '#93C5FD',
-  success: '#4ADE80',
-  onSuccess: '#052E16',
-  warning: '#FBBF24',
-  onWarning: '#1C1917',
-  error: '#F87171',
-  onError: '#450A0A',
-  info: '#38BDF8',
-  onInfo: '#082F49',
+  primary: palette.sa[400],
+  onPrimary: palette.sa[950],
+  primaryContainer: palette.sa[800],
+  onPrimaryContainer: palette.sa[100],
+  secondary: palette.lavender[400],
+  onSecondary: palette.gray[950],
+  background: palette.gray[950],
+  onBackground: palette.gray[25],
+  surface: palette.gray[900],
+  onSurface: palette.gray[25],
+  surfaceVariant: palette.gray[800],
+  onSurfaceVariant: palette.gray[300],
+  textPrimary: palette.gray[25],
+  textSecondary: palette.gray[400],
+  textDisabled: palette.gray[600],
+  textInverse: palette.gray[1000],
+  border: palette.gray[700],
+  divider: palette.gray[800],
+  focus: palette.sa[300],
+  success: palette.success[400],
+  onSuccess: palette.gray[950],
+  warning: palette.warning[400],
+  onWarning: palette.gray[950],
+  error: palette.error[400],
+  onError: palette.gray[950],
+  info: palette.info[400],
+  onInfo: palette.gray[950],
   overlay: 'rgba(0, 0, 0, 0.6)',
-  skeletonBase: '#1F2937',
-  skeletonHighlight: '#374151',
+  skeletonBase: palette.gray[800],
+  skeletonHighlight: palette.gray[700],
 };
 
 /** Raw type scale (design px). `fontSize`/`lineHeight` are run through `fontPx` in themes.ts. */

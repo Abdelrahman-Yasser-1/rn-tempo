@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 
+import { palette } from './palette';
 import { fontPx } from './scaling';
 import {
   darkColors,
@@ -41,6 +42,7 @@ const typography = Object.fromEntries(
 const createTheme = (name: AppTheme['name'], colors: ColorTokens): AppTheme => ({
   name,
   colors,
+  palette,
   spacing,
   radii,
   typography,
