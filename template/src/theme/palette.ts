@@ -1,4 +1,4 @@
-// Saudi (DGA/MOS) palette primitives. Components never read these directly except through
+// Saudi (DGA) palette primitives. Components never read these directly except through
 // `theme.palette` for variant styling; everything else uses the semantic tokens in tokens.ts.
 // Gold 50-400 and 800-900 and the 300/400/800 status shades are standard Untitled-UI-style fills
 // because the MOS scale was partial. The known MOS bugs are fixed: `warning500` is a real amber.
