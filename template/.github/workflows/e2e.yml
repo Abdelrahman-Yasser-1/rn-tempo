@@ -56,6 +56,10 @@ jobs:
         if: steps.flows.outputs.found == 'true'
         run: |
           if grep -q '^API_MOCKING=' .env.dev; then sed -i 's/^API_MOCKING=.*/API_MOCKING=true/' .env.dev; else echo 'API_MOCKING=true' >> .env.dev; fi
+      # A release build bundles only the icons the code names; the runner is ephemeral.
+      - name: Prune unused icons
+        if: steps.flows.outputs.found == 'true'
+        run: yarn icons:prune
       - name: Build devRelease APK
         if: steps.flows.outputs.found == 'true'
         working-directory: android
