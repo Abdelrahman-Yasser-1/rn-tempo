@@ -50,7 +50,6 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   moduleNameMapper: {
     ...reactNativePreset.moduleNameMapper,
-    '\\.svg$': '<rootDir>/__mocks__/svgMock.tsx',
     ...aliasMapper,
   },
   transform: {

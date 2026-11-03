@@ -5710,7 +5710,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@svgr/core@npm:8.1.0, @svgr/core@npm:^8.1.0":
+"@svgr/core@npm:8.1.0":
   version: 8.1.0
   resolution: "@svgr/core@npm:8.1.0"
   dependencies:
@@ -5733,7 +5733,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@svgr/plugin-jsx@npm:8.1.0, @svgr/plugin-jsx@npm:^8.1.0":
+"@svgr/plugin-jsx@npm:8.1.0":
   version: 8.1.0
   resolution: "@svgr/plugin-jsx@npm:8.1.0"
   dependencies:
@@ -5759,7 +5759,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@svgr/plugin-svgo@npm:8.1.0, @svgr/plugin-svgo@npm:^8.1.0":
+"@svgr/plugin-svgo@npm:8.1.0":
   version: 8.1.0
   resolution: "@svgr/plugin-svgo@npm:8.1.0"
   dependencies:
@@ -12339,13 +12339,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"path-dirname@npm:^1.0.2":
-  version: 1.0.2
-  resolution: "path-dirname@npm:1.0.2"
-  checksum: 10c0/71e59be2bada7c91f62b976245fd421b7cb01fde3207fe53a82d8880621ad04fd8b434e628c9cf4e796259fc168a107d77cd56837725267c5b2c58cefe2c4e1b
-  languageName: node
-  linkType: hard
-
 "path-exists@npm:^3.0.0":
   version: 3.0.0
   resolution: "path-exists@npm:3.0.0"
@@ -13021,21 +13014,6 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: 10c0/48677262fe2f2cea6c071e348d05fdceb8ef21c26ab395efa5b4e267d55b2ec9145c1c581fbfc6739d877d7c2808e1284cb91cfb2a7b3c7375253d1a8f0e80fe
-  languageName: node
-  linkType: hard
-
-"react-native-svg-transformer@npm:1.5.3":
-  version: 1.5.3
-  resolution: "react-native-svg-transformer@npm:1.5.3"
-  dependencies:
-    "@svgr/core": "npm:^8.1.0"
-    "@svgr/plugin-jsx": "npm:^8.1.0"
-    "@svgr/plugin-svgo": "npm:^8.1.0"
-    path-dirname: "npm:^1.0.2"
-  peerDependencies:
-    react-native: ">=0.59.0"
-    react-native-svg: ">=12.0.0"
-  checksum: 10c0/0e2dd028c7e691a8db6f775c8142e07bd54f3f86473794a5512fbe8303d591f20eb35d7422ea7995347c8ea8776e32552be303499860699dc9325bd54ff1410f
   languageName: node
   linkType: hard
 
@@ -14374,7 +14352,6 @@ __metadata:
     react-native-screens: "npm:4.30.0"
     react-native-ssl-public-key-pinning: "npm:1.2.6"
     react-native-svg: "npm:15.16.0"
-    react-native-svg-transformer: "npm:1.5.3"
     react-native-toast-message: "npm:2.5.2"
     react-native-unistyles: "npm:3.6.0"
     react-native-worklets: "npm:0.13.0"
