@@ -112,6 +112,8 @@ import { fromISODate } from '@shared/utils/calendar';
 
 Hermes only implements the calendars its `Intl` build ships with, and that differs by platform and by React Native version. Don't assume `islamic-umalqura` works because it does in Node or in the Chrome you used to try it.
 
+Verified with the template on React Native 0.88 (debug builds, iOS 26 simulator and an Android 16 emulator, November 2026): both report `calendar: 'islamic-umalqura'`, and 4 November 2026 formats as `٢٤ جمادى الأولى ١٤٤٨ هـ` in `ar-SA`. Short English month names differ between platforms (`Jum. I` on Android, `Jmd.I` on iOS), so don't compare formatted strings across platforms. Re-check after every React Native upgrade.
+
 - Check `isHijriSupported` on a real iOS and a real Android device, in a release build, for every locale you ship.
 - If a platform reports a different `calendar` (typically `gregory`), the helper above would print Gregorian dates under a Hijri label. Gate the feature on `isHijriSupported` and fall back to the Gregorian calendar.
 - If you need Hijri everywhere, replace the `Intl` calls with a pinned converter package. Pin an exact version, check that it implements Umm al-Qura (not only the tabular civil calendar, which can be a day off), and keep it behind the same three functions:
