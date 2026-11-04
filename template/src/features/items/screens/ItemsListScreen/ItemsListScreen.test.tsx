@@ -81,6 +81,30 @@ describe('ItemsListScreen', () => {
     expect(requested).toContain(`/products?limit=${String(ITEMS_PAGE_SIZE)}&skip=0`);
   });
 
+  test('shows the loading placeholder until the first page arrives', async () => {
+    // Hold the first page until the placeholder is asserted; the mock server answers too fast to
+    // catch it otherwise. Resolving falls through to the default products handler.
+    const { promise: gate, resolve: release } = Promise.withResolvers<undefined>();
+    server.use(
+      http.get('*/products', async () => {
+        await gate;
+      }),
+    );
+    await renderItemsList();
+
+    /* eslint-disable no-restricted-syntax -- the shimmer is decorative and has no role */
+    expect(
+      screen.getByTestId('items-list.loading', { includeHiddenElements: true }),
+    ).toBeOnTheScreen();
+    /* eslint-enable no-restricted-syntax */
+    expect(screen.queryByText('Product 1')).not.toBeOnTheScreen();
+
+    release(undefined);
+    expect(await screen.findByText('Product 1')).toBeOnTheScreen();
+    // eslint-disable-next-line no-restricted-syntax -- the shimmer is decorative and has no role
+    expect(screen.queryByTestId('items-list.loading')).not.toBeOnTheScreen();
+  });
+
   test('pressing an item opens its details', async () => {
     const { user } = await renderItemsList();
     await screen.findByText('Product 1');
