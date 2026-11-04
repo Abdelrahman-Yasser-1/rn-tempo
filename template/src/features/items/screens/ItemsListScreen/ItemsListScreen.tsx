@@ -1,27 +1,27 @@
-import { FlashList } from '@shopify/flash-list';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import {
   EmptyState,
-  ErrorState,
   Header,
   Image,
   ListItem,
-  ListShimmer,
-  Loader,
+  PaginatedList,
   Screen,
   TextField,
 } from '@shared/components';
 import type { HeaderAction } from '@shared/components';
 import { formatCurrency } from '@shared/utils';
 
-import type { Item } from '../../types';
+import type { Item, ItemsPage } from '../../types';
 
 import { styles } from './styles';
 import { useItemsListScreen } from './useItemsListScreen';
 
 const THUMBNAIL_SIZE = 48;
+
+const getItems = (page: ItemsPage) => page.products;
+const getItemKey = (item: Item) => String(item.id);
 
 export function ItemsListScreen() {
   const { t } = useTranslation('items');
@@ -48,39 +48,6 @@ export function ItemsListScreen() {
       testID={`items-list.item-${String(index)}`}
     />
   );
-
-  let body;
-  if (vm.isPending) {
-    body = <ListShimmer testID="items-list.loading" />;
-  } else if (vm.isError) {
-    body = <ErrorState error={vm.error} onRetry={vm.onRefresh} testID="items-list.error" />;
-  } else {
-    body = (
-      <FlashList
-        data={vm.items}
-        renderItem={renderItem}
-        keyExtractor={(item) => String(item.id)}
-        onEndReached={vm.onLoadMore}
-        onEndReachedThreshold={0.5}
-        refreshing={vm.isRefreshing}
-        onRefresh={vm.onRefresh}
-        ListEmptyComponent={
-          <EmptyState
-            title={t('list.emptyTitle')}
-            message={t('list.emptyMessage')}
-            testID="items-list.empty"
-          />
-        }
-        ListFooterComponent={
-          vm.isFetchingNextPage ? (
-            <View style={styles.footer}>
-              <Loader testID="items-list.loading-more" />
-            </View>
-          ) : null
-        }
-      />
-    );
-  }
 
   const createAction: HeaderAction = {
     icon: 'plus',
@@ -109,7 +76,22 @@ export function ItemsListScreen() {
           testID="items-list.search-input"
         />
       </View>
-      <View style={styles.body}>{body}</View>
+      <View style={styles.body}>
+        <PaginatedList
+          query={vm.itemsQuery}
+          getItems={getItems}
+          renderItem={renderItem}
+          keyExtractor={getItemKey}
+          ListEmptyComponent={
+            <EmptyState
+              title={t('list.emptyTitle')}
+              message={t('list.emptyMessage')}
+              testID="items-list.empty"
+            />
+          }
+          testID="items-list"
+        />
+      </View>
     </Screen>
   );
 }

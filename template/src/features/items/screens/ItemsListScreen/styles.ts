@@ -8,7 +8,4 @@ export const styles = StyleSheet.create((theme) => ({
   body: {
     flex: 1,
   },
-  footer: {
-    paddingVertical: theme.spacing.lg,
-  },
 }));

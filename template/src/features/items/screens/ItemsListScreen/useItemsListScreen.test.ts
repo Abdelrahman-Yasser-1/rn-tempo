@@ -30,34 +30,40 @@ afterEach(() => {
   setFlagOverride('itemsCreateEnabled', undefined);
 });
 
+type HookResult = { current: ReturnType<typeof useItemsListScreen> };
+
+/** Every loaded item, across pages. */
+const loadedItems = (result: HookResult) =>
+  result.current.itemsQuery.data?.pages.flatMap((page) => page.products) ?? [];
+
 describe('useItemsListScreen', () => {
   test('starts pending, then exposes the first page of items', async () => {
     const { result } = await renderHookWithProviders(() => useItemsListScreen());
 
-    expect(result.current.isPending).toBe(true);
-    expect(result.current.items).toEqual([]);
+    expect(result.current.itemsQuery.isPending).toBe(true);
+    expect(loadedItems(result)).toEqual([]);
 
     await waitFor(() => {
-      expect(result.current.items).toHaveLength(ITEMS_PAGE_SIZE);
+      expect(loadedItems(result)).toHaveLength(ITEMS_PAGE_SIZE);
     });
-    expect(result.current.isPending).toBe(false);
-    expect(result.current.isError).toBe(false);
-    expect(result.current.isRefreshing).toBe(false);
+    expect(result.current.itemsQuery.isPending).toBe(false);
+    expect(result.current.itemsQuery.isError).toBe(false);
+    expect(result.current.itemsQuery.isRefetching).toBe(false);
   });
 
   test('loading more appends the next page', async () => {
     const { result } = await renderHookWithProviders(() => useItemsListScreen());
     await waitFor(() => {
-      expect(result.current.items).toHaveLength(ITEMS_PAGE_SIZE);
+      expect(loadedItems(result)).toHaveLength(ITEMS_PAGE_SIZE);
     });
 
     await act(() => {
-      result.current.onLoadMore();
+      void result.current.itemsQuery.fetchNextPage();
       return Promise.resolve();
     });
 
     await waitFor(() => {
-      expect(result.current.items).toHaveLength(ITEMS_PAGE_SIZE * 2);
+      expect(loadedItems(result)).toHaveLength(ITEMS_PAGE_SIZE * 2);
     });
   });
 
@@ -71,26 +77,26 @@ describe('useItemsListScreen', () => {
     const { result } = await renderHookWithProviders(() => useItemsListScreen());
 
     await waitFor(() => {
-      expect(result.current.isError).toBe(true);
+      expect(result.current.itemsQuery.isError).toBe(true);
     });
-    expect(result.current.error).toBeTruthy();
+    expect(result.current.itemsQuery.error).toBeTruthy();
 
     isFailing = false;
     await act(() => {
-      result.current.onRefresh();
+      void result.current.itemsQuery.refetch();
       return Promise.resolve();
     });
 
     await waitFor(() => {
-      expect(result.current.items).toHaveLength(ITEMS_PAGE_SIZE);
+      expect(loadedItems(result)).toHaveLength(ITEMS_PAGE_SIZE);
     });
-    expect(result.current.isError).toBe(false);
+    expect(result.current.itemsQuery.isError).toBe(false);
   });
 
   test('onSearchChange updates the search text and filters after the debounce', async () => {
     const { result } = await renderHookWithProviders(() => useItemsListScreen());
     await waitFor(() => {
-      expect(result.current.items).toHaveLength(ITEMS_PAGE_SIZE);
+      expect(loadedItems(result)).toHaveLength(ITEMS_PAGE_SIZE);
     });
 
     await act(() => {
@@ -101,7 +107,7 @@ describe('useItemsListScreen', () => {
     expect(result.current.search).toBe('zzz-no-match');
     await waitFor(
       () => {
-        expect(result.current.items).toEqual([]);
+        expect(loadedItems(result)).toEqual([]);
       },
       { timeout: SEARCH_DEBOUNCE_MS * 10 },
     );
