@@ -82,6 +82,15 @@
   "loader": {
     "label": "جارٍ التحميل"
   },
+  "mapPicker": {
+    "coordinates": "{{latitude}}، {{longitude}}",
+    "mapLabel": "الخريطة",
+    "openSettings": "فتح الإعدادات",
+    "permissionDenied": "اسمح بالوصول إلى الموقع من الإعدادات للانتقال إلى موقعك.",
+    "placeholder": "اختر موقعًا",
+    "title": "اختر موقعًا",
+    "useMyLocation": "استخدام موقعي"
+  },
   "modal": {
     "close": "إغلاق"
   },
