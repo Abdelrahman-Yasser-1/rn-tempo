@@ -13,6 +13,8 @@ import {
   isValidISODate,
   monthGrid,
   monthLabels,
+  parseYearMonth,
+  toYearMonth,
   numeralLocale,
   toISODate,
   weekdayLabels,
@@ -29,6 +31,15 @@ describe('toISODate / fromISODate', () => {
 
   it('pads small years and keeps them four digits', () => {
     expect(toISODate(fromISODate('0099-03-05'))).toBe('0099-03-05');
+  });
+});
+
+describe('parseYearMonth / toYearMonth', () => {
+  it('converts between YYYY-MM and a zero-based month', () => {
+    expect(parseYearMonth('2026-11')).toEqual({ year: 2026, month: 10 });
+    expect(parseYearMonth('2026-01-15')).toEqual({ year: 2026, month: 0 });
+    expect(toYearMonth(2026, 10)).toBe('2026-11');
+    expect(toYearMonth(99, 0)).toBe('0099-01');
   });
 });
 

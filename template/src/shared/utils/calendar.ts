@@ -50,6 +50,17 @@ export function toISODate(date: Date): string {
   return `${pad(date.getFullYear(), 4)}-${pad(date.getMonth() + 1, 2)}-${pad(date.getDate(), 2)}`;
 }
 
+/** Splits `YYYY-MM` (or any longer ISO date) into a year and a zero-based month. */
+export function parseYearMonth(value: string): { year: number; month: number } {
+  const [year, month] = value.split('-').map(Number) as [number, number];
+  return { year, month: month - 1 };
+}
+
+/** `YYYY-MM` for a year and a zero-based month. */
+export function toYearMonth(year: number, month: number): string {
+  return `${pad(year, 4)}-${pad(month + 1, 2)}`;
+}
+
 /** Local midnight of a `YYYY-MM-DD` string. */
 export function fromISODate(iso: string): Date {
   const [year, month, day] = iso.split('-').map(Number) as [number, number, number];
