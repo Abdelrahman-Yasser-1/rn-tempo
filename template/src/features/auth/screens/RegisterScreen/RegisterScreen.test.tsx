@@ -44,6 +44,19 @@ async function fillForm(
   await user.type(screen.getByLabelText('Confirm password'), values.confirmPassword);
 }
 describe('RegisterScreen', () => {
+  test('lays out the header, title and subtitle with the Maestro test IDs', async () => {
+    await renderRegister();
+
+    /* eslint-disable no-restricted-syntax -- Maestro flows address these IDs */
+    expect(screen.getByTestId('register-screen')).toBeOnTheScreen();
+    expect(screen.getByTestId('register.header')).toBeOnTheScreen();
+    expect(screen.getByTestId('register.submit-button')).toBeOnTheScreen();
+    /* eslint-enable no-restricted-syntax */
+    // The app bar and the page title are both headings named "Create account".
+    expect(screen.getAllByRole('header', { name: 'Create account' })).toHaveLength(2);
+    expect(screen.getByText('Enter your details to get started.')).toBeOnTheScreen();
+  });
+
   test('AC-7: a valid form goes to Otp with purpose register', async () => {
     const { user } = await renderRegister();
 

@@ -49,6 +49,21 @@ afterEach(() => {
 });
 
 describe('LoginScreen', () => {
+  test('lays out the title, subtitle and links with the Maestro test IDs, and no header', async () => {
+    await renderLogin();
+
+    /* eslint-disable no-restricted-syntax -- Maestro flows address these IDs */
+    expect(screen.getByTestId('login-screen')).toBeOnTheScreen();
+    expect(screen.getByTestId('login.forgot-password-link')).toBeOnTheScreen();
+    expect(screen.getByTestId('login.register-link')).toBeOnTheScreen();
+    expect(screen.getByTestId('login.submit-button')).toBeOnTheScreen();
+    expect(screen.queryByTestId('login.header')).not.toBeOnTheScreen();
+    /* eslint-enable no-restricted-syntax */
+    expect(screen.getByRole('header', { name: 'Welcome back' })).toBeOnTheScreen();
+    expect(screen.getByText('Sign in to continue.')).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Back' })).not.toBeOnTheScreen();
+  });
+
   test('AC-1: valid credentials store the tokens and sign the user in', async () => {
     const { user } = await renderLogin();
 
