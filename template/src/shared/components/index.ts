@@ -29,10 +29,15 @@ export * from './ErrorState';
 export * from './Fab';
 export * from './FieldLabel';
 export * from './FieldMessage';
+export * from './FilePicker'; // @tempo-feature:file-picker
+export * from './FileRow'; // @tempo-feature:file-picker
+export * from './FileSourceSheet'; // @tempo-feature:file-picker
 export * from './FilterBar';
 export * from './FormCheckbox';
 export * from './FormDatePicker';
+export * from './FormFilePicker'; // @tempo-feature:file-picker
 export * from './FormMonthYearPicker';
+export * from './FormMultiFilePicker'; // @tempo-feature:file-picker
 export * from './FormMultiSelect';
 export * from './FormNumberInput';
 export * from './FormOtpInput';
@@ -60,6 +65,7 @@ export * from './Loader';
 export * from './Modal';
 export * from './MonthYearGrid';
 export * from './MonthYearPicker';
+export * from './MultiFilePicker'; // @tempo-feature:file-picker
 export * from './MultiSelect';
 export * from './NumberInput';
 export * from './OfflineBanner';

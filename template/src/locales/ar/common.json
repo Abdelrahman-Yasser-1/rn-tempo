@@ -41,6 +41,30 @@
     "required": "مطلوب",
     "showHint": "إظهار التلميح"
   },
+  "filePicker": {
+    "add": "إضافة ملفات",
+    "browse": "تصفح الملفات",
+    "camera": "التقاط صورة",
+    "cameraUnavailable": "لا توجد كاميرا متاحة على هذا الجهاز.",
+    "count": "{{current}} من {{max}} ملفات",
+    "errorSize": "حجم الملف أكبر من {{max}} م.ب.",
+    "errorType": "هذا النوع من الملفات غير مسموح به.",
+    "failed": "تعذر الحصول على الملف. حاول مرة أخرى.",
+    "library": "اختيار من الصور",
+    "maxFiles": "يمكنك إضافة {{max}} ملفات كحد أقصى.",
+    "openSettings": "فتح الإعدادات",
+    "permissionDenied": "اسمح بالوصول من الإعدادات لاستخدام الكاميرا أو صورك.",
+    "placeholder": "اختر ملفًا",
+    "remove": "إزالة {{name}}",
+    "replace": "استبدال الملف",
+    "sheetTitle": "إضافة ملف",
+    "units": {
+      "b": "{{size}} ب",
+      "gb": "{{size}} ج.ب",
+      "kb": "{{size}} ك.ب",
+      "mb": "{{size}} م.ب"
+    }
+  },
   "filterBar": {
     "filters": "التصفية",
     "filtersActive": "التصفية، {{active}} نشطة"
