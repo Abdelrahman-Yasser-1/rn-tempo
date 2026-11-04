@@ -6,6 +6,7 @@ import {
   BottomSheetTextInput,
 } from '@gorhom/bottom-sheet';
 import type { BottomSheetBackdropProps, BottomSheetFooterProps } from '@gorhom/bottom-sheet';
+import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable } from 'react-native';
 import { useUnistyles } from 'react-native-unistyles';
@@ -95,7 +96,7 @@ export function MultiSelect({
 }: MultiSelectProps) {
   const { t } = useTranslation();
   const { theme } = useUnistyles();
-  const { sheetRef, ...vm } = useMultiSelect({ options, value, onChange, maxSelected });
+  const { sheetRef, onClose, ...vm } = useMultiSelect({ options, value, onChange, maxSelected });
   const isInvalid = errorText !== undefined && errorText !== '';
   const isInert = isDisabled || isReadOnly;
   styles.useVariants({
@@ -115,17 +116,19 @@ export function MultiSelect({
       ? undefined
       : vm.selectedOptions.map((option) => option.label).join(', ');
 
-  const renderFooter = (props: BottomSheetFooterProps) => (
-    <BottomSheetFooter {...props}>
-      <Box style={styles.footer}>
-        <Button
-          testID={suffix('done')}
-          title={t('multiSelect.done')}
-          fullWidth
-          onPress={vm.onClose}
-        />
-      </Box>
-    </BottomSheetFooter>
+  // Memoized like BottomSheet's footer: gorhom remounts the footer whenever this function changes,
+  // so an inline function would remount the Done button on every render.
+  const doneTestID = suffix('done');
+  const doneTitle = t('multiSelect.done');
+  const renderFooter = useCallback(
+    (props: BottomSheetFooterProps) => (
+      <BottomSheetFooter {...props}>
+        <Box style={styles.footer}>
+          <Button testID={doneTestID} title={doneTitle} fullWidth onPress={onClose} />
+        </Box>
+      </BottomSheetFooter>
+    ),
+    [doneTestID, doneTitle, onClose],
   );
 
   return (
@@ -215,7 +218,7 @@ export function MultiSelect({
             icon="close"
             size="sm"
             accessibilityLabel={t('select.close')}
-            onPress={vm.onClose}
+            onPress={onClose}
           />
         </Box>
         {isSearchable && (

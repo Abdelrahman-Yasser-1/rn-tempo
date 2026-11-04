@@ -1,5 +1,5 @@
 import type { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import { useDebounce } from '@shared/hooks';
 
@@ -42,9 +42,10 @@ export function useMultiSelect({
     sheetRef.current?.present();
   };
 
-  const onClose = () => {
+  // Stable, so the memoized sheet footer that calls it keeps its identity.
+  const onClose = useCallback(() => {
     sheetRef.current?.dismiss();
-  };
+  }, []);
 
   const onDismiss = () => {
     setIsOpen(false);
