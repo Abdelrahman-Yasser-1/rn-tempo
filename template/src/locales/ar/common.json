@@ -61,6 +61,10 @@
   "modal": {
     "close": "إغلاق"
   },
+  "monthYearPicker": {
+    "placeholder": "اختر الشهر والسنة",
+    "title": "اختر الشهر والسنة"
+  },
   "multiSelect": {
     "clear": "مسح",
     "done": "تم",

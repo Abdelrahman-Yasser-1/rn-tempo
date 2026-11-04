@@ -61,6 +61,10 @@
   "modal": {
     "close": "Close"
   },
+  "monthYearPicker": {
+    "placeholder": "Select month and year",
+    "title": "Select month and year"
+  },
   "multiSelect": {
     "clear": "Clear",
     "done": "Done",
