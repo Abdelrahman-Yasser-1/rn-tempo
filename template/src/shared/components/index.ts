@@ -46,6 +46,7 @@ export * from './MultiSelect';
 export * from './NumberInput';
 export * from './OfflineBanner';
 export * from './OtpInput';
+export * from './PhoneInput';
 export * from './Pagination';
 export * from './PaginatedList';
 export * from './Radio';

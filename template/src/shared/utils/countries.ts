@@ -1,4 +1,4 @@
-import { COUNTRIES } from '@shared/constants/countries';
+import { COUNTRIES, DEFAULT_COUNTRY_ISO2 } from '@shared/constants/countries';
 import type { Country } from '@shared/constants/countries';
 
 /** The name in the given language (`ar` gives the Arabic name, anything else English). */
@@ -39,3 +39,12 @@ export function filterCountries(countries: readonly Country[], query: string): C
       (isDialQuery && country.dialCode.slice(1).startsWith(digits)),
   );
 }
+
+/** Saudi Arabia, the default country. */
+export const FALLBACK_COUNTRY: Country = findCountry(DEFAULT_COUNTRY_ISO2) ?? {
+  iso2: 'SA',
+  dialCode: '+966',
+  flag: '\u{1F1F8}\u{1F1E6}',
+  nameEn: 'Saudi Arabia',
+  nameAr: 'المملكة العربية السعودية',
+};
