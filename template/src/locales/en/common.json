@@ -117,6 +117,10 @@
     "done": "Completed",
     "upcoming": "Upcoming"
   },
+  "timePicker": {
+    "placeholder": "Select a time",
+    "title": "Select a time"
+  },
   "toast": {
     "close": "Dismiss notification"
   },
