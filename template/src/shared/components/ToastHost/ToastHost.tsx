@@ -33,7 +33,8 @@ type ToastCardProps = Readonly<
 >;
 
 function ToastCard({ type, text1, text2, onPress, props, hide }: ToastCardProps) {
-  const { t } = useTranslation();
+  // The host renders outside the app's Suspense boundaries, so it must not suspend on i18n.
+  const { t } = useTranslation(undefined, { useSuspense: false });
   styles.useVariants({ type });
   const actions = (props?.actions ?? []).slice(0, MAX_ACTIONS);
 
