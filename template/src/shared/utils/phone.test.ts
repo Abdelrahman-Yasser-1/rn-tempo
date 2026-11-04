@@ -1,4 +1,4 @@
-import { isValidPhone, normalizePhone } from './phone';
+import { isValidPhone, joinE164, normalizePhone, splitE164 } from './phone';
 
 describe('normalizePhone', () => {
   it('strips spaces, dashes, dots and parentheses', () => {
@@ -21,5 +21,38 @@ describe('isValidPhone', () => {
     expect(isValidPhone('4155550123')).toBe(false);
     expect(isValidPhone('+1234')).toBe(false);
     expect(isValidPhone('+0123456789')).toBe(false);
+  });
+});
+
+describe('splitE164', () => {
+  it('picks the country by the longest matching dial code', () => {
+    const saudi = splitE164('+966512345678');
+    expect(saudi.country?.iso2).toBe('SA');
+    expect(saudi.nationalNumber).toBe('512345678');
+    expect(splitE164('+16841234567').country?.iso2).toBe('AS');
+    expect(splitE164('+97150123456').country?.iso2).toBe('AE');
+  });
+
+  it('resolves shared dial codes to the primary country', () => {
+    expect(splitE164('+14155550123').country?.iso2).toBe('US');
+    expect(splitE164('+79123456789').country?.iso2).toBe('RU');
+    expect(splitE164('+447911123456').country?.iso2).toBe('GB');
+  });
+
+  it('has no country without a leading + or a known dial code', () => {
+    expect(splitE164('0512345678')).toEqual({ country: undefined, nationalNumber: '0512345678' });
+    expect(splitE164('+999123')).toEqual({ country: undefined, nationalNumber: '999123' });
+    expect(splitE164('')).toEqual({ country: undefined, nationalNumber: '' });
+  });
+});
+
+describe('joinE164', () => {
+  it('joins the dial code and digits, dropping the trunk zero and separators', () => {
+    expect(joinE164('+966', '05 1234-5678')).toBe('+966512345678');
+  });
+
+  it('gives an empty string for an empty national number', () => {
+    expect(joinE164('+966', '')).toBe('');
+    expect(joinE164('+966', '0')).toBe('');
   });
 });
