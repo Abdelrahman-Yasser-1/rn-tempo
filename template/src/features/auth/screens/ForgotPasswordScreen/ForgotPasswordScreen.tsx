@@ -1,11 +1,9 @@
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
 
-import { Button, FormTextField, Header, Screen, Text } from '@shared/components';
+import { AuthLayout, Button, FormTextField } from '@shared/components';
 
 import { FormError } from '../../components/FormError';
 
-import { styles } from './styles';
 import { useForgotPasswordScreen } from './useForgotPasswordScreen';
 
 export function ForgotPasswordScreen() {
@@ -13,24 +11,13 @@ export function ForgotPasswordScreen() {
   const vm = useForgotPasswordScreen();
 
   return (
-    <Screen
-      preset="scroll"
-      keyboardAware
-      padding="xl"
-      contentContainerStyle={styles.content}
+    <AuthLayout
+      headerTitle={t('header.forgotPassword')}
+      onBack={vm.onBack}
+      title={t('forgotPassword.title')}
+      subtitle={t('forgotPassword.subtitle')}
       testID="forgot-password-screen"
     >
-      <Header
-        title={t('header.forgotPassword')}
-        onBack={vm.onBack}
-        testID="forgot-password.header"
-      />
-      <View>
-        <Text variant="h1" accessibilityRole="header">
-          {t('forgotPassword.title')}
-        </Text>
-        <Text color="textSecondary">{t('forgotPassword.subtitle')}</Text>
-      </View>
       <FormTextField
         control={vm.control}
         name="email"
@@ -51,6 +38,6 @@ export function ForgotPasswordScreen() {
         onPress={vm.onSubmit}
         testID="forgot-password.submit-button"
       />
-    </Screen>
+    </AuthLayout>
   );
 }
