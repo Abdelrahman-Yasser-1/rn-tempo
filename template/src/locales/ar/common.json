@@ -75,6 +75,11 @@
     "progress": "الخطوة {{current}} من {{total}}",
     "upcoming": "قادمة"
   },
+  "stepperLayout": {
+    "back": "رجوع",
+    "next": "التالي",
+    "submit": "إرسال"
+  },
   "timeline": {
     "current": "الخطوة الحالية",
     "done": "مكتمل",
