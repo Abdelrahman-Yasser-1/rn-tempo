@@ -1,0 +1,11 @@
+import type { FieldPath, FieldValues, UseControllerProps } from 'react-hook-form';
+
+import type { MonthYearPickerProps } from '../MonthYearPicker';
+
+export type FormMonthYearPickerProps<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+> = Readonly<
+  Omit<MonthYearPickerProps, 'value' | 'onChange' | 'errorText'> &
+    Pick<UseControllerProps<TFieldValues, TName>, 'name' | 'control'>
+>;
