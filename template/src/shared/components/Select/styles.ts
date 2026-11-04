@@ -14,9 +14,9 @@ export const styles = StyleSheet.create((theme) => ({
     gap: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
     borderWidth: 1,
-    borderRadius: theme.radii.md,
+    borderRadius: theme.radii.sm,
     borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surfaceVariant,
+    backgroundColor: theme.colors.background,
     variants: {
       open: {
         true: { borderColor: theme.colors.focus },
@@ -26,17 +26,18 @@ export const styles = StyleSheet.create((theme) => ({
         true: { borderColor: theme.colors.error },
         false: {},
       },
+      readOnly: {
+        true: { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
+        false: {},
+      },
       disabled: {
-        true: { backgroundColor: theme.colors.surface },
+        true: { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
         false: {},
       },
     },
   },
   triggerText: {
     flex: 1,
-  },
-  chevron: {
-    transform: [{ rotate: '90deg' }],
   },
   sheetBackground: {
     backgroundColor: theme.colors.surface,
@@ -53,6 +54,26 @@ export const styles = StyleSheet.create((theme) => ({
   },
   sheetContent: {
     paddingBottom: theme.spacing.xxl,
+  },
+  search: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: MIN_TOUCH_TARGET,
+    gap: theme.spacing.sm,
+    marginHorizontal: theme.spacing.lg,
+    marginBottom: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderWidth: 1,
+    borderRadius: theme.radii.sm,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.background,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: theme.spacing.sm,
+    color: theme.colors.textPrimary,
+    fontFamily: theme.typography.body.fontFamily,
+    fontSize: theme.typography.body.fontSize,
   },
   option: {
     flexDirection: 'row',

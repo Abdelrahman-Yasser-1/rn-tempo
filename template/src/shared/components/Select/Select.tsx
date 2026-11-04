@@ -1,11 +1,20 @@
-import { BottomSheetBackdrop, BottomSheetFlatList, BottomSheetModal } from '@gorhom/bottom-sheet';
+import {
+  BottomSheetBackdrop,
+  BottomSheetFlatList,
+  BottomSheetModal,
+  BottomSheetTextInput,
+} from '@gorhom/bottom-sheet';
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { useTranslation } from 'react-i18next';
 import { Pressable } from 'react-native';
+import { useUnistyles } from 'react-native-unistyles';
 
 import { HIT_SLOP } from '@shared/constants/touch';
 
 import { Box } from '../Box';
+import { EmptyState } from '../EmptyState';
+import { FieldLabel } from '../FieldLabel';
+import { FieldMessage } from '../FieldMessage';
 import { Icon } from '../Icon';
 import { IconButton } from '../IconButton';
 import { Text } from '../Text';
@@ -15,6 +24,7 @@ import type { SelectOption, SelectProps } from './types';
 import { useSelect } from './useSelect';
 
 const SNAP_POINTS = ['50%'];
+const SEARCHABLE_SNAP_POINTS = ['70%'];
 
 function renderBackdrop(props: BottomSheetBackdropProps) {
   return <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} />;
@@ -51,23 +61,67 @@ function SelectItem({ option, isSelected, testID, onSelect }: SelectItemProps) {
   );
 }
 
-/** Field-like trigger that opens a bottom sheet list of options. */
+type SelectSearchProps = Readonly<{
+  value: string;
+  onChangeText: (text: string) => void;
+  testID?: string;
+}>;
+
+function SelectSearch({ value, onChangeText, testID }: SelectSearchProps) {
+  const { t } = useTranslation();
+  const { theme } = useUnistyles();
+
+  return (
+    <Box style={styles.search}>
+      <Icon name="search" size="md" color="textSecondary" />
+      <BottomSheetTextInput
+        testID={testID}
+        accessibilityLabel={t('select.searchLabel')}
+        placeholder={t('select.searchPlaceholder')}
+        placeholderTextColor={theme.colors.textSecondary}
+        selectionColor={theme.colors.primary}
+        maxFontSizeMultiplier={1.5}
+        autoCapitalize="none"
+        autoCorrect={false}
+        returnKeyType="search"
+        value={value}
+        style={styles.searchInput}
+        onChangeText={onChangeText}
+      />
+    </Box>
+  );
+}
+
+/**
+ * Field-like trigger that opens a bottom sheet list of options, optionally with a search field,
+ * an empty state when nothing matches, and a read-only mode that never opens.
+ */
 export function Select({
   options,
   value,
   onChange,
   label,
+  required: isRequired,
+  subLabel,
+  tooltip,
   placeholder,
   sheetTitle,
   helperText,
   errorText,
   disabled: isDisabled = false,
+  readOnly: isReadOnly = false,
+  searchable: isSearchable = false,
   testID,
 }: SelectProps) {
   const { t } = useTranslation();
   const { sheetRef, ...vm } = useSelect({ options, value, onChange });
   const isInvalid = errorText !== undefined && errorText !== '';
-  styles.useVariants({ open: vm.isOpen, invalid: isInvalid, disabled: isDisabled });
+  styles.useVariants({
+    open: vm.isOpen,
+    invalid: isInvalid,
+    readOnly: isReadOnly,
+    disabled: isDisabled,
+  });
 
   const selected = vm.selected;
   const message = isInvalid ? errorText : helperText;
@@ -78,9 +132,13 @@ export function Select({
   return (
     <Box style={styles.root}>
       {label !== undefined && (
-        <Text testID={testID ? `${testID}.label` : undefined} variant="label" color="textSecondary">
-          {label}
-        </Text>
+        <FieldLabel
+          testID={testID ? `${testID}.label` : undefined}
+          label={label}
+          required={isRequired}
+          subLabel={subLabel}
+          tooltip={tooltip}
+        />
       )}
       <Pressable
         accessibilityRole="combobox"
@@ -91,7 +149,7 @@ export function Select({
         testID={testID}
         disabled={isDisabled}
         style={styles.trigger}
-        onPress={vm.onOpen}
+        onPress={isReadOnly ? undefined : vm.onOpen}
       >
         <Text
           testID={testID ? `${testID}.value` : undefined}
@@ -101,24 +159,21 @@ export function Select({
         >
           {selected?.label ?? placeholder ?? t('select.placeholder')}
         </Text>
-        <Box style={styles.chevron}>
-          <Icon name="chevron-right" size={20} color="textSecondary" />
-        </Box>
+        {!isReadOnly && <Icon name="chevron-down" size="md" color="textSecondary" />}
       </Pressable>
       {message !== undefined && message !== '' && (
-        <Text
+        <FieldMessage
           testID={testID ? `${testID}.${messageKind}` : undefined}
-          variant="caption"
-          color={isInvalid ? 'error' : 'textSecondary'}
-          accessibilityLiveRegion={isInvalid ? 'polite' : undefined}
-          accessibilityRole={isInvalid ? 'alert' : undefined}
-        >
-          {message}
-        </Text>
+          variant={messageKind}
+          message={message}
+        />
       )}
       <BottomSheetModal
         ref={sheetRef}
-        snapPoints={SNAP_POINTS}
+        snapPoints={isSearchable ? SEARCHABLE_SNAP_POINTS : SNAP_POINTS}
+        keyboardBehavior="interactive"
+        keyboardBlurBehavior="restore"
+        android_keyboardInputMode="adjustResize"
         enableDynamicSizing={false}
         backdropComponent={renderBackdrop}
         backgroundStyle={styles.sheetBackground}
@@ -137,10 +192,25 @@ export function Select({
             onPress={vm.onClose}
           />
         </Box>
+        {isSearchable && (
+          <SelectSearch
+            testID={testID ? `${testID}.search` : undefined}
+            value={vm.search}
+            onChangeText={vm.onSearchChange}
+          />
+        )}
         <BottomSheetFlatList
-          data={options}
+          data={vm.visibleOptions}
           keyExtractor={(option) => option.value}
           contentContainerStyle={styles.sheetContent}
+          keyboardShouldPersistTaps="handled"
+          ListEmptyComponent={
+            <EmptyState
+              testID={testID ? `${testID}.empty` : undefined}
+              title={t('select.empty.title')}
+              message={t('select.empty.message')}
+            />
+          }
           renderItem={({ item }) => (
             <SelectItem
               option={item}

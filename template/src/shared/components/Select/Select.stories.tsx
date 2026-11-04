@@ -44,3 +44,17 @@ export const WithHelper: Story = { args: { helperText: 'Used for the app interfa
 export const WithError: Story = { args: { errorText: 'Pick a language.' } };
 
 export const Disabled: Story = { args: { disabled: true, value: 'en' } };
+
+export const Searchable: Story = {
+  args: { searchable: true, sheetTitle: 'Choose a language', required: true },
+};
+
+export const ReadOnly: Story = { args: { readOnly: true, value: 'ar' } };
+
+export const Labelled: Story = {
+  args: {
+    required: true,
+    subLabel: '(shown in the app)',
+    tooltip: 'Changes the interface language.',
+  },
+};
