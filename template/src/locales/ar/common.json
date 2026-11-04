@@ -25,6 +25,10 @@
     "required": "مطلوب",
     "showHint": "إظهار التلميح"
   },
+  "filterBar": {
+    "filters": "التصفية",
+    "filtersActive": "التصفية، {{active}} نشطة"
+  },
   "header": {
     "back": "رجوع"
   },

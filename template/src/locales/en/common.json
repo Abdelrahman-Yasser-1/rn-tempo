@@ -25,6 +25,10 @@
     "required": "required",
     "showHint": "Show hint"
   },
+  "filterBar": {
+    "filters": "Filters",
+    "filtersActive": "Filters, {{active}} active"
+  },
   "header": {
     "back": "Back"
   },
