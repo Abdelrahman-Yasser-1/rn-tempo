@@ -13,10 +13,13 @@ import { FormDatePicker } from './FormDatePicker';
 const schema = z.object({ field: isoDateSchema });
 type FormValues = { field: string };
 
-function Harness({ onValid }: Readonly<{ onValid: (values: FormValues) => void }>) {
+function Harness({
+  onValid,
+  initial = '',
+}: Readonly<{ onValid: (values: FormValues) => void; initial?: string }>) {
   const { control, handleSubmit } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { field: '' },
+    defaultValues: { field: initial },
   });
 
   return (
@@ -58,5 +61,28 @@ describe('FormDatePicker', () => {
     const { user } = await renderWithProviders(<Harness onValid={jest.fn()} />);
     await user.press(screen.getByRole('button', { name: 'Submit' }));
     expect(await screen.findByText('Enter a valid date.')).toBeOnTheScreen();
+  });
+
+  it('shows the prefilled day formatted', async () => {
+    await renderWithProviders(<Harness initial="2026-11-04" onValid={jest.fn()} />);
+    expect(screen.getByRole('button', { name: 'Available from' })).toHaveAccessibilityValue({
+      text: 'Nov 4, 2026',
+    });
+  });
+
+  it('rejects a day that does not exist', async () => {
+    const onValid = jest.fn();
+    const { user } = await renderWithProviders(<Harness initial="2026-02-30" onValid={onValid} />);
+    await user.press(screen.getByRole('button', { name: 'Submit' }));
+    expect(await screen.findByText('Enter a valid date.')).toBeOnTheScreen();
+    expect(onValid).not.toHaveBeenCalled();
+  });
+
+  it('translates the validation message to Arabic', async () => {
+    const { user } = await renderWithProviders(<Harness onValid={jest.fn()} />, {
+      language: 'ar',
+    });
+    await user.press(screen.getByRole('button', { name: 'Submit' }));
+    expect(await screen.findByText('أدخل تاريخًا صالحًا.')).toBeOnTheScreen();
   });
 });

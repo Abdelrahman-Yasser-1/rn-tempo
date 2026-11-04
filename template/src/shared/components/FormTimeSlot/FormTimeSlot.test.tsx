@@ -12,10 +12,13 @@ import { FormTimeSlot } from './FormTimeSlot';
 const schema = z.object({ field: z.string().min(1, 'username.required') });
 type FormValues = { field: string };
 
-function Harness({ onValid }: Readonly<{ onValid: (values: FormValues) => void }>) {
+function Harness({
+  onValid,
+  initial = '',
+}: Readonly<{ onValid: (values: FormValues) => void; initial?: string }>) {
   const { control, handleSubmit } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { field: '' },
+    defaultValues: { field: initial },
   });
 
   return (
@@ -57,5 +60,20 @@ describe('FormTimeSlot', () => {
     const { user } = await renderWithProviders(<Harness onValid={jest.fn()} />);
     await user.press(screen.getByRole('button', { name: 'Submit' }));
     expect(await screen.findByText('Enter your username.')).toBeOnTheScreen();
+  });
+
+  it('shows the prefilled slot', async () => {
+    await renderWithProviders(<Harness initial="09:00" onValid={jest.fn()} />);
+    expect(screen.getByRole('button', { name: 'Pickup slot' })).toHaveAccessibilityValue({
+      text: 'Nine',
+    });
+  });
+
+  it('translates the validation message to Arabic', async () => {
+    const { user } = await renderWithProviders(<Harness onValid={jest.fn()} />, {
+      language: 'ar',
+    });
+    await user.press(screen.getByRole('button', { name: 'Submit' }));
+    expect(await screen.findByText('أدخل اسم المستخدم.')).toBeOnTheScreen();
   });
 });

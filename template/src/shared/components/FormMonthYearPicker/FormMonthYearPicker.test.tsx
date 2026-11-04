@@ -58,4 +58,19 @@ describe('FormMonthYearPicker', () => {
     await user.press(screen.getByRole('button', { name: 'Submit' }));
     expect(await screen.findByText('Enter your username.')).toBeOnTheScreen();
   });
+
+  it('shows the prefilled month formatted', async () => {
+    await renderWithProviders(<Harness onValid={jest.fn()} initial="2026-11" />);
+    expect(screen.getByRole('button', { name: 'Statement month' })).toHaveAccessibilityValue({
+      text: 'November 2026',
+    });
+  });
+
+  it('translates the validation message to Arabic', async () => {
+    const { user } = await renderWithProviders(<Harness onValid={jest.fn()} initial="" />, {
+      language: 'ar',
+    });
+    await user.press(screen.getByRole('button', { name: 'Submit' }));
+    expect(await screen.findByText('أدخل اسم المستخدم.')).toBeOnTheScreen();
+  });
 });
