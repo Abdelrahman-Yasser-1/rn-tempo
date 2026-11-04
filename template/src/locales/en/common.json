@@ -56,6 +56,12 @@
   "sheet": {
     "close": "Close"
   },
+  "stepper": {
+    "current": "Current step",
+    "done": "Completed",
+    "progress": "Step {{current}} of {{total}}",
+    "upcoming": "Upcoming"
+  },
   "timeline": {
     "current": "Current step",
     "done": "Completed",
