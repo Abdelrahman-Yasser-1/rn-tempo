@@ -53,3 +53,52 @@ describe('FormOtpInput', () => {
     expect(await screen.findByRole('alert', { name: 'Enter the 6-digit code.' })).toBeOnTheScreen();
   });
 });
+
+function Extra({ defaultValue = '' }: Readonly<{ defaultValue?: string }>) {
+  const { control, handleSubmit } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { field: defaultValue },
+  });
+
+  return (
+    <>
+      <FormOtpInput<FormValues, 'field'> name="field" control={control} testID="otp" />
+      <Button
+        title="Submit"
+        onPress={() => {
+          void handleSubmit(jest.fn())();
+        }}
+      />
+    </>
+  );
+}
+
+describe('FormOtpInput default and error states', () => {
+  it('starts from the default code', async () => {
+    await renderWithProviders(<Extra defaultValue="123456" />);
+    expect(screen.getByLabelText('Digit 1 of 6')).toHaveDisplayValue('1');
+    expect(screen.getByLabelText('Digit 6 of 6')).toHaveDisplayValue('6');
+  });
+
+  it('keeps the error while the code is incomplete and clears it once it is complete', async () => {
+    const { user } = await renderWithProviders(<Extra />);
+    await user.press(screen.getByRole('button', { name: 'Submit' }));
+    expect(await screen.findByRole('alert', { name: 'Enter the 6-digit code.' })).toBeOnTheScreen();
+    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
+    await fireEvent.changeText(screen.getByLabelText('Digit 1 of 6'), '123');
+    expect(await screen.findByRole('alert', { name: 'Enter the 6-digit code.' })).toBeOnTheScreen();
+    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
+    await fireEvent.changeText(screen.getByLabelText('Digit 1 of 6'), '123456');
+    await waitFor(() => {
+      expect(screen.queryByRole('alert')).not.toBeOnTheScreen();
+    });
+  });
+
+  it('translates the error into Arabic', async () => {
+    const { user } = await renderWithProviders(<Extra />, { language: 'ar' });
+    await user.press(screen.getByRole('button', { name: 'Submit' }));
+    expect(
+      await screen.findByRole('alert', { name: 'أدخل الرمز المكوّن من 6 أرقام.' }),
+    ).toBeOnTheScreen();
+  });
+});

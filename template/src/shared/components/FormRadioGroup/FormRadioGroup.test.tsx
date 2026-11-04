@@ -55,3 +55,66 @@ describe('FormRadioGroup', () => {
     expect(await screen.findByRole('alert', { name: 'Enter your username.' })).toBeOnTheScreen();
   });
 });
+
+function Extra({
+  defaultValue = '',
+  helperText,
+}: Readonly<{ defaultValue?: string; helperText?: string }>) {
+  const { control, handleSubmit } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { field: defaultValue },
+  });
+
+  return (
+    <>
+      <FormRadioGroup<FormValues, 'field'>
+        name="field"
+        control={control}
+        label="Plan"
+        helperText={helperText}
+      >
+        <Radio value="free" label="Free" />
+        <Radio value="pro" label="Pro" />
+      </FormRadioGroup>
+      <Button
+        title="Submit"
+        onPress={() => {
+          void handleSubmit(jest.fn())();
+        }}
+      />
+    </>
+  );
+}
+
+describe('FormRadioGroup helper text and error states', () => {
+  it('starts from the default value', async () => {
+    await renderWithProviders(<Extra defaultValue="pro" />);
+    expect(screen.getByRole('radio', { name: 'Pro' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Free' })).not.toBeChecked();
+  });
+
+  it('shows the helper text until a validation error replaces it', async () => {
+    const { user } = await renderWithProviders(<Extra helperText="You can change it later" />);
+    expect(screen.getByText('You can change it later')).toBeOnTheScreen();
+    await user.press(screen.getByRole('button', { name: 'Submit' }));
+    expect(await screen.findByRole('alert', { name: 'Enter your username.' })).toBeOnTheScreen();
+    expect(screen.queryByText('You can change it later')).not.toBeOnTheScreen();
+  });
+
+  it('clears the error once an option is chosen, and brings the helper text back', async () => {
+    const { user } = await renderWithProviders(<Extra helperText="You can change it later" />);
+    await user.press(screen.getByRole('button', { name: 'Submit' }));
+    expect(await screen.findByRole('alert')).toBeOnTheScreen();
+    await user.press(screen.getByRole('radio', { name: 'Free' }));
+    await waitFor(() => {
+      expect(screen.queryByRole('alert')).not.toBeOnTheScreen();
+    });
+    expect(screen.getByText('You can change it later')).toBeOnTheScreen();
+  });
+
+  it('translates the error into Arabic', async () => {
+    const { user } = await renderWithProviders(<Extra />, { language: 'ar' });
+    await user.press(screen.getByRole('button', { name: 'Submit' }));
+    expect(await screen.findByRole('alert', { name: 'أدخل اسم المستخدم.' })).toBeOnTheScreen();
+  });
+});

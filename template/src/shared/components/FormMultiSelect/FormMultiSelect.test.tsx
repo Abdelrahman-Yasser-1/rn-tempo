@@ -62,3 +62,65 @@ describe('FormMultiSelect', () => {
     expect(await screen.findByRole('alert', { name: 'Enter your username.' })).toBeOnTheScreen();
   });
 });
+
+function Extra({ defaultValue = [] }: Readonly<{ defaultValue?: string[] }>) {
+  const { control, handleSubmit } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { field: defaultValue },
+  });
+
+  return (
+    <>
+      <FormMultiSelect<FormValues, 'field'>
+        name="field"
+        control={control}
+        label="Tags"
+        options={[
+          { value: 'new', label: 'New' },
+          { value: 'sale', label: 'Sale' },
+        ]}
+      />
+      <Button
+        title="Submit"
+        onPress={() => {
+          void handleSubmit(jest.fn())();
+        }}
+      />
+    </>
+  );
+}
+
+describe('FormMultiSelect default and error states', () => {
+  it('starts from the default selection', async () => {
+    await renderWithProviders(<Extra defaultValue={['sale']} />);
+    expect(screen.getByRole('combobox', { name: 'Tags' })).toHaveAccessibilityValue({
+      text: 'Sale',
+    });
+    expect(screen.getByRole('checkbox', { name: 'Sale' })).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'New' })).not.toBeChecked();
+  });
+
+  it('removes a value from the form when its chip is removed', async () => {
+    const { user } = await renderWithProviders(<Extra defaultValue={['new', 'sale']} />);
+    await user.press(screen.getByRole('button', { name: 'Remove New' }));
+    expect(screen.getByRole('combobox', { name: 'Tags' })).toHaveAccessibilityValue({
+      text: 'Sale',
+    });
+  });
+
+  it('clears the error once something is selected', async () => {
+    const { user } = await renderWithProviders(<Extra />);
+    await user.press(screen.getByRole('button', { name: 'Submit' }));
+    expect(await screen.findByRole('alert')).toBeOnTheScreen();
+    await user.press(screen.getByRole('checkbox', { name: 'New' }));
+    await waitFor(() => {
+      expect(screen.queryByRole('alert')).not.toBeOnTheScreen();
+    });
+  });
+
+  it('translates the error into Arabic', async () => {
+    const { user } = await renderWithProviders(<Extra />, { language: 'ar' });
+    await user.press(screen.getByRole('button', { name: 'Submit' }));
+    expect(await screen.findByRole('alert', { name: 'أدخل اسم المستخدم.' })).toBeOnTheScreen();
+  });
+});
