@@ -1,5 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 
+import { Column } from '../Column';
+import { Text } from '../Text';
+
 import { Image } from './Image';
 
 const meta = {
@@ -29,4 +32,21 @@ export const Circle: Story = { args: { radius: 'full' } };
 
 export const BrokenSource: Story = {
   args: { source: { uri: 'https://invalid.example/missing.png' }, accessibilityLabel: 'Missing' },
+};
+
+export const CustomFallback: Story = {
+  args: {
+    source: { uri: 'https://invalid.example/missing.png' },
+    accessibilityLabel: 'Missing',
+    fallback: <Text>No photo</Text>,
+  },
+};
+
+/** The shimmer shows until the image loads; a slow network makes it easy to see. */
+export const LoadingState: Story = {
+  render: (args) => (
+    <Column gap="md">
+      <Image {...args} source={{ uri: 'https://httpbin.org/delay/8' }} />
+    </Column>
+  ),
 };
