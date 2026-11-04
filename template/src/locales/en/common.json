@@ -8,6 +8,13 @@
     "retry": "Check again",
     "title": "No connection"
   },
+  "countryPicker": {
+    "close": "Close",
+    "label": "Country",
+    "searchLabel": "Search countries",
+    "searchPlaceholder": "Search by name or code",
+    "title": "Select a country"
+  },
   "dialog": {
     "cancel": "Cancel",
     "confirm": "Confirm"

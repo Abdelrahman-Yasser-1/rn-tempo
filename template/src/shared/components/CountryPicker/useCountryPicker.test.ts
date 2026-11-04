@@ -1,0 +1,73 @@
+import { act, renderHook } from '@testing-library/react-native';
+
+import { initI18nInstance } from '@services/i18n/i18n';
+import { initStorage } from '@services/storage/storage';
+
+import { useCountryPicker } from './useCountryPicker';
+
+beforeAll(async () => {
+  await initStorage();
+  await initI18nInstance('en');
+});
+
+async function setup(value?: string, defaultCountry?: string) {
+  const onChange = jest.fn();
+  const sheet = { present: jest.fn(), dismiss: jest.fn() };
+  const view = await renderHook(() => useCountryPicker({ value, defaultCountry, onChange }));
+  view.result.current.sheetRef.current = sheet as never;
+  return { ...view, onChange, sheet };
+}
+
+describe('useCountryPicker', () => {
+  test('selects the country of the value', async () => {
+    const { result } = await setup('EG');
+
+    expect(result.current.selected?.iso2).toBe('EG');
+  });
+
+  test('falls back to Saudi Arabia, then to the given default', async () => {
+    const { result: fallback } = await setup();
+    const { result: unknown } = await setup('ZZ', 'AE');
+
+    expect(fallback.current.selected?.iso2).toBe('SA');
+    expect(unknown.current.selected?.iso2).toBe('AE');
+  });
+
+  test('lists every country', async () => {
+    const { result } = await setup();
+
+    expect(result.current.visibleCountries.length).toBeGreaterThan(200);
+  });
+
+  test('onSelect reports the country and dismisses the sheet', async () => {
+    const { result, onChange, sheet } = await setup();
+    const egypt = result.current.visibleCountries.find((country) => country.iso2 === 'EG');
+
+    await act(() => {
+      if (egypt) {
+        result.current.onSelect(egypt);
+      }
+      return Promise.resolve();
+    });
+
+    expect(onChange).toHaveBeenCalledWith(egypt);
+    expect(sheet.dismiss).toHaveBeenCalledTimes(1);
+  });
+
+  test('onOpen presents the sheet and onDismiss closes it', async () => {
+    const { result, sheet } = await setup();
+
+    await act(() => {
+      result.current.onOpen();
+      return Promise.resolve();
+    });
+    expect(result.current.isOpen).toBe(true);
+    expect(sheet.present).toHaveBeenCalledTimes(1);
+
+    await act(() => {
+      result.current.onDismiss();
+      return Promise.resolve();
+    });
+    expect(result.current.isOpen).toBe(false);
+  });
+});

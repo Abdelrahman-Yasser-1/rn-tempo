@@ -8,6 +8,13 @@
     "retry": "تحقق مرة أخرى",
     "title": "لا يوجد اتصال"
   },
+  "countryPicker": {
+    "close": "إغلاق",
+    "label": "الدولة",
+    "searchLabel": "البحث في الدول",
+    "searchPlaceholder": "ابحث بالاسم أو الرمز",
+    "title": "اختر دولة"
+  },
   "dialog": {
     "cancel": "إلغاء",
     "confirm": "تأكيد"
