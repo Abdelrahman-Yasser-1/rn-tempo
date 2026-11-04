@@ -16,8 +16,10 @@ export {
   isValidISODate,
   monthGrid,
   monthLabels,
+  parseYearMonth,
   numeralLocale,
   toISODate,
+  toYearMonth,
   weekdayLabels,
 } from './calendar';
 export type { DayOfWeek, DisabledRules, GridCell } from './calendar';
@@ -41,4 +43,6 @@ export {
   phoneSchema,
 } from './schemas';
 export { capitalize, initials, maskEmail, maskPhone, truncate } from './string';
+export { formatTime, isValidTime, parseTime, timePeriod, timeToDate, toTime } from './time';
+export type { TimePeriod } from './time';
 export { versionCompare } from './version';
