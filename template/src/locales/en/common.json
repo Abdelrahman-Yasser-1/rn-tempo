@@ -45,6 +45,10 @@
   "modal": {
     "close": "Close"
   },
+  "numberInput": {
+    "decrease": "Decrease",
+    "increase": "Increase"
+  },
   "offline": {
     "banner": "You are offline"
   },
