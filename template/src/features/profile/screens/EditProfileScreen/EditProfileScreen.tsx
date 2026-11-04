@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { View } from 'react-native';
 
 import { Button, FormTextField, Header, Screen } from '@shared/components';
 
@@ -17,41 +18,43 @@ export function EditProfileScreen() {
       testID="edit-profile-screen"
     >
       <Header title={t('editTitle')} onBack={vm.onBack} testID="edit-profile.header" />
-      <FormTextField
-        control={vm.control}
-        name="firstName"
-        label={t('firstName')}
-        autoComplete="given-name"
-        returnKeyType="next"
-        testID="edit-profile.first-name-input"
-      />
-      <FormTextField
-        control={vm.control}
-        name="lastName"
-        label={t('lastName')}
-        autoComplete="family-name"
-        returnKeyType="next"
-        testID="edit-profile.last-name-input"
-      />
-      <FormTextField
-        control={vm.control}
-        name="email"
-        label={t('email')}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoCorrect={false}
-        autoComplete="email"
-        returnKeyType="done"
-        onSubmitEditing={vm.onSubmit}
-        testID="edit-profile.email-input"
-      />
-      <Button
-        title={t('save')}
-        fullWidth
-        loading={vm.isPending}
-        onPress={vm.onSubmit}
-        testID="edit-profile.save-button"
-      />
+      <View style={styles.body}>
+        <FormTextField
+          control={vm.control}
+          name="firstName"
+          label={t('firstName')}
+          autoComplete="given-name"
+          returnKeyType="next"
+          testID="edit-profile.first-name-input"
+        />
+        <FormTextField
+          control={vm.control}
+          name="lastName"
+          label={t('lastName')}
+          autoComplete="family-name"
+          returnKeyType="next"
+          testID="edit-profile.last-name-input"
+        />
+        <FormTextField
+          control={vm.control}
+          name="email"
+          label={t('email')}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete="email"
+          returnKeyType="done"
+          onSubmitEditing={vm.onSubmit}
+          testID="edit-profile.email-input"
+        />
+        <Button
+          title={t('save')}
+          fullWidth
+          loading={vm.isPending}
+          onPress={vm.onSubmit}
+          testID="edit-profile.save-button"
+        />
+      </View>
     </Screen>
   );
 }
