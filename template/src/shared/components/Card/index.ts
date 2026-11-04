@@ -1,2 +1,2 @@
 export { Card } from './Card';
-export type { CardPadding, CardProps, CardVariant } from './types';
+export type { CardMedia, CardPadding, CardProps, CardVariant } from './types';
