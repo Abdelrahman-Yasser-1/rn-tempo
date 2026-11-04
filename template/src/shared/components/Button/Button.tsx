@@ -3,8 +3,8 @@ import Animated from 'react-native-reanimated';
 import { useUnistyles } from 'react-native-unistyles';
 
 import { HIT_SLOP } from '@shared/constants/touch';
-import { BUTTON_CONTENT_COLOR } from '@theme/buttonVariants';
-import type { ColorTokens, TypographyVariant } from '@theme/tokens';
+import { getButtonContentColor } from '@theme/buttonVariants';
+import type { TypographyVariant } from '@theme/tokens';
 
 import { Icon } from '../Icon';
 import { Text } from '../Text';
@@ -45,9 +45,9 @@ export function Button({
   const state = { ...accessibilityState, disabled: isInactive, busy: isLoading };
   styles.useVariants({ variant, size, fullWidth: isFullWidth });
 
-  const contentColor: keyof ColorTokens = isDisabled
-    ? 'textDisabled'
-    : BUTTON_CONTENT_COLOR[variant];
+  const contentColor = isDisabled
+    ? theme.colors.textDisabled
+    : getButtonContentColor(theme, variant);
   const isLink = variant === 'link';
   const isIconAtEnd = iconPosition === 'end';
 
@@ -55,12 +55,9 @@ export function Button({
   const isSpinnerAtStart = isLoading && !isIconAtEnd;
   const isSpinnerAtEnd = isLoading && isIconAtEnd;
   const spinner = (
-    <ActivityIndicator
-      testID={testID ? `${testID}.spinner` : undefined}
-      color={theme.colors[contentColor]}
-    />
+    <ActivityIndicator testID={testID ? `${testID}.spinner` : undefined} color={contentColor} />
   );
-  const iconNode = icon ? <Icon name={icon} size={ICON_SIZE[size]} color={contentColor} /> : null;
+  const iconNode = icon ? <Icon name={icon} size={ICON_SIZE[size]} tint={contentColor} /> : null;
 
   return (
     <Pressable
@@ -87,10 +84,9 @@ export function Button({
         <Text
           testID={testID ? `${testID}.label` : undefined}
           variant={LABEL_VARIANT[size]}
-          color={contentColor}
+          style={[{ color: contentColor }, isLink && isPressed ? styles.pressedLabel : undefined]}
           tx={tx}
           txOptions={txOptions}
-          style={isLink && isPressed ? styles.pressedLabel : undefined}
         >
           {title}
         </Text>

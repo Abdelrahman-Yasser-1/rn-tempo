@@ -15,9 +15,9 @@ const MIRRORED = { transform: [{ scaleX: -1 }] };
  * are pruned (`yarn icons:prune`) to the icons the code names, so an icon missing from the registry
  * renders nothing; in development nothing is pruned, and the warning says what to do.
  */
-export function Icon({ name, size, color, accessibilityLabel, testID }: IconProps) {
+export function Icon({ name, size, color, tint: rawTint, accessibilityLabel, testID }: IconProps) {
   const Svg = REGISTRY[name];
-  const { pixels, tint, isMirrored } = useIcon({ name, size, color });
+  const { pixels, tint, isMirrored } = useIcon({ name, size, color, tint: rawTint });
   if (!Svg) {
     if (__DEV__) {
       logger.warn(

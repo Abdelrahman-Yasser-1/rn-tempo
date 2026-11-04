@@ -2,19 +2,9 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { palette } from './palette';
+import { contrast } from './testContrast';
 import { darkTheme, lightTheme } from './themes';
 import { darkColors, lightColors, type ColorTokens } from './tokens';
-
-const channel = (hex: string, offset: number): number => {
-  const value = parseInt(hex.slice(offset, offset + 2), 16) / 255;
-  return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
-};
-const luminance = (hex: string): number =>
-  0.2126 * channel(hex, 1) + 0.7152 * channel(hex, 3) + 0.0722 * channel(hex, 5);
-const contrast = (a: string, b: string): number => {
-  const [lighter, darker] = [luminance(a), luminance(b)].sort((x, y) => y - x);
-  return ((lighter ?? 0) + 0.05) / ((darker ?? 0) + 0.05);
-};
 
 const TEXT_PAIRS: [foreground: keyof ColorTokens, background: keyof ColorTokens][] = [
   ['onPrimary', 'primary'],
