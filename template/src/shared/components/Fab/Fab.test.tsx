@@ -26,4 +26,46 @@ describe('Fab', () => {
     );
     expect(screen.queryByRole('button')).not.toBeOnTheScreen();
   });
+
+  it('shows only the icon, named by accessibilityLabel, when it has no label', async () => {
+    await renderWithProviders(
+      <Fab icon="plus" accessibilityLabel="Add item" onPress={jest.fn()} testID="fab" />,
+    );
+    // eslint-disable-next-line no-restricted-syntax -- checks the testID plumbing itself
+    expect(screen.queryByTestId('fab.label')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Add item')).not.toBeOnTheScreen();
+  });
+
+  it('treats an empty label as icon-only', async () => {
+    await renderWithProviders(
+      <Fab icon="plus" label="" accessibilityLabel="Add item" onPress={jest.fn()} testID="fab" />,
+    );
+    // eslint-disable-next-line no-restricted-syntax -- checks the testID plumbing itself
+    expect(screen.queryByTestId('fab.label')).not.toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Add item' })).toBeOnTheScreen();
+  });
+
+  it('prefers accessibilityLabel over the visible label for the button name', async () => {
+    await renderWithProviders(
+      <Fab icon="plus" label="New" accessibilityLabel="Create a new item" onPress={jest.fn()} />,
+    );
+    expect(screen.getByRole('button', { name: 'Create a new item' })).toBeOnTheScreen();
+    expect(screen.getByText('New')).toBeOnTheScreen();
+  });
+
+  it('fires onPress from the extended form', async () => {
+    const onPress = jest.fn();
+    const { user } = await renderWithProviders(<Fab icon="plus" label="New" onPress={onPress} />);
+    await user.press(screen.getByRole('button', { name: 'New' }));
+    expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it('appears and disappears with the visible prop', async () => {
+    const { rerender } = await renderWithProviders(
+      <Fab icon="plus" accessibilityLabel="Add item" visible={false} onPress={jest.fn()} />,
+    );
+    expect(screen.queryByRole('button')).not.toBeOnTheScreen();
+    await rerender(<Fab icon="plus" accessibilityLabel="Add item" visible onPress={jest.fn()} />);
+    expect(screen.getByRole('button', { name: 'Add item' })).toBeOnTheScreen();
+  });
 });
