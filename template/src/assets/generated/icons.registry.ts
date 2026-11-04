@@ -1062,6 +1062,7 @@ import ChessKnightFilled from './icons/ChessKnightFilled';
 import ChessQueenFilled from './icons/ChessQueenFilled';
 import ChessRookFilled from './icons/ChessRookFilled';
 import ChevronDownFilled from './icons/ChevronDownFilled';
+import ChevronDown from './icons/ChevronDown';
 import ChevronLeft from './icons/ChevronLeft';
 import ChevronRightFilled from './icons/ChevronRightFilled';
 import ChevronRight from './icons/ChevronRight';
@@ -1079,6 +1080,7 @@ import CircleCaretLeftFilled from './icons/CircleCaretLeftFilled';
 import CircleCaretRightFilled from './icons/CircleCaretRightFilled';
 import CircleCaretUpFilled from './icons/CircleCaretUpFilled';
 import CircleCheckFilled from './icons/CircleCheckFilled';
+import CircleCheck from './icons/CircleCheck';
 import CircleChevronDownFilled from './icons/CircleChevronDownFilled';
 import CircleChevronLeftFilled from './icons/CircleChevronLeftFilled';
 import CircleChevronRightFilled from './icons/CircleChevronRightFilled';
@@ -1130,6 +1132,7 @@ import CirclePercentageFilled from './icons/CirclePercentageFilled';
 import CirclePlusFilled from './icons/CirclePlusFilled';
 import CircleRectangleFilled from './icons/CircleRectangleFilled';
 import CircleXFilled from './icons/CircleXFilled';
+import CircleX from './icons/CircleX';
 import CirclesFilled from './icons/CirclesFilled';
 import ClickFilled from './icons/ClickFilled';
 import ClipboardCheckFilled from './icons/ClipboardCheckFilled';
@@ -1557,6 +1560,7 @@ import PhoneCheckFilled from './icons/PhoneCheckFilled';
 import PhoneFilled from './icons/PhoneFilled';
 import PhoneXFilled from './icons/PhoneXFilled';
 import PhotoFilled from './icons/PhotoFilled';
+import PhotoOff from './icons/PhotoOff';
 import PictureInPictureFilled from './icons/PictureInPictureFilled';
 import PictureInPictureTopFilled from './icons/PictureInPictureTopFilled';
 import PigFilled from './icons/PigFilled';
@@ -2926,6 +2930,7 @@ export const ICONS: Record<IconName, IconComponent> = {
   'chess-queen-filled': ChessQueenFilled,
   'chess-rook-filled': ChessRookFilled,
   'chevron-down-filled': ChevronDownFilled,
+  'chevron-down': ChevronDown,
   'chevron-left': ChevronLeft,
   'chevron-right-filled': ChevronRightFilled,
   'chevron-right': ChevronRight,
@@ -2943,6 +2948,7 @@ export const ICONS: Record<IconName, IconComponent> = {
   'circle-caret-right-filled': CircleCaretRightFilled,
   'circle-caret-up-filled': CircleCaretUpFilled,
   'circle-check-filled': CircleCheckFilled,
+  'circle-check': CircleCheck,
   'circle-chevron-down-filled': CircleChevronDownFilled,
   'circle-chevron-left-filled': CircleChevronLeftFilled,
   'circle-chevron-right-filled': CircleChevronRightFilled,
@@ -2994,6 +3000,7 @@ export const ICONS: Record<IconName, IconComponent> = {
   'circle-plus-filled': CirclePlusFilled,
   'circle-rectangle-filled': CircleRectangleFilled,
   'circle-x-filled': CircleXFilled,
+  'circle-x': CircleX,
   'circles-filled': CirclesFilled,
   'click-filled': ClickFilled,
   'clipboard-check-filled': ClipboardCheckFilled,
@@ -3421,6 +3428,7 @@ export const ICONS: Record<IconName, IconComponent> = {
   'phone-filled': PhoneFilled,
   'phone-x-filled': PhoneXFilled,
   'photo-filled': PhotoFilled,
+  'photo-off': PhotoOff,
   'picture-in-picture-filled': PictureInPictureFilled,
   'picture-in-picture-top-filled': PictureInPictureTopFilled,
   'pig-filled': PigFilled,
