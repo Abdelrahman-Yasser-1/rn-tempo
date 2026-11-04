@@ -14,6 +14,8 @@ export type IconProps = Readonly<
     size?: IconSize | number;
     /** Color token key; defaults to `textPrimary`. */
     color?: keyof ColorTokens;
+    /** Raw colour that overrides `color`, for pairs computed outside the token set. */
+    tint?: string;
     testID?: string;
   }
 >;

@@ -4,8 +4,7 @@ import { useUnistyles } from 'react-native-unistyles';
 
 import { HIT_SLOP } from '@shared/constants/touch';
 import { usePressFeedback } from '@shared/hooks';
-import { BUTTON_CONTENT_COLOR } from '@theme/buttonVariants';
-import type { ColorTokens } from '@theme/tokens';
+import { getButtonContentColor } from '@theme/buttonVariants';
 
 import type { ButtonSize } from '../Button';
 import { Icon } from '../Icon';
@@ -34,9 +33,9 @@ export function IconButton({
   const state = { ...accessibilityState, disabled: isInactive, busy: isLoading };
   styles.useVariants({ variant, size });
 
-  const contentColor: keyof ColorTokens = isDisabled
-    ? 'textDisabled'
-    : BUTTON_CONTENT_COLOR[variant];
+  const contentColor = isDisabled
+    ? theme.colors.textDisabled
+    : getButtonContentColor(theme, variant);
 
   return (
     <Pressable
@@ -57,9 +56,9 @@ export function IconButton({
     >
       <Animated.View style={[styles.container, isDisabled && styles.disabled, animatedStyle]}>
         {isLoading ? (
-          <ActivityIndicator color={theme.colors[contentColor]} />
+          <ActivityIndicator color={contentColor} />
         ) : (
-          <Icon name={icon} size={ICON_SIZE[size]} color={contentColor} />
+          <Icon name={icon} size={ICON_SIZE[size]} tint={contentColor} />
         )}
       </Animated.View>
     </Pressable>
