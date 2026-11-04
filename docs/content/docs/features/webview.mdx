@@ -1,0 +1,70 @@
+---
+title: Web view
+description: An in-app browser with a progress bar, an error state and a safe link policy.
+---
+
+<FeatureBadge name="webview" />
+
+## What it is
+
+The `webview` module adds a themed `WebView` component and a `WebViewScreen` built on [`react-native-webview`](https://github.com/react-native-webview/react-native-webview). It is off by default in the CLI prompt.
+
+- **`WebView`** (`src/shared/components/WebView`): a thin progress bar while a page loads, an error state with Retry when it fails, and a navigation policy that keeps the user on the hosts you allow.
+- **`WebViewScreen`** (`src/app/screens/WebViewScreen`): a header with a back button, reload and "open in browser", over a `WebView`. It is registered as the `WebView` route of the root stack.
+
+## Enable and remove
+
+<CommandTabs yarn="tempo feature add webview" npm="npx tempo feature add webview" />
+
+<CommandTabs yarn="tempo feature remove webview" npm="npx tempo feature remove webview" />
+
+Removing it deletes the two folders, the route type and registration, the `react-native-webview` dependency and its translations, then runs `pod install`. The items sample keeps working: its "Open product page" button is marked as part of this module and goes with it.
+
+## Native setup
+
+None. `react-native-webview` autolinks on both platforms and supports the New Architecture. Run `yarn pods` after enabling the module on iOS.
+
+## Use it
+
+Open the screen from anywhere with the root navigator (`navigationRef` works outside React):
+
+```ts
+import { navigationRef } from '@navigation/navigationRef';
+
+navigationRef.navigate('WebView', { url: 'https://example.com/terms', title: 'Terms' });
+```
+
+The route is `WebView: { url: string; title?: string }`. Without a `title`, the header shows the page title once it loads, and the host until then.
+
+To embed the view in your own screen:
+
+```tsx
+import { WebView } from '@shared/components';
+
+<WebView
+  url="https://example.com/help"
+  allowedHosts={['example.com', 'cdn.example.com']}
+  onPageChange={({ url, title }) => setTitle(title)}
+/>;
+```
+
+| Prop           | Meaning                                                                                       |
+| -------------- | --------------------------------------------------------------------------------------------- |
+| `url`          | The page to load. It must be `https`.                                                         |
+| `allowedHosts` | Hosts that open inside the view, with their subdomains. Defaults to the host of `url`.        |
+| `reloadToken`  | Change the number to reload the current page.                                                 |
+| `onPageChange` | Called with the current `url` and `title` as the page changes.                                |
+
+## Link policy
+
+Every request goes through `decideNavigation`, which returns `allow`, `external` or `block`:
+
+- an `https` page on an allowed host loads in the view;
+- any other `http` or `https` link, and `mailto:`, `tel:` and `sms:` links, open outside the app through `openUrlSafe`;
+- every other scheme (`javascript:`, `intent:`, `file:`, `data:`) is dropped.
+
+The `WebViewScreen` refuses a `url` that is not `https` and shows an error instead of a page.
+
+<Callout title="No deep link, on purpose" type="warn">
+  The `WebView` route has no URL path. A link such as `myapp://webview?url=...` would let anyone who can send your users a link show an arbitrary page inside your app (an open redirect). If you need one, accept only `https` and check the host against a list you own before navigating.
+</Callout>

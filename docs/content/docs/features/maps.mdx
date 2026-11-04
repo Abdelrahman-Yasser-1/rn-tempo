@@ -1,0 +1,74 @@
+---
+title: Map picker
+description: Choose a place by moving a map under a centre pin, with an optional "use my location" button.
+---
+
+<FeatureBadge name="maps" />
+
+## What it is
+
+The `maps` module adds `MapPicker` and `FormMapPicker`, built on [`react-native-maps`](https://github.com/react-native-maps/react-native-maps). The field opens a sheet with a map and a pin fixed at its centre. The user pans the map to put the pin on a place, optionally jumps to their own location, and confirms.
+
+- **iOS** uses Apple Maps and needs no key.
+- **Android** uses Google Maps and needs an API key.
+
+## Enable and remove
+
+<CommandTabs yarn="tempo feature add maps" npm="npx tempo feature add maps" />
+
+<CommandTabs yarn="tempo feature remove maps" npm="npx tempo feature remove maps" />
+
+Removal deletes the components, the dependency, the manifest entries, the `GOOGLE_MAPS_API_KEY` env lines and the translations, then runs `pod install`.
+
+## Native setup
+
+### Google Maps key (Android)
+
+1. Create a key in the [Google Cloud console](https://console.cloud.google.com/google/maps-apis) with the **Maps SDK for Android** enabled, and restrict it to your package name and signing certificates.
+2. Put it in the env file of each flavor (`.env.dev`, `.env.staging`, `.env.prod`):
+
+   ```bash
+   GOOGLE_MAPS_API_KEY=your-key
+   ```
+
+`android/app/build.gradle` reads the key of the selected flavor into the `googleMapsApiKey` manifest placeholder, and `AndroidManifest.xml` passes it to `com.google.android.geo.API_KEY`. The entry is always present, so an empty key does not crash the app: the map draws blank tiles. Keep real keys out of git; the committed files hold an empty value.
+
+### Location permission
+
+The "use my location" button is the only thing that needs location access, and it asks only when pressed.
+
+- **iOS**: `NSLocationWhenInUseUsageDescription` is in `Info.plist`; the system prompt appears when the map starts showing the user's location. Reword the string for your app.
+- **Android**: `ACCESS_FINE_LOCATION` and `ACCESS_COARSE_LOCATION` are in the manifest and requested at runtime through the `usePermissions` hook.
+
+A refusal shows a toast with an "Open settings" action. Pass `showMyLocation={false}` to remove the button; you can then also delete the permission entries.
+
+## Use it
+
+The value is a `MapLocation`:
+
+```ts
+type MapLocation = { latitude: number; longitude: number; address?: string };
+```
+
+```tsx
+import { FormMapPicker, MapPicker } from '@shared/components';
+
+<MapPicker label="Pickup location" value={place} onChange={setPlace} />;
+
+// With react-hook-form: the value is a MapLocation, or null when empty.
+<FormMapPicker control={control} name="pickupLocation" label="Pickup location" />;
+```
+
+The map opens on `value`, else on `defaultCenter`, else on Riyadh.
+
+## Showing an address
+
+The picker returns coordinates only; `address` is there for you to fill in. Turning coordinates into text needs a geocoding service, and which one is your decision (Google, Apple, a government service). When you pick one, call it after `onChange` and store the result next to the coordinates:
+
+```ts
+const onChange = async (location: MapLocation) => {
+  setPlace(location);
+  const address = await reverseGeocode(location); // your service
+  setPlace({ ...location, address });
+};
+```

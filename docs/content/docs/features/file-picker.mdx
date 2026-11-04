@@ -1,0 +1,80 @@
+---
+title: File pickers
+description: Pick a file from the camera, the photo library or the file browser, with size and type checks.
+---
+
+<FeatureBadge name="file-picker" />
+
+## What it is
+
+The `file-picker` module adds fields that let the user attach files, and the service that talks to the native pickers.
+
+| Piece                                  | Where                                    | What it does                                                         |
+| -------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------- |
+| `FilePicker`, `FormFilePicker`         | `src/shared/components`                  | One file, with name, size, icon and a remove button.                 |
+| `MultiFilePicker`, `FormMultiFilePicker` | `src/shared/components`                | A list of files with `maxFiles`.                                     |
+| `FileRow`, `FileSourceSheet`           | `src/shared/components`                  | The row and the "Take a photo / Choose from photos / Browse files" sheet. |
+| `pickDocument`, `pickImage`            | `src/services/files`                     | The only code that imports the native libraries.                     |
+
+It uses [`@react-native-documents/picker`](https://react-native-documents.github.io/) for documents and [`react-native-image-picker`](https://github.com/react-native-image-picker/react-native-image-picker) for the camera and photo library. A lint rule allows these two packages only inside `src/services/files`.
+
+## Enable and remove
+
+<CommandTabs yarn="tempo feature add file-picker" npm="npx tempo feature add file-picker" />
+
+<CommandTabs yarn="tempo feature remove file-picker" npm="npx tempo feature remove file-picker" />
+
+Removal deletes the components and `src/services/files`, the two dependencies, the Info.plist usage strings and the translations, then runs `pod install`.
+
+## Native setup
+
+**iOS**: the module adds two strings to `Info.plist`. Reword them for your app, because App Review reads them.
+
+- `NSCameraUsageDescription` for "Take a photo";
+- `NSPhotoLibraryUsageDescription` for "Choose from photos".
+
+`NSPhotoLibraryAddUsageDescription` is not needed: the pickers never save to the library.
+
+**Android**: nothing to add. The image picker does not need the `CAMERA` permission unless your app declares it in its manifest. If you add that permission yourself, request it at runtime before opening the camera.
+
+When the camera or photo permission is refused, the picker shows a toast with an "Open settings" action.
+
+## Use it
+
+The value is a `PickedFile`:
+
+```ts
+type PickedFile = { uri: string; name: string; type: string; size: number };
+```
+
+```tsx
+import { FilePicker, FormFilePicker } from '@shared/components';
+
+<FilePicker
+  label="Attachment"
+  value={file}
+  onChange={setFile}
+  accept={['application/pdf', 'image/*']}
+  maxSizeMB={5}
+/>;
+
+// With react-hook-form: the value is a PickedFile, or null when empty.
+<FormFilePicker control={control} name="attachment" label="Attachment" maxSizeMB={5} />;
+```
+
+| Prop        | Meaning                                                                                              |
+| ----------- | ---------------------------------------------------------------------------------------------------- |
+| `accept`    | MIME types or wildcards. When no image type is accepted, only "Browse files" is offered.             |
+| `maxSizeMB` | Largest file. A bigger one is refused with an error message under the field.                         |
+| `maxFiles`  | `MultiFilePicker` only: the most files in the list. The field disables itself when it is full.        |
+
+`MultiFilePicker` skips duplicates and files that fail the checks, keeps the rest, and shows the first problem.
+
+To upload, send `uri` with `FormData` (React Native's `fetch` and axios read `file://` and `content://` URIs):
+
+```ts
+const body = new FormData();
+body.append('file', { uri: file.uri, name: file.name, type: file.type } as unknown as Blob);
+```
+
+The items sample sends only the file's metadata as JSON, because its API (dummyjson) is a mock.
