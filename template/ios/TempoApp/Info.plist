@@ -49,8 +49,18 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<!-- @tempo-feature:file-picker:start -->
+	<key>NSCameraUsageDescription</key>
+	<string>The camera is used to take photos you choose to attach.</string>
+	<!-- @tempo-feature:file-picker:end -->
+	<!-- @tempo-feature:maps:start -->
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string>Your location is used to place the pin on the map when you ask for it.</string>
+	<!-- @tempo-feature:maps:end -->
+	<!-- @tempo-feature:file-picker:start -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Your photos are used when you choose a picture to attach.</string>
+	<!-- @tempo-feature:file-picker:end -->
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>
