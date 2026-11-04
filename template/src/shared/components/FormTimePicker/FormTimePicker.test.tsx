@@ -12,10 +12,13 @@ import { FormTimePicker } from './FormTimePicker';
 const schema = z.object({ field: z.string().min(1, 'username.required') });
 type FormValues = { field: string };
 
-function Harness({ onValid }: Readonly<{ onValid: (values: FormValues) => void }>) {
+function Harness({
+  onValid,
+  initial = '',
+}: Readonly<{ onValid: (values: FormValues) => void; initial?: string }>) {
   const { control, handleSubmit } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { field: '' },
+    defaultValues: { field: initial },
   });
 
   return (
@@ -49,5 +52,18 @@ describe('FormTimePicker', () => {
     const { user } = await renderWithProviders(<Harness onValid={jest.fn()} />);
     await user.press(screen.getByRole('button', { name: 'Submit' }));
     expect(await screen.findByText('Enter your username.')).toBeOnTheScreen();
+  });
+
+  it('shows the prefilled time formatted', async () => {
+    await renderWithProviders(<Harness initial="14:30" onValid={jest.fn()} />);
+    expect(screen.getByText(/^2:30\sPM$/)).toBeOnTheScreen();
+  });
+
+  it('translates the validation message to Arabic', async () => {
+    const { user } = await renderWithProviders(<Harness onValid={jest.fn()} />, {
+      language: 'ar',
+    });
+    await user.press(screen.getByRole('button', { name: 'Submit' }));
+    expect(await screen.findByText('أدخل اسم المستخدم.')).toBeOnTheScreen();
   });
 });
