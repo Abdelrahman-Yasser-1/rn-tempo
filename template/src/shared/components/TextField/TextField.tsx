@@ -1,14 +1,19 @@
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TextInput } from 'react-native';
 import { useUnistyles } from 'react-native-unistyles';
 
 import { Box } from '../Box';
+import { FieldLabel } from '../FieldLabel';
+import { FieldMessage } from '../FieldMessage';
 import { IconButton } from '../IconButton';
 import { Text } from '../Text';
 
 import { styles } from './styles';
 import type { TextFieldProps } from './types';
 import { useTextField } from './useTextField';
+
+const DEFAULT_MULTILINE_LINES = 4;
 
 type PasswordToggleProps = Readonly<{
   isRevealed: boolean;
@@ -33,19 +38,52 @@ function PasswordToggle({ isRevealed, isDisabled, onToggle, testID }: PasswordTo
   );
 }
 
+type AffixProps = Readonly<{ content: ReactNode; testID?: string }>;
+
+/** Nothing for an empty slot; a string is styled as secondary text, any other node as given. */
+function Affix({ content, testID }: AffixProps) {
+  if (content === undefined || content === null || content === '') {
+    return null;
+  }
+  return typeof content === 'string' ? (
+    <Text testID={testID} color="textSecondary">
+      {content}
+    </Text>
+  ) : (
+    content
+  );
+}
+
+type AdornmentProps = Readonly<{ content: ReactNode }>;
+
+/** An edge slot (icon, button); nothing when empty. */
+function Adornment({ content }: AdornmentProps) {
+  return content === undefined || content === null ? null : (
+    <Box style={styles.adornment}>{content}</Box>
+  );
+}
+
 /**
- * Labelled text input with helper and error text, start/end adornments and, for
- * `secureTextEntry`, a show/hide toggle.
+ * Labelled text input with helper and error text, start/end adornments, in-field prefix and
+ * suffix, a read-only style and, for `secureTextEntry`, a show/hide toggle.
  */
 export function TextField({
   ref,
   label,
+  required: isRequired,
+  subLabel,
+  tooltip,
   helperText,
   errorText,
   disabled: isDisabled = false,
+  readOnly: isReadOnly = false,
   left,
   right,
+  prefix,
+  suffix,
   secureTextEntry: isSecure = false,
+  multiline: isMultiline = false,
+  numberOfLines,
   accessibilityLabel,
   accessibilityState,
   onFocus,
@@ -62,7 +100,13 @@ export function TextField({
     onToggleReveal,
   } = useTextField({ onFocus, onBlur });
   const isInvalid = errorText !== undefined && errorText !== '';
-  styles.useVariants({ focused: isFocused, invalid: isInvalid, disabled: isDisabled });
+  styles.useVariants({
+    multiline: isMultiline,
+    focused: isFocused && !isReadOnly,
+    invalid: isInvalid,
+    readOnly: isReadOnly,
+    disabled: isDisabled,
+  });
 
   const state = { ...accessibilityState, disabled: isDisabled };
   const message = isInvalid ? errorText : helperText;
@@ -81,12 +125,17 @@ export function TextField({
   return (
     <Box style={styles.root}>
       {label !== undefined && (
-        <Text testID={testID ? `${testID}.label` : undefined} variant="label" color="textSecondary">
-          {label}
-        </Text>
+        <FieldLabel
+          testID={testID ? `${testID}.label` : undefined}
+          label={label}
+          required={isRequired}
+          subLabel={subLabel}
+          tooltip={tooltip}
+        />
       )}
       <Box style={styles.container}>
-        {left !== undefined && <Box style={styles.adornment}>{left}</Box>}
+        <Adornment content={left} />
+        <Affix content={prefix} testID={testID ? `${testID}.prefix` : undefined} />
         <TextInput
           accessibilityLabel={accessibilityLabel ?? label}
           accessibilityState={state}
@@ -96,26 +145,27 @@ export function TextField({
           {...rest}
           ref={ref}
           testID={testID}
+          multiline={isMultiline}
+          numberOfLines={numberOfLines}
           editable={!isDisabled}
+          readOnly={isReadOnly || undefined}
           secureTextEntry={isSecure && !isRevealed}
-          style={styles.input}
+          style={[
+            styles.input,
+            isMultiline && styles.multilineHeight(numberOfLines ?? DEFAULT_MULTILINE_LINES),
+          ]}
           onFocus={handleFocus}
           onBlur={handleBlur}
         />
-        {endAdornment !== undefined && endAdornment !== null && (
-          <Box style={styles.adornment}>{endAdornment}</Box>
-        )}
+        <Affix content={suffix} testID={testID ? `${testID}.suffix` : undefined} />
+        <Adornment content={endAdornment} />
       </Box>
       {message !== undefined && message !== '' && (
-        <Text
+        <FieldMessage
           testID={testID ? `${testID}.${messageKind}` : undefined}
-          variant="caption"
-          color={isInvalid ? 'error' : 'textSecondary'}
-          accessibilityLiveRegion={isInvalid ? 'polite' : undefined}
-          accessibilityRole={isInvalid ? 'alert' : undefined}
-        >
-          {message}
-        </Text>
+          variant={messageKind}
+          message={message}
+        />
       )}
     </Box>
   );

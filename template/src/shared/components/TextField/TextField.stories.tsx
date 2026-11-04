@@ -31,6 +31,26 @@ export const WithError: Story = { args: { errorText: 'Enter a valid email addres
 
 export const Disabled: Story = { args: { disabled: true, value: 'locked@example.com' } };
 
+export const Required: Story = {
+  args: {
+    required: true,
+    subLabel: '(as on your ID)',
+    tooltip: 'Use the name printed on your ID.',
+  },
+};
+
+export const ReadOnly: Story = { args: { readOnly: true, value: 'locked@example.com' } };
+
+export const PrefixAndSuffix: Story = {
+  render: (args) => (
+    <Column gap="md">
+      <TextField {...args} label="Mobile" prefix="+966" placeholder="5X XXX XXXX" />
+      <TextField {...args} label="Amount" suffix="SAR" placeholder="0.00" />
+      <TextField {...args} label="Search" prefix={<Icon name="search" size={20} />} suffix="km" />
+    </Column>
+  ),
+};
+
 export const Password: Story = {
   args: { label: 'Password', placeholder: '', secureTextEntry: true, value: 'secret123' },
 };

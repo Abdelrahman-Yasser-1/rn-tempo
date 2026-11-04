@@ -19,6 +19,12 @@
     "retry": "إعادة المحاولة",
     "title": "حدث خطأ ما"
   },
+  "field": {
+    "characterCount": "{{current}} من {{max}} حرفًا",
+    "hideHint": "إخفاء التلميح",
+    "required": "مطلوب",
+    "showHint": "إظهار التلميح"
+  },
   "header": {
     "back": "رجوع"
   },
