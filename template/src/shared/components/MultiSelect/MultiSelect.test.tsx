@@ -132,6 +132,209 @@ describe('MultiSelect', () => {
       });
       expect(screen.getByText('No results')).toBeOnTheScreen();
     });
+
+    it('waits for the debounce before filtering, and ignores case', async () => {
+      await renderWithProviders(
+        <MultiSelect label="Tags" searchable options={OPTIONS} value={[]} onChange={jest.fn()} />,
+      );
+      jest.useFakeTimers();
+      // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
+      await fireEvent.changeText(screen.getByLabelText('Search options'), 'BETA');
+      await act(async () => {
+        await jest.advanceTimersByTimeAsync(100);
+      });
+      expect(screen.getByRole('checkbox', { name: 'Alpha' })).toBeOnTheScreen();
+      await act(async () => {
+        await jest.advanceTimersByTimeAsync(150);
+      });
+      expect(screen.queryByRole('checkbox', { name: 'Alpha' })).not.toBeOnTheScreen();
+      expect(screen.getByRole('checkbox', { name: 'Beta' })).toBeOnTheScreen();
+    });
+
+    it('selects only the filtered, enabled options with Select all', async () => {
+      const onChange = jest.fn();
+      await renderWithProviders(
+        <MultiSelect label="Tags" searchable options={OPTIONS} value={[]} onChange={onChange} />,
+      );
+      jest.useFakeTimers();
+      // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
+      await fireEvent.changeText(screen.getByLabelText('Search options'), 'a');
+      await act(async () => {
+        await jest.advanceTimersByTimeAsync(250);
+      });
+      // "a" matches Alpha, Beta, Gamma (disabled), Delta; Epsilon has no "a".
+      // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
+      await fireEvent.press(screen.getByRole('button', { name: 'Select all' }));
+      expect(onChange).toHaveBeenLastCalledWith(['a', 'b', 'd']);
+    });
+
+    it('has no search field unless searchable', async () => {
+      await renderWithProviders(
+        <MultiSelect label="Tags" options={OPTIONS} value={[]} onChange={jest.fn()} />,
+      );
+      expect(screen.queryByLabelText('Search options')).not.toBeOnTheScreen();
+    });
+  });
+
+  it('shows up to three selections as chips and four as a count', async () => {
+    const { rerender } = await renderWithProviders(
+      <MultiSelect label="Tags" options={OPTIONS} value={['a', 'b', 'd']} onChange={jest.fn()} />,
+    );
+    expect(screen.getByRole('button', { name: 'Remove Alpha' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Remove Delta' })).toBeOnTheScreen();
+    expect(screen.queryByText('3 selected')).not.toBeOnTheScreen();
+    await rerender(
+      <MultiSelect
+        label="Tags"
+        options={OPTIONS}
+        value={['a', 'b', 'd', 'e']}
+        onChange={jest.fn()}
+      />,
+    );
+    expect(screen.getByText('4 selected')).toBeOnTheScreen();
+  });
+
+  it('keeps the other chips when one is removed', async () => {
+    const onChange = jest.fn();
+    const { user } = await renderWithProviders(
+      <MultiSelect label="Tags" options={OPTIONS} value={['a', 'b', 'd']} onChange={onChange} />,
+    );
+    await user.press(screen.getByRole('button', { name: 'Remove Beta' }));
+    expect(onChange).toHaveBeenCalledWith(['a', 'd']);
+  });
+
+  it('uses a custom placeholder when nothing is selected', async () => {
+    await renderWithProviders(
+      <MultiSelect
+        label="Tags"
+        placeholder="Pick tags"
+        options={OPTIONS}
+        value={[]}
+        onChange={jest.fn()}
+      />,
+    );
+    expect(screen.getByText('Pick tags')).toBeOnTheScreen();
+  });
+
+  it('does not select a disabled option', async () => {
+    const onChange = jest.fn();
+    const { user } = await renderWithProviders(
+      <MultiSelect label="Tags" options={OPTIONS} value={[]} onChange={onChange} />,
+    );
+    await user.press(screen.getByRole('checkbox', { name: 'Gamma' }));
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('shows the option description under its label', async () => {
+    await renderWithProviders(
+      <MultiSelect label="Tags" options={OPTIONS} value={[]} onChange={jest.fn()} />,
+    );
+    expect(screen.getByText('First letter')).toBeOnTheScreen();
+  });
+
+  it('blocks a further selection at the limit, but lets a selected option be unticked', async () => {
+    const onChange = jest.fn();
+    const { user } = await renderWithProviders(
+      <MultiSelect
+        label="Tags"
+        options={OPTIONS}
+        value={['a', 'b']}
+        maxSelected={2}
+        onChange={onChange}
+      />,
+    );
+    await user.press(screen.getByRole('checkbox', { name: 'Delta' }));
+    expect(onChange).not.toHaveBeenCalled();
+    await user.press(screen.getByRole('checkbox', { name: 'Beta' }));
+    expect(onChange).toHaveBeenCalledWith(['a']);
+    expect(screen.getByText('Choose up to 2')).toBeOnTheScreen();
+  });
+
+  it('enables the unselected options again below the limit', async () => {
+    await renderWithProviders(
+      <MultiSelect
+        label="Tags"
+        options={OPTIONS}
+        value={['a']}
+        maxSelected={2}
+        onChange={jest.fn()}
+      />,
+    );
+    expect(screen.getByRole('checkbox', { name: 'Delta' })).toBeEnabled();
+  });
+
+  it('disables Clear while nothing is selected', async () => {
+    await renderWithProviders(
+      <MultiSelect label="Tags" options={OPTIONS} value={[]} onChange={jest.fn()} />,
+    );
+    expect(screen.getByRole('button', { name: 'Clear' })).toBeDisabled();
+  });
+
+  it('closes the sheet from its close button', async () => {
+    const dismiss = jest.spyOn(BottomSheetModal.prototype, 'dismiss');
+    const { user } = await renderWithProviders(
+      <MultiSelect label="Tags" options={OPTIONS} value={[]} onChange={jest.fn()} />,
+    );
+    await user.press(screen.getByRole('button', { name: 'Close' }));
+    expect(dismiss).toHaveBeenCalled();
+  });
+
+  it('titles the sheet with the sheetTitle, or else the label', async () => {
+    const { rerender } = await renderWithProviders(
+      <MultiSelect label="Tags" options={OPTIONS} value={[]} onChange={jest.fn()} />,
+    );
+    expect(screen.getByRole('header', { name: 'Tags' })).toBeOnTheScreen();
+    await rerender(
+      <MultiSelect
+        label="Tags"
+        sheetTitle="Choose tags"
+        options={OPTIONS}
+        value={[]}
+        onChange={jest.fn()}
+      />,
+    );
+    expect(screen.getByRole('header', { name: 'Choose tags' })).toBeOnTheScreen();
+  });
+
+  it('shows no empty state while there are options', async () => {
+    await renderWithProviders(
+      <MultiSelect label="Tags" options={OPTIONS} value={[]} onChange={jest.fn()} />,
+    );
+    expect(screen.queryByText('No results')).not.toBeOnTheScreen();
+  });
+
+  it('shows the empty state when there are no options at all', async () => {
+    await renderWithProviders(
+      <MultiSelect label="Tags" options={[]} value={[]} onChange={jest.fn()} />,
+    );
+    expect(screen.getByText('No results')).toBeOnTheScreen();
+  });
+
+  it('is disabled, with disabled chips, when disabled', async () => {
+    const present = jest.spyOn(BottomSheetModal.prototype, 'present');
+    const { user } = await renderWithProviders(
+      <MultiSelect label="Tags" disabled options={OPTIONS} value={['a']} onChange={jest.fn()} />,
+    );
+    const field = screen.getByRole('combobox', { name: 'Tags' });
+    expect(field).toBeDisabled();
+    await user.press(field);
+    expect(present).not.toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: 'Remove Alpha' })).not.toBeOnTheScreen();
+  });
+
+  it('shows the helper text and the sub label', async () => {
+    await renderWithProviders(
+      <MultiSelect
+        label="Tags"
+        subLabel="(optional)"
+        helperText="Pick some"
+        options={OPTIONS}
+        value={[]}
+        onChange={jest.fn()}
+      />,
+    );
+    expect(screen.getByText('Pick some')).toBeOnTheScreen();
+    expect(screen.getByText('(optional)')).toBeOnTheScreen();
   });
 
   it('does not open or offer chip removal when read only', async () => {
