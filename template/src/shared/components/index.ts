@@ -21,6 +21,7 @@ export * from './Divider';
 export * from './EmptyState';
 export * from './ErrorBoundary';
 export * from './ErrorState';
+export * from './Fab';
 export * from './FieldLabel';
 export * from './FieldMessage';
 export * from './FormTextArea';
