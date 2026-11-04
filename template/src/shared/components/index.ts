@@ -102,3 +102,4 @@ export * from './TimeSlotPicker';
 export * from './ToastHost';
 export * from './Tooltip';
 export * from './UserCard';
+export * from './WebView'; // @tempo-feature:webview
