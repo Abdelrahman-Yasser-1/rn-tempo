@@ -68,14 +68,14 @@ export function MapPicker({
         testID={testID}
         onPress={vm.onOpen}
       />
-      <PickerSheet
-        visible={vm.isOpen}
-        title={sheetTitle ?? label ?? t('mapPicker.title')}
-        testID={suffix('sheet')}
-        onConfirm={vm.onConfirm}
-        onClose={vm.onClose}
-      >
-        {vm.isOpen && (
+      {vm.isOpen && (
+        <PickerSheet
+          visible
+          title={sheetTitle ?? label ?? t('mapPicker.title')}
+          testID={suffix('sheet')}
+          onConfirm={vm.onConfirm}
+          onClose={vm.onClose}
+        >
           <Box style={styles.body}>
             <View style={styles.mapFrame(Math.round(height * MAP_HEIGHT_RATIO))}>
               <MapView
@@ -125,8 +125,8 @@ export function MapPicker({
               {vm.draftText}
             </Text>
           </Box>
-        )}
-      </PickerSheet>
+        </PickerSheet>
+      )}
     </>
   );
 }
