@@ -3,7 +3,15 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import type { HomeStackParamList } from '@navigation/types';
-import { DetailsShimmer, ErrorState, Header, Image, Screen, Text } from '@shared/components';
+import {
+  Button,
+  DetailsShimmer,
+  ErrorState,
+  Header,
+  Image,
+  Screen,
+  Text,
+} from '@shared/components';
 import { formatCurrency, formatNumber } from '@shared/utils';
 
 import { styles } from './styles';
@@ -51,6 +59,16 @@ export function ItemDetailsScreen({ route }: ItemDetailsScreenProps) {
           </Text>
         </View>
         <Text testID="item-details.description">{data.description}</Text>
+        {/* @tempo-feature:webview:start */}
+        <Button
+          title={t('details.openProduct')}
+          variant="outline"
+          icon="external-link"
+          fullWidth
+          onPress={vm.onOpenProductPage}
+          testID="item-details.open-product-button"
+        />
+        {/* @tempo-feature:webview:end */}
       </View>
     );
   }

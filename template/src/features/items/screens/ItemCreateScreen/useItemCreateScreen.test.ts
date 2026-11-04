@@ -147,6 +147,76 @@ describe('useItemCreateScreen', () => {
       'Eco-friendly',
     ]);
   });
+
+  // @tempo-feature:file-picker:start
+  test('sends the attachment only when one was chosen', async () => {
+    const bodies: Record<string, unknown>[] = [];
+    server.use(
+      http.post('*/products/add', async ({ request }) => {
+        bodies.push((await request.json()) as Record<string, unknown>);
+        return HttpResponse.json({ id: 101 }, { status: 201 });
+      }),
+    );
+    const attachment = { uri: 'file:///a.pdf', name: 'a.pdf', type: 'application/pdf', size: 10 };
+
+    const view = await renderHookWithProviders(() => useItemCreateScreen());
+    await fillFields(view.result.current.control, VALID);
+    await act(async () => {
+      await view.result.current.control
+        .register('attachment')
+        .onChange({ target: { name: 'attachment', value: attachment }, type: 'change' });
+    });
+    await act(() => {
+      view.result.current.onSubmit();
+      return Promise.resolve();
+    });
+    await waitFor(() => {
+      expect(bodies).toHaveLength(1);
+    });
+    expect(bodies[0]).toMatchObject({ attachment });
+
+    await submitWith(VALID);
+    await waitFor(() => {
+      expect(bodies).toHaveLength(2);
+    });
+    expect(bodies[1]).not.toHaveProperty('attachment');
+  });
+  // @tempo-feature:file-picker:end
+
+  // @tempo-feature:maps:start
+  test('sends the pickup location only when one was chosen', async () => {
+    const bodies: Record<string, unknown>[] = [];
+    server.use(
+      http.post('*/products/add', async ({ request }) => {
+        bodies.push((await request.json()) as Record<string, unknown>);
+        return HttpResponse.json({ id: 101 }, { status: 201 });
+      }),
+    );
+    const pickupLocation = { latitude: 24.7136, longitude: 46.6753 };
+
+    const view = await renderHookWithProviders(() => useItemCreateScreen());
+    await fillFields(view.result.current.control, VALID);
+    await act(async () => {
+      await view.result.current.control
+        .register('pickupLocation')
+        .onChange({ target: { name: 'pickupLocation', value: pickupLocation }, type: 'change' });
+    });
+    await act(() => {
+      view.result.current.onSubmit();
+      return Promise.resolve();
+    });
+    await waitFor(() => {
+      expect(bodies).toHaveLength(1);
+    });
+    expect(bodies[0]).toMatchObject({ pickupLocation });
+
+    await submitWith(VALID);
+    await waitFor(() => {
+      expect(bodies).toHaveLength(2);
+    });
+    expect(bodies[1]).not.toHaveProperty('pickupLocation');
+  });
+  // @tempo-feature:maps:end
 });
 
 const SCHEMA_INPUT = {

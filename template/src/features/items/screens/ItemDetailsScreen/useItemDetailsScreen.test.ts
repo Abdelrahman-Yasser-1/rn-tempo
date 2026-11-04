@@ -14,6 +14,18 @@ jest.mock('@react-navigation/native', () => ({
   useNavigation: () => mockNavigation,
 }));
 
+// @tempo-feature:webview:start
+const mockRootNavigate = jest.fn<undefined, [string, object]>();
+jest.mock('@navigation/navigationRef', () => ({
+  navigationRef: {
+    isReady: () => true,
+    navigate: (name: string, params: object) => {
+      mockRootNavigate(name, params);
+    },
+  },
+}));
+// @tempo-feature:webview:end
+
 beforeEach(() => {
   mockNavigation.navigate.mockClear();
   mockNavigation.goBack.mockClear();
@@ -69,4 +81,20 @@ describe('useItemDetailsScreen', () => {
 
     expect(mockNavigation.goBack).toHaveBeenCalledTimes(1);
   });
+
+  // @tempo-feature:webview:start
+  test('opens the product page of the item in the web view', async () => {
+    const { result } = await renderHookWithProviders(() => useItemDetailsScreen(routeFor(4)));
+    await waitFor(() => {
+      expect(result.current.data?.id).toBe(4);
+    });
+
+    result.current.onOpenProductPage();
+
+    expect(mockRootNavigate).toHaveBeenCalledWith('WebView', {
+      url: 'https://dummyjson.com/products/4',
+      title: 'Product 4',
+    });
+  });
+  // @tempo-feature:webview:end
 });

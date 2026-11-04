@@ -30,23 +30,47 @@ export function useItemCreateScreen() {
       tags: [],
       availableFrom: '',
       pickupSlot: '',
+      // @tempo-feature:file-picker:start
+      attachment: null,
+      // @tempo-feature:file-picker:end
+      // @tempo-feature:maps:start
+      pickupLocation: null,
+      // @tempo-feature:maps:end
     },
   });
 
   // Read once on mount so the render stays pure; the earliest availability day is today.
   const [today] = useState(() => toISODate(new Date()));
 
-  // The optional date and slot only go in the request when they were set.
-  const submit = handleSubmit(({ availableFrom, pickupSlot, ...values }) => {
-    createItem.mutate(
-      {
-        ...values,
-        ...(availableFrom ? { availableFrom } : {}),
-        ...(pickupSlot ? { pickupSlot } : {}),
-      },
-      { onSuccess: navigation.goBack },
-    );
-  });
+  // The optional fields only go in the request when they were set.
+  const submit = handleSubmit(
+    ({
+      availableFrom,
+      pickupSlot,
+      // @tempo-feature:file-picker:start
+      attachment,
+      // @tempo-feature:file-picker:end
+      // @tempo-feature:maps:start
+      pickupLocation,
+      // @tempo-feature:maps:end
+      ...values
+    }) => {
+      createItem.mutate(
+        {
+          ...values,
+          ...(availableFrom ? { availableFrom } : {}),
+          ...(pickupSlot ? { pickupSlot } : {}),
+          // @tempo-feature:file-picker:start
+          ...(attachment ? { attachment } : {}),
+          // @tempo-feature:file-picker:end
+          // @tempo-feature:maps:start
+          ...(pickupLocation ? { pickupLocation } : {}),
+          // @tempo-feature:maps:end
+        },
+        { onSuccess: navigation.goBack },
+      );
+    },
+  );
 
   const onSubmit = () => {
     void submit();

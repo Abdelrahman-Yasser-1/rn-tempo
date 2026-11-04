@@ -1,9 +1,11 @@
 {
   "create": {
+    "attachment": "مرفق",
     "availableFrom": "متاح من",
     "category": "الفئة",
     "description": "الوصف",
     "optional": "(اختياري)",
+    "pickupLocation": "موقع الاستلام",
     "pickupSlot": "موعد الاستلام",
     "price": "السعر (دولار أمريكي)",
     "quantity": "الكمية",
@@ -22,6 +24,7 @@
   },
   "details": {
     "category": "الفئة: {{category}}",
+    "openProduct": "فتح صفحة المنتج",
     "rating": "التقييم: {{rating}} / 5",
     "stock": "المتوفر: {{stock}}",
     "title": "العنصر"
