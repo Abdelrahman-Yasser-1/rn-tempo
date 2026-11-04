@@ -42,7 +42,13 @@
   },
   "select": {
     "close": "إغلاق",
-    "placeholder": "اختر خيارًا"
+    "empty": {
+      "message": "جرّب كلمة بحث مختلفة.",
+      "title": "لا توجد نتائج"
+    },
+    "placeholder": "اختر خيارًا",
+    "searchLabel": "البحث في الخيارات",
+    "searchPlaceholder": "بحث"
   },
   "sheet": {
     "close": "إغلاق"

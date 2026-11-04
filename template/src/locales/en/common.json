@@ -42,7 +42,13 @@
   },
   "select": {
     "close": "Close",
-    "placeholder": "Select an option"
+    "empty": {
+      "message": "Try a different search term.",
+      "title": "No results"
+    },
+    "placeholder": "Select an option",
+    "searchLabel": "Search options",
+    "searchPlaceholder": "Search"
   },
   "sheet": {
     "close": "Close"
