@@ -34,6 +34,14 @@ describe('PickerSheet', () => {
     expect(screen.getByText('Body')).toBeOnTheScreen();
   });
 
+  it('does not dismiss before it was ever presented', async () => {
+    // gorhom ignores the next present() after a dismiss() on a never-presented modal, so a
+    // dismiss on mount would leave the picker unable to open.
+    const dismiss = jest.spyOn(BottomSheetModal.prototype, 'dismiss');
+    await renderWithProviders(<PickerSheet visible={false} title="Pick" onClose={jest.fn()} />);
+    expect(dismiss).not.toHaveBeenCalled();
+  });
+
   it('presents and dismisses as visible changes', async () => {
     const present = jest.spyOn(BottomSheetModal.prototype, 'present');
     const dismiss = jest.spyOn(BottomSheetModal.prototype, 'dismiss');

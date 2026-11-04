@@ -24,14 +24,15 @@ describe('BottomSheet', () => {
     expect(present).toHaveBeenCalled();
   });
 
-  it('dismisses the sheet when hidden', async () => {
+  it('does not dismiss a sheet that was never presented', async () => {
+    // gorhom ignores the next present() after a dismiss() on a never-presented modal.
     const dismiss = jest.spyOn(BottomSheetModal.prototype, 'dismiss');
     await renderWithProviders(
       <BottomSheet visible={false} onClose={jest.fn()}>
         <Text>Content</Text>
       </BottomSheet>,
     );
-    expect(dismiss).toHaveBeenCalled();
+    expect(dismiss).not.toHaveBeenCalled();
   });
 
   it('renders a header title and the children', async () => {

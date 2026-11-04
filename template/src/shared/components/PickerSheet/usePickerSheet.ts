@@ -27,10 +27,15 @@ export function usePickerSheet({
     return isScrollable ? SCROLLABLE_SNAP_POINTS : undefined;
   }, [snapPoints, isScrollable]);
 
+  // Dismissing a modal that was never presented leaves gorhom in its DISMISSING state, and the
+  // next present() then never shows the sheet. So only dismiss after a present.
+  const wasPresentedRef = useRef(false);
   useEffect(() => {
     if (isVisible) {
+      wasPresentedRef.current = true;
       sheetRef.current?.present();
-    } else {
+    } else if (wasPresentedRef.current) {
+      wasPresentedRef.current = false;
       sheetRef.current?.dismiss();
     }
   }, [isVisible]);
