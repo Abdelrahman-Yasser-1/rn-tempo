@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
+import { action } from 'storybook/actions';
 
 import { toast } from '@services/toast/toast';
 
@@ -28,7 +29,7 @@ const meta = {
         />
         <Button
           title="Info"
-          variant="neutral"
+          variant="outline"
           onPress={() => {
             toast.info('Heads up');
           }}
@@ -38,6 +39,41 @@ const meta = {
           variant="outline"
           onPress={() => {
             toast.warning('Storage almost full', 'Free some space soon.');
+          }}
+        />
+        <Button
+          title="With actions"
+          variant="outline"
+          onPress={() => {
+            toast.show({
+              type: 'info',
+              title: 'Item archived',
+              description: 'You can undo this for a few seconds.',
+              actions: [
+                { label: 'Undo', onPress: action('undo') },
+                { label: 'View', onPress: action('view') },
+              ],
+            });
+          }}
+        />
+        <Button
+          title="Closable"
+          variant="outline"
+          onPress={() => {
+            toast.show({ type: 'success', title: 'Profile updated', isClosable: true });
+          }}
+        />
+        <Button
+          title="Fixed (no auto-hide)"
+          variant="outline"
+          onPress={() => {
+            toast.show({
+              type: 'warning',
+              title: 'Update required',
+              description: 'Stays until you close it.',
+              isFixed: true,
+              isClosable: true,
+            });
           }}
         />
       </Column>

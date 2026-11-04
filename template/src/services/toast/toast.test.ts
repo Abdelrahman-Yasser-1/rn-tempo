@@ -26,7 +26,7 @@ describe('toast', () => {
     toast.show({
       type: 'warning',
       title: 'Low battery',
-      message: 'Connect a charger',
+      description: 'Connect a charger',
       durationMs: 1500,
       onPress,
     });
