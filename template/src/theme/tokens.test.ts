@@ -4,6 +4,7 @@ import path from 'node:path';
 import { palette } from './palette';
 import { contrast } from './testContrast';
 import { darkTheme, lightTheme } from './themes';
+import type * as Themes from './themes';
 import { darkColors, lightColors, type ColorTokens } from './tokens';
 
 const TEXT_PAIRS: [foreground: keyof ColorTokens, background: keyof ColorTokens][] = [
@@ -59,6 +60,20 @@ describe('themes', () => {
     }
     expect(lightTheme.typography.display.fontFamily).toBe('IBMPlexSansArabic-Bold');
     expect(lightTheme.typography.body.fontFamily).toBe('IBMPlexSansArabic');
+  });
+
+  test('keeps the semantic weight on iOS but leaves the weight to the family on Android', () => {
+    expect(lightTheme.typography.display.fontWeight).toBe('700');
+
+    jest.isolateModules(() => {
+      jest.doMock('react-native', () => ({ Platform: { OS: 'android' } }));
+      const { lightTheme: androidTheme } = jest.requireActual<typeof Themes>('./themes');
+      for (const style of Object.values(androidTheme.typography)) {
+        expect(style.fontWeight).toBe('400');
+      }
+      expect(androidTheme.typography.display.fontFamily).toBe('IBMPlexSansArabic-Bold');
+    });
+    jest.dontMock('react-native');
   });
 });
 
