@@ -56,6 +56,11 @@
   "sheet": {
     "close": "إغلاق"
   },
+  "timeline": {
+    "current": "الخطوة الحالية",
+    "done": "مكتمل",
+    "upcoming": "قادم"
+  },
   "toast": {
     "close": "إغلاق الإشعار"
   },
