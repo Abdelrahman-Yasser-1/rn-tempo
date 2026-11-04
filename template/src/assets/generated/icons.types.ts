@@ -1524,6 +1524,7 @@ export type IconName =
   | 'microwave-filled'
   | 'military-rank-filled'
   | 'milk-filled'
+  | 'minus'
   | 'mood-angry-filled'
   | 'mood-confuzed-filled'
   | 'mood-crazy-happy-filled'
