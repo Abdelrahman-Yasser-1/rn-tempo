@@ -20,6 +20,7 @@ export const styles = StyleSheet.create((theme, rt) => ({
     paddingBottom: theme.spacing.xl,
   },
   footer: {
+    backgroundColor: theme.colors.surface,
     gap: theme.spacing.sm,
     paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.md,
