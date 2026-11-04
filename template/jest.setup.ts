@@ -72,6 +72,26 @@ jest.mock('react-native-bootsplash', () => ({
   hide: jest.fn().mockResolvedValue(undefined),
   isVisible: jest.fn().mockReturnValue(false),
 }));
+// @tempo-feature:file-picker:start
+// The native pickers need a device; tests drive the mocked `pick`, `launchCamera` and
+// `launchImageLibrary` (jest.mocked) instead.
+jest.mock('@react-native-documents/picker', () => ({
+  pick: jest.fn(),
+  errorCodes: {
+    OPERATION_CANCELED: 'OPERATION_CANCELED',
+    ASYNC_OP_IN_PROGRESS: 'ASYNC_OP_IN_PROGRESS',
+    IN_PROGRESS: 'ASYNC_OP_IN_PROGRESS',
+    UNABLE_TO_OPEN_FILE_TYPE: 'UNABLE_TO_OPEN_FILE_TYPE',
+    NULL_PRESENTER: 'NULL_PRESENTER',
+  },
+  isErrorWithCode: (error: unknown) =>
+    typeof error === 'object' && error !== null && 'code' in error,
+}));
+jest.mock('react-native-image-picker', () => ({
+  launchCamera: jest.fn(),
+  launchImageLibrary: jest.fn(),
+}));
+// @tempo-feature:file-picker:end
 
 beforeAll(() => {
   // MSW 3 renamed `onUnhandledRequest` to `onUnhandledFrame`.
