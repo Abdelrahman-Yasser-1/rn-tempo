@@ -27,6 +27,14 @@ const RESTRICTIONS = {
   },
   axios: { name: 'axios', message: 'Only src/services/http may import axios.' },
   mmkv: { name: 'react-native-mmkv', message: 'Only src/services/storage may import MMKV.' },
+  documentPicker: {
+    name: '@react-native-documents/picker',
+    message: 'Only src/services/files may import the document picker.',
+  },
+  imagePicker: {
+    name: 'react-native-image-picker',
+    message: 'Only src/services/files may import the image picker.',
+  },
   reactNativeSvg: {
     name: 'react-native-svg',
     message: 'Draw icons with <Icon name=... /> from @shared/components; only Icon uses react-native-svg.',
@@ -89,6 +97,11 @@ export function restrictionsConfig() {
       name: 'rn-tempo/restrictions/storage',
       files: ['src/services/storage/**'],
       rules: { 'no-restricted-imports': restrict(['mmkv']) },
+    },
+    {
+      name: 'rn-tempo/restrictions/files',
+      files: ['src/services/files/**'],
+      rules: { 'no-restricted-imports': restrict(['documentPicker', 'imagePicker']) },
     },
     {
       name: 'rn-tempo/restrictions/storage-key',
