@@ -8,6 +8,8 @@ export const styles = StyleSheet.create((theme) => ({
     justifyContent: 'center',
     overflow: 'hidden',
     borderRadius: theme.radii.full,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: theme.colors.divider,
     backgroundColor: theme.colors.primaryContainer,
     variants: {
       size: {

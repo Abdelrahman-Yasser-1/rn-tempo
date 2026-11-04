@@ -1,21 +1,19 @@
 import { StyleSheet } from 'react-native-unistyles';
 
-import { MIN_TOUCH_TARGET } from '@shared/constants/touch';
-
 export const styles = StyleSheet.create((theme) => ({
   root: {
     // The visible chip is smaller than the touch target; hitSlop makes up the difference.
     alignSelf: 'flex-start',
-    minHeight: MIN_TOUCH_TARGET - theme.spacing.lg,
+    minHeight: theme.spacing.xxl,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.md,
+    gap: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.xs,
     borderWidth: 1,
-    borderRadius: theme.radii.full,
+    borderRadius: theme.radii.sm,
     borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surfaceVariant,
+    backgroundColor: theme.colors.background,
     variants: {
       selected: {
         true: {
