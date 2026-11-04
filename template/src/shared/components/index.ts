@@ -41,6 +41,7 @@ export * from './ListItemContent';
 export * from './ListShimmer';
 export * from './Loader';
 export * from './Modal';
+export * from './MultiSelect';
 export * from './NumberInput';
 export * from './OfflineBanner';
 export * from './OtpInput';
