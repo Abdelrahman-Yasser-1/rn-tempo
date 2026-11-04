@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { isValidISODate } from './calendar';
 import { isValidPhone } from './phone';
 
 /**
@@ -8,6 +9,7 @@ import { isValidPhone } from './phone';
  */
 
 // Keys of the `validation` namespace, declared here so the i18n extractor keeps them.
+// t('date.invalid', { ns: 'validation', defaultValue: 'Enter a valid date.' })
 // t('email.required', { ns: 'validation', defaultValue: 'Enter your email address.' })
 // t('email.invalid', { ns: 'validation', defaultValue: 'Enter a valid email address.' })
 // t('password.tooShort', { ns: 'validation', defaultValue: 'Use at least 8 characters.' })
@@ -43,3 +45,6 @@ export const nameSchema = z
   .trim()
   .min(NAME_MIN_LENGTH, 'name.tooShort')
   .max(NAME_MAX_LENGTH, 'name.tooLong');
+
+/** A real calendar day as `YYYY-MM-DD` (the value the date pickers produce). */
+export const isoDateSchema = z.string().refine((value) => isValidISODate(value), 'date.invalid');

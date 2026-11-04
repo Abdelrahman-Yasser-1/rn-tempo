@@ -1,4 +1,7 @@
 {
+  "date": {
+    "invalid": "Enter a valid date."
+  },
   "email": {
     "invalid": "Enter a valid email address.",
     "required": "Enter your email address."
