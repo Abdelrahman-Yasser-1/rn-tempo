@@ -10,6 +10,7 @@ import type { EmptyStateProps } from './types';
 /** Placeholder for lists and screens with nothing to show, with an optional action. */
 export function EmptyState({
   icon = 'search',
+  illustration,
   title,
   message,
   actionLabel,
@@ -18,7 +19,7 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <View testID={testID} style={styles.root}>
-      <Icon name={icon} size={48} color="textSecondary" />
+      {illustration ?? <Icon name={icon} size={48} color="textSecondary" />}
       <Text testID={testID ? `${testID}.title` : undefined} variant="title" align="center">
         {title}
       </Text>

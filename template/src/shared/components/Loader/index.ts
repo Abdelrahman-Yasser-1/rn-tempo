@@ -1,2 +1,2 @@
 export { Loader } from './Loader';
-export type { LoaderProps, LoaderSize } from './types';
+export type { LoaderProps, LoaderSize, LoaderVariant } from './types';

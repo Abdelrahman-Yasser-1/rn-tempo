@@ -1,6 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 import { action } from 'storybook/actions';
 
+import { Box } from '../Box';
+import { Icon } from '../Icon';
+
 import { EmptyState } from './EmptyState';
 
 const meta = {
@@ -24,3 +27,16 @@ export const WithAction: Story = {
 };
 
 export const TitleOnly: Story = { args: { message: undefined } };
+
+/** The slot takes any node; here a tinted circle stands in for an illustration. */
+export const WithIllustration: Story = {
+  args: {
+    illustration: (
+      <Box p="xl" radius="full" bg="primaryContainer">
+        <Icon name="photo-off" size="xl" color="primary" />
+      </Box>
+    ),
+    actionLabel: 'Add photo',
+    onAction: action('onAction'),
+  },
+};
