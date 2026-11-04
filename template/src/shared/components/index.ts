@@ -27,6 +27,7 @@ export * from './Icon';
 export * from './IconButton';
 export * from './Image';
 export * from './ListItem';
+export * from './ListItemContent';
 export * from './ListShimmer';
 export * from './Loader';
 export * from './Modal';

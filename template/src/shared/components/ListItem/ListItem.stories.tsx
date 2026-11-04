@@ -38,3 +38,36 @@ export const Variants: Story = {
     </Column>
   ),
 };
+
+export const Layouts: Story = {
+  render: (args) => (
+    <Column>
+      <ListItem {...args} layout="default" meta="12 Nov" />
+      <ListItem {...args} layout="inline" meta="12 Nov" />
+      <ListItem {...args} layout="stacked" meta="12 Nov" />
+    </Column>
+  ),
+};
+
+export const Slots: Story = {
+  render: (args) => (
+    <Column>
+      <ListItem
+        {...args}
+        leading={{ type: 'icon', name: 'bell' }}
+        trailing={{ type: 'text', text: 'On' }}
+      />
+      <ListItem
+        {...args}
+        leading={{ type: 'avatar', name: 'Ada Lovelace' }}
+        trailing={{ type: 'badge', count: 2, variant: 'error' }}
+      />
+      <ListItem
+        {...args}
+        leading={{ type: 'image', source: { uri: 'https://picsum.photos/id/1011/96/96' } }}
+        trailing={{ type: 'chevron' }}
+        onPress={action('onPress')}
+      />
+    </Column>
+  ),
+};

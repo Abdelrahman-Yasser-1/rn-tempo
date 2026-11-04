@@ -4,16 +4,21 @@ import Animated from 'react-native-reanimated';
 import { HIT_SLOP } from '@shared/constants/touch';
 import { usePressFeedback } from '@shared/hooks';
 
-import { Icon } from '../Icon';
-import { Text } from '../Text';
+import { ListItemContent } from '../ListItemContent';
 
 import { styles } from './styles';
 import type { ListItemProps } from './types';
+
+const CHEVRON = { type: 'chevron' } as const;
 
 /** Row with a title, optional subtitle and leading/trailing content; pressable with `onPress`. */
 export function ListItem({
   title,
   subtitle,
+  meta,
+  layout,
+  leading,
+  trailing,
   left,
   right,
   showChevron: shouldShowChevron = false,
@@ -32,27 +37,17 @@ export function ListItem({
   styles.useVariants({ divider: shouldShowDivider });
 
   const content = (
-    <>
-      {left}
-      <View style={styles.body}>
-        <Text testID={testID ? `${testID}.title` : undefined} variant="body">
-          {title}
-        </Text>
-        {subtitle !== undefined && (
-          <Text
-            testID={testID ? `${testID}.subtitle` : undefined}
-            variant="bodySmall"
-            color="textSecondary"
-          >
-            {subtitle}
-          </Text>
-        )}
-      </View>
-      {right ??
-        (shouldShowChevron && onPress !== undefined && (
-          <Icon name="chevron-right" size="md" color="textSecondary" />
-        ))}
-    </>
+    <ListItemContent
+      title={title}
+      subtitle={subtitle}
+      meta={meta}
+      layout={layout}
+      leading={leading}
+      trailing={trailing ?? (shouldShowChevron && onPress !== undefined ? CHEVRON : undefined)}
+      left={left}
+      right={right}
+      partsTestID={testID}
+    />
   );
 
   if (onPress === undefined) {
