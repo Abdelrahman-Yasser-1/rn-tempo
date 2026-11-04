@@ -41,6 +41,30 @@
     "required": "required",
     "showHint": "Show hint"
   },
+  "filePicker": {
+    "add": "Add files",
+    "browse": "Browse files",
+    "camera": "Take a photo",
+    "cameraUnavailable": "No camera is available on this device.",
+    "count": "{{current}} of {{max}} files",
+    "errorSize": "The file is larger than {{max}} MB.",
+    "errorType": "This type of file is not allowed.",
+    "failed": "Could not get the file. Try again.",
+    "library": "Choose from photos",
+    "maxFiles": "You can add up to {{max}} files.",
+    "openSettings": "Open settings",
+    "permissionDenied": "Allow access in Settings to use the camera or your photos.",
+    "placeholder": "Choose a file",
+    "remove": "Remove {{name}}",
+    "replace": "Replace file",
+    "sheetTitle": "Add a file",
+    "units": {
+      "b": "{{size}} B",
+      "gb": "{{size}} GB",
+      "kb": "{{size}} KB",
+      "mb": "{{size}} MB"
+    }
+  },
   "filterBar": {
     "filters": "Filters",
     "filtersActive": "Filters, {{active}} active"
