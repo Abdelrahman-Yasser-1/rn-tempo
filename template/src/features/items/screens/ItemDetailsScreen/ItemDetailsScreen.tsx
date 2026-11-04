@@ -4,7 +4,9 @@ import { View } from 'react-native';
 
 import type { HomeStackParamList } from '@navigation/types';
 import {
+  // @tempo-feature:webview:start
   Button,
+  // @tempo-feature:webview:end
   DetailsShimmer,
   ErrorState,
   Header,
