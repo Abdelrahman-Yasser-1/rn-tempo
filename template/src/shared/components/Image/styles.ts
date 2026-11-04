@@ -16,6 +16,13 @@ export const styles = StyleSheet.create((theme) => ({
     width: '100%' as const,
     height: '100%' as const,
   },
+  placeholder: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    start: 0,
+    end: 0,
+  },
   fallback: {
     position: 'absolute',
     top: 0,
