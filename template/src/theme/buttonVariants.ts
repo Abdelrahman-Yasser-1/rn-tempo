@@ -17,21 +17,6 @@ export type ButtonVariant =
   | 'dangerGhost'
   | 'link';
 
-export const BUTTON_VARIANTS: readonly ButtonVariant[] = [
-  'primary',
-  'neutral',
-  'secondary',
-  'outline',
-  'outlineOnColor',
-  'subtle',
-  'ghost',
-  'danger',
-  'dangerOutline',
-  'dangerSubtle',
-  'dangerGhost',
-  'link',
-];
-
 /** Foreground (label, icon, spinner) token for each variant. */
 export const BUTTON_CONTENT_COLOR: Record<ButtonVariant, keyof ColorTokens> = {
   primary: 'onPrimary',
