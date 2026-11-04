@@ -32,4 +32,43 @@ describe('FormReview', () => {
     await user.press(screen.getByRole('link', { name: 'Edit Plan' }));
     expect(onEdit).toHaveBeenCalledWith('plan');
   });
+
+  it('puts the section title in the Edit link name, one link per section', async () => {
+    await renderWithProviders(<FormReview sections={SECTIONS} onEdit={jest.fn()} />);
+    expect(screen.getAllByRole('link')).toHaveLength(2);
+    expect(screen.getByRole('link', { name: 'Edit Account' })).toBeOnTheScreen();
+    expect(screen.getByRole('link', { name: 'Edit Plan' })).toBeOnTheScreen();
+  });
+
+  it('reports each section key on its own link', async () => {
+    const onEdit = jest.fn();
+    const { user } = await renderWithProviders(<FormReview sections={SECTIONS} onEdit={onEdit} />);
+    await user.press(screen.getByRole('link', { name: 'Edit Account' }));
+    await user.press(screen.getByRole('link', { name: 'Edit Plan' }));
+    expect(onEdit.mock.calls).toEqual([['account'], ['plan']]);
+  });
+
+  it('reads each row with its label in both layouts', async () => {
+    const { rerender } = await renderWithProviders(<FormReview sections={SECTIONS} />);
+    expect(screen.getByLabelText('Tier, Pro')).toBeOnTheScreen();
+    await rerender(<FormReview sections={SECTIONS} layout="vertical" />);
+    expect(screen.getByLabelText('Name, Ada Lovelace')).toBeOnTheScreen();
+  });
+
+  it('passes the testID down to sections, titles and edit links', async () => {
+    await renderWithProviders(
+      <FormReview sections={SECTIONS} onEdit={jest.fn()} testID="review" />,
+    );
+    /* eslint-disable no-restricted-syntax -- checks the testID plumbing itself */
+    expect(screen.getByTestId('review.plan')).toBeOnTheScreen();
+    expect(screen.getByTestId('review.plan.title')).toHaveTextContent('Plan');
+    expect(screen.getByTestId('review.plan.edit')).toBeOnTheScreen();
+    expect(screen.getByTestId('review.plan.list.tier')).toBeOnTheScreen();
+    /* eslint-enable no-restricted-syntax */
+  });
+
+  it('renders nothing without sections', async () => {
+    await renderWithProviders(<FormReview sections={[]} testID="review" />);
+    expect(screen.queryByRole('header')).not.toBeOnTheScreen();
+  });
 });
