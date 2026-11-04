@@ -5,6 +5,8 @@ import { useLatest } from '@shared/hooks';
 
 import type { PickerSheetProps } from './types';
 
+const SCROLLABLE_SNAP_POINTS = ['60%'];
+
 /**
  * Presents or dismisses the modal as `visible` changes. `onConfirmPress` keeps one identity for
  * the sheet's whole life (it reads the newest `onConfirm` through a ref), so the memoized footer
@@ -14,10 +16,16 @@ export function usePickerSheet({
   visible: isVisible,
   onConfirm,
   snapPoints,
-}: Pick<PickerSheetProps, 'visible' | 'onConfirm' | 'snapPoints'>) {
+  scrollable: isScrollable = false,
+}: Pick<PickerSheetProps, 'visible' | 'onConfirm' | 'snapPoints' | 'scrollable'>) {
   const sheetRef = useRef<BottomSheetModal>(null);
   const latestConfirm = useLatest(onConfirm);
-  const points = useMemo(() => (snapPoints ? [...snapPoints] : undefined), [snapPoints]);
+  const points = useMemo(() => {
+    if (snapPoints) {
+      return [...snapPoints];
+    }
+    return isScrollable ? SCROLLABLE_SNAP_POINTS : undefined;
+  }, [snapPoints, isScrollable]);
 
   useEffect(() => {
     if (isVisible) {

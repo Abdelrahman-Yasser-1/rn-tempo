@@ -125,6 +125,20 @@
     "placeholder": "اختر وقتًا",
     "title": "اختر وقتًا"
   },
+  "timeSlot": {
+    "empty": {
+      "message": "لا توجد مواعيد متاحة للاختيار.",
+      "title": "لا توجد مواعيد"
+    },
+    "period": {
+      "afternoon": "بعد الظهر",
+      "evening": "المساء",
+      "morning": "الصباح"
+    },
+    "placeholder": "اختر موعدًا",
+    "title": "اختر موعدًا",
+    "titleOnDate": "المواعيد في {{date}}"
+  },
   "toast": {
     "close": "إغلاق الإشعار"
   },

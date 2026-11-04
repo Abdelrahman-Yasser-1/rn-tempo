@@ -11,6 +11,8 @@ export type PickerSheetProps = Readonly<{
    */
   onConfirm?: () => void;
   confirmDisabled?: boolean;
+  /** Scrolls the content in a fixed-height sheet (60% unless `snapPoints` say otherwise), for long lists. */
+  scrollable?: boolean;
   /** Fixed snap points such as `['60%']`; omit to size the sheet to its content. */
   snapPoints?: readonly (string | number)[];
   children?: ReactNode;
