@@ -175,6 +175,7 @@ export function Select({
         keyboardBlurBehavior="restore"
         android_keyboardInputMode="adjustResize"
         enableDynamicSizing={false}
+        accessible={false}
         backdropComponent={renderBackdrop}
         backgroundStyle={styles.sheetBackground}
         handleIndicatorStyle={styles.sheetHandle}

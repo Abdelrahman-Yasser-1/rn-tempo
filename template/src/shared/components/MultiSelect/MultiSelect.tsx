@@ -199,6 +199,7 @@ export function MultiSelect({
         keyboardBlurBehavior="restore"
         android_keyboardInputMode="adjustResize"
         enableDynamicSizing={false}
+        accessible={false}
         backdropComponent={renderBackdrop}
         backgroundStyle={selectStyles.sheetBackground}
         handleIndicatorStyle={selectStyles.sheetHandle}

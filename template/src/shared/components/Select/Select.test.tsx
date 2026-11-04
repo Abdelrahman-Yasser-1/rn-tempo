@@ -195,4 +195,13 @@ describe('Select', () => {
     expect(screen.getByRole('header', { name: 'Plan' })).toBeOnTheScreen();
     expect(screen.getByRole('header', { name: 'Choose a tier' })).toBeOnTheScreen();
   });
+
+  it('does not make the sheet one accessible node, so screen readers reach its contents', async () => {
+    const render = jest.spyOn(BottomSheetModal.prototype, 'render');
+    await renderWithProviders(
+      <Select label="Plan" options={OPTIONS} value="b" onChange={jest.fn()} />,
+    );
+    const [sheet] = render.mock.contexts as { props: { accessible?: boolean } }[];
+    expect(sheet?.props.accessible).toBe(false);
+  });
 });
