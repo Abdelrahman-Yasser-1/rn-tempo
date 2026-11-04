@@ -2,9 +2,18 @@
   "create": {
     "category": "الفئة",
     "description": "الوصف",
+    "optional": "(اختياري)",
     "price": "السعر (دولار أمريكي)",
+    "quantity": "الكمية",
     "submit": "إنشاء العنصر",
     "success": "تم إنشاء العنصر",
+    "tagOptions": {
+      "eco": "صديق للبيئة",
+      "new": "جديد",
+      "popular": "شائع",
+      "sale": "تخفيض"
+    },
+    "tags": "الوسوم",
     "title": "عنصر جديد",
     "titleLabel": "العنوان",
     "unavailable": "إنشاء العناصر غير متاح حاليًا."

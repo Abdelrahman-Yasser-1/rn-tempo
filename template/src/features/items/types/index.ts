@@ -5,6 +5,7 @@ import { z } from 'zod';
 // t('item.priceInvalid', { ns: 'validation', defaultValue: 'Enter a price greater than 0.' })
 // t('item.descriptionRequired', { ns: 'validation', defaultValue: 'Enter a description.' })
 // t('item.categoryRequired', { ns: 'validation', defaultValue: 'Enter a category.' })
+// t('item.quantityInvalid', { ns: 'validation', defaultValue: 'Enter a quantity of at least 1.' })
 
 /** Contract C13 `Item`. */
 export const ItemSchema = z.object({
@@ -34,11 +35,16 @@ export const CreateItemSchema = z.object({
   price: z.coerce.number('item.priceInvalid').positive('item.priceInvalid'),
   description: z.string().trim().min(1, 'item.descriptionRequired'),
   category: z.string().trim().min(1, 'item.categoryRequired'),
+  quantity: z
+    .number('item.quantityInvalid')
+    .int('item.quantityInvalid')
+    .min(1, 'item.quantityInvalid'),
+  tags: z.array(z.string()),
 });
 
 /** dummyjson echoes only the sent fields plus the new id, so that is all the app relies on. */
 export const CreatedItemSchema = z.object({ id: z.number() });
 
-/** The form values: `price` is typed text until the schema coerces it. */
+/** The form values: `price` is typed text until the schema coerces it. `tags` hold the ids of `ITEM_TAGS`. */
 export type CreateItemInput = z.input<typeof CreateItemSchema>;
 export type CreateItem = z.output<typeof CreateItemSchema>;

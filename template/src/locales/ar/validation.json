@@ -7,6 +7,7 @@
     "categoryRequired": "أدخل الفئة.",
     "descriptionRequired": "أدخل الوصف.",
     "priceInvalid": "أدخل سعرًا أكبر من 0.",
+    "quantityInvalid": "أدخل كمية لا تقل عن 1.",
     "titleRequired": "أدخل العنوان."
   },
   "name": {

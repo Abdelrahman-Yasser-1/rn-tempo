@@ -2,9 +2,18 @@
   "create": {
     "category": "Category",
     "description": "Description",
+    "optional": "(optional)",
     "price": "Price (USD)",
+    "quantity": "Quantity",
     "submit": "Create item",
     "success": "Item created",
+    "tagOptions": {
+      "eco": "Eco-friendly",
+      "new": "New",
+      "popular": "Popular",
+      "sale": "On sale"
+    },
+    "tags": "Tags",
     "title": "New item",
     "titleLabel": "Title",
     "unavailable": "Creating items is not available right now."
