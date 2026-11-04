@@ -7,27 +7,27 @@ import { Text } from '../Text';
 import { styles } from './styles';
 import type { LoaderProps } from './types';
 
-/** Activity indicator with an optional caption, announced as a busy progress bar. */
+/** Claims every touch so nothing underneath the overlay reacts. */
+const blockTouches = () => true;
+
+/**
+ * Activity indicator with an optional caption, announced as a busy progress bar. The `overlay`
+ * variant covers its parent and blocks interaction while work is in progress.
+ */
 export function Loader({
   size = 'lg',
   color = 'primary',
   label,
-  fullScreen: isFullScreen = false,
+  variant = 'inline',
   testID,
 }: LoaderProps) {
   const { t } = useTranslation();
   const { theme } = useUnistyles();
-  styles.useVariants({ fullScreen: isFullScreen });
+  styles.useVariants({ variant });
+  const isOverlay = variant === 'overlay';
 
-  return (
-    <View
-      accessible
-      accessibilityRole="progressbar"
-      accessibilityLabel={label ?? t('loader.label')}
-      accessibilityState={{ busy: true }}
-      testID={testID}
-      style={styles.root}
-    >
+  const content = (
+    <>
       <ActivityIndicator
         testID={testID ? `${testID}.spinner` : undefined}
         size={size === 'sm' ? 'small' : 'large'}
@@ -43,6 +43,21 @@ export function Loader({
           {label}
         </Text>
       )}
+    </>
+  );
+
+  return (
+    <View
+      accessible
+      accessibilityRole="progressbar"
+      accessibilityLabel={label ?? t('loader.label')}
+      accessibilityState={{ busy: true }}
+      accessibilityViewIsModal={isOverlay}
+      onStartShouldSetResponder={isOverlay ? blockTouches : undefined}
+      testID={testID}
+      style={styles.root}
+    >
+      {isOverlay ? <View style={styles.panel}>{content}</View> : content}
     </View>
   );
 }
