@@ -1,6 +1,7 @@
 // Barrel (contract C4).
 export * from './Accordion';
 export * from './AccordionItem';
+export * from './AuthLayout';
 export * from './Avatar';
 export * from './Badge';
 export * from './Bone';
