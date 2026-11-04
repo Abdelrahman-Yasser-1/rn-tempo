@@ -6,9 +6,17 @@ export const styles = StyleSheet.create((theme) => ({
   root: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     minHeight: MIN_TOUCH_TARGET,
     gap: theme.spacing.md,
+    variants: {
+      labelPosition: {
+        start: { justifyContent: 'space-between' },
+        end: { justifyContent: 'flex-start' },
+      },
+    },
+  },
+  label: {
+    flexShrink: 1,
   },
   track: {
     width: theme.spacing.xxxl,
