@@ -1,8 +1,13 @@
 import { screen } from '@testing-library/react-native';
 
+import { openUrlSafe } from '@services/linking/linking';
 import { renderWithProviders } from '@test-utils/renderWithProviders';
 
 import { SectionHeader } from './SectionHeader';
+
+jest.mock('@services/linking/linking', () => ({
+  openUrlSafe: jest.fn(() => Promise.resolve(true)),
+}));
 
 describe('SectionHeader', () => {
   it('exposes the title as a header with its subtitle', async () => {
@@ -23,5 +28,19 @@ describe('SectionHeader', () => {
     );
     await user.press(screen.getByRole('link', { name: 'See all' }));
     expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it('opens the action href through openUrlSafe', async () => {
+    const { user } = await renderWithProviders(
+      <SectionHeader title="Help" action={{ label: 'Open docs', href: 'https://example.test' }} />,
+    );
+    await user.press(screen.getByRole('link', { name: 'Open docs' }));
+    expect(openUrlSafe).toHaveBeenCalledWith('https://example.test');
+  });
+
+  it('shows no subtitle when it is empty', async () => {
+    await renderWithProviders(<SectionHeader title="Recent" subtitle="" testID="section" />);
+    // eslint-disable-next-line no-restricted-syntax -- checks the testID plumbing itself
+    expect(screen.queryByTestId('section.subtitle')).not.toBeOnTheScreen();
   });
 });
