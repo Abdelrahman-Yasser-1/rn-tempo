@@ -2,6 +2,8 @@
 export { formatCurrency, formatDate, formatNumber, formatRelativeTime } from './format';
 export type { DateStyle } from './format';
 export { haptics } from './haptics';
+export { computeTooltipLayout } from './tooltipLayout';
+export type { Rect, TooltipLayout, TooltipPlacement } from './tooltipLayout';
 export { isValidPhone, normalizePhone } from './phone';
 export { isAndroid, isIOS, select } from './platform';
 export { retry, sleep } from './retry';
