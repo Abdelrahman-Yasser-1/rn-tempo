@@ -51,6 +51,9 @@
   "otp": {
     "digit": "Digit {{index}} of {{total}}"
   },
+  "paginatedList": {
+    "emptyTitle": "Nothing to show"
+  },
   "pagination": {
     "next": "Next page",
     "page": "Page {{page}}",
