@@ -51,3 +51,59 @@ describe('FormCheckbox', () => {
     expect(await screen.findByRole('alert', { name: 'Enter your username.' })).toBeOnTheScreen();
   });
 });
+
+function Extra({ isOn = false, helperText }: Readonly<{ isOn?: boolean; helperText?: string }>) {
+  const { control, handleSubmit } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { field: isOn },
+  });
+
+  return (
+    <>
+      <FormCheckbox<FormValues, 'field'>
+        name="field"
+        control={control}
+        label="Accept"
+        helperText={helperText}
+      />
+      <Button
+        title="Submit"
+        onPress={() => {
+          void handleSubmit(jest.fn())();
+        }}
+      />
+    </>
+  );
+}
+
+describe('FormCheckbox helper text and error states', () => {
+  it('starts from the default value', async () => {
+    await renderWithProviders(<Extra isOn />);
+    expect(screen.getByRole('checkbox', { name: 'Accept' })).toBeChecked();
+  });
+
+  it('shows the helper text until a validation error replaces it', async () => {
+    const { user } = await renderWithProviders(<Extra helperText="Required to continue" />);
+    expect(screen.getByText('Required to continue')).toBeOnTheScreen();
+    await user.press(screen.getByRole('button', { name: 'Submit' }));
+    expect(await screen.findByRole('alert', { name: 'Enter your username.' })).toBeOnTheScreen();
+    expect(screen.queryByText('Required to continue')).not.toBeOnTheScreen();
+  });
+
+  it('clears the error once the field is valid, and brings the helper text back', async () => {
+    const { user } = await renderWithProviders(<Extra helperText="Required to continue" />);
+    await user.press(screen.getByRole('button', { name: 'Submit' }));
+    expect(await screen.findByRole('alert')).toBeOnTheScreen();
+    await user.press(screen.getByRole('checkbox', { name: 'Accept' }));
+    await waitFor(() => {
+      expect(screen.queryByRole('alert')).not.toBeOnTheScreen();
+    });
+    expect(screen.getByText('Required to continue')).toBeOnTheScreen();
+  });
+
+  it('translates the error into Arabic', async () => {
+    const { user } = await renderWithProviders(<Extra />, { language: 'ar' });
+    await user.press(screen.getByRole('button', { name: 'Submit' }));
+    expect(await screen.findByRole('alert', { name: 'أدخل اسم المستخدم.' })).toBeOnTheScreen();
+  });
+});
