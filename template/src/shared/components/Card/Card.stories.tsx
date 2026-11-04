@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 import { action } from 'storybook/actions';
 
+import { Badge } from '../Badge';
+import { CardSection } from '../CardSection';
 import { Column } from '../Column';
 import { Text } from '../Text';
 
@@ -44,4 +46,30 @@ export const Variants: Story = {
 
 export const Pressable: Story = {
   args: { onPress: action('onPress'), accessibilityLabel: 'Open details' },
+};
+
+const MEDIA = { source: { uri: 'https://picsum.photos/id/1015/600/300' }, height: 140 };
+
+export const WithMedia: Story = {
+  args: { media: { ...MEDIA, accessibilityLabel: 'River valley' } },
+};
+
+export const MediaWithOverlay: Story = {
+  args: {
+    padding: 'none',
+    media: { ...MEDIA, overlay: <Badge label="New" /> },
+    onPress: action('onPress'),
+    accessibilityLabel: 'Open article',
+  },
+  render: (args) => (
+    <Card {...args}>
+      <CardSection>
+        <Text variant="title">Pressable card with media</Text>
+        <Text color="textSecondary">The overlay sits on the image.</Text>
+      </CardSection>
+      <CardSection divider>
+        <Text color="textSecondary">Footer section</Text>
+      </CardSection>
+    </Card>
+  ),
 };

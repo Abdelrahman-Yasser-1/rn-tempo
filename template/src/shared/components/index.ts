@@ -6,6 +6,7 @@ export * from './BottomSheet';
 export * from './Box';
 export * from './Button';
 export * from './Card';
+export * from './CardSection';
 export * from './CardShimmer';
 export * from './Checkbox';
 export * from './Chip';
