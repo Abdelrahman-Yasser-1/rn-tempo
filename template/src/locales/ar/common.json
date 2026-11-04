@@ -51,6 +51,9 @@
   "otp": {
     "digit": "الرقم {{index}} من {{total}}"
   },
+  "paginatedList": {
+    "emptyTitle": "لا يوجد شيء لعرضه"
+  },
   "pagination": {
     "next": "الصفحة التالية",
     "page": "الصفحة {{page}}",
