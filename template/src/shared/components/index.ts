@@ -56,6 +56,7 @@ export * from './SectionHeader';
 export * from './SegmentedControl';
 export * from './Select';
 export * from './Skeleton';
+export * from './Slider';
 export * from './Spacer';
 export * from './StatusIndicator';
 export * from './StepperLayout';
