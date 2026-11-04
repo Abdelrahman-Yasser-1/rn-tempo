@@ -43,6 +43,11 @@
   "otp": {
     "digit": "Digit {{index}} of {{total}}"
   },
+  "pagination": {
+    "next": "Next page",
+    "page": "Page {{page}}",
+    "previous": "Previous page"
+  },
   "select": {
     "close": "Close",
     "empty": {
