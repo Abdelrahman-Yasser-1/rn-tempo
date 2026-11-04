@@ -28,6 +28,7 @@ export * from './Header';
 export * from './Icon';
 export * from './IconButton';
 export * from './Image';
+export * from './Link';
 export * from './ListItem';
 export * from './ListItemContent';
 export * from './ListShimmer';
