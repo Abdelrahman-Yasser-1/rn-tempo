@@ -4,8 +4,8 @@ export type FieldLabelProps = Readonly<{
   required?: boolean;
   /** Secondary text shown next to the label, e.g. "(optional)". */
   subLabel?: string;
-  /** Help text revealed inline by a small info button next to the label. */
+  /** Help text shown in a tooltip by a small info button next to the label. */
   tooltip?: string;
-  /** Applied to the label text; the parts add suffixes (`.required`, `.subLabel`, `.tooltip`, `.hint`). */
+  /** Applied to the label text; the parts add suffixes (`.required`, `.subLabel`, `.tooltip`, and `.tooltip.bubble` for the hint text). */
   testID?: string;
 }>;
