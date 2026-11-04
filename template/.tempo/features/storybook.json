@@ -16,8 +16,7 @@
     "storybook",
     "@storybook/addon-ondevice-controls",
     "@storybook/addon-ondevice-actions",
-    "@react-native-community/datetimepicker",
-    "@react-native-community/slider"
+    "@react-native-community/datetimepicker"
   ],
   "envKeys": [
     "STORYBOOK_ENABLED"
