@@ -36,7 +36,7 @@ export function ErrorState({
           <Button
             testID={testID ? `${testID}.retry` : undefined}
             title={retryLabel ?? t('errorState.retry')}
-            leftIcon="refresh"
+            icon="refresh"
             onPress={onRetry}
           />
         </View>

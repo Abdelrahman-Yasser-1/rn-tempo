@@ -3,26 +3,24 @@ import Animated from 'react-native-reanimated';
 import { useUnistyles } from 'react-native-unistyles';
 
 import { HIT_SLOP } from '@shared/constants/touch';
-import { usePressFeedback } from '@shared/hooks';
-import type { ColorTokens } from '@theme/tokens';
+import { BUTTON_CONTENT_COLOR } from '@theme/buttonVariants';
+import type { ColorTokens, TypographyVariant } from '@theme/tokens';
 
 import { Icon } from '../Icon';
 import { Text } from '../Text';
 
 import { styles } from './styles';
-import type { ButtonProps, ButtonSize, ButtonVariant } from './types';
-
-const CONTENT_COLOR: Record<ButtonVariant, keyof ColorTokens> = {
-  primary: 'onPrimary',
-  secondary: 'onSecondary',
-  outline: 'primary',
-  ghost: 'primary',
-  danger: 'onError',
-};
+import type { ButtonProps, ButtonSize } from './types';
+import { useButton } from './useButton';
 
 const ICON_SIZE: Record<ButtonSize, number> = { sm: 16, md: 20, lg: 24 };
+const LABEL_VARIANT: Record<ButtonSize, TypographyVariant> = {
+  sm: 'label',
+  md: 'button',
+  lg: 'button',
+};
 
-/** Pressable button with variants, sizes, icons, a loading state and animated press feedback. */
+/** Pressable button with variants, sizes, an icon, a loading state and animated press feedback. */
 export function Button({
   title,
   tx,
@@ -31,8 +29,8 @@ export function Button({
   size = 'md',
   loading: isLoading = false,
   disabled: isDisabled = false,
-  leftIcon,
-  rightIcon,
+  icon,
+  iconPosition = 'start',
   fullWidth: isFullWidth = false,
   accessibilityLabel,
   accessibilityState,
@@ -42,12 +40,27 @@ export function Button({
   ...rest
 }: ButtonProps) {
   const { theme } = useUnistyles();
-  const { animatedStyle, handlers } = usePressFeedback();
+  const { animatedStyle, isPressed, ...handlers } = useButton({ onPressIn, onPressOut });
   const isInactive = isDisabled || isLoading;
   const state = { ...accessibilityState, disabled: isInactive, busy: isLoading };
-  styles.useVariants({ variant, size, fullWidth: isFullWidth, disabled: isDisabled });
+  styles.useVariants({ variant, size, fullWidth: isFullWidth });
 
-  const contentColor: keyof ColorTokens = isDisabled ? 'textDisabled' : CONTENT_COLOR[variant];
+  const contentColor: keyof ColorTokens = isDisabled
+    ? 'textDisabled'
+    : BUTTON_CONTENT_COLOR[variant];
+  const isLink = variant === 'link';
+  const isIconAtEnd = iconPosition === 'end';
+
+  // The spinner takes the icon's place, or the start slot when there is no icon.
+  const isSpinnerAtStart = isLoading && !isIconAtEnd;
+  const isSpinnerAtEnd = isLoading && isIconAtEnd;
+  const spinner = (
+    <ActivityIndicator
+      testID={testID ? `${testID}.spinner` : undefined}
+      color={theme.colors[contentColor]}
+    />
+  );
+  const iconNode = icon ? <Icon name={icon} size={ICON_SIZE[size]} color={contentColor} /> : null;
 
   return (
     <Pressable
@@ -58,37 +71,30 @@ export function Button({
       {...rest}
       testID={testID}
       disabled={isInactive}
-      onPressIn={(event) => {
-        handlers.onPressIn();
-        onPressIn?.(event);
-      }}
-      onPressOut={(event) => {
-        handlers.onPressOut();
-        onPressOut?.(event);
-      }}
+      onPressIn={handlers.onPressIn}
+      onPressOut={handlers.onPressOut}
       style={styles.root}
     >
-      <Animated.View style={[styles.container, animatedStyle]}>
-        {isLoading ? (
-          <ActivityIndicator
-            testID={testID ? `${testID}.spinner` : undefined}
-            color={theme.colors[contentColor]}
-          />
-        ) : (
-          leftIcon && <Icon name={leftIcon} size={ICON_SIZE[size]} color={contentColor} />
-        )}
+      <Animated.View
+        style={[
+          styles.container,
+          isPressed && !isInactive && styles.pressed,
+          isDisabled && styles.disabled,
+          animatedStyle,
+        ]}
+      >
+        {isSpinnerAtStart ? spinner : !isIconAtEnd && iconNode}
         <Text
           testID={testID ? `${testID}.label` : undefined}
-          variant="button"
+          variant={LABEL_VARIANT[size]}
           color={contentColor}
           tx={tx}
           txOptions={txOptions}
+          style={isLink && isPressed ? styles.pressedLabel : undefined}
         >
           {title}
         </Text>
-        {rightIcon && !isLoading && (
-          <Icon name={rightIcon} size={ICON_SIZE[size]} color={contentColor} />
-        )}
+        {isSpinnerAtEnd ? spinner : isIconAtEnd && iconNode}
       </Animated.View>
     </Pressable>
   );

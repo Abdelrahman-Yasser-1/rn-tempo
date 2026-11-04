@@ -4,21 +4,14 @@ import { useUnistyles } from 'react-native-unistyles';
 
 import { HIT_SLOP } from '@shared/constants/touch';
 import { usePressFeedback } from '@shared/hooks';
+import { BUTTON_CONTENT_COLOR } from '@theme/buttonVariants';
 import type { ColorTokens } from '@theme/tokens';
 
-import type { ButtonSize, ButtonVariant } from '../Button';
+import type { ButtonSize } from '../Button';
 import { Icon } from '../Icon';
 
 import { styles } from './styles';
 import type { IconButtonProps } from './types';
-
-const CONTENT_COLOR: Record<ButtonVariant, keyof ColorTokens> = {
-  primary: 'onPrimary',
-  secondary: 'onSecondary',
-  outline: 'primary',
-  ghost: 'primary',
-  danger: 'onError',
-};
 
 const ICON_SIZE: Record<ButtonSize, number> = { sm: 16, md: 20, lg: 24 };
 
@@ -39,9 +32,11 @@ export function IconButton({
   const { animatedStyle, handlers } = usePressFeedback();
   const isInactive = isDisabled || isLoading;
   const state = { ...accessibilityState, disabled: isInactive, busy: isLoading };
-  styles.useVariants({ variant, size, disabled: isDisabled });
+  styles.useVariants({ variant, size });
 
-  const contentColor: keyof ColorTokens = isDisabled ? 'textDisabled' : CONTENT_COLOR[variant];
+  const contentColor: keyof ColorTokens = isDisabled
+    ? 'textDisabled'
+    : BUTTON_CONTENT_COLOR[variant];
 
   return (
     <Pressable
@@ -60,7 +55,7 @@ export function IconButton({
         onPressOut?.(event);
       }}
     >
-      <Animated.View style={[styles.container, animatedStyle]}>
+      <Animated.View style={[styles.container, isDisabled && styles.disabled, animatedStyle]}>
         {isLoading ? (
           <ActivityIndicator color={theme.colors[contentColor]} />
         ) : (
