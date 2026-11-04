@@ -59,4 +59,21 @@ describe('toast', () => {
     toast.hide();
     expect(hide).toHaveBeenCalledTimes(1);
   });
+
+  it('maps actions and the close button into the library props', () => {
+    const show = jest.spyOn(Toast, 'show').mockReturnValue(undefined);
+    const actions = [{ label: 'Undo', onPress: jest.fn() }];
+    toast.show({ title: 'Deleted', actions, isClosable: true });
+    expect(show).toHaveBeenCalledWith(
+      expect.objectContaining({ props: { actions, isClosable: true } }),
+    );
+  });
+
+  it('hides itself by default and stays on screen when fixed', () => {
+    const show = jest.spyOn(Toast, 'show').mockReturnValue(undefined);
+    toast.show({ title: 'Auto' });
+    toast.show({ title: 'Sticky', isFixed: true, durationMs: 100 });
+    expect(show).toHaveBeenNthCalledWith(1, expect.objectContaining({ autoHide: true }));
+    expect(show).toHaveBeenNthCalledWith(2, expect.objectContaining({ autoHide: false }));
+  });
 });

@@ -1,4 +1,4 @@
-import { fireEvent, screen } from '@testing-library/react-native';
+import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { Text } from 'react-native';
 
 import { renderWithProviders } from '@test-utils/renderWithProviders';
@@ -14,6 +14,12 @@ function failNativeLoad() {
   const nativeImage = screen.getByTestId('pic.image', { includeHiddenElements: true });
   void fireEvent(nativeImage, 'fastImageError');
 }
+
+/** Test ids of decorative, screen-reader-hidden views are the only handle on them. */
+/* eslint-disable no-restricted-syntax -- decorative views have no accessible role */
+const getHidden = (id: string) => screen.getByTestId(id, { includeHiddenElements: true });
+const queryHidden = (id: string) => screen.queryByTestId(id, { includeHiddenElements: true });
+/* eslint-enable no-restricted-syntax */
 
 describe('Image', () => {
   it('is an informative image when given an accessibilityLabel', async () => {
@@ -59,5 +65,44 @@ describe('Image', () => {
     );
     failNativeLoad();
     expect(await screen.findByText('No photo')).toBeOnTheScreen();
+  });
+
+  it('shows a loading placeholder until the image loads', async () => {
+    await renderWithProviders(<Image source={SOURCE} testID="pic" accessibilityLabel="Sunset" />);
+    expect(getHidden('pic.loading')).toBeOnTheScreen();
+
+    void fireEvent(getHidden('pic.image'), 'fastImageLoad');
+    await waitFor(() => {
+      expect(queryHidden('pic.loading')).not.toBeOnTheScreen();
+    });
+  });
+
+  it('drops the placeholder and image once loading fails', async () => {
+    await renderWithProviders(<Image source={SOURCE} testID="pic" accessibilityLabel="Broken" />);
+    failNativeLoad();
+    await waitFor(() => {
+      expect(queryHidden('pic.loading')).not.toBeOnTheScreen();
+      expect(queryHidden('pic.image')).not.toBeOnTheScreen();
+    });
+  });
+
+  it('resets to loading when the source changes after a failure', async () => {
+    const { rerender } = await renderWithProviders(
+      <Image source={SOURCE} testID="pic" accessibilityLabel="Photo" />,
+    );
+    failNativeLoad();
+    await waitFor(() => {
+      expect(getHidden('pic.fallback')).toBeOnTheScreen();
+    });
+
+    await rerender(
+      <Image
+        source={{ uri: 'https://example.com/other.png' }}
+        testID="pic"
+        accessibilityLabel="Photo"
+      />,
+    );
+    expect(getHidden('pic.loading')).toBeOnTheScreen();
+    expect(queryHidden('pic.fallback')).not.toBeOnTheScreen();
   });
 });

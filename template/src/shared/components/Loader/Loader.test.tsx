@@ -33,4 +33,27 @@ describe('Loader', () => {
     // eslint-disable-next-line no-restricted-syntax -- ActivityIndicator has no accessible role
     expect(screen.getByTestId('large.spinner')).toHaveProp('size', 'large');
   });
+
+  it('is not modal when inline', async () => {
+    await renderWithProviders(<Loader label="Saving" />);
+    expect(screen.getByRole('progressbar', { name: 'Saving' })).toHaveProp(
+      'accessibilityViewIsModal',
+      false,
+    );
+  });
+
+  it('is announced as a modal and claims touches when an overlay', async () => {
+    await renderWithProviders(<Loader variant="overlay" label="Uploading" />);
+    const overlay = screen.getByRole('progressbar', { name: 'Uploading' });
+    expect(overlay).toHaveProp('accessibilityViewIsModal', true);
+    expect(overlay).toBeBusy();
+    expect(screen.getByText('Uploading')).toBeOnTheScreen();
+    const claimTouches = overlay.props.onStartShouldSetResponder as () => boolean;
+    expect(claimTouches()).toBe(true);
+  });
+
+  it('does not claim touches when inline', async () => {
+    await renderWithProviders(<Loader />);
+    expect(screen.getByRole('progressbar').props.onStartShouldSetResponder).toBeUndefined();
+  });
 });
