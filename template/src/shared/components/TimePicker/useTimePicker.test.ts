@@ -33,4 +33,39 @@ describe('useTimePicker on Android', () => {
     expect(onChange).toHaveBeenCalledWith('07:05');
     expect(result.current.isOpen).toBe(false);
   });
+
+  it('starts the dialog at 09:00 without a value and forwards minuteInterval', async () => {
+    const open = jest.spyOn(DateTimePickerAndroid, 'open').mockReturnValue(undefined);
+    const { result } = await renderHookWithProviders(() =>
+      useTimePicker({ onChange: jest.fn(), minuteInterval: 15 }),
+    );
+    await act(() => {
+      result.current.onOpen();
+    });
+    const options = open.mock.calls[0]?.[0];
+    expect(options?.value.getHours()).toBe(9);
+    expect(options?.value.getMinutes()).toBe(0);
+    expect(options?.minuteInterval).toBe(15);
+  });
+
+  it('does not commit when the dialog is dismissed', async () => {
+    const open = jest.spyOn(DateTimePickerAndroid, 'open').mockReturnValue(undefined);
+    const onChange = jest.fn();
+    const { result } = await renderHookWithProviders(() =>
+      useTimePicker({ value: '14:30', onChange }),
+    );
+    await act(() => {
+      result.current.onOpen();
+    });
+    open.mock.calls[0]?.[0].onDismiss?.();
+    expect(onChange).not.toHaveBeenCalled();
+    expect(result.current.isOpen).toBe(false);
+  });
+
+  it('formats the value for the field', async () => {
+    const { result } = await renderHookWithProviders(() =>
+      useTimePicker({ value: '14:30', onChange: jest.fn() }),
+    );
+    expect(result.current.valueText).toMatch(/^2:30\sPM$/);
+  });
 });
