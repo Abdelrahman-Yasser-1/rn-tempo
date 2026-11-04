@@ -1,0 +1,156 @@
+---
+title: Hijri calendar
+description: Show Umm al-Qura dates next to the Gregorian ones in the date picker.
+---
+
+## Why it's not in the template
+
+The `Calendar`, `DatePicker` and `DatePickerSheet` components work on Gregorian days. Most apps never need Hijri dates, and the ones that do disagree on the details: Umm al-Qura or a sighting-based calendar, Hijri numerals or Latin ones, Hijri only or both side by side. A built-in Hijri mode would ship a decision that half the projects would have to undo, so the template ships one hook instead: the optional `renderDayLabel` prop of `Calendar`. Everything else on this page is code you add to your project.
+
+<Callout title="Dates stay Gregorian" type="info">
+  Hijri is a display layer. Values still travel as `YYYY-MM-DD` Gregorian strings (`DatePicker`, forms, the API), so nothing else in the app changes.
+</Callout>
+
+## Approach
+
+1. Format a Gregorian day as Hijri with `Intl.DateTimeFormat` and the `islamic-umalqura` calendar extension (`ar-SA-u-ca-islamic-umalqura`).
+2. Pass the Hijri day number to `Calendar` through `renderDayLabel`. The cell's spoken label stays the full Gregorian date, so screen reader users hear the same thing in both modes.
+3. For a dual display, format the field text with `formatValue` so it shows both dates.
+4. Check the calendar is supported on every platform you ship, and fall back to a small converter package where it isn't.
+
+## Code
+
+### A formatting helper
+
+Put it in your project, for example in `src/shared/utils/hijri.ts`.
+
+```ts
+import { fromISODate } from '@shared/utils/calendar';
+
+const UMM_AL_QURA = 'islamic-umalqura';
+
+function hijriFormat(locale: string, options: Intl.DateTimeFormatOptions) {
+  // `nu-latn` keeps Latin digits, like the rest of the app. Drop it for Arabic-Indic digits.
+  return new Intl.DateTimeFormat(`${locale}-u-ca-${UMM_AL_QURA}-nu-latn`, options);
+}
+
+/** Whether this runtime really formats with the Umm al-Qura calendar (see "Platform support"). */
+export function isHijriSupported(locale: string): boolean {
+  return hijriFormat(locale, {}).resolvedOptions().calendar === UMM_AL_QURA;
+}
+
+/** "24 جمادى الأولى 1448 هـ" in Arabic, "Jumada I 24, 1448 AH" in English. */
+export function formatHijri(iso: string, locale: string): string {
+  return hijriFormat(locale, { day: 'numeric', month: 'long', year: 'numeric' }).format(
+    fromISODate(iso),
+  );
+}
+
+/** The Hijri day of the month only, for a calendar cell. */
+export function formatHijriDay(iso: string, locale: string): string {
+  return hijriFormat(locale, { day: 'numeric' }).format(fromISODate(iso));
+}
+```
+
+`fromISODate` builds a local date, so the Hijri day matches the Gregorian day the user sees whatever the time zone.
+
+### Hijri day numbers in the calendar
+
+`renderDayLabel` receives the day as `YYYY-MM-DD` and the default Gregorian label, and returns the text for the cell.
+
+```tsx
+import { useTranslation } from 'react-i18next';
+
+import { Calendar } from '@shared/components';
+
+import { formatHijriDay } from '@shared/utils/hijri';
+
+export function HijriCalendar(props: React.ComponentProps<typeof Calendar>) {
+  const { i18n } = useTranslation();
+
+  return (
+    <Calendar
+      {...props}
+      renderDayLabel={(iso) => formatHijriDay(iso, i18n.language)}
+    />
+  );
+}
+```
+
+`DatePicker` and `DatePickerSheet` forward the same prop to their calendar, so you can use it there directly:
+
+```tsx
+<DatePicker
+  label={t('booking.date')}
+  value={value}
+  onChange={setValue}
+  renderDayLabel={(iso) => formatHijriDay(iso, i18n.language)}
+/>
+```
+
+The month title above the grid is still the Gregorian month. A Hijri month spans two Gregorian ones, so there is no single title that is right for both; show the Hijri range in the field's helper text if you need it.
+
+### Gregorian and Hijri together
+
+Use `formatValue` to show both dates in the field, and `helperText` or a `Text` under it for the Hijri date of the current selection.
+
+```tsx
+import { formatDate } from '@shared/utils/format';
+import { fromISODate } from '@shared/utils/calendar';
+
+<DatePicker
+  label={t('booking.date')}
+  value={value}
+  onChange={setValue}
+  formatValue={(iso, locale) =>
+    `${formatDate(fromISODate(iso), 'medium', locale)} · ${formatHijri(iso, locale)}`
+  }
+/>;
+```
+
+### Platform support
+
+Hermes only implements the calendars its `Intl` build ships with, and that differs by platform and by React Native version. Don't assume `islamic-umalqura` works because it does in Node or in the Chrome you used to try it.
+
+- Check `isHijriSupported` on a real iOS and a real Android device, in a release build, for every locale you ship.
+- If a platform reports a different `calendar` (typically `gregory`), the helper above would print Gregorian dates under a Hijri label. Gate the feature on `isHijriSupported` and fall back to the Gregorian calendar.
+- If you need Hijri everywhere, replace the `Intl` calls with a pinned converter package. Pin an exact version, check that it implements Umm al-Qura (not only the tabular civil calendar, which can be a day off), and keep it behind the same three functions:
+
+```ts
+// hijri.ts, converter variant. `toHijri` is whatever your converter package exposes.
+import { toHijri } from 'your-hijri-converter';
+
+export function formatHijriDay(iso: string): string {
+  const [year, month, day] = iso.split('-').map(Number);
+  return String(toHijri(year, month, day).day);
+}
+```
+
+Callers don't change, because `Calendar` only sees a function from a day to a string.
+
+## Testing
+
+Unit-test the helper on Node, and test the screen on devices.
+
+```ts
+import { formatHijri, formatHijriDay } from './hijri';
+
+describe('hijri', () => {
+  it('formats a mid-month day in Arabic', () => {
+    // 4 November 2026 is the 24th of Jumada al-Ula 1448. A mid-month day is stable even if the ICU
+    // tables disagree by a day at a month boundary.
+    expect(formatHijriDay('2026-11-04', 'ar')).toBe('24');
+    expect(formatHijri('2026-11-04', 'ar')).toContain('1448');
+  });
+});
+```
+
+- A Node test proves your code, not the device. Run the calendar on iOS and Android, in English and Arabic, and compare a few days with an Umm al-Qura table.
+- Check the first and last days of a Hijri month: Umm al-Qura months have 29 or 30 days, and the Gregorian day that starts a month is where bugs show up.
+- Add a test for the `renderDayLabel` wiring if you wrap `Calendar`: the cell's accessible name must still be the Gregorian date.
+
+## Removal
+
+1. Delete `hijri.ts` and its test.
+2. Remove the `renderDayLabel` props (and the `formatValue` override) from your pickers.
+3. Nothing else changes: the template's `Calendar` never depended on the recipe, and stored values are the same Gregorian strings as before.
