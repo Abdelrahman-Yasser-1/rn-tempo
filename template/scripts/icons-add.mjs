@@ -37,15 +37,19 @@ export function toKebabCase(name) {
 }
 
 /**
- * Cleans an SVG for the icon set: drops the XML prolog and comments, makes its single paint color
- * `currentColor`, and removes the root width and height when there is a viewBox (sizes come from
- * the `Icon` props).
+ * Cleans an SVG for the icon set: drops the XML prolog, comments, `class` attributes and invisible
+ * bounding-box paths, makes its single paint color `currentColor`, and removes the root width and
+ * height when there is a viewBox (sizes come from the `Icon` props).
  */
 export function normalizeSvg(svg) {
   let result = svg
     .replaceAll(/<\?xml[\s\S]*?\?>/g, '')
     .replaceAll(/<!DOCTYPE[\s\S]*?>/gi, '')
     .replaceAll(/<!--[\s\S]*?-->/g, '')
+    // `class` becomes a `className` prop svgr cannot type on react-native-svg.
+    .replaceAll(/\sclass=("[^"]*"|'[^']*')/g, '')
+    // Tabler draws an invisible bounding-box path (`stroke="none" ... fill="none"`); it paints nothing.
+    .replaceAll(/<path\b(?=[^>]*\sstroke="none")(?=[^>]*\sfill="none")[^>]*\/>/g, '')
     .trim();
   const [color] = svgColors(result);
   if (color) {
@@ -58,7 +62,8 @@ export function normalizeSvg(svg) {
   result = result.replace(/<svg\b[^>]*>/, (tag) =>
     /\sviewBox=/.test(tag) ? tag.replaceAll(/\s(?:width|height)=("[^"]*"|'[^']*')/g, '') : tag,
   );
-  return `${result}\n`;
+  // Removed attributes and elements leave whitespace-only lines behind in multi-line sources.
+  return `${result.replaceAll(/\n[ \t]*(?=\n)/g, '')}\n`;
 }
 
 /** The icon names in `iconsDir`, sorted: `home`, `home-filled`, ... */

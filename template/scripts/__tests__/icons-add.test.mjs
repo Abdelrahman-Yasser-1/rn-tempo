@@ -66,6 +66,16 @@ describe('normalizeSvg', () => {
     assert.ok(svg.endsWith('</svg>\n'));
   });
 
+  it('drops class attributes and the invisible tabler bounding-box path', () => {
+    const svg = normalizeSvg(
+      '<svg class="icon icon-tabler" viewBox="0 0 24 24" stroke="#000" fill="none">' +
+        '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12h14"/></svg>',
+    );
+
+    assert.doesNotMatch(svg, /class=|M0 0h24v24H0z/);
+    assert.match(svg, /<path d="M5 12h14"\/>/);
+  });
+
   it('keeps the size when there is no viewBox, and leaves several colors alone', () => {
     assert.match(
       normalizeSvg('<svg width="24" height="24"><path fill="#000"/></svg>'),
