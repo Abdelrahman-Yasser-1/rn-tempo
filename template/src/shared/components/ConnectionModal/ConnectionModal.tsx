@@ -36,7 +36,7 @@ export function ConnectionModal({ testID, ...props }: ConnectionModalProps) {
         <Button
           testID={testID ? `${testID}.retry` : undefined}
           title={t('connection.retry')}
-          leftIcon="refresh"
+          icon="refresh"
           onPress={onRetryPress}
         />
       </View>

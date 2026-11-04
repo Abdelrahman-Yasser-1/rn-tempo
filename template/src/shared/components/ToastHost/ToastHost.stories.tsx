@@ -28,7 +28,7 @@ const meta = {
         />
         <Button
           title="Info"
-          variant="secondary"
+          variant="neutral"
           onPress={() => {
             toast.info('Heads up');
           }}
