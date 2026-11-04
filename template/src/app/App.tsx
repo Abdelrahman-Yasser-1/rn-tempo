@@ -17,12 +17,14 @@ import { MaintenanceScreen } from './screens/MaintenanceScreen';
 import { NotFoundScreen } from './screens/NotFoundScreen';
 import { SecurityErrorScreen } from './screens/SecurityErrorScreen';
 import { StartupErrorScreen } from './screens/StartupErrorScreen';
+import { WebViewScreen } from './screens/WebViewScreen'; // @tempo-feature:webview
 
 const Navigation = createRootNavigator({
   ForceUpdate: ForceUpdateScreen,
   Maintenance: MaintenanceScreen,
   NotFound: NotFoundScreen,
   DebugMenu: DebugMenuScreen,
+  WebView: WebViewScreen, // @tempo-feature:webview
 });
 
 // Metro drops this branch from release bundles (`__DEV__` is a compile-time false), so the
