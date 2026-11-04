@@ -4,10 +4,7 @@ import { MIN_TOUCH_TARGET } from '@shared/constants/touch';
 
 export const styles = StyleSheet.create((theme) => ({
   root: {
-    flexDirection: 'row',
-    alignItems: 'center',
     minHeight: MIN_TOUCH_TARGET,
-    gap: theme.spacing.md,
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.lg,
     variants: {
@@ -19,9 +16,5 @@ export const styles = StyleSheet.create((theme) => ({
         false: {},
       },
     },
-  },
-  body: {
-    flex: 1,
-    gap: theme.spacing.xxs,
   },
 }));
