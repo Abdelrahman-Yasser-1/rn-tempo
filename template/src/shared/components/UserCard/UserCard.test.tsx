@@ -35,4 +35,36 @@ describe('UserCard', () => {
     await renderWithProviders(<UserCard name="Ada" trailing={<Text>Admin</Text>} />);
     expect(screen.getByText('Admin')).toBeOnTheScreen();
   });
+
+  it('uses a custom accessibilityLabel for the button', async () => {
+    await renderWithProviders(
+      <UserCard
+        name="Ada Lovelace"
+        meta={['Engineer']}
+        accessibilityLabel="Open profile of Ada"
+        onPress={jest.fn()}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'Open profile of Ada' })).toBeOnTheScreen();
+  });
+
+  it('names the button after the name alone without meta lines', async () => {
+    await renderWithProviders(<UserCard name="Ada Lovelace" onPress={jest.fn()} />);
+    expect(screen.getByRole('button', { name: 'Ada Lovelace' })).toBeOnTheScreen();
+  });
+
+  it('keeps the trailing slot inside the pressable card', async () => {
+    const onPress = jest.fn();
+    const { user } = await renderWithProviders(
+      <UserCard name="Ada" trailing={<Text>Admin</Text>} onPress={onPress} />,
+    );
+    await user.press(screen.getByText('Admin'));
+    expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it('passes the testID to the card and its name', async () => {
+    await renderWithProviders(<UserCard name="Ada" testID="user" />);
+    // eslint-disable-next-line no-restricted-syntax -- checks the testID plumbing itself
+    expect(screen.getByTestId('user.name')).toHaveTextContent('Ada');
+  });
 });

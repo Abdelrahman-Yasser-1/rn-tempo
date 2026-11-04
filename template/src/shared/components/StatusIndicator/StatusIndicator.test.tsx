@@ -36,4 +36,14 @@ describe('StatusIndicator', () => {
       expect(contrast(dot, colors.background)).toBeGreaterThanOrEqual(3);
     }
   });
+
+  it('reads once, as the label, and hides the dot from assistive tech', async () => {
+    await renderWithProviders(<StatusIndicator status="error" label="Failed" testID="status" />);
+    // The dot is decorative; the colour never carries the meaning on its own.
+    // eslint-disable-next-line no-restricted-syntax -- decorative view has no role to query
+    const dot = screen.getByTestId('status.dot', { includeHiddenElements: true });
+    expect(dot).toHaveProp('accessibilityElementsHidden', true);
+    expect(dot).toHaveProp('importantForAccessibility', 'no-hide-descendants');
+    expect(screen.getByLabelText('Failed')).toBeOnTheScreen();
+  });
 });
