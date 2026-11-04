@@ -20,6 +20,10 @@
     "searchPlaceholder": "Search by name or code",
     "title": "Select a country"
   },
+  "datePicker": {
+    "placeholder": "Select a date",
+    "title": "Select a date"
+  },
   "dialog": {
     "cancel": "Cancel",
     "confirm": "Confirm"
