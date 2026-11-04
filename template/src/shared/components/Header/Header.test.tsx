@@ -1,5 +1,4 @@
 import { screen } from '@testing-library/react-native';
-import { Text } from 'react-native';
 
 import { renderWithProviders } from '@test-utils/renderWithProviders';
 
@@ -29,7 +28,14 @@ describe('Header', () => {
   });
 
   it('renders trailing actions', async () => {
-    await renderWithProviders(<Header title="Edit" right={<Text>Save</Text>} />);
-    expect(screen.getByText('Save')).toBeOnTheScreen();
+    const onSave = jest.fn();
+    const { user } = await renderWithProviders(
+      <Header
+        title="Edit"
+        actions={[{ icon: 'check', accessibilityLabel: 'Save', onPress: onSave }]}
+      />,
+    );
+    await user.press(screen.getByRole('button', { name: 'Save' }));
+    expect(onSave).toHaveBeenCalledTimes(1);
   });
 });

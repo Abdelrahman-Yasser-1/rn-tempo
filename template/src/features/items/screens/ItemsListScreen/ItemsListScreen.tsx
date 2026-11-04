@@ -6,7 +6,6 @@ import {
   EmptyState,
   ErrorState,
   Header,
-  IconButton,
   Image,
   ListItem,
   ListShimmer,
@@ -14,6 +13,7 @@ import {
   Screen,
   TextField,
 } from '@shared/components';
+import type { HeaderAction } from '@shared/components';
 import { formatCurrency } from '@shared/utils';
 
 import type { Item } from '../../types';
@@ -82,22 +82,19 @@ export function ItemsListScreen() {
     );
   }
 
+  const createAction: HeaderAction = {
+    icon: 'plus',
+    accessibilityLabel: t('list.create'),
+    onPress: vm.onCreate,
+    testID: 'items-list.create-button',
+  };
+
   return (
     <Screen preset="fixed" testID="items-list-screen">
       <Header
         title={t('list.title')}
         onBack={vm.onBack}
-        right={
-          vm.canCreate ? (
-            <IconButton
-              icon="plus"
-              variant="ghost"
-              accessibilityLabel={t('list.create')}
-              onPress={vm.onCreate}
-              testID="items-list.create-button"
-            />
-          ) : undefined
-        }
+        actions={vm.canCreate ? [createAction] : undefined}
         testID="items-list.header"
       />
       <View style={styles.search}>
