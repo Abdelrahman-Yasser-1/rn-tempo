@@ -256,3 +256,30 @@ describe('firstDayOfWeekFor', () => {
     expect(firstDayOfWeekFor('')).toBe(0);
   });
 });
+
+describe('year-month edge cases', () => {
+  it('round-trips every month of a year', () => {
+    for (let month = 0; month < 12; month += 1) {
+      expect(parseYearMonth(toYearMonth(2026, month))).toEqual({ year: 2026, month });
+    }
+  });
+
+  it('pads single-digit months and keeps December as 12', () => {
+    expect(toYearMonth(2026, 0)).toBe('2026-01');
+    expect(toYearMonth(2026, 11)).toBe('2026-12');
+    expect(parseYearMonth('2026-12')).toEqual({ year: 2026, month: 11 });
+  });
+
+  it('ignores the day of a full date', () => {
+    expect(parseYearMonth('2028-02-29')).toEqual({ year: 2028, month: 1 });
+  });
+});
+
+describe('numeralLocale edge cases', () => {
+  it('keeps an explicit numbering system and leaves other languages alone', () => {
+    expect(numeralLocale('ar-u-nu-arab')).toBe('ar-u-nu-arab');
+    expect(numeralLocale('ar-EG')).toBe('ar-EG-u-nu-latn');
+    expect(numeralLocale('en-US')).toBe('en-US');
+    expect(numeralLocale('fr')).toBe('fr');
+  });
+});
