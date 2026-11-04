@@ -4,6 +4,7 @@ export type { DateStyle } from './format';
 export { haptics } from './haptics';
 export { computeTooltipLayout } from './tooltipLayout';
 export type { Rect, TooltipLayout, TooltipPlacement } from './tooltipLayout';
+export { countryName, filterCountries, findCountry, sortCountries } from './countries';
 export { isValidPhone, joinE164, normalizePhone, splitE164 } from './phone';
 export type { SplitPhone } from './phone';
 export { isAndroid, isIOS, select } from './platform';

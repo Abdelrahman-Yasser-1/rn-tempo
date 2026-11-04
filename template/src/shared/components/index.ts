@@ -15,6 +15,7 @@ export * from './Checkbox';
 export * from './Chip';
 export * from './Column';
 export * from './ConnectionModal';
+export * from './CountryPicker';
 export * from './DescriptionList';
 export * from './DetailsShimmer';
 export * from './Dialog';
