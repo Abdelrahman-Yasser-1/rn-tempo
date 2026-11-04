@@ -1010,6 +1010,7 @@ import CalendarEventFilled from './icons/CalendarEventFilled';
 import CalendarFilled from './icons/CalendarFilled';
 import CalendarMonthFilled from './icons/CalendarMonthFilled';
 import CalendarWeekFilled from './icons/CalendarWeekFilled';
+import Calendar from './icons/Calendar';
 import CameraFilled from './icons/CameraFilled';
 import CampfireFilled from './icons/CampfireFilled';
 import CandleFilled from './icons/CandleFilled';
@@ -1157,6 +1158,7 @@ import ClockHour6Filled from './icons/ClockHour6Filled';
 import ClockHour7Filled from './icons/ClockHour7Filled';
 import ClockHour8Filled from './icons/ClockHour8Filled';
 import ClockHour9Filled from './icons/ClockHour9Filled';
+import Clock from './icons/Clock';
 import Close from './icons/Close';
 import CloudComputingFilled from './icons/CloudComputingFilled';
 import CloudDataConnectionFilled from './icons/CloudDataConnectionFilled';
@@ -2879,6 +2881,7 @@ export const ICONS: Record<IconName, IconComponent> = {
   'calendar-filled': CalendarFilled,
   'calendar-month-filled': CalendarMonthFilled,
   'calendar-week-filled': CalendarWeekFilled,
+  calendar: Calendar,
   'camera-filled': CameraFilled,
   'campfire-filled': CampfireFilled,
   'candle-filled': CandleFilled,
@@ -3026,6 +3029,7 @@ export const ICONS: Record<IconName, IconComponent> = {
   'clock-hour-7-filled': ClockHour7Filled,
   'clock-hour-8-filled': ClockHour8Filled,
   'clock-hour-9-filled': ClockHour9Filled,
+  clock: Clock,
   close: Close,
   'cloud-computing-filled': CloudComputingFilled,
   'cloud-data-connection-filled': CloudDataConnectionFilled,
