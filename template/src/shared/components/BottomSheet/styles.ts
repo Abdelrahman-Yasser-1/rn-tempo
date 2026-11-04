@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native-unistyles';
 
-export const styles = StyleSheet.create((theme) => ({
+export const styles = StyleSheet.create((theme, rt) => ({
   background: {
     backgroundColor: theme.colors.surface,
   },
@@ -15,7 +15,16 @@ export const styles = StyleSheet.create((theme) => ({
     paddingBottom: theme.spacing.sm,
   },
   content: {
+    flexShrink: 1,
     paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxl,
+    paddingBottom: theme.spacing.xl,
+  },
+  footer: {
+    gap: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.md,
+    paddingBottom: theme.spacing.md + rt.insets.bottom,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: theme.colors.divider,
   },
 }));

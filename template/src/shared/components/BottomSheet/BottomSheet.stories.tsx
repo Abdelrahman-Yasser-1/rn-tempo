@@ -50,4 +50,15 @@ export const Playground: Story = {};
 
 export const FixedSnapPoint: Story = { args: { snapPoints: ['50%'] } };
 
+export const WithFooter: Story = {
+  args: {
+    footer: (
+      <>
+        <Button title="Confirm" fullWidth />
+        <Button title="Cancel" variant="outline" fullWidth />
+      </>
+    ),
+  },
+};
+
 export const NoTitle: Story = { args: { title: undefined } };
