@@ -45,6 +45,15 @@
   "modal": {
     "close": "Close"
   },
+  "multiSelect": {
+    "clear": "Clear",
+    "done": "Done",
+    "limit": "Choose up to {{max}}",
+    "placeholder": "Select options",
+    "remove": "Remove {{label}}",
+    "selectAll": "Select all",
+    "selected": "{{selected}} selected"
+  },
   "numberInput": {
     "decrease": "Decrease",
     "increase": "Increase"

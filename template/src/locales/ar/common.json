@@ -45,6 +45,15 @@
   "modal": {
     "close": "إغلاق"
   },
+  "multiSelect": {
+    "clear": "مسح",
+    "done": "تم",
+    "limit": "اختر حتى {{max}}",
+    "placeholder": "اختر خيارات",
+    "remove": "إزالة {{label}}",
+    "selectAll": "تحديد الكل",
+    "selected": "تم اختيار {{selected}}"
+  },
   "numberInput": {
     "decrease": "إنقاص",
     "increase": "زيادة"
