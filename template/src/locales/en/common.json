@@ -46,5 +46,8 @@
   },
   "sheet": {
     "close": "Close"
+  },
+  "toast": {
+    "close": "Dismiss notification"
   }
 }
