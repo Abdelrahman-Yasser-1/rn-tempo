@@ -29,6 +29,10 @@
     "filters": "التصفية",
     "filtersActive": "التصفية، {{active}} نشطة"
   },
+  "formReview": {
+    "edit": "تعديل",
+    "editSection": "تعديل {{section}}"
+  },
   "header": {
     "back": "رجوع"
   },

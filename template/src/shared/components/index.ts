@@ -25,6 +25,7 @@ export * from './Fab';
 export * from './FieldLabel';
 export * from './FieldMessage';
 export * from './FilterBar';
+export * from './FormReview';
 export * from './FormTextArea';
 export * from './FormTextField';
 export * from './Header';
