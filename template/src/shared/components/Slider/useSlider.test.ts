@@ -37,4 +37,33 @@ describe('useSlider', () => {
 
     expect(onChangeEnd).toHaveBeenCalledWith(7);
   });
+
+  test('does not step past the maximum', async () => {
+    const { result, onChange, onChangeEnd } = await setup(10);
+
+    result.current.onIncrement();
+
+    expect(onChange).not.toHaveBeenCalled();
+    expect(onChangeEnd).not.toHaveBeenCalled();
+  });
+
+  test('works without an onChangeEnd handler', async () => {
+    const onChange = jest.fn();
+    const { result } = await renderHook(() =>
+      useSlider({ value: 2, onChange, min: 0, max: 10, step: 1 }),
+    );
+
+    result.current.onIncrement();
+    result.current.onSlidingComplete(5);
+
+    expect(onChange).toHaveBeenCalledWith(3);
+  });
+
+  test('passes drag values straight to onChange', async () => {
+    const { result, onChange } = await setup(3);
+
+    result.current.onValueChange(6);
+
+    expect(onChange).toHaveBeenCalledWith(6);
+  });
 });

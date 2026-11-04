@@ -100,4 +100,150 @@ describe('Slider', () => {
     );
     expect(screen.getByRole('adjustable', { name: 'Volume' })).toBeDisabled();
   });
+
+  it('reports every drag value and the final one when the user lets go', async () => {
+    const onChange = jest.fn();
+    const onChangeEnd = jest.fn();
+    await renderWithProviders(
+      <Slider
+        label="Volume"
+        value={40}
+        min={0}
+        max={100}
+        onChange={onChange}
+        onChangeEnd={onChangeEnd}
+      />,
+    );
+    const slider = screen.getByRole('adjustable', { name: 'Volume' });
+    /* eslint-disable testing-library/no-await-sync-events -- RNTL 14 fireEvent is async */
+    await fireEvent(slider, 'valueChange', 55);
+    expect(onChange).toHaveBeenLastCalledWith(55);
+    expect(onChangeEnd).not.toHaveBeenCalled();
+    await fireEvent(slider, 'slidingComplete', 60);
+    /* eslint-enable testing-library/no-await-sync-events */
+    expect(onChangeEnd).toHaveBeenCalledTimes(1);
+    expect(onChangeEnd).toHaveBeenLastCalledWith(60);
+  });
+
+  it('survives the end of a drag without an onChangeEnd handler', async () => {
+    await renderWithProviders(
+      <Slider label="Volume" value={40} min={0} max={100} onChange={jest.fn()} />,
+    );
+    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
+    await fireEvent(screen.getByRole('adjustable', { name: 'Volume' }), 'slidingComplete', 60);
+    expect(screen.getByRole('adjustable', { name: 'Volume' })).toBeOnTheScreen();
+  });
+
+  it('shows no value readout unless asked to', async () => {
+    await renderWithProviders(
+      <Slider label="Volume" value={40} min={0} max={100} onChange={jest.fn()} testID="slider" />,
+    );
+    expect(screen.queryByText('40')).not.toBeOnTheScreen();
+    expect(screen.getByText('0')).toBeOnTheScreen();
+    expect(screen.getByText('100')).toBeOnTheScreen();
+  });
+
+  it('shows the plain value when showValue is on and there is no formatter', async () => {
+    await renderWithProviders(
+      <Slider label="Volume" value={40} min={0} max={100} showValue onChange={jest.fn()} />,
+    );
+    expect(screen.getByText('40')).toBeOnTheScreen();
+  });
+
+  it('uses custom range labels in place of the formatted bounds', async () => {
+    await renderWithProviders(
+      <Slider
+        label="Speed"
+        value={2}
+        min={1}
+        max={5}
+        minLabel="Slow"
+        maxLabel="Fast"
+        onChange={jest.fn()}
+      />,
+    );
+    expect(screen.getByText('Slow')).toBeOnTheScreen();
+    expect(screen.getByText('Fast')).toBeOnTheScreen();
+    expect(screen.queryByText('1')).not.toBeOnTheScreen();
+  });
+
+  it('gives screen readers the formatted value as text', async () => {
+    await renderWithProviders(
+      <Slider
+        label="Battery"
+        value={40}
+        min={0}
+        max={100}
+        formatValue={(value) => `${String(value)}%`}
+        onChange={jest.fn()}
+      />,
+    );
+    expect(screen.getByRole('adjustable', { name: 'Battery' })).toHaveAccessibilityValue({
+      min: 0,
+      max: 100,
+      now: 40,
+      text: '40%',
+    });
+  });
+
+  it('declares the increment and decrement accessibility actions', async () => {
+    await renderWithProviders(
+      <Slider label="Volume" value={40} min={0} max={100} onChange={jest.fn()} />,
+    );
+    expect(screen.getByRole('adjustable', { name: 'Volume' })).toHaveProp('accessibilityActions', [
+      { name: 'increment' },
+      { name: 'decrement' },
+    ]);
+  });
+
+  it('does not step below the minimum, and clamps a step that would overshoot', async () => {
+    const onChange = jest.fn();
+    await renderWithProviders(
+      <Slider label="Volume" value={3} min={0} max={100} step={5} onChange={onChange} />,
+    );
+    const slider = screen.getByRole('adjustable', { name: 'Volume' });
+    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
+    await fireEvent(slider, 'RNCSliderAccessibilityAction', {
+      nativeEvent: { actionName: 'decrement' },
+    });
+    expect(onChange).toHaveBeenLastCalledWith(0);
+  });
+
+  it('ignores accessibility actions it does not know', async () => {
+    const onChange = jest.fn();
+    await renderWithProviders(
+      <Slider label="Volume" value={40} min={0} max={100} onChange={onChange} />,
+    );
+    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
+    await fireEvent(
+      screen.getByRole('adjustable', { name: 'Volume' }),
+      'RNCSliderAccessibilityAction',
+      { nativeEvent: { actionName: 'activate' } },
+    );
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('cannot be changed when read only', async () => {
+    await renderWithProviders(
+      <Slider label="Volume" value={40} min={0} max={100} readOnly onChange={jest.fn()} />,
+    );
+    expect(screen.getByRole('adjustable', { name: 'Volume' })).toBeDisabled();
+  });
+
+  it('shows the helper text, the sub label and the value next to the label', async () => {
+    await renderWithProviders(
+      <Slider
+        label="Volume"
+        subLabel="(percent)"
+        helperText="Applies to alerts"
+        value={40}
+        min={0}
+        max={100}
+        showValue
+        onChange={jest.fn()}
+      />,
+    );
+    expect(screen.getByText('Applies to alerts')).toBeOnTheScreen();
+    expect(screen.getByText('(percent)')).toBeOnTheScreen();
+  });
 });
