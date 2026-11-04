@@ -23,6 +23,18 @@ async function renderForgotPassword() {
   return view;
 }
 describe('ForgotPasswordScreen', () => {
+  test('lays out the header, title and subtitle with the Maestro test IDs', async () => {
+    await renderForgotPassword();
+
+    /* eslint-disable no-restricted-syntax -- Maestro flows address these IDs */
+    expect(screen.getByTestId('forgot-password-screen')).toBeOnTheScreen();
+    expect(screen.getByTestId('forgot-password.header')).toBeOnTheScreen();
+    expect(screen.getByTestId('forgot-password.submit-button')).toBeOnTheScreen();
+    /* eslint-enable no-restricted-syntax */
+    expect(screen.getByRole('header', { name: 'Reset your password' })).toBeOnTheScreen();
+    expect(screen.getByText("Enter your email and we'll send you a code.")).toBeOnTheScreen();
+  });
+
   test('AC-8: a valid email goes to Otp with purpose reset-password', async () => {
     const { user } = await renderForgotPassword();
 
