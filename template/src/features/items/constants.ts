@@ -14,3 +14,13 @@ export const PICKUP_SLOTS = [
   { value: '17:00' },
   { value: '18:30' },
 ] as const;
+
+// @tempo-feature:webview:start
+/** Product pages the "Open product page" button shows in the in-app browser; the item id follows. */
+export const PRODUCT_PAGE_URL = 'https://dummyjson.com/products';
+// @tempo-feature:webview:end
+
+// @tempo-feature:file-picker:start
+/** Largest attachment of the create form, in megabytes. */
+export const ATTACHMENT_MAX_MB = 5;
+// @tempo-feature:file-picker:end

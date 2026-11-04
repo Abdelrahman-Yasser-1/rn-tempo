@@ -1,9 +1,11 @@
 {
   "create": {
+    "attachment": "Attachment",
     "availableFrom": "Available from",
     "category": "Category",
     "description": "Description",
     "optional": "(optional)",
+    "pickupLocation": "Pickup location",
     "pickupSlot": "Pickup slot",
     "price": "Price (USD)",
     "quantity": "Quantity",
@@ -22,6 +24,7 @@
   },
   "details": {
     "category": "Category: {{category}}",
+    "openProduct": "Open product page",
     "rating": "Rating: {{rating}} / 5",
     "stock": "In stock: {{stock}}",
     "title": "Item"

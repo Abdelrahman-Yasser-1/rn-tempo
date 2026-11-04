@@ -5,6 +5,12 @@ import {
   Button,
   EmptyState,
   FormDatePicker,
+  // @tempo-feature:file-picker:start
+  FormFilePicker,
+  // @tempo-feature:file-picker:end
+  // @tempo-feature:maps:start
+  FormMapPicker,
+  // @tempo-feature:maps:end
   FormMultiSelect,
   FormNumberInput,
   FormTextField,
@@ -13,6 +19,10 @@ import {
   Screen,
 } from '@shared/components';
 
+// @tempo-feature:file-picker:start
+import { ATTACHMENT_MAX_MB } from '../../constants';
+
+// @tempo-feature:file-picker:end
 import { styles } from './styles';
 import { useItemCreateScreen } from './useItemCreateScreen';
 
@@ -93,6 +103,25 @@ export function ItemCreateScreen() {
               slots={vm.pickupSlots}
               testID="item-create.pickup-slot"
             />
+            {/* @tempo-feature:file-picker:start */}
+            <FormFilePicker
+              control={vm.control}
+              name="attachment"
+              label={t('create.attachment')}
+              subLabel={t('create.optional')}
+              maxSizeMB={ATTACHMENT_MAX_MB}
+              testID="item-create.attachment"
+            />
+            {/* @tempo-feature:file-picker:end */}
+            {/* @tempo-feature:maps:start */}
+            <FormMapPicker
+              control={vm.control}
+              name="pickupLocation"
+              label={t('create.pickupLocation')}
+              subLabel={t('create.optional')}
+              testID="item-create.pickup-location"
+            />
+            {/* @tempo-feature:maps:end */}
             <Button
               title={t('create.submit')}
               fullWidth

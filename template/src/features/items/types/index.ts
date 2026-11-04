@@ -46,6 +46,20 @@ export const CreateItemSchema = z.object({
   availableFrom: isoDateSchema.or(z.literal('')).optional(),
   /** Pickup time slot (`HH:mm`); empty when not set. */
   pickupSlot: z.string().optional(),
+  // @tempo-feature:file-picker:start
+  /** Optional attachment as picked (`uri`, `name`, `type`, `size`); `null` when none. */
+  attachment: z
+    .object({ uri: z.string(), name: z.string(), type: z.string(), size: z.number() })
+    .nullable()
+    .optional(),
+  // @tempo-feature:file-picker:end
+  // @tempo-feature:maps:start
+  /** Optional pickup place; `null` when none. */
+  pickupLocation: z
+    .object({ latitude: z.number(), longitude: z.number(), address: z.string().optional() })
+    .nullable()
+    .optional(),
+  // @tempo-feature:maps:end
 });
 
 /** dummyjson echoes only the sent fields plus the new id, so that is all the app relies on. */
