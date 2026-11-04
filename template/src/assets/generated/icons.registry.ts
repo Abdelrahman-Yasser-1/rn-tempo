@@ -1519,6 +1519,7 @@ import MicroscopeFilled from './icons/MicroscopeFilled';
 import MicrowaveFilled from './icons/MicrowaveFilled';
 import MilitaryRankFilled from './icons/MilitaryRankFilled';
 import MilkFilled from './icons/MilkFilled';
+import Minus from './icons/Minus';
 import MoodAngryFilled from './icons/MoodAngryFilled';
 import MoodConfuzedFilled from './icons/MoodConfuzedFilled';
 import MoodCrazyHappyFilled from './icons/MoodCrazyHappyFilled';
@@ -3387,6 +3388,7 @@ export const ICONS: Record<IconName, IconComponent> = {
   'microwave-filled': MicrowaveFilled,
   'military-rank-filled': MilitaryRankFilled,
   'milk-filled': MilkFilled,
+  minus: Minus,
   'mood-angry-filled': MoodAngryFilled,
   'mood-confuzed-filled': MoodConfuzedFilled,
   'mood-crazy-happy-filled': MoodCrazyHappyFilled,
