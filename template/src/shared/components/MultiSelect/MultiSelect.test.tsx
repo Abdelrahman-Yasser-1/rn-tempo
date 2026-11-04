@@ -1,5 +1,5 @@
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { act, fireEvent, screen } from '@testing-library/react-native';
+import { act, fireEvent, screen, within } from '@testing-library/react-native';
 
 import { renderWithProviders } from '@test-utils/renderWithProviders';
 
@@ -49,6 +49,25 @@ describe('MultiSelect', () => {
       <MultiSelect label="Tags" options={OPTIONS} value={[]} onChange={jest.fn()} />,
     );
     expect(screen.getByText('Select options')).toBeOnTheScreen();
+  });
+
+  it('keeps the trigger a plain row item that nothing overlays (Android swallows taps otherwise)', async () => {
+    await renderWithProviders(
+      <MultiSelect label="Tags" options={OPTIONS} value={[]} onChange={jest.fn()} />,
+    );
+    const trigger = screen.getByRole('combobox', { name: 'Tags' });
+    expect(trigger).not.toHaveStyle({ position: 'absolute' });
+    expect(within(trigger).getByText('Select options')).toBeOnTheScreen();
+  });
+
+  it('puts the chips beside the trigger, not inside it or over it', async () => {
+    await renderWithProviders(
+      <MultiSelect label="Tags" options={OPTIONS} value={['a']} onChange={jest.fn()} />,
+    );
+    const trigger = screen.getByRole('combobox', { name: 'Tags' });
+    expect(trigger).not.toHaveStyle({ position: 'absolute' });
+    expect(within(trigger).queryByText('Alpha')).not.toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Remove Alpha' })).toBeOnTheScreen();
   });
 
   it('opens the sheet when the field is pressed', async () => {
