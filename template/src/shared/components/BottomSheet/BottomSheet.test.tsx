@@ -125,4 +125,15 @@ describe('BottomSheet', () => {
     expect(screen.queryByRole('header')).not.toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: 'Close' })).not.toBeOnTheScreen();
   });
+
+  it('does not make the sheet one accessible node, so screen readers reach its contents', async () => {
+    const render = jest.spyOn(BottomSheetModal.prototype, 'render');
+    await renderWithProviders(
+      <BottomSheet visible onClose={jest.fn()}>
+        <Text>Content</Text>
+      </BottomSheet>,
+    );
+    const [sheet] = render.mock.contexts as { props: { accessible?: boolean } }[];
+    expect(sheet?.props.accessible).toBe(false);
+  });
 });

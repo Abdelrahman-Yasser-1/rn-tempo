@@ -383,4 +383,13 @@ describe('MultiSelect', () => {
     expect(screen.queryByText('Pick some')).not.toBeOnTheScreen();
     expect(screen.getByRole('alert', { name: 'Tags are required' })).toBeOnTheScreen();
   });
+
+  it('does not make the sheet one accessible node, so screen readers reach its contents', async () => {
+    const render = jest.spyOn(BottomSheetModal.prototype, 'render');
+    await renderWithProviders(
+      <MultiSelect label="Tags" options={OPTIONS} value={[]} onChange={jest.fn()} />,
+    );
+    const [sheet] = render.mock.contexts as { props: { accessible?: boolean } }[];
+    expect(sheet?.props.accessible).toBe(false);
+  });
 });

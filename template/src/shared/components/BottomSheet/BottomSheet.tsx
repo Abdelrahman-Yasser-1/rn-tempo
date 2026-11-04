@@ -72,6 +72,7 @@ export function BottomSheet({
       ref={sheetRef}
       snapPoints={points}
       enableDynamicSizing={points === undefined}
+      accessible={false}
       backdropComponent={renderBackdrop}
       backgroundStyle={styles.background}
       handleIndicatorStyle={styles.handle}

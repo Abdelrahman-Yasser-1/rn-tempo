@@ -269,4 +269,11 @@ describe('CountryPicker', () => {
       expect(screen.getByRole('radio', { name: 'مصر, +20' })).toBeOnTheScreen();
     });
   });
+
+  it('does not make the sheet one accessible node, so screen readers reach its contents', async () => {
+    const render = jest.spyOn(BottomSheetModal.prototype, 'render');
+    await renderWithProviders(<CountryPicker label="Country" value="US" onChange={jest.fn()} />);
+    const [sheet] = render.mock.contexts as { props: { accessible?: boolean } }[];
+    expect(sheet?.props.accessible).toBe(false);
+  });
 });
