@@ -45,6 +45,10 @@
   "modal": {
     "close": "إغلاق"
   },
+  "numberInput": {
+    "decrease": "إنقاص",
+    "increase": "زيادة"
+  },
   "offline": {
     "banner": "أنت غير متصل بالإنترنت"
   },
