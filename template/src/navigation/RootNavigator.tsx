@@ -29,6 +29,10 @@ export type AppScreens = {
   NotFound: ComponentType;
   /** Rendered only in non-prod builds. */
   DebugMenu: ComponentType;
+  // @tempo-feature:webview:start
+  /** In-app browser for `https` pages; open it with `navigate('WebView', { url, title })`. */
+  WebView: ComponentType<{ route: { params: RootStackParamList['WebView'] } }>;
+  // @tempo-feature:webview:end
 };
 
 /** Builds the root navigator: auth/main groups gated by session, plus status and debug screens. */
@@ -64,6 +68,10 @@ export function createRootNavigator(screens: Readonly<AppScreens>) {
     },
     screens: {
       NotFound: { screen: screens.NotFound, linking: '*' },
+      // @tempo-feature:webview:start
+      // No deep link on purpose: a link that opens any URL would be an open redirect.
+      WebView: screens.WebView,
+      // @tempo-feature:webview:end
     },
   });
 

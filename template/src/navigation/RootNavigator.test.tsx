@@ -83,6 +83,7 @@ const Navigation = createRootNavigator({
   Maintenance: () => <Fixed label="Maintenance" />,
   NotFound: () => <Fixed label="NotFound" />,
   DebugMenu: () => <Fixed label="DebugMenu" />,
+  WebView: () => <Fixed label="WebView" />, // @tempo-feature:webview
 });
 
 const initialUrl = jest.spyOn(Linking, 'getInitialURL');

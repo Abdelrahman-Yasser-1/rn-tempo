@@ -173,6 +173,8 @@
     "errorMessage": "The page could not be loaded. Check your connection and try again.",
     "errorTitle": "Page unavailable",
     "loading": "Loading page",
+    "openInBrowser": "Open in browser",
+    "reload": "Reload",
     "unsafe": "This link cannot be opened here."
   }
 }

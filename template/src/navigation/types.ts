@@ -41,6 +41,7 @@ export type RootStackParamList = {
   ForceUpdate: undefined;
   Maintenance: undefined;
   NotFound: undefined;
+  WebView: { url: string; title?: string }; // @tempo-feature:webview
   // Non-prod only.
   DebugMenu: undefined;
 };
