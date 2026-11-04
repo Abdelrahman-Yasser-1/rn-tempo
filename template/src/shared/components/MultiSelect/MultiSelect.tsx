@@ -109,6 +109,7 @@ export function MultiSelect({
   const messageKind = isInvalid ? 'error' : 'helper';
   const title = sheetTitle ?? label;
   const suffix = (part: string) => (testID ? `${testID}.${part}` : undefined);
+  const isShowingChips = vm.hasSelection && vm.hasInlineChips;
   const summary =
     vm.selectedOptions.length === 0
       ? undefined
@@ -139,6 +140,29 @@ export function MultiSelect({
         />
       )}
       <Box style={styles.field}>
+        {isShowingChips && (
+          <Box style={styles.chips}>
+            {vm.selectedOptions.map((option) => (
+              <Chip
+                key={option.value}
+                testID={suffix(`chip.${option.value}`)}
+                label={option.label}
+                leftIcon={isInert ? undefined : 'close'}
+                disabled={isDisabled}
+                accessibilityLabel={
+                  isInert ? option.label : t('multiSelect.remove', { label: option.label })
+                }
+                onPress={
+                  isInert
+                    ? undefined
+                    : () => {
+                        vm.onRemove(option.value);
+                      }
+                }
+              />
+            ))}
+          </Box>
+        )}
         <Pressable
           accessibilityRole="combobox"
           accessibilityLabel={label}
@@ -147,39 +171,15 @@ export function MultiSelect({
           hitSlop={HIT_SLOP}
           testID={testID}
           disabled={isDisabled}
-          style={styles.trigger}
+          style={styles.trigger(isShowingChips)}
           onPress={isReadOnly ? undefined : vm.onOpen}
-        />
-        <Box style={styles.content} pointerEvents="box-none">
-          {vm.hasSelection && vm.hasInlineChips ? (
-            <Box style={styles.chips} pointerEvents="box-none">
-              {vm.selectedOptions.map((option) => (
-                <Chip
-                  key={option.value}
-                  testID={suffix(`chip.${option.value}`)}
-                  label={option.label}
-                  leftIcon={isInert ? undefined : 'close'}
-                  disabled={isDisabled}
-                  accessibilityLabel={
-                    isInert ? option.label : t('multiSelect.remove', { label: option.label })
-                  }
-                  onPress={
-                    isInert
-                      ? undefined
-                      : () => {
-                          vm.onRemove(option.value);
-                        }
-                  }
-                />
-              ))}
-            </Box>
-          ) : (
+        >
+          {!isShowingChips && (
             <Text
               testID={suffix('value')}
               style={styles.summary}
               numberOfLines={1}
               color={vm.hasSelection ? 'textPrimary' : 'textSecondary'}
-              pointerEvents="none"
             >
               {vm.hasSelection
                 ? t('multiSelect.selected', { selected: vm.selectedOptions.length })
@@ -187,7 +187,7 @@ export function MultiSelect({
             </Text>
           )}
           {!isReadOnly && <Icon name="chevron-down" size="md" color="textSecondary" />}
-        </Box>
+        </Pressable>
       </Box>
       {message !== undefined && message !== '' && (
         <FieldMessage testID={suffix(messageKind)} variant={messageKind} message={message} />

@@ -7,6 +7,8 @@ export const styles = StyleSheet.create((theme, rt) => ({
     gap: theme.spacing.xs,
   },
   field: {
+    flexDirection: 'row',
+    alignItems: 'center',
     minHeight: MIN_TOUCH_TARGET,
     borderWidth: 1,
     borderRadius: theme.radii.sm,
@@ -31,29 +33,29 @@ export const styles = StyleSheet.create((theme, rt) => ({
       },
     },
   },
-  // Covers the field so a press anywhere that is not a chip opens the sheet.
-  trigger: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    start: 0,
-    end: 0,
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
-  },
+  // The chips and the trigger sit side by side, so no view overlaps the trigger (an overlay would
+  // swallow its taps on Android). The trigger takes the rest of the row, including its own tap area.
   chips: {
-    flex: 1,
+    flexShrink: 1,
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'center',
     gap: theme.spacing.xs,
+    paddingStart: theme.spacing.md,
+    paddingVertical: theme.spacing.xs,
   },
+  trigger: (hasChips: boolean) => ({
+    flex: 1,
+    alignSelf: 'stretch',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: hasChips ? 'flex-end' : 'space-between',
+    gap: theme.spacing.sm,
+    minWidth: MIN_TOUCH_TARGET,
+    paddingStart: hasChips ? theme.spacing.xs : theme.spacing.md,
+    paddingEnd: theme.spacing.md,
+    paddingVertical: theme.spacing.xs,
+  }),
   summary: {
     flex: 1,
   },
