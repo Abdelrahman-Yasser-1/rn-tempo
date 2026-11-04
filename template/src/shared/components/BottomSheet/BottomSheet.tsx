@@ -1,6 +1,6 @@
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Box } from '../Box';
@@ -9,30 +9,25 @@ import { Text } from '../Text';
 
 import { styles } from './styles';
 import type { BottomSheetProps } from './types';
+import { useBottomSheet } from './useBottomSheet';
 
 /**
  * Themed bottom sheet (gorhom modal). Needs `BottomSheetModalProvider`, which `AppProviders`
  * mounts. Drive it with `visible`; `onClose` fires on every dismissal so state stays in sync.
+ * The optional `title` renders a header with a close button, and `footer` stays pinned under
+ * the content (e.g. confirm and cancel buttons).
  */
 export function BottomSheet({
   visible: isVisible,
   onClose,
   title,
+  footer,
   snapPoints,
   children,
   testID,
 }: BottomSheetProps) {
   const { t } = useTranslation();
-  const sheetRef = useRef<BottomSheetModal>(null);
-  const points = useMemo(() => (snapPoints ? [...snapPoints] : undefined), [snapPoints]);
-
-  useEffect(() => {
-    if (isVisible) {
-      sheetRef.current?.present();
-    } else {
-      sheetRef.current?.dismiss();
-    }
-  }, [isVisible]);
+  const { sheetRef, points, onDismissPress } = useBottomSheet({ visible: isVisible, snapPoints });
 
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
@@ -67,13 +62,16 @@ export function BottomSheet({
               icon="close"
               size="sm"
               accessibilityLabel={t('sheet.close')}
-              onPress={() => {
-                sheetRef.current?.dismiss();
-              }}
+              onPress={onDismissPress}
             />
           </Box>
         )}
         <Box style={styles.content}>{children}</Box>
+        {footer !== undefined && (
+          <Box testID={testID ? `${testID}.footer` : undefined} style={styles.footer}>
+            {footer}
+          </Box>
+        )}
       </BottomSheetView>
     </BottomSheetModal>
   );
