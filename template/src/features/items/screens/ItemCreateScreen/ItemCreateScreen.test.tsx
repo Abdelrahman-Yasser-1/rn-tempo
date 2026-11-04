@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react-native';
+import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { http, HttpResponse } from 'msw';
 
 import { setFlagOverride } from '@services/flags/flagOverrides';
@@ -99,6 +99,50 @@ describe('ItemCreateScreen', () => {
       expect(mockNavigation.goBack).toHaveBeenCalledTimes(1);
     });
     expect(bodies).toEqual([expect.objectContaining({ quantity: 2, tags: ['sale'] })]);
+  });
+
+  test('the quantity cannot go below 1: the decrease button is disabled and typing 0 is raised to 1', async () => {
+    const bodies = recordCreates();
+    const { user } = await renderCreate();
+
+    expect(screen.getByRole('button', { name: 'Decrease' })).toBeDisabled();
+    await user.type(screen.getByLabelText('Title'), 'Desk lamp');
+    await user.type(screen.getByLabelText('Price (USD)'), '24.5');
+    await user.type(screen.getByLabelText('Description'), 'Warm light');
+    await user.type(screen.getByLabelText('Category'), 'home');
+    const quantity = screen.getByRole('adjustable', { name: 'Quantity' });
+    /* eslint-disable testing-library/no-await-sync-events -- RNTL 14 fireEvent is async */
+    await fireEvent(quantity, 'focus');
+    await fireEvent.changeText(quantity, '0');
+    await fireEvent(quantity, 'blur');
+    /* eslint-enable testing-library/no-await-sync-events */
+    await user.press(screen.getByRole('button', { name: 'Create item' }));
+
+    await waitFor(() => {
+      expect(mockNavigation.goBack).toHaveBeenCalledTimes(1);
+    });
+    expect(screen.queryByText('Enter a quantity of at least 1.')).not.toBeOnTheScreen();
+    expect(bodies).toEqual([expect.objectContaining({ quantity: 1 })]);
+  });
+
+  test('the quantity and every chosen tag reach the request, in the order they were picked', async () => {
+    const bodies = recordCreates();
+    const { user } = await renderCreate();
+
+    await user.type(screen.getByLabelText('Title'), 'Desk lamp');
+    await user.type(screen.getByLabelText('Price (USD)'), '24.5');
+    await user.type(screen.getByLabelText('Description'), 'Warm light');
+    await user.type(screen.getByLabelText('Category'), 'home');
+    await user.press(screen.getByRole('button', { name: 'Increase' }));
+    await user.press(screen.getByRole('button', { name: 'Increase' }));
+    await user.press(screen.getByRole('checkbox', { name: 'Eco-friendly' }));
+    await user.press(screen.getByRole('checkbox', { name: 'New' }));
+    await user.press(screen.getByRole('button', { name: 'Create item' }));
+
+    await waitFor(() => {
+      expect(mockNavigation.goBack).toHaveBeenCalledTimes(1);
+    });
+    expect(bodies).toEqual([expect.objectContaining({ quantity: 3, tags: ['eco', 'new'] })]);
   });
 
   test('an incomplete form shows the field errors and sends no request', async () => {
