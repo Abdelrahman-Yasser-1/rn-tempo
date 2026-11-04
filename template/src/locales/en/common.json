@@ -55,5 +55,8 @@
   },
   "toast": {
     "close": "Dismiss notification"
+  },
+  "tooltip": {
+    "close": "Close tooltip"
   }
 }
