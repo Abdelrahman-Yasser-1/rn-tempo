@@ -8,11 +8,12 @@ import { Text } from '../Text';
 import { styles } from './styles';
 import type { SwitchProps } from './types';
 
-/** Labelled on/off toggle with the label at the start and the track at the end. */
+/** On/off toggle; the whole row is pressable. The label sits at the start by default, or the end. */
 export function Switch({
   value: isOn,
   onValueChange,
   label,
+  labelPosition = 'start',
   disabled: isDisabled = false,
   accessibilityLabel,
   accessibilityState,
@@ -20,7 +21,18 @@ export function Switch({
   ...rest
 }: SwitchProps) {
   const state = { ...accessibilityState, checked: isOn, disabled: isDisabled };
-  styles.useVariants({ value: isOn, disabled: isDisabled });
+  styles.useVariants({ value: isOn, disabled: isDisabled, labelPosition });
+  const isLabelAtEnd = labelPosition === 'end';
+
+  const labelNode = (
+    <Text
+      testID={testID ? `${testID}.label` : undefined}
+      style={styles.label}
+      color={isDisabled ? 'textDisabled' : 'textPrimary'}
+    >
+      {label}
+    </Text>
+  );
 
   return (
     <Pressable
@@ -36,17 +48,11 @@ export function Switch({
         onValueChange(!isOn);
       }}
     >
-      {label !== undefined && (
-        <Text
-          testID={testID ? `${testID}.label` : undefined}
-          color={isDisabled ? 'textDisabled' : 'textPrimary'}
-        >
-          {label}
-        </Text>
-      )}
+      {label !== undefined && !isLabelAtEnd && labelNode}
       <Box style={styles.track}>
         <Box style={styles.thumb} />
       </Box>
+      {label !== undefined && isLabelAtEnd && labelNode}
     </Pressable>
   );
 }
