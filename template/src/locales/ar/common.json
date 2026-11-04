@@ -20,6 +20,10 @@
     "searchPlaceholder": "ابحث بالاسم أو الرمز",
     "title": "اختر دولة"
   },
+  "datePicker": {
+    "placeholder": "اختر تاريخًا",
+    "title": "اختر تاريخًا"
+  },
   "dialog": {
     "cancel": "إلغاء",
     "confirm": "تأكيد"
