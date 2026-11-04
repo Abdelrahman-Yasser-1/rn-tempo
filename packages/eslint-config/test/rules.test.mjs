@@ -112,6 +112,11 @@ describe('eslint-config fixtures', () => {
       'src/features/auth/utils/usesRnSvg.ts',
       'no-restricted-imports',
     ],
+    [
+      'the document picker outside services/files',
+      'src/features/auth/utils/usesFilePicker.ts',
+      'no-restricted-imports',
+    ],
     ['getByTestId in a test', 'src/shared/utils/byTestId.test.ts', 'no-restricted-syntax'],
   ];
 
