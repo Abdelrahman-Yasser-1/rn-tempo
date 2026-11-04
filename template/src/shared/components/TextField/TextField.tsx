@@ -147,7 +147,7 @@ export function TextField({
           testID={testID}
           multiline={isMultiline}
           numberOfLines={numberOfLines}
-          editable={!isDisabled}
+          editable={!isDisabled && !isReadOnly}
           readOnly={isReadOnly || undefined}
           secureTextEntry={isSecure && !isRevealed}
           style={[
