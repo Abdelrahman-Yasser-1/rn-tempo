@@ -1,8 +1,10 @@
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { screen } from '@testing-library/react-native';
+import { fireEvent, screen } from '@testing-library/react-native';
 import { Text } from 'react-native';
 
 import { renderWithProviders } from '@test-utils/renderWithProviders';
+
+import { Button } from '../Button';
 
 import { BottomSheet } from './BottomSheet';
 
@@ -52,5 +54,75 @@ describe('BottomSheet', () => {
     dismiss.mockClear();
     await user.press(screen.getByRole('button', { name: 'Close' }));
     expect(dismiss).toHaveBeenCalled();
+  });
+
+  it('renders a footer after the content', async () => {
+    await renderWithProviders(
+      <BottomSheet visible onClose={jest.fn()} testID="sheet" footer={<Button title="Apply" />}>
+        <Text>Body</Text>
+      </BottomSheet>,
+    );
+    expect(screen.getByRole('button', { name: 'Apply' })).toBeOnTheScreen();
+    expect(screen.getByText('Body')).toBeOnTheScreen();
+  });
+
+  it('keeps the footer interactive', async () => {
+    const onApply = jest.fn();
+    const { user } = await renderWithProviders(
+      <BottomSheet
+        visible
+        onClose={jest.fn()}
+        footer={<Button title="Apply" onPress={onApply} />}
+      />,
+    );
+    await user.press(screen.getByRole('button', { name: 'Apply' }));
+    expect(onApply).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders no footer without one', async () => {
+    await renderWithProviders(
+      <BottomSheet visible onClose={jest.fn()} testID="sheet">
+        <Text>Body</Text>
+      </BottomSheet>,
+    );
+    // eslint-disable-next-line no-restricted-syntax -- absence check on a plain layout box
+    expect(screen.queryByTestId('sheet.footer')).not.toBeOnTheScreen();
+  });
+
+  it('reserves the footer height at the end of the content', async () => {
+    await renderWithProviders(
+      <BottomSheet visible onClose={jest.fn()} testID="sheet" footer={<Text>Footer</Text>}>
+        <Text>Body</Text>
+      </BottomSheet>,
+    );
+    // eslint-disable-next-line no-restricted-syntax -- layout box without a role
+    const footer = screen.getByTestId('sheet.footer');
+    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
+    await fireEvent(footer, 'layout', { nativeEvent: { layout: { height: 88, width: 300 } } });
+    // eslint-disable-next-line no-restricted-syntax -- layout box without a role
+    expect(screen.getByTestId('sheet.content')).toHaveStyle({ paddingBottom: 88 });
+  });
+
+  it('presents and dismisses as visible changes', async () => {
+    const present = jest.spyOn(BottomSheetModal.prototype, 'present');
+    const dismiss = jest.spyOn(BottomSheetModal.prototype, 'dismiss');
+    const { rerender } = await renderWithProviders(
+      <BottomSheet visible={false} onClose={jest.fn()} />,
+    );
+    expect(present).not.toHaveBeenCalled();
+    present.mockClear();
+    dismiss.mockClear();
+
+    await rerender(<BottomSheet visible onClose={jest.fn()} />);
+    expect(present).toHaveBeenCalledTimes(1);
+
+    await rerender(<BottomSheet visible={false} onClose={jest.fn()} />);
+    expect(dismiss).toHaveBeenCalledTimes(1);
+  });
+
+  it('has no header or close button without a title', async () => {
+    await renderWithProviders(<BottomSheet visible onClose={jest.fn()} />);
+    expect(screen.queryByRole('header')).not.toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Close' })).not.toBeOnTheScreen();
   });
 });

@@ -94,7 +94,10 @@ export function BottomSheet({
           </Box>
         )}
         {/* The footer floats over the sheet, so the content reserves its height at the bottom. */}
-        <Box style={[styles.content, footerHeight > 0 && { paddingBottom: footerHeight }]}>
+        <Box
+          testID={testID ? `${testID}.content` : undefined}
+          style={[styles.content, footerHeight > 0 && { paddingBottom: footerHeight }]}
+        >
           {children}
         </Box>
       </BottomSheetView>

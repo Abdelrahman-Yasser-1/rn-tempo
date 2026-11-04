@@ -41,4 +41,21 @@ describe('IconButton', () => {
     await user.press(button);
     expect(onPress).not.toHaveBeenCalled();
   });
+
+  it.each(['primary', 'neutral', 'outline', 'ghost', 'danger', 'dangerSubtle', 'link'] as const)(
+    'accepts the %s variant',
+    async (variant) => {
+      const onPress = jest.fn();
+      const { user } = await renderWithProviders(
+        <IconButton icon="close" accessibilityLabel="Close" variant={variant} onPress={onPress} />,
+      );
+      await user.press(screen.getByRole('button', { name: 'Close' }));
+      expect(onPress).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it.each(['sm', 'md', 'lg'] as const)('renders the %s size', async (size) => {
+    await renderWithProviders(<IconButton icon="close" accessibilityLabel="Close" size={size} />);
+    expect(screen.getByRole('button', { name: 'Close' })).toBeOnTheScreen();
+  });
 });

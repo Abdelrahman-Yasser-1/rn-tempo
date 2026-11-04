@@ -1,5 +1,5 @@
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { screen, within } from '@testing-library/react-native';
+import { act, fireEvent, screen, within } from '@testing-library/react-native';
 
 import { renderWithProviders } from '@test-utils/renderWithProviders';
 
@@ -98,5 +98,101 @@ describe('Select', () => {
       <Select label="Plan" options={OPTIONS} value={undefined} disabled onChange={jest.fn()} />,
     );
     expect(screen.getByRole('combobox', { name: 'Plan' })).toBeDisabled();
+  });
+
+  describe('searchable', () => {
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('has no search field unless searchable', async () => {
+      await renderWithProviders(
+        <Select label="Plan" options={OPTIONS} value={undefined} onChange={jest.fn()} />,
+      );
+      expect(screen.queryByLabelText('Search options')).not.toBeOnTheScreen();
+    });
+
+    it('filters the options after the debounce', async () => {
+      await renderWithProviders(
+        <Select label="Plan" searchable options={OPTIONS} value={undefined} onChange={jest.fn()} />,
+      );
+      jest.useFakeTimers();
+      // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
+      await fireEvent.changeText(screen.getByLabelText('Search options'), 'bet');
+      // The query is debounced, so every option is still listed.
+      expect(screen.getByRole('radio', { name: 'Alpha' })).toBeOnTheScreen();
+
+      await act(async () => {
+        await jest.advanceTimersByTimeAsync(250);
+      });
+      expect(screen.getByRole('radio', { name: 'Beta' })).toBeOnTheScreen();
+      expect(screen.queryByRole('radio', { name: 'Alpha' })).not.toBeOnTheScreen();
+    });
+
+    it('matches case-insensitively', async () => {
+      await renderWithProviders(
+        <Select label="Plan" searchable options={OPTIONS} value={undefined} onChange={jest.fn()} />,
+      );
+      jest.useFakeTimers();
+      // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
+      await fireEvent.changeText(screen.getByLabelText('Search options'), 'ALP');
+      await act(async () => {
+        await jest.advanceTimersByTimeAsync(250);
+      });
+      expect(screen.getByRole('radio', { name: 'Alpha' })).toBeOnTheScreen();
+      expect(screen.queryByRole('radio', { name: 'Beta' })).not.toBeOnTheScreen();
+    });
+
+    it('shows the empty state when nothing matches', async () => {
+      await renderWithProviders(
+        <Select label="Plan" searchable options={OPTIONS} value={undefined} onChange={jest.fn()} />,
+      );
+      expect(screen.queryByText('No results')).not.toBeOnTheScreen();
+      jest.useFakeTimers();
+      // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
+      await fireEvent.changeText(screen.getByLabelText('Search options'), 'zzz');
+      await act(async () => {
+        await jest.advanceTimersByTimeAsync(250);
+      });
+      expect(screen.getByText('No results')).toBeOnTheScreen();
+      expect(screen.getByText('Try a different search term.')).toBeOnTheScreen();
+    });
+  });
+
+  it('does not open when read only', async () => {
+    const present = jest.spyOn(BottomSheetModal.prototype, 'present');
+    const { user } = await renderWithProviders(
+      <Select label="Plan" readOnly options={OPTIONS} value="a" onChange={jest.fn()} />,
+    );
+    await user.press(screen.getByRole('combobox', { name: 'Plan' }));
+    expect(present).not.toHaveBeenCalled();
+    expect(screen.getByRole('combobox', { name: 'Plan' })).not.toBeExpanded();
+    expect(
+      within(screen.getByRole('combobox', { name: 'Plan' })).getByText('Alpha'),
+    ).toBeOnTheScreen();
+  });
+
+  it('marks the label as required', async () => {
+    await renderWithProviders(
+      <Select label="Plan" required options={OPTIONS} value={undefined} onChange={jest.fn()} />,
+    );
+    expect(screen.getByLabelText('required')).toBeOnTheScreen();
+  });
+
+  it('shows the sheet title from sheetTitle, falling back to the label', async () => {
+    await renderWithProviders(
+      <>
+        <Select label="Plan" options={OPTIONS} value={undefined} onChange={jest.fn()} />
+        <Select
+          label="Tier"
+          sheetTitle="Choose a tier"
+          options={OPTIONS}
+          value={undefined}
+          onChange={jest.fn()}
+        />
+      </>,
+    );
+    expect(screen.getByRole('header', { name: 'Plan' })).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Choose a tier' })).toBeOnTheScreen();
   });
 });
