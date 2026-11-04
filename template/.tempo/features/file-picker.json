@@ -9,6 +9,7 @@
   "deleteGlobs": [
     "src/services/files/**",
     "src/shared/components/FileRow/**",
+    "src/shared/components/FileSourceSheet/**",
     "src/shared/components/FilePicker/**",
     "src/shared/components/MultiFilePicker/**",
     "src/shared/components/FormFilePicker/**",
