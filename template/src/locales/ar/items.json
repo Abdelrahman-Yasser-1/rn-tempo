@@ -1,8 +1,10 @@
 {
   "create": {
+    "availableFrom": "متاح من",
     "category": "الفئة",
     "description": "الوصف",
     "optional": "(اختياري)",
+    "pickupSlot": "موعد الاستلام",
     "price": "السعر (دولار أمريكي)",
     "quantity": "الكمية",
     "submit": "إنشاء العنصر",

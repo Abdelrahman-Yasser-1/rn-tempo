@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { isoDateSchema } from '@shared/utils/schemas';
+
 // Keys of the `validation` namespace, declared here so the i18n extractor keeps them.
 // t('item.titleRequired', { ns: 'validation', defaultValue: 'Enter a title.' })
 // t('item.priceInvalid', { ns: 'validation', defaultValue: 'Enter a price greater than 0.' })
@@ -40,6 +42,10 @@ export const CreateItemSchema = z.object({
     .int('item.quantityInvalid')
     .min(1, 'item.quantityInvalid'),
   tags: z.array(z.string()),
+  /** Day the item is available from (`YYYY-MM-DD`); empty when not set. */
+  availableFrom: isoDateSchema.or(z.literal('')).optional(),
+  /** Pickup time slot (`HH:mm`); empty when not set. */
+  pickupSlot: z.string().optional(),
 });
 
 /** dummyjson echoes only the sent fields plus the new id, so that is all the app relies on. */

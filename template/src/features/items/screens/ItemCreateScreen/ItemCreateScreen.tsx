@@ -4,9 +4,11 @@ import { View } from 'react-native';
 import {
   Button,
   EmptyState,
+  FormDatePicker,
   FormMultiSelect,
   FormNumberInput,
   FormTextField,
+  FormTimeSlot,
   Header,
   Screen,
 } from '@shared/components';
@@ -74,6 +76,22 @@ export function ItemCreateScreen() {
               subLabel={t('create.optional')}
               options={vm.tagOptions}
               testID="item-create.tags-select"
+            />
+            <FormDatePicker
+              control={vm.control}
+              name="availableFrom"
+              label={t('create.availableFrom')}
+              subLabel={t('create.optional')}
+              minDate={vm.today}
+              testID="item-create.available-from"
+            />
+            <FormTimeSlot
+              control={vm.control}
+              name="pickupSlot"
+              label={t('create.pickupSlot')}
+              subLabel={t('create.optional')}
+              slots={vm.pickupSlots}
+              testID="item-create.pickup-slot"
             />
             <Button
               title={t('create.submit')}

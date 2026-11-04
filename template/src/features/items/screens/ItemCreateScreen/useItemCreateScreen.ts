@@ -1,13 +1,16 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import type { HomeStackParamList } from '@navigation/types';
 import { useFeatureFlag } from '@services/flags/useFeatureFlag';
+import { toISODate } from '@shared/utils/calendar';
 
 import { useCreateItemMutation } from '../../api/mutations';
+import { PICKUP_SLOTS } from '../../constants';
 import { CreateItemSchema, type CreateItem, type CreateItemInput } from '../../types';
 
 /** Logic of the create-item screen: feature flag, form, tag options and submit-then-go-back. */
@@ -18,11 +21,31 @@ export function useItemCreateScreen() {
   const createItem = useCreateItemMutation();
   const { control, handleSubmit } = useForm<CreateItemInput, unknown, CreateItem>({
     resolver: zodResolver(CreateItemSchema),
-    defaultValues: { title: '', price: '', description: '', category: '', quantity: 1, tags: [] },
+    defaultValues: {
+      title: '',
+      price: '',
+      description: '',
+      category: '',
+      quantity: 1,
+      tags: [],
+      availableFrom: '',
+      pickupSlot: '',
+    },
   });
 
-  const submit = handleSubmit((values) => {
-    createItem.mutate(values, { onSuccess: navigation.goBack });
+  // Read once on mount so the render stays pure; the earliest availability day is today.
+  const [today] = useState(() => toISODate(new Date()));
+
+  // The optional date and slot only go in the request when they were set.
+  const submit = handleSubmit(({ availableFrom, pickupSlot, ...values }) => {
+    createItem.mutate(
+      {
+        ...values,
+        ...(availableFrom ? { availableFrom } : {}),
+        ...(pickupSlot ? { pickupSlot } : {}),
+      },
+      { onSuccess: navigation.goBack },
+    );
   });
 
   const onSubmit = () => {
@@ -39,6 +62,8 @@ export function useItemCreateScreen() {
   return {
     control,
     tagOptions,
+    today,
+    pickupSlots: PICKUP_SLOTS,
     isEnabled,
     isPending: createItem.isPending,
     onSubmit,
