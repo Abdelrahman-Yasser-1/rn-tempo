@@ -1,9 +1,15 @@
 import 'react-native-gesture-handler/jestSetup';
 
 import { cleanup } from '@testing-library/react-native';
+import type { Component, ComponentType, Fragment, ReactNode, createElement } from 'react';
 
 import { queryClient } from '@services/http/queryClient';
 import { server } from '@test-utils/msw/server';
+
+type ModalProps = {
+  children?: ReactNode;
+  footerComponent?: ComponentType<{ animatedFooterPosition: { value: number } }>;
+};
 
 // Native modules are mocked once here; individual tests override behavior with jest.mocked().
 jest.mock('react-native-worklets', () =>
@@ -16,7 +22,30 @@ jest.mock(
   'react-native-safe-area-context',
   () => jest.requireActual<{ default: object }>('react-native-safe-area-context/jest/mock').default,
 );
-jest.mock('@gorhom/bottom-sheet', () => jest.requireActual<object>('@gorhom/bottom-sheet/mock'));
+// The stock gorhom mock has no footer support: it neither exports `BottomSheetFooter` nor renders
+// `footerComponent`, so both are added here (the footer renders right after the content).
+jest.mock('@gorhom/bottom-sheet', () => {
+  const React = jest.requireActual<{
+    createElement: typeof createElement;
+    Fragment: typeof Fragment;
+  }>('react');
+  const mock = jest.requireActual<{ BottomSheetModal: typeof Component<ModalProps> }>(
+    '@gorhom/bottom-sheet/mock',
+  );
+  class BottomSheetModal extends mock.BottomSheetModal {
+    override render() {
+      const Footer = this.props.footerComponent;
+      return React.createElement(
+        React.Fragment,
+        null,
+        super.render(),
+        Footer ? React.createElement(Footer, { animatedFooterPosition: { value: 0 } }) : null,
+      );
+    }
+  }
+  const BottomSheetFooter = ({ children }: { children?: ReactNode }) => children;
+  return { ...mock, BottomSheetModal, BottomSheetFooter };
+});
 // Rozenite talks to the React Native DevTools frontend, which does not exist under Jest.
 jest.mock('@rozenite/mmkv-plugin', () => ({ useMMKVDevTools: jest.fn() }));
 jest.mock('@rozenite/network-activity-plugin', () => ({ useNetworkActivityDevTools: jest.fn() }));
