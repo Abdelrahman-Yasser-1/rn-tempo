@@ -1012,6 +1012,7 @@ import CalendarMonthFilled from './icons/CalendarMonthFilled';
 import CalendarWeekFilled from './icons/CalendarWeekFilled';
 import Calendar from './icons/Calendar';
 import CameraFilled from './icons/CameraFilled';
+import Camera from './icons/Camera';
 import CampfireFilled from './icons/CampfireFilled';
 import CandleFilled from './icons/CandleFilled';
 import CannabisFilled from './icons/CannabisFilled';
@@ -1204,6 +1205,7 @@ import CropPortraitFilled from './icons/CropPortraitFilled';
 import CrossFilled from './icons/CrossFilled';
 import CrownFilled from './icons/CrownFilled';
 import CurrentLocationFilled from './icons/CurrentLocationFilled';
+import CurrentLocation from './icons/CurrentLocation';
 import DashboardFilled from './icons/DashboardFilled';
 import DatabaseFilled from './icons/DatabaseFilled';
 import DeviceCctvFilled from './icons/DeviceCctvFilled';
@@ -1266,6 +1268,7 @@ import ExclamationCircleFilled from './icons/ExclamationCircleFilled';
 import ExplicitFilled from './icons/ExplicitFilled';
 import ExposureFilled from './icons/ExposureFilled';
 import ExternalLinkFilled from './icons/ExternalLinkFilled';
+import ExternalLink from './icons/ExternalLink';
 import EyeFilled from './icons/EyeFilled';
 import EyeOff from './icons/EyeOff';
 import EyeTableFilled from './icons/EyeTableFilled';
@@ -1318,6 +1321,7 @@ import FileUnknownFilled from './icons/FileUnknownFilled';
 import FileUploadFilled from './icons/FileUploadFilled';
 import FileVectorFilled from './icons/FileVectorFilled';
 import FileXFilled from './icons/FileXFilled';
+import File from './icons/File';
 import FilesFilled from './icons/FilesFilled';
 import FilterFilled from './icons/FilterFilled';
 import FiltersFilled from './icons/FiltersFilled';
@@ -1503,6 +1507,7 @@ import MailOpenedFilled from './icons/MailOpenedFilled';
 import ManFilled from './icons/ManFilled';
 import ManualGearboxFilled from './icons/ManualGearboxFilled';
 import MapPinFilled from './icons/MapPinFilled';
+import MapPin from './icons/MapPin';
 import MedicalCrossFilled from './icons/MedicalCrossFilled';
 import MeepleFilled from './icons/MeepleFilled';
 import MelonFilled from './icons/MelonFilled';
@@ -1551,6 +1556,7 @@ import PaintFilled from './icons/PaintFilled';
 import PaletteFilled from './icons/PaletteFilled';
 import PanoramaHorizontalFilled from './icons/PanoramaHorizontalFilled';
 import PanoramaVerticalFilled from './icons/PanoramaVerticalFilled';
+import Paperclip from './icons/Paperclip';
 import ParkingCircleFilled from './icons/ParkingCircleFilled';
 import PawFilled from './icons/PawFilled';
 import PencilFilled from './icons/PencilFilled';
@@ -1564,6 +1570,7 @@ import PhoneFilled from './icons/PhoneFilled';
 import PhoneXFilled from './icons/PhoneXFilled';
 import PhotoFilled from './icons/PhotoFilled';
 import PhotoOff from './icons/PhotoOff';
+import Photo from './icons/Photo';
 import PictureInPictureFilled from './icons/PictureInPictureFilled';
 import PictureInPictureTopFilled from './icons/PictureInPictureTopFilled';
 import PigFilled from './icons/PigFilled';
@@ -2883,6 +2890,7 @@ export const ICONS: Record<IconName, IconComponent> = {
   'calendar-week-filled': CalendarWeekFilled,
   calendar: Calendar,
   'camera-filled': CameraFilled,
+  camera: Camera,
   'campfire-filled': CampfireFilled,
   'candle-filled': CandleFilled,
   'cannabis-filled': CannabisFilled,
@@ -3075,6 +3083,7 @@ export const ICONS: Record<IconName, IconComponent> = {
   'cross-filled': CrossFilled,
   'crown-filled': CrownFilled,
   'current-location-filled': CurrentLocationFilled,
+  'current-location': CurrentLocation,
   'dashboard-filled': DashboardFilled,
   'database-filled': DatabaseFilled,
   'device-cctv-filled': DeviceCctvFilled,
@@ -3137,6 +3146,7 @@ export const ICONS: Record<IconName, IconComponent> = {
   'explicit-filled': ExplicitFilled,
   'exposure-filled': ExposureFilled,
   'external-link-filled': ExternalLinkFilled,
+  'external-link': ExternalLink,
   'eye-filled': EyeFilled,
   'eye-off': EyeOff,
   'eye-table-filled': EyeTableFilled,
@@ -3189,6 +3199,7 @@ export const ICONS: Record<IconName, IconComponent> = {
   'file-upload-filled': FileUploadFilled,
   'file-vector-filled': FileVectorFilled,
   'file-x-filled': FileXFilled,
+  file: File,
   'files-filled': FilesFilled,
   'filter-filled': FilterFilled,
   'filters-filled': FiltersFilled,
@@ -3374,6 +3385,7 @@ export const ICONS: Record<IconName, IconComponent> = {
   'man-filled': ManFilled,
   'manual-gearbox-filled': ManualGearboxFilled,
   'map-pin-filled': MapPinFilled,
+  'map-pin': MapPin,
   'medical-cross-filled': MedicalCrossFilled,
   'meeple-filled': MeepleFilled,
   'melon-filled': MelonFilled,
@@ -3422,6 +3434,7 @@ export const ICONS: Record<IconName, IconComponent> = {
   'palette-filled': PaletteFilled,
   'panorama-horizontal-filled': PanoramaHorizontalFilled,
   'panorama-vertical-filled': PanoramaVerticalFilled,
+  paperclip: Paperclip,
   'parking-circle-filled': ParkingCircleFilled,
   'paw-filled': PawFilled,
   'pencil-filled': PencilFilled,
@@ -3435,6 +3448,7 @@ export const ICONS: Record<IconName, IconComponent> = {
   'phone-x-filled': PhoneXFilled,
   'photo-filled': PhotoFilled,
   'photo-off': PhotoOff,
+  photo: Photo,
   'picture-in-picture-filled': PictureInPictureFilled,
   'picture-in-picture-top-filled': PictureInPictureTopFilled,
   'pig-filled': PigFilled,
