@@ -56,6 +56,12 @@
   "sheet": {
     "close": "إغلاق"
   },
+  "stepper": {
+    "current": "الخطوة الحالية",
+    "done": "مكتملة",
+    "progress": "الخطوة {{current}} من {{total}}",
+    "upcoming": "قادمة"
+  },
   "timeline": {
     "current": "الخطوة الحالية",
     "done": "مكتمل",
