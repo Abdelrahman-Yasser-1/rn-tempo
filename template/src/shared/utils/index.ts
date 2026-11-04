@@ -1,6 +1,26 @@
 // Barrel (contract C4).
 export { formatCurrency, formatDate, formatNumber, formatRelativeTime } from './format';
 export type { DateStyle } from './format';
+export {
+  addDays,
+  addMonths,
+  clampISO,
+  compareISO,
+  firstDayOfWeekFor,
+  formatDayNumber,
+  formatFullDate,
+  formatMonthYear,
+  fromISODate,
+  isDisabled,
+  isSameDay,
+  isValidISODate,
+  monthGrid,
+  monthLabels,
+  numeralLocale,
+  toISODate,
+  weekdayLabels,
+} from './calendar';
+export type { DayOfWeek, DisabledRules, GridCell } from './calendar';
 export { haptics } from './haptics';
 export { computeTooltipLayout } from './tooltipLayout';
 export type { Rect, TooltipLayout, TooltipPlacement } from './tooltipLayout';
@@ -12,6 +32,13 @@ export { paginationRange } from './paginationRange';
 export type { PageItem } from './paginationRange';
 export { retry, sleep } from './retry';
 export type { RetryOptions } from './retry';
-export { emailSchema, nameSchema, otpSchema, passwordSchema, phoneSchema } from './schemas';
+export {
+  emailSchema,
+  isoDateSchema,
+  nameSchema,
+  otpSchema,
+  passwordSchema,
+  phoneSchema,
+} from './schemas';
 export { capitalize, initials, maskEmail, maskPhone, truncate } from './string';
 export { versionCompare } from './version';

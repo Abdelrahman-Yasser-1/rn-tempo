@@ -1,4 +1,11 @@
-import { emailSchema, nameSchema, otpSchema, passwordSchema, phoneSchema } from './schemas';
+import {
+  emailSchema,
+  isoDateSchema,
+  nameSchema,
+  otpSchema,
+  passwordSchema,
+  phoneSchema,
+} from './schemas';
 
 function messageFor(
   schema: {
@@ -62,5 +69,16 @@ describe('nameSchema', () => {
     expect(nameSchema.parse('  Ada  ')).toBe('Ada');
     expect(messageFor(nameSchema, 'A')).toBe('name.tooShort');
     expect(messageFor(nameSchema, 'x'.repeat(51))).toBe('name.tooLong');
+  });
+});
+
+describe('isoDateSchema', () => {
+  it('accepts a real YYYY-MM-DD day', () => {
+    expect(isoDateSchema.parse('2028-02-29')).toBe('2028-02-29');
+  });
+
+  it('rejects text that is not a calendar day', () => {
+    expect(messageFor(isoDateSchema, '2026-02-30')).toBe('date.invalid');
+    expect(messageFor(isoDateSchema, '04/11/2026')).toBe('date.invalid');
   });
 });
