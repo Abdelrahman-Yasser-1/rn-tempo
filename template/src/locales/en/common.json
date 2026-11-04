@@ -168,5 +168,11 @@
   },
   "tooltip": {
     "close": "Close tooltip"
+  },
+  "webView": {
+    "errorMessage": "The page could not be loaded. Check your connection and try again.",
+    "errorTitle": "Page unavailable",
+    "loading": "Loading page",
+    "unsafe": "This link cannot be opened here."
   }
 }

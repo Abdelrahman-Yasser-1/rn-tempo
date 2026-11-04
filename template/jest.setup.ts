@@ -72,6 +72,29 @@ jest.mock('react-native-bootsplash', () => ({
   hide: jest.fn().mockResolvedValue(undefined),
   isVisible: jest.fn().mockReturnValue(false),
 }));
+// @tempo-feature:webview:start
+// The native web view needs a device. The mock renders a labelled View that receives every prop
+// (so tests can call `onShouldStartLoadWithRequest` and friends) and has a `reload` method.
+jest.mock('react-native-webview', () => {
+  const React = jest.requireActual<{
+    createElement: typeof createElement;
+    Component: typeof Component;
+  }>('react');
+  const { View } = jest.requireActual<{ View: ComponentType<Record<string, unknown>> }>(
+    'react-native',
+  );
+  const reload = jest.fn();
+  class WebView extends React.Component<object> {
+    // eslint-disable-next-line @eslint-react/no-unused-class-component-members -- called through the ref
+    reload = reload;
+
+    override render() {
+      return React.createElement(View, { ...this.props, accessibilityLabel: 'Web view' });
+    }
+  }
+  return { __esModule: true, default: WebView, WebView, mockReload: reload };
+});
+// @tempo-feature:webview:end
 // @tempo-feature:file-picker:start
 // The native pickers need a device; tests drive the mocked `pick`, `launchCamera` and
 // `launchImageLibrary` (jest.mocked) instead.
