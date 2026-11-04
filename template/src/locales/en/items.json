@@ -1,8 +1,10 @@
 {
   "create": {
+    "availableFrom": "Available from",
     "category": "Category",
     "description": "Description",
     "optional": "(optional)",
+    "pickupSlot": "Pickup slot",
     "price": "Price (USD)",
     "quantity": "Quantity",
     "submit": "Create item",

@@ -3,6 +3,7 @@ import { http, HttpResponse } from 'msw';
 
 import { setFlagOverride } from '@services/flags/flagOverrides';
 import { toast } from '@services/toast/toast';
+import { addDays, formatFullDate, toISODate } from '@shared/utils/calendar';
 import { server } from '@test-utils/msw/server';
 import { renderWithProviders } from '@test-utils/renderWithProviders';
 
@@ -143,6 +144,30 @@ describe('ItemCreateScreen', () => {
       expect(mockNavigation.goBack).toHaveBeenCalledTimes(1);
     });
     expect(bodies).toEqual([expect.objectContaining({ quantity: 3, tags: ['eco', 'new'] })]);
+  });
+
+  test('the availability day and the pickup slot are sent only when chosen', async () => {
+    const bodies = recordCreates();
+    const { user } = await renderCreate();
+    const tomorrow = addDays(toISODate(new Date()), 1);
+
+    await user.type(screen.getByLabelText('Title'), 'Desk lamp');
+    await user.type(screen.getByLabelText('Price (USD)'), '24.5');
+    await user.type(screen.getByLabelText('Description'), 'Warm light');
+    await user.type(screen.getByLabelText('Category'), 'home');
+    await user.press(screen.getByRole('button', { name: /^Available from/ }));
+    await user.press(screen.getByRole('button', { name: formatFullDate(tomorrow, 'en') }));
+    await user.press(screen.getByRole('button', { name: 'Confirm' }));
+    await user.press(screen.getByRole('button', { name: /^Pickup slot/ }));
+    await user.press(screen.getByRole('button', { name: /^2:00/ }));
+    await user.press(screen.getByRole('button', { name: 'Create item' }));
+
+    await waitFor(() => {
+      expect(mockNavigation.goBack).toHaveBeenCalledTimes(1);
+    });
+    expect(bodies).toEqual([
+      expect.objectContaining({ availableFrom: tomorrow, pickupSlot: '14:00' }),
+    ]);
   });
 
   test('an incomplete form shows the field errors and sends no request', async () => {
