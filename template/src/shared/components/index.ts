@@ -24,6 +24,7 @@ export * from './ErrorState';
 export * from './Fab';
 export * from './FieldLabel';
 export * from './FieldMessage';
+export * from './FilterBar';
 export * from './FormTextArea';
 export * from './FormTextField';
 export * from './Header';
