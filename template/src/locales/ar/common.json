@@ -28,6 +28,9 @@
   "header": {
     "back": "رجوع"
   },
+  "inlineMessage": {
+    "close": "إغلاق الرسالة"
+  },
   "loader": {
     "label": "جارٍ التحميل"
   },

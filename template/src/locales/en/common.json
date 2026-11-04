@@ -28,6 +28,9 @@
   "header": {
     "back": "Back"
   },
+  "inlineMessage": {
+    "close": "Dismiss message"
+  },
   "loader": {
     "label": "Loading"
   },
