@@ -125,6 +125,20 @@
     "placeholder": "Select a time",
     "title": "Select a time"
   },
+  "timeSlot": {
+    "empty": {
+      "message": "There are no time slots to choose from.",
+      "title": "No time slots"
+    },
+    "period": {
+      "afternoon": "Afternoon",
+      "evening": "Evening",
+      "morning": "Morning"
+    },
+    "placeholder": "Select a time slot",
+    "title": "Select a time slot",
+    "titleOnDate": "Slots for {{date}}"
+  },
   "toast": {
     "close": "Dismiss notification"
   },

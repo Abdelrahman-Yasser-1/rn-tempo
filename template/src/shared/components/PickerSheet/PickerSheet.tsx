@@ -2,6 +2,7 @@ import {
   BottomSheetBackdrop,
   BottomSheetFooter,
   BottomSheetModal,
+  BottomSheetScrollView,
   BottomSheetView,
 } from '@gorhom/bottom-sheet';
 import type { BottomSheetBackdropProps, BottomSheetFooterProps } from '@gorhom/bottom-sheet';
@@ -29,6 +30,7 @@ export function PickerSheet({
   onConfirm,
   confirmDisabled: isConfirmDisabled = false,
   snapPoints,
+  scrollable: isScrollable = false,
   children,
   testID,
 }: PickerSheetProps) {
@@ -37,6 +39,7 @@ export function PickerSheet({
     visible: isVisible,
     onConfirm,
     snapPoints,
+    scrollable: isScrollable,
   });
   const hasFooter = onConfirm !== undefined;
 
@@ -93,6 +96,22 @@ export function PickerSheet({
     ],
   );
 
+  const header = (
+    <Box style={styles.header}>
+      <Text variant="title" accessibilityRole="header">
+        {title}
+      </Text>
+      <IconButton
+        testID={testID ? `${testID}.close` : undefined}
+        icon="close"
+        size="sm"
+        accessibilityLabel={t('sheet.close')}
+        onPress={onDismissPress}
+      />
+    </Box>
+  );
+  const contentStyle = [styles.content, hasFooter && styles.contentWithFooter];
+
   return (
     <BottomSheetModal
       ref={sheetRef}
@@ -106,21 +125,19 @@ export function PickerSheet({
       footerComponent={hasFooter ? renderFooter : undefined}
       onDismiss={onClose}
     >
-      <BottomSheetView testID={testID}>
-        <Box style={styles.header}>
-          <Text variant="title" accessibilityRole="header">
-            {title}
-          </Text>
-          <IconButton
-            testID={testID ? `${testID}.close` : undefined}
-            icon="close"
-            size="sm"
-            accessibilityLabel={t('sheet.close')}
-            onPress={onDismissPress}
-          />
-        </Box>
-        <Box style={[styles.content, hasFooter && styles.contentWithFooter]}>{children}</Box>
-      </BottomSheetView>
+      {isScrollable ? (
+        <>
+          {header}
+          <BottomSheetScrollView testID={testID} contentContainerStyle={contentStyle}>
+            {children}
+          </BottomSheetScrollView>
+        </>
+      ) : (
+        <BottomSheetView testID={testID}>
+          {header}
+          <Box style={contentStyle}>{children}</Box>
+        </BottomSheetView>
+      )}
     </BottomSheetModal>
   );
 }
