@@ -19,6 +19,12 @@
     "retry": "Retry",
     "title": "Something went wrong"
   },
+  "field": {
+    "characterCount": "{{current}} of {{max}} characters",
+    "hideHint": "Hide hint",
+    "required": "required",
+    "showHint": "Show hint"
+  },
   "header": {
     "back": "Back"
   },
