@@ -1,14 +1,15 @@
 import { useTranslation } from 'react-i18next';
 
 import { Box } from '../Box';
-import { IconButton } from '../IconButton';
+import { Icon } from '../Icon';
 import { Text } from '../Text';
+import { Tooltip } from '../Tooltip';
 
 import { styles } from './styles';
 import type { FieldLabelProps } from './types';
 import { useFieldLabel } from './useFieldLabel';
 
-/** Label of a form field: required marker, sub label and an optional inline tooltip hint. */
+/** Label of a form field: required marker, sub label and an optional tooltip hint. */
 export function FieldLabel({
   label,
   required: isRequired = false,
@@ -17,7 +18,7 @@ export function FieldLabel({
   testID,
 }: FieldLabelProps) {
   const { t } = useTranslation();
-  const { isHintOpen, onToggleHint } = useFieldLabel();
+  const { isHintOpen, onHintVisibleChange } = useFieldLabel();
   const suffix = (part: string) => (testID ? `${testID}.${part}` : undefined);
 
   return (
@@ -42,27 +43,19 @@ export function FieldLabel({
           </Text>
         )}
         {tooltip !== undefined && tooltip !== '' && (
-          <IconButton
+          <Tooltip
             testID={suffix('tooltip')}
-            icon="info"
-            size="sm"
+            content={tooltip}
+            visible={isHintOpen}
+            onVisibleChange={onHintVisibleChange}
             accessibilityLabel={t(isHintOpen ? 'field.hideHint' : 'field.showHint')}
-            accessibilityState={{ expanded: isHintOpen }}
-            onPress={onToggleHint}
-          />
+          >
+            <Box p="sm">
+              <Icon name="info" size="sm" color="textSecondary" />
+            </Box>
+          </Tooltip>
         )}
       </Box>
-      {isHintOpen && tooltip !== undefined && (
-        <Text
-          testID={suffix('hint')}
-          variant="caption"
-          color="textSecondary"
-          style={styles.hint}
-          accessibilityLiveRegion="polite"
-        >
-          {tooltip}
-        </Text>
-      )}
     </Box>
   );
 }

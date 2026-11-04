@@ -1,12 +1,12 @@
 import { useState } from 'react';
 
-/** Open state of the inline tooltip hint. */
+/** Visibility of the tooltip hint, driven by the tooltip. */
 export function useFieldLabel() {
   const [isHintOpen, setIsHintOpen] = useState(false);
 
-  const onToggleHint = () => {
-    setIsHintOpen((isOpen) => !isOpen);
+  const onHintVisibleChange = (isVisible: boolean) => {
+    setIsHintOpen(isVisible);
   };
 
-  return { isHintOpen, onToggleHint };
+  return { isHintOpen, onHintVisibleChange };
 }
