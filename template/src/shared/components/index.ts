@@ -47,6 +47,7 @@ export * from './Radio';
 export * from './RadioGroup';
 export * from './Row';
 export * from './Screen';
+export * from './ScreenLayout';
 export * from './ScreenShimmer';
 export * from './SectionHeader';
 export * from './SegmentedControl';
