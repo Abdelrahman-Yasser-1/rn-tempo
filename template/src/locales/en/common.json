@@ -82,6 +82,15 @@
   "loader": {
     "label": "Loading"
   },
+  "mapPicker": {
+    "coordinates": "{{latitude}}, {{longitude}}",
+    "mapLabel": "Map",
+    "openSettings": "Open settings",
+    "permissionDenied": "Allow location access in Settings to jump to where you are.",
+    "placeholder": "Choose a location",
+    "title": "Choose a location",
+    "useMyLocation": "Use my location"
+  },
   "modal": {
     "close": "Close"
   },

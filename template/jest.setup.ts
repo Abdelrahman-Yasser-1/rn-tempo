@@ -95,6 +95,35 @@ jest.mock('react-native-webview', () => {
   return { __esModule: true, default: WebView, WebView, mockReload: reload };
 });
 // @tempo-feature:webview:end
+// @tempo-feature:maps:start
+// The native map needs a device. The mock renders a labelled View that receives every prop (so
+// tests can call `onRegionChangeComplete` and `onUserLocationChange`) and records `animateToRegion`.
+jest.mock('react-native-maps', () => {
+  const React = jest.requireActual<{
+    createElement: typeof createElement;
+    Component: typeof Component;
+  }>('react');
+  const { View } = jest.requireActual<{ View: ComponentType<Record<string, unknown>> }>(
+    'react-native',
+  );
+  const animateToRegion = jest.fn();
+  class MapView extends React.Component<Record<string, unknown>> {
+    // eslint-disable-next-line @eslint-react/no-unused-class-component-members -- called through the ref
+    animateToRegion = animateToRegion;
+
+    override render() {
+      return React.createElement(View, { ...this.props, accessible: true });
+    }
+  }
+  return {
+    __esModule: true,
+    default: MapView,
+    PROVIDER_DEFAULT: undefined,
+    PROVIDER_GOOGLE: 'google',
+    mockAnimateToRegion: animateToRegion,
+  };
+});
+// @tempo-feature:maps:end
 // @tempo-feature:file-picker:start
 // The native pickers need a device; tests drive the mocked `pick`, `launchCamera` and
 // `launchImageLibrary` (jest.mocked) instead.

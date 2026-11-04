@@ -36,6 +36,7 @@ export * from './FilterBar';
 export * from './FormCheckbox';
 export * from './FormDatePicker';
 export * from './FormFilePicker'; // @tempo-feature:file-picker
+export * from './FormMapPicker'; // @tempo-feature:maps
 export * from './FormMonthYearPicker';
 export * from './FormMultiFilePicker'; // @tempo-feature:file-picker
 export * from './FormMultiSelect';
@@ -62,6 +63,7 @@ export * from './ListItem';
 export * from './ListItemContent';
 export * from './ListShimmer';
 export * from './Loader';
+export * from './MapPicker'; // @tempo-feature:maps
 export * from './Modal';
 export * from './MonthYearGrid';
 export * from './MonthYearPicker';
