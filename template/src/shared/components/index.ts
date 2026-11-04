@@ -55,6 +55,7 @@ export * from './Select';
 export * from './Skeleton';
 export * from './Spacer';
 export * from './StatusIndicator';
+export * from './StepperLayout';
 export * from './Stepper';
 export * from './Switch';
 export * from './Tabs';

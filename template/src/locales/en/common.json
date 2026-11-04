@@ -75,6 +75,11 @@
     "progress": "Step {{current}} of {{total}}",
     "upcoming": "Upcoming"
   },
+  "stepperLayout": {
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit"
+  },
   "timeline": {
     "current": "Current step",
     "done": "Completed",
