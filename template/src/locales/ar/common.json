@@ -117,6 +117,10 @@
     "done": "مكتمل",
     "upcoming": "قادم"
   },
+  "timePicker": {
+    "placeholder": "اختر وقتًا",
+    "title": "اختر وقتًا"
+  },
   "toast": {
     "close": "إغلاق الإشعار"
   },
