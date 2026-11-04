@@ -1,6 +1,14 @@
 import { useTranslation } from 'react-i18next';
 
-import { Button, EmptyState, FormTextField, Header, Screen } from '@shared/components';
+import {
+  Button,
+  EmptyState,
+  FormMultiSelect,
+  FormNumberInput,
+  FormTextField,
+  Header,
+  Screen,
+} from '@shared/components';
 
 import { styles } from './styles';
 import { useItemCreateScreen } from './useItemCreateScreen';
@@ -49,6 +57,21 @@ export function ItemCreateScreen() {
             returnKeyType="done"
             onSubmitEditing={vm.onSubmit}
             testID="item-create.category-input"
+          />
+          <FormNumberInput
+            control={vm.control}
+            name="quantity"
+            label={t('create.quantity')}
+            min={1}
+            testID="item-create.quantity-input"
+          />
+          <FormMultiSelect
+            control={vm.control}
+            name="tags"
+            label={t('create.tags')}
+            subLabel={t('create.optional')}
+            options={vm.tagOptions}
+            testID="item-create.tags-select"
           />
           <Button
             title={t('create.submit')}

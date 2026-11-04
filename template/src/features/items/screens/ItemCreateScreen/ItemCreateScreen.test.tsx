@@ -73,12 +73,32 @@ describe('ItemCreateScreen', () => {
         price: 24.5,
         description: 'Warm light for late work',
         category: 'home',
+        quantity: 1,
+        tags: [],
       },
     ]);
     expect(toastSpy).toHaveBeenCalledWith(
       expect.objectContaining({ type: 'success', title: 'Item created' }),
     );
     expect(invalidate).toHaveBeenCalledWith({ queryKey: itemKeys.lists() });
+  });
+
+  test('the quantity stepper and the tag sheet feed the created item', async () => {
+    const bodies = recordCreates();
+    const { user } = await renderCreate();
+
+    await user.type(screen.getByLabelText('Title'), 'Desk lamp');
+    await user.type(screen.getByLabelText('Price (USD)'), '24.5');
+    await user.type(screen.getByLabelText('Description'), 'Warm light');
+    await user.type(screen.getByLabelText('Category'), 'home');
+    await user.press(screen.getByRole('button', { name: 'Increase' }));
+    await user.press(screen.getByRole('checkbox', { name: 'On sale' }));
+    await user.press(screen.getByRole('button', { name: 'Create item' }));
+
+    await waitFor(() => {
+      expect(mockNavigation.goBack).toHaveBeenCalledTimes(1);
+    });
+    expect(bodies).toEqual([expect.objectContaining({ quantity: 2, tags: ['sale'] })]);
   });
 
   test('an incomplete form shows the field errors and sends no request', async () => {
