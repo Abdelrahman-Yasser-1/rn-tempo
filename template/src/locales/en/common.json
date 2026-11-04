@@ -56,6 +56,11 @@
   "sheet": {
     "close": "Close"
   },
+  "timeline": {
+    "current": "Current step",
+    "done": "Completed",
+    "upcoming": "Upcoming"
+  },
   "toast": {
     "close": "Dismiss notification"
   },
