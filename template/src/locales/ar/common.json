@@ -3,6 +3,11 @@
     "hidePassword": "إخفاء كلمة المرور",
     "showPassword": "إظهار كلمة المرور"
   },
+  "calendar": {
+    "chooseMonthYear": "اختر الشهر والسنة",
+    "nextMonth": "الشهر التالي",
+    "previousMonth": "الشهر السابق"
+  },
   "connection": {
     "message": "تحتاج هذه الشاشة إلى الإنترنت. أعد الاتصال للمتابعة.",
     "retry": "تحقق مرة أخرى",

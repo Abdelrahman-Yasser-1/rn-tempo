@@ -35,6 +35,17 @@ const SUNDAY_YEAR = 2023;
 const FIRST_DAY_OF_WEEK: Readonly<Record<string, DayOfWeek>> = { ar: 6, en: 0 };
 const DEFAULT_FIRST_DAY: DayOfWeek = 0;
 
+// Building an Intl formatter is slow on Hermes and a month grid formats 42 labels, so reuse them.
+const dateFormatters = new Map<string, Intl.DateTimeFormat>();
+const numberFormatters = new Map<string, Intl.NumberFormat>();
+
+function dateFormatter(locale: string, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+  const key = `${locale}|${JSON.stringify(options)}`;
+  const cached = dateFormatters.get(key) ?? new Intl.DateTimeFormat(numeralLocale(locale), options);
+  dateFormatters.set(key, cached);
+  return cached;
+}
+
 const pad = (value: number, length: number) => String(value).padStart(length, '0');
 
 /**
@@ -156,7 +167,7 @@ export function weekdayLabels(
   firstDayOfWeek: DayOfWeek,
   width: 'narrow' | 'short',
 ): string[] {
-  const format = new Intl.DateTimeFormat(numeralLocale(locale), { weekday: width });
+  const format = dateFormatter(locale, { weekday: width });
   return Array.from({ length: DAYS_IN_WEEK }, (_, index) =>
     format.format(new Date(SUNDAY_YEAR, 0, 1 + ((firstDayOfWeek + index) % DAYS_IN_WEEK))),
   );
@@ -164,7 +175,7 @@ export function weekdayLabels(
 
 /** The twelve month names, January first. */
 export function monthLabels(locale: string): string[] {
-  const format = new Intl.DateTimeFormat(numeralLocale(locale), { month: 'long' });
+  const format = dateFormatter(locale, { month: 'long' });
   return Array.from({ length: 12 }, (_, month) => format.format(new Date(SUNDAY_YEAR, month, 1)));
 }
 
@@ -172,21 +183,19 @@ export function monthLabels(locale: string): string[] {
 export function formatMonthYear(locale: string, year: number, month: number): string {
   const date = new Date(year, month, 1);
   date.setFullYear(year);
-  return new Intl.DateTimeFormat(numeralLocale(locale), { month: 'long', year: 'numeric' }).format(
-    date,
-  );
+  return dateFormatter(locale, { month: 'long', year: 'numeric' }).format(date);
 }
 
 /** "Tuesday, 4 November 2026"; the spoken label of a day cell. */
 export function formatFullDate(iso: string, locale: string): string {
-  return new Intl.DateTimeFormat(numeralLocale(locale), { dateStyle: 'full' }).format(
-    fromISODate(iso),
-  );
+  return dateFormatter(locale, { dateStyle: 'full' }).format(fromISODate(iso));
 }
 
 /** The day of the month as shown in a cell. */
 export function formatDayNumber(day: number, locale: string): string {
-  return new Intl.NumberFormat(numeralLocale(locale)).format(day);
+  const cached = numberFormatters.get(locale) ?? new Intl.NumberFormat(numeralLocale(locale));
+  numberFormatters.set(locale, cached);
+  return cached.format(day);
 }
 
 /** First day of the week for a locale such as `ar`, `ar-SA` or `en-US`. */

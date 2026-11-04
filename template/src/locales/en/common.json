@@ -3,6 +3,11 @@
     "hidePassword": "Hide password",
     "showPassword": "Show password"
   },
+  "calendar": {
+    "chooseMonthYear": "Choose month and year",
+    "nextMonth": "Next month",
+    "previousMonth": "Previous month"
+  },
   "connection": {
     "message": "This screen needs the internet. Reconnect to continue.",
     "retry": "Check again",
