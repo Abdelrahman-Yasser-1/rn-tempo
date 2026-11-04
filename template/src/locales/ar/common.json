@@ -43,6 +43,11 @@
   "otp": {
     "digit": "الرقم {{index}} من {{total}}"
   },
+  "pagination": {
+    "next": "الصفحة التالية",
+    "page": "الصفحة {{page}}",
+    "previous": "الصفحة السابقة"
+  },
   "select": {
     "close": "إغلاق",
     "empty": {

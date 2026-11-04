@@ -6,6 +6,8 @@ export { computeTooltipLayout } from './tooltipLayout';
 export type { Rect, TooltipLayout, TooltipPlacement } from './tooltipLayout';
 export { isValidPhone, normalizePhone } from './phone';
 export { isAndroid, isIOS, select } from './platform';
+export { paginationRange } from './paginationRange';
+export type { PageItem } from './paginationRange';
 export { retry, sleep } from './retry';
 export type { RetryOptions } from './retry';
 export { emailSchema, nameSchema, otpSchema, passwordSchema, phoneSchema } from './schemas';

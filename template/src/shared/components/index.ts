@@ -40,6 +40,7 @@ export * from './Loader';
 export * from './Modal';
 export * from './OfflineBanner';
 export * from './OtpInput';
+export * from './Pagination';
 export * from './Radio';
 export * from './RadioGroup';
 export * from './Row';
