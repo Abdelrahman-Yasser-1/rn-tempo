@@ -44,4 +44,21 @@ describe('FieldLabel', () => {
     expect(screen.queryByText('Use your work email')).not.toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Show hint' })).toBeCollapsed();
   });
+
+  it('opens the tooltip with the hint text and closes it from the backdrop', async () => {
+    const { user } = await renderWithProviders(
+      <FieldLabel label="Email" tooltip="Use your work email" />,
+    );
+    await user.press(screen.getByRole('button', { name: 'Show hint' }));
+    expect(screen.getByText('Use your work email')).toHaveProp('accessibilityLiveRegion', 'polite');
+
+    await user.press(screen.getByRole('button', { name: 'Close tooltip' }));
+    expect(screen.queryByText('Use your work email')).not.toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Show hint' })).toBeCollapsed();
+  });
+
+  it('has no hint button for an empty tooltip', async () => {
+    await renderWithProviders(<FieldLabel label="Email" tooltip="" />);
+    expect(screen.queryByRole('button')).not.toBeOnTheScreen();
+  });
 });
