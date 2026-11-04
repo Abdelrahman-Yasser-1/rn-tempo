@@ -39,6 +39,14 @@ function recordCreates() {
   return bodies;
 }
 
+/** Fills the required fields of the form. */
+async function fillRequired(user: Awaited<ReturnType<typeof renderCreate>>['user']) {
+  await user.type(screen.getByLabelText('Title'), 'Desk lamp');
+  await user.type(screen.getByLabelText('Price (USD)'), '24.5');
+  await user.type(screen.getByLabelText('Description'), 'Warm light');
+  await user.type(screen.getByLabelText('Category'), 'home');
+}
+
 describe('ItemCreateScreen', () => {
   let toastSpy: jest.SpyInstance;
 
@@ -168,6 +176,56 @@ describe('ItemCreateScreen', () => {
     expect(bodies).toEqual([
       expect.objectContaining({ availableFrom: tomorrow, pickupSlot: '14:00' }),
     ]);
+  });
+
+  test('only the availability day is sent when no pickup slot is chosen', async () => {
+    const bodies = recordCreates();
+    const { user } = await renderCreate();
+    const today = toISODate(new Date());
+
+    await fillRequired(user);
+    await user.press(screen.getByRole('button', { name: /^Available from/ }));
+    await user.press(screen.getByRole('button', { name: formatFullDate(today, 'en') }));
+    await user.press(screen.getByRole('button', { name: 'Confirm' }));
+    await user.press(screen.getByRole('button', { name: 'Create item' }));
+
+    await waitFor(() => {
+      expect(mockNavigation.goBack).toHaveBeenCalledTimes(1);
+    });
+    expect(bodies).toEqual([expect.objectContaining({ availableFrom: today })]);
+    expect(bodies[0]).not.toHaveProperty('pickupSlot');
+  });
+
+  test('only the pickup slot is sent when no availability day is chosen', async () => {
+    const bodies = recordCreates();
+    const { user } = await renderCreate();
+
+    await fillRequired(user);
+    await user.press(screen.getByRole('button', { name: /^Pickup slot/ }));
+    await user.press(screen.getByRole('button', { name: /^6:30/ }));
+    await user.press(screen.getByRole('button', { name: 'Create item' }));
+
+    await waitFor(() => {
+      expect(mockNavigation.goBack).toHaveBeenCalledTimes(1);
+    });
+    expect(bodies).toEqual([expect.objectContaining({ pickupSlot: '18:30' })]);
+    expect(bodies[0]).not.toHaveProperty('availableFrom');
+  });
+
+  test('the availability day cannot be earlier than today', async () => {
+    const { user } = await renderCreate();
+    const today = toISODate(new Date());
+    const yesterday = addDays(today, -1);
+
+    await user.press(screen.getByRole('button', { name: /^Available from/ }));
+
+    expect(screen.getByRole('button', { name: formatFullDate(today, 'en') })).toBeEnabled();
+    // Yesterday only shows when it belongs to the grid (not on the first of a Sunday month).
+    for (const cell of screen.queryAllByRole('button', { name: formatFullDate(yesterday, 'en') })) {
+      expect(cell).toBeDisabled();
+    }
+    // Nothing earlier can be reached by paging back either.
+    expect(screen.getByRole('button', { name: 'Previous month' })).toBeDisabled();
   });
 
   test('an incomplete form shows the field errors and sends no request', async () => {
