@@ -1,11 +1,9 @@
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
 
-import { Button, FormTextField, Header, Screen, Text } from '@shared/components';
+import { AuthLayout, Button, FormTextField } from '@shared/components';
 
 import { FormError } from '../../components/FormError';
 
-import { styles } from './styles';
 import { useRegisterScreen } from './useRegisterScreen';
 
 export function RegisterScreen() {
@@ -13,20 +11,13 @@ export function RegisterScreen() {
   const vm = useRegisterScreen();
 
   return (
-    <Screen
-      preset="scroll"
-      keyboardAware
-      padding="xl"
-      contentContainerStyle={styles.content}
+    <AuthLayout
+      headerTitle={t('header.register')}
+      onBack={vm.onBack}
+      title={t('register.title')}
+      subtitle={t('register.subtitle')}
       testID="register-screen"
     >
-      <Header title={t('header.register')} onBack={vm.onBack} testID="register.header" />
-      <View>
-        <Text variant="h1" accessibilityRole="header">
-          {t('register.title')}
-        </Text>
-        <Text color="textSecondary">{t('register.subtitle')}</Text>
-      </View>
       <FormTextField
         control={vm.control}
         name="firstName"
@@ -91,6 +82,6 @@ export function RegisterScreen() {
         onPress={vm.onSubmit}
         testID="register.submit-button"
       />
-    </Screen>
+    </AuthLayout>
   );
 }
