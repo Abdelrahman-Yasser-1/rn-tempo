@@ -29,6 +29,10 @@
     "filters": "Filters",
     "filtersActive": "Filters, {{active}} active"
   },
+  "formReview": {
+    "edit": "Edit",
+    "editSection": "Edit {{section}}"
+  },
   "header": {
     "back": "Back"
   },
