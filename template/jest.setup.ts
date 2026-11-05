@@ -50,6 +50,7 @@ jest.mock('@gorhom/bottom-sheet', () => {
 jest.mock('@rozenite/mmkv-plugin', () => ({ useMMKVDevTools: jest.fn() }));
 jest.mock('@rozenite/network-activity-plugin', () => ({ useNetworkActivityDevTools: jest.fn() }));
 jest.mock('@rozenite/tanstack-query-plugin', () => ({ useTanStackQueryDevTools: jest.fn() }));
+// @tempo-feature:device-integrity:start
 jest.mock('jail-monkey', () => ({
   __esModule: true,
   default: {
@@ -58,11 +59,14 @@ jest.mock('jail-monkey', () => ({
     hookDetected: jest.fn(() => false),
   },
 }));
+// @tempo-feature:device-integrity:end
+// @tempo-feature:ssl-pinning:start
 jest.mock('react-native-ssl-public-key-pinning', () => ({
   isSslPinningAvailable: jest.fn(() => true),
   initializeSslPinning: jest.fn(() => Promise.resolve()),
   addSslPinningErrorListener: jest.fn(),
 }));
+// @tempo-feature:ssl-pinning:end
 jest.mock('react-native-bootsplash', () => ({
   __esModule: true,
   default: {
