@@ -53,10 +53,69 @@ describe('pickDocument', () => {
     await expect(pickDocument()).resolves.toEqual([]);
   });
 
+  test('returns an empty list while another pick is in progress', async () => {
+    mockedPick.mockRejectedValue({ code: errorCodes.IN_PROGRESS });
+
+    await expect(pickDocument()).resolves.toEqual([]);
+  });
+
   test('wraps other failures in a FilePickError', async () => {
     mockedPick.mockRejectedValue(new Error('boom'));
 
     await expect(pickDocument()).rejects.toMatchObject({ code: 'unknown' });
+  });
+
+  test('wraps a coded failure that is not a cancel and keeps the cause', async () => {
+    const cause = { code: errorCodes.NULL_PRESENTER };
+    mockedPick.mockRejectedValue(cause);
+
+    const error: unknown = await pickDocument().catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(FilePickError);
+    expect(error).toMatchObject({ code: 'unknown', cause });
+  });
+
+  test('asks for every file type and a single file by default', async () => {
+    mockedPick.mockResolvedValue([] as never);
+
+    await pickDocument();
+    await pickDocument({ accept: [] });
+
+    expect(mockedPick).toHaveBeenNthCalledWith(1, {
+      type: undefined,
+      allowMultiSelection: false,
+    });
+    expect(mockedPick).toHaveBeenNthCalledWith(2, {
+      type: undefined,
+      allowMultiSelection: false,
+    });
+  });
+
+  test('derives the name from the URI without its query string', async () => {
+    mockedPick.mockResolvedValue([
+      { uri: 'file:///tmp/a%20b.png?x=1#top', name: null, type: 'image/png', size: 5 },
+    ] as never);
+
+    await expect(pickDocument()).resolves.toEqual([
+      { uri: 'file:///tmp/a%20b.png?x=1#top', name: 'a b.png', type: 'image/png', size: 5 },
+    ]);
+  });
+
+  test('keeps a raw name when the URI cannot be decoded and uses "file" for a bare URI', async () => {
+    mockedPick.mockResolvedValue([
+      { uri: 'file:///tmp/100%.txt', name: null, type: null, size: null },
+      { uri: 'file:///tmp/', name: null, type: null, size: null },
+    ] as never);
+
+    const files = await pickDocument({ multiple: true });
+
+    expect(files.map((file) => file.name)).toEqual(['100%.txt', 'file']);
+  });
+
+  test('returns every file of a multiple selection', async () => {
+    mockedPick.mockResolvedValue([response, { ...response, uri: 'file:///tmp/b.pdf' }] as never);
+
+    await expect(pickDocument({ multiple: true })).resolves.toHaveLength(2);
   });
 });
 
@@ -86,6 +145,56 @@ describe('pickImage', () => {
     mockedLibrary.mockResolvedValue({ didCancel: true });
 
     await expect(pickImage({ source: 'library' })).resolves.toEqual([]);
+  });
+
+  test('returns an empty list when the camera is cancelled', async () => {
+    mockedCamera.mockResolvedValue({ didCancel: true });
+
+    await expect(pickImage({ source: 'camera' })).resolves.toEqual([]);
+  });
+
+  test('forwards multiple and limit to the library, and no limit means unlimited', async () => {
+    mockedLibrary.mockResolvedValue({ assets: [] });
+
+    await pickImage({ source: 'library', multiple: true });
+    await pickImage({ source: 'library', multiple: false, limit: 5 });
+
+    expect(mockedLibrary).toHaveBeenNthCalledWith(1, { mediaType: 'photo', selectionLimit: 0 });
+    expect(mockedLibrary).toHaveBeenNthCalledWith(2, { mediaType: 'photo', selectionLimit: 1 });
+    expect(mockedCamera).not.toHaveBeenCalled();
+  });
+
+  test('falls back when the asset has no name, type or size, and drops assets without a URI', async () => {
+    mockedLibrary.mockResolvedValue({
+      assets: [{ uri: 'file:///tmp/IMG_1.heic' }, { fileName: 'ghost.jpg' }, {}],
+    });
+
+    await expect(pickImage({ source: 'library', multiple: true })).resolves.toEqual([
+      { uri: 'file:///tmp/IMG_1.heic', name: 'IMG_1.heic', type: 'image/jpeg', size: 0 },
+    ]);
+  });
+
+  test('uses photo.jpg when the URI has no file name', async () => {
+    mockedLibrary.mockResolvedValue({ assets: [{ uri: 'ph://' }] });
+
+    const [file] = await pickImage({ source: 'library' });
+
+    expect(file?.name).toBe('photo.jpg');
+  });
+
+  test('returns an empty list when the response has no assets', async () => {
+    mockedLibrary.mockResolvedValue({});
+
+    await expect(pickImage({ source: 'library' })).resolves.toEqual([]);
+  });
+
+  test('keeps the native error message as the cause of an unknown error', async () => {
+    mockedCamera.mockResolvedValue({ errorCode: 'others', errorMessage: 'disk full' });
+
+    await expect(pickImage({ source: 'camera' })).rejects.toMatchObject({
+      code: 'unknown',
+      cause: 'disk full',
+    });
   });
 
   test.each([
