@@ -25,9 +25,17 @@
       "reset": "Reset overrides",
       "title": "Feature flags"
     },
+    "networkLog": {
+      "hint": "Requests made by this app. Sign-in, token and profile requests are hidden. Everything else is shown as sent, Authorization header included, so this is for dev and staging builds only.",
+      "open": "Open network log",
+      "title": "Network log"
+    },
     "pushToken": {
       "placeholder": "Not available yet. Push notifications are not part of the template.",
       "title": "Push token"
+    },
+    "shake": {
+      "hint": "Shake the device to open this menu from anywhere in the app."
     },
     "storybook": {
       "hint": "Set STORYBOOK_ENABLED=true in the env file and restart to launch Storybook instead of the app.",

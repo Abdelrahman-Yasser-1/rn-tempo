@@ -21,6 +21,7 @@ export const LINK_PATHS = {
   Theme: 'settings/theme',
   About: 'settings/about',
   DebugMenu: 'debug',
+  NetworkLog: 'debug/network',
 } as const;
 
 const AUTH_PATHS = new Set<string>([
@@ -71,8 +72,8 @@ export function interceptLink(url: string | null | undefined): string | null {
   if (path === null || isPublicPath(path)) {
     return url;
   }
-  // The debug menu only exists in non-prod builds; ignore it elsewhere rather than parking it.
-  if (path === LINK_PATHS.DebugMenu && isProd) {
+  // The debug screens only exist in non-prod builds; ignore it elsewhere rather than parking it.
+  if ((path === LINK_PATHS.DebugMenu || path === LINK_PATHS.NetworkLog) && isProd) {
     return null;
   }
   setPendingLink(url);

@@ -1,7 +1,10 @@
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useAuthStore } from '@features/auth';
+import type { RootStackParamList } from '@navigation/types';
 import { clearFlagOverrides, setFlagOverride } from '@services/flags/flagOverrides';
 import { FLAG_DEFAULTS, type FlagKey } from '@services/flags/flags';
 import { useFeatureFlag } from '@services/flags/useFeatureFlag';
@@ -25,6 +28,7 @@ export function useDebugFlag(flag: FlagKey) {
 /** Logic of the debug menu: API URL override, flag reset and data reset actions. */
 export function useDebugMenuScreen() {
   const { t } = useTranslation('app');
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, 'DebugMenu'>>();
   const [apiUrl, setApiUrl] = useState(storage.getString(STORAGE_KEYS.apiBaseUrlOverride) ?? '');
   const [doneMessage, setDoneMessage] = useState('');
 
@@ -73,5 +77,8 @@ export function useDebugMenuScreen() {
     onClearStorage,
     onClearQueryCache,
     onClearTokens,
+    onOpenNetworkLog: () => {
+      navigation.navigate('NetworkLog');
+    },
   };
 }

@@ -44,4 +44,5 @@ export type RootStackParamList = {
   WebView: { url: string; title?: string }; // @tempo-feature:webview
   // Non-prod only.
   DebugMenu: undefined;
+  NetworkLog: undefined;
 };
