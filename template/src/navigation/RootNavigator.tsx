@@ -30,6 +30,7 @@ export type AppScreens = {
   NotFound: ComponentType;
   /** Rendered only in non-prod builds. */
   DebugMenu: ComponentType;
+  NetworkLog: ComponentType;
   // @tempo-feature:webview:start
   /** In-app browser for `https` pages; open it with `navigate('WebView', { url, title })`. */
   WebView: ComponentType<{ route: { params: RootStackParamList['WebView'] } }>;
@@ -64,6 +65,7 @@ export function createRootNavigator(screens: Readonly<AppScreens>) {
               screenOptions: { presentation: 'modal' as const },
               screens: {
                 DebugMenu: { screen: screens.DebugMenu, linking: LINK_PATHS.DebugMenu },
+                NetworkLog: { screen: screens.NetworkLog, linking: LINK_PATHS.NetworkLog },
               },
             },
           }),

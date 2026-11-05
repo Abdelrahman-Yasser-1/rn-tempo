@@ -141,6 +141,22 @@ export function DebugMenuScreen() {
         </View>
       </Section>
 
+      <Section title={t('debug.networkLog.title')}>
+        <Text color="textSecondary" variant="caption">
+          {t('debug.networkLog.hint')}
+        </Text>
+        <Text color="textSecondary" variant="caption">
+          {t('debug.shake.hint')}
+        </Text>
+        <View style={styles.buttons}>
+          <Action
+            label={t('debug.networkLog.open')}
+            onPress={vm.onOpenNetworkLog}
+            testID="debug-menu.network-log"
+          />
+        </View>
+      </Section>
+
       <Section title={t('debug.data.title')}>
         <View style={styles.buttons}>
           <Action

@@ -50,6 +50,27 @@ jest.mock('@gorhom/bottom-sheet', () => {
 jest.mock('react-native-keyboard-controller', () =>
   jest.requireActual<object>('react-native-keyboard-controller/jest'),
 );
+// react-native-shake ships no jest mock; tests grab the listener from `addListener` to fire a shake.
+jest.mock('react-native-shake', () => ({
+  __esModule: true,
+  default: {
+    addListener: jest.fn(() => ({ remove: jest.fn() })),
+    removeAllListeners: jest.fn(),
+    configure: jest.fn(),
+  },
+}));
+// react-native-network-logger patches XHR and ships no jest mock; the viewer renders a labelled View.
+jest.mock('react-native-network-logger', () => {
+  const { View } = jest.requireActual<{ View: ComponentType<{ testID?: string }> }>('react-native');
+  const { createElement: h } = jest.requireActual<{ createElement: typeof createElement }>('react');
+  return {
+    __esModule: true,
+    default: (props: { testID?: string }) => h(View, { ...props, testID: 'network-logger' }),
+    startNetworkLogging: jest.fn(),
+    stopNetworkLogging: jest.fn(),
+    getBackHandler: jest.fn((back: () => void) => back),
+  };
+});
 jest.mock('@rozenite/mmkv-plugin', () => ({ useMMKVDevTools: jest.fn() }));
 jest.mock('@rozenite/network-activity-plugin', () => ({ useNetworkActivityDevTools: jest.fn() }));
 jest.mock('@rozenite/tanstack-query-plugin', () => ({ useTanStackQueryDevTools: jest.fn() }));

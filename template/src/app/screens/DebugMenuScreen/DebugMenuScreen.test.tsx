@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { useAuthStore } from '@features/auth';
@@ -13,7 +14,13 @@ import { DebugMenuScreen } from './DebugMenuScreen';
 beforeEach(async () => {
   await initStorage();
   storage.clearAll();
+  jest.mocked(useNavigation).mockReturnValue({ navigate: jest.fn() });
 });
+
+jest.mock('@react-navigation/native', () => ({
+  ...jest.requireActual<object>('@react-navigation/native'),
+  useNavigation: jest.fn(),
+}));
 
 describe('DebugMenuScreen', () => {
   test('shows environment info', async () => {
@@ -95,5 +102,15 @@ describe('DebugMenuScreen', () => {
     await renderWithProviders(<DebugMenuScreen />, { language: 'ar' });
 
     expect(screen.getByRole('button', { name: 'مسح التخزين' })).toBeOnTheScreen();
+  });
+
+  test('opens the network log', async () => {
+    const navigate = jest.fn();
+    jest.mocked(useNavigation).mockReturnValue({ navigate });
+    const { user } = await renderWithProviders(<DebugMenuScreen />);
+
+    await user.press(screen.getByRole('button', { name: 'Open network log' }));
+
+    expect(navigate).toHaveBeenCalledWith('NetworkLog');
   });
 });

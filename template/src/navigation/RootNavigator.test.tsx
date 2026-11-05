@@ -83,6 +83,7 @@ const Navigation = createRootNavigator({
   Maintenance: () => <Fixed label="Maintenance" />,
   NotFound: () => <Fixed label="NotFound" />,
   DebugMenu: () => <Fixed label="DebugMenu" />,
+  NetworkLog: () => <Fixed label="NetworkLog" />,
   WebView: () => <Fixed label="WebView" />, // @tempo-feature:webview
 });
 

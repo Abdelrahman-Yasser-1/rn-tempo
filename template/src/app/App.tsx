@@ -11,9 +11,11 @@ import { useAppTheme } from '@theme/index';
 import { useSecurityStore } from './bootstrap/securityStore';
 import { useBootstrap, type BootstrapState } from './bootstrap/useBootstrap';
 import { AppProviders } from './providers/AppProviders';
+import { useShakeToOpenDebugMenu } from './providers/useShakeToOpenDebugMenu';
 import { DebugMenuScreen } from './screens/DebugMenuScreen';
 import { ForceUpdateScreen } from './screens/ForceUpdateScreen';
 import { MaintenanceScreen } from './screens/MaintenanceScreen';
+import { NetworkLogScreen } from './screens/NetworkLogScreen';
 import { NotFoundScreen } from './screens/NotFoundScreen';
 import { SecurityErrorScreen } from './screens/SecurityErrorScreen';
 import { StartupErrorScreen } from './screens/StartupErrorScreen';
@@ -24,6 +26,7 @@ const Navigation = createRootNavigator({
   Maintenance: MaintenanceScreen,
   NotFound: NotFoundScreen,
   DebugMenu: DebugMenuScreen,
+  NetworkLog: NetworkLogScreen,
   WebView: WebViewScreen, // @tempo-feature:webview
 });
 
@@ -77,6 +80,7 @@ function AppContent() {
 
   useEffect(() => startNetworkMonitoring(), []);
   useEffect(() => startPendingLinkResume(), []);
+  useShakeToOpenDebugMenu();
 
   if (bootstrap.status === 'loading') {
     // The native splash is still visible; nothing to draw yet.
