@@ -13002,6 +13002,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native-network-logger@npm:3.0.0":
+  version: 3.0.0
+  resolution: "react-native-network-logger@npm:3.0.0"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 10c0/c865bd00804b4e020cbb0c463037e9b369d89b504ba6af24de5a5b398f99808f44013bf4bbcab4142ded7654b8a8250efee3bdc4935c0280704426a7f6811134
+  languageName: node
+  linkType: hard
+
 "react-native-nitro-modules@npm:0.37.1":
   version: 0.37.1
   resolution: "react-native-nitro-modules@npm:0.37.1"
@@ -14428,6 +14438,7 @@ __metadata:
     react-native-localize: "npm:3.7.2"
     react-native-maps: "npm:1.29.11"
     react-native-mmkv: "npm:4.3.2"
+    react-native-network-logger: "npm:3.0.0"
     react-native-nitro-modules: "npm:0.37.1"
     react-native-reanimated: "npm:4.7.1"
     react-native-restart: "npm:0.0.29"
