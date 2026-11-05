@@ -12,7 +12,7 @@ export type ScreenProps = Readonly<{
   preset?: ScreenPreset;
   /** Safe-area edges to inset; defaults to top and bottom. */
   safeAreaEdges?: readonly Edge[];
-  /** Wraps content in a KeyboardAvoidingView. */
+  /** Keeps the focused field above the keyboard: a keyboard-aware scroll view, or a padded view. */
   keyboardAware?: boolean;
   /** `auto` picks light or dark content from the active theme. */
   statusBarStyle?: ScreenStatusBarStyle;

@@ -47,6 +47,9 @@ jest.mock('@gorhom/bottom-sheet', () => {
   return { ...mock, BottomSheetModal, BottomSheetFooter };
 });
 // Rozenite talks to the React Native DevTools frontend, which does not exist under Jest.
+jest.mock('react-native-keyboard-controller', () =>
+  jest.requireActual<object>('react-native-keyboard-controller/jest'),
+);
 jest.mock('@rozenite/mmkv-plugin', () => ({ useMMKVDevTools: jest.fn() }));
 jest.mock('@rozenite/network-activity-plugin', () => ({ useNetworkActivityDevTools: jest.fn() }));
 jest.mock('@rozenite/tanstack-query-plugin', () => ({ useTanStackQueryDevTools: jest.fn() }));
