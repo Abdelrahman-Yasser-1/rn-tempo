@@ -288,4 +288,66 @@ describe('httpClient token refresh', () => {
     expect(unauthorized).not.toHaveBeenCalled();
     expect(refreshCalls).toBe(0);
   });
+
+  const loginHandler = () =>
+    http.post(`${ENV.API_BASE_URL}/auth/login`, () =>
+      HttpResponse.json({ message: 'Invalid credentials' }, { status: 401 }),
+    );
+
+  test('a login 401 with a stored token neither refreshes nor signs out and rejects as UNAUTHORIZED', async () => {
+    server.use(loginHandler(), refreshHandler());
+
+    await expect(httpClient.post('/auth/login', {})).rejects.toMatchObject({
+      code: 'UNAUTHORIZED',
+      status: 401,
+    });
+
+    expect(refreshCalls).toBe(0);
+    expect(unauthorized).not.toHaveBeenCalled();
+    expect(tokenStore.getRefreshToken()).toBe('ref-old');
+  });
+
+  test('a skipped path with a query string is still skipped', async () => {
+    server.use(loginHandler(), refreshHandler());
+
+    await expect(httpClient.post('/auth/login?next=%2Fhome', {})).rejects.toMatchObject({
+      code: 'UNAUTHORIZED',
+    });
+
+    expect(refreshCalls).toBe(0);
+    expect(unauthorized).not.toHaveBeenCalled();
+  });
+
+  test('skipAuthRefresh on one request skips the refresh for a normal endpoint', async () => {
+    const calls: string[] = [];
+    server.use(protectedHandler(calls), refreshHandler());
+
+    await expect(httpClient.get('/secure', { skipAuthRefresh: true })).rejects.toMatchObject({
+      code: 'UNAUTHORIZED',
+    });
+
+    expect(calls).toEqual(['Bearer old']);
+    expect(refreshCalls).toBe(0);
+    expect(unauthorized).not.toHaveBeenCalled();
+  });
+
+  test('a path that only starts like a skipped one still refreshes', async () => {
+    const calls: string[] = [];
+    server.use(
+      http.get(`${ENV.API_BASE_URL}/auth/login-history`, ({ request }) => {
+        const auth = request.headers.get('authorization') ?? '';
+        calls.push(auth);
+        return auth === 'Bearer new'
+          ? HttpResponse.json({ ok: true })
+          : HttpResponse.json({}, { status: 401 });
+      }),
+      refreshHandler(),
+    );
+
+    const response = await httpClient.get<{ ok: boolean }>('/auth/login-history');
+
+    expect(response.data.ok).toBe(true);
+    expect(calls).toEqual(['Bearer old', 'Bearer new']);
+    expect(refreshCalls).toBe(1);
+  });
 });
