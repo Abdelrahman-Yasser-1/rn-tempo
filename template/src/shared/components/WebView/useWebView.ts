@@ -13,7 +13,8 @@ import type { WebViewProps } from './types';
 export type NavigationDecision = 'allow' | 'external' | 'block';
 
 const EXTERNAL_SCHEMES = new Set(['http:', 'https:', 'mailto:', 'tel:', 'sms:']);
-const URL_PARTS = /^([a-z][a-z0-9+.-]*:)(?:\/\/([^/?#]*))?/i;
+// A backslash ends the authority like `/` does: browsers read `https://evil.com\@good.com` as evil.com.
+const URL_PARTS = /^([a-z][a-z0-9+.-]*:)(?:\/\/([^/\\?#]*))?/i;
 
 /** The scheme (`https:`) and host of a URL, lower-cased; `null` when it does not parse. */
 export function parseUrl(url: string): { protocol: string; host: string } | null {
