@@ -1,5 +1,7 @@
 import { ENV } from '@config/env';
 
+import { redact, redactString } from './redact';
+
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 export type LogEntry = { level: LogLevel; message: string; args: readonly unknown[] };
 export type LogTransport = (entry: LogEntry) => void;
@@ -33,11 +35,14 @@ export function createLogger({ level, isProduction }: Readonly<LoggerOptions>) {
     if (RANK[entryLevel] < threshold) {
       return;
     }
-    transport?.({ level: entryLevel, message, args });
+    // Redact once, before any sink: the transport and the dev console only see safe copies.
+    const safeMessage = redactString(message);
+    const safeArgs = redact(args);
+    transport?.({ level: entryLevel, message: safeMessage, args: safeArgs });
     if (!isProduction) {
       // The only place console is allowed: it is the dev sink behind the level filter.
       // eslint-disable-next-line no-console -- logger is the single console wrapper
-      console[entryLevel](message, ...args);
+      console[entryLevel](safeMessage, ...safeArgs);
     }
   };
 
