@@ -1,6 +1,15 @@
+// @tempo-feature:file-picker:start
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
+// @tempo-feature:file-picker:end
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+// @tempo-feature:maps:start
+import { act } from '@testing-library/react-native';
+// @tempo-feature:maps:end
 import { http, HttpResponse } from 'msw';
 
+// @tempo-feature:file-picker:start
+import { pickDocument } from '@services/files/files';
+// @tempo-feature:file-picker:end
 import { setFlagOverride } from '@services/flags/flagOverrides';
 import { toast } from '@services/toast/toast';
 import { addDays, formatFullDate, toISODate } from '@shared/utils/calendar';
@@ -10,6 +19,10 @@ import { renderWithProviders } from '@test-utils/renderWithProviders';
 import { itemKeys } from '../../api/keys';
 
 import { ItemCreateScreen } from './ItemCreateScreen';
+
+// @tempo-feature:file-picker:start
+jest.mock('@services/files/files');
+// @tempo-feature:file-picker:end
 
 const mockNavigation = { navigate: jest.fn(), goBack: jest.fn(), reset: jest.fn() };
 jest.mock('@react-navigation/native', () => ({
@@ -252,4 +265,94 @@ describe('ItemCreateScreen', () => {
     expect(screen.queryByLabelText('Title')).not.toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: 'Create item' })).not.toBeOnTheScreen();
   });
+
+  // @tempo-feature:file-picker:start
+  test('the chosen attachment is sent in the request body', async () => {
+    jest.spyOn(BottomSheetModal.prototype, 'dismiss').mockImplementation(function dismiss(this: {
+      props: { onDismiss?: () => void };
+    }) {
+      this.props.onDismiss?.();
+    });
+    const attachment = {
+      uri: 'file:///manual.pdf',
+      name: 'manual.pdf',
+      type: 'application/pdf',
+      size: 2048,
+    };
+    jest.mocked(pickDocument).mockResolvedValue([attachment]);
+    const bodies = recordCreates();
+    const { user } = await renderCreate();
+
+    await fillRequired(user);
+    await user.press(screen.getByRole('button', { name: 'Attachment' }));
+    await user.press(screen.getByText('Browse files'));
+    expect(await screen.findByText('manual.pdf')).toBeOnTheScreen();
+    await user.press(screen.getByRole('button', { name: 'Create item' }));
+
+    await waitFor(() => {
+      expect(mockNavigation.goBack).toHaveBeenCalledTimes(1);
+    });
+    expect(bodies).toEqual([expect.objectContaining({ attachment })]);
+    jest.restoreAllMocks();
+  });
+
+  test('the attachment is left out of the request when it was removed again', async () => {
+    jest.spyOn(BottomSheetModal.prototype, 'dismiss').mockImplementation(function dismiss(this: {
+      props: { onDismiss?: () => void };
+    }) {
+      this.props.onDismiss?.();
+    });
+    jest
+      .mocked(pickDocument)
+      .mockResolvedValue([
+        { uri: 'file:///manual.pdf', name: 'manual.pdf', type: 'application/pdf', size: 2048 },
+      ]);
+    const bodies = recordCreates();
+    const { user } = await renderCreate();
+
+    await fillRequired(user);
+    await user.press(screen.getByRole('button', { name: 'Attachment' }));
+    await user.press(screen.getByText('Browse files'));
+    await user.press(await screen.findByRole('button', { name: 'Remove manual.pdf' }));
+    await user.press(screen.getByRole('button', { name: 'Create item' }));
+
+    await waitFor(() => {
+      expect(mockNavigation.goBack).toHaveBeenCalledTimes(1);
+    });
+    expect(bodies[0]).not.toHaveProperty('attachment');
+    jest.restoreAllMocks();
+  });
+  // @tempo-feature:file-picker:end
+
+  // @tempo-feature:maps:start
+  test('the chosen pickup location is sent in the request body', async () => {
+    const bodies = recordCreates();
+    const { user } = await renderCreate();
+
+    await fillRequired(user);
+    await user.press(screen.getByRole('button', { name: 'Pickup location' }));
+    await act(() => {
+      (
+        screen.getByLabelText('Map').props as {
+          onRegionChangeComplete: (region: object) => void;
+        }
+      ).onRegionChangeComplete({ latitude: 21.5433, longitude: 39.1728 });
+    });
+    // The date and slot sheets have a Confirm button too; the map sheet is mounted last.
+    const mapConfirm = screen.getAllByRole('button', { name: 'Confirm' }).at(-1);
+    if (mapConfirm === undefined) {
+      throw new Error('The map sheet has no Confirm button');
+    }
+    await user.press(mapConfirm);
+    await user.press(screen.getByRole('button', { name: 'Create item' }));
+
+    await waitFor(() => {
+      expect(mockNavigation.goBack).toHaveBeenCalledTimes(1);
+    });
+    expect(bodies).toEqual([
+      expect.objectContaining({ pickupLocation: { latitude: 21.5433, longitude: 39.1728 } }),
+    ]);
+    jest.restoreAllMocks();
+  });
+  // @tempo-feature:maps:end
 });
