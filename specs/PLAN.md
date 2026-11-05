@@ -508,6 +508,9 @@ export const breakpoints = { xs: 0, sm: 360, md: 600, lg: 900, xl: 1200 } as con
 | `ai-claude` | on | `.claude/` + `CLAUDE.md` |
 | `ai-cursor` | on | `.cursor/` |
 | `ai-copilot` | on | `.github/copilot-instructions.md` + `.github/instructions/` |
+| `webview` | off | `WebView` component + `WebViewScreen` (react-native-webview) |
+| `file-picker` | off | `FilePicker` / `MultiFilePicker` + `services/files` (documents, camera, photo library) |
+| `maps` | off | `MapPicker` (react-native-maps; Apple Maps on iOS, Google Maps on Android) |
 
 The template repo keeps **every** module present, `dynamic-forms` included. "Default" only sets the CLI prompt's preselection.
 

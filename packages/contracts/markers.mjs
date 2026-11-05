@@ -11,6 +11,9 @@ export const FEATURE_NAMES = Object.freeze([
   'ai-claude',
   'ai-cursor',
   'ai-copilot',
+  'webview',
+  'file-picker',
+  'maps',
 ]);
 
 const SLASH = { start: (n) => `// @tempo-feature:${n}:start`, end: (n) => `// @tempo-feature:${n}:end`, single: (n) => `// @tempo-feature:${n}` };

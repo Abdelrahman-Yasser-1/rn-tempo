@@ -1,0 +1,46 @@
+{
+  "$schema": "https://unpkg.com/@rn-tempo/contracts/schemas/feature-manifest.schema.json",
+  "name": "maps",
+  "title": "Map picker",
+  "description": "MapPicker (a pin on a map, optional current location) and FormMapPicker; Apple Maps on iOS, Google Maps on Android.",
+  "defaultEnabled": false,
+  "requires": [],
+  "conflicts": [],
+  "deleteGlobs": [
+    "src/shared/components/MapPicker/**",
+    "src/shared/components/FormMapPicker/**"
+  ],
+  "dependencies": [
+    "react-native-maps"
+  ],
+  "devDependencies": [],
+  "envKeys": [
+    "GOOGLE_MAPS_API_KEY"
+  ],
+  "jsonPatches": [
+    {
+      "file": "src/locales/en/common.json",
+      "op": "remove",
+      "path": "/mapPicker"
+    },
+    {
+      "file": "src/locales/ar/common.json",
+      "op": "remove",
+      "path": "/mapPicker"
+    },
+    {
+      "file": "src/locales/en/items.json",
+      "op": "remove",
+      "path": "/create/pickupLocation"
+    },
+    {
+      "file": "src/locales/ar/items.json",
+      "op": "remove",
+      "path": "/create/pickupLocation"
+    }
+  ],
+  "postRemove": [
+    "pods"
+  ],
+  "docs": "/docs/features/maps"
+}
