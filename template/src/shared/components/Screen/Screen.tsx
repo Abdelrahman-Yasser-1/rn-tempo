@@ -1,4 +1,5 @@
-import { KeyboardAvoidingView, Platform, ScrollView, StatusBar, View } from 'react-native';
+import { ScrollView, StatusBar, View } from 'react-native';
+import { KeyboardAvoidingView, KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUnistyles } from 'react-native-unistyles';
 
@@ -29,14 +30,29 @@ export function Screen({
 }: ScreenProps) {
   const { theme } = useUnistyles();
 
-  const body =
-    preset === 'scroll' ? (
-      <ScrollView
+  const scrollContent = [styles.scrollContent(padding), contentContainerStyle];
+  // A scrolling keyboard-aware screen scrolls the focused field into view itself; the library
+  // view below it would only shrink the scroll area a second time.
+  const isKeyboardScroll = isKeyboardAware && preset === 'scroll';
+
+  const renderScroll = () =>
+    isKeyboardScroll ? (
+      <KeyboardAwareScrollView
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={[styles.scrollContent(padding), contentContainerStyle]}
+        bottomOffset={theme.spacing.xl}
+        contentContainerStyle={scrollContent}
       >
         {children}
+      </KeyboardAwareScrollView>
+    ) : (
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={scrollContent}>
+        {children}
       </ScrollView>
+    );
+
+  const body =
+    preset === 'scroll' ? (
+      renderScroll()
     ) : (
       <View style={[styles.flex, styles.content(padding), contentContainerStyle]}>{children}</View>
     );
@@ -44,10 +60,11 @@ export function Screen({
   return (
     <SafeAreaView testID={testID} edges={safeAreaEdges} style={styles.root}>
       <StatusBar barStyle={barStyleFor(statusBarStyle, theme.name)} />
-      {isKeyboardAware ? (
+      {isKeyboardAware && !isKeyboardScroll ? (
         <KeyboardAvoidingView
           style={styles.flex}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior="padding"
+          keyboardVerticalOffset={theme.spacing.none}
         >
           {body}
         </KeyboardAvoidingView>

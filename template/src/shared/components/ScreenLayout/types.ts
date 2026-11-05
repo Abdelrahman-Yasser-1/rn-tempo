@@ -13,7 +13,7 @@ export type ScreenLayoutProps = Readonly<{
   footer?: ReactNode;
   /** Fades and slides the content in on mount. Skipped when reduced motion is on. */
   animated?: boolean;
-  /** Wraps the layout in a KeyboardAvoidingView. */
+  /** Keeps the focused field above the keyboard (see Screen). */
   keyboardAware?: boolean;
   /** Padding of the content as a spacing token; defaults to `xl`. */
   padding?: SpacingKey;

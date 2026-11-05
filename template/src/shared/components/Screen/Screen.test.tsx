@@ -45,4 +45,22 @@ describe('Screen', () => {
     );
     expect(screen.getByText('Long content')).toBeOnTheScreen();
   });
+
+  it('renders a keyboard-aware scroll screen', async () => {
+    await renderWithProviders(
+      <Screen preset="scroll" keyboardAware testID="screen">
+        <Text>Form</Text>
+      </Screen>,
+    );
+    expect(screen.getByText('Form')).toBeOnTheScreen();
+  });
+
+  it('renders a keyboard-aware fixed screen', async () => {
+    await renderWithProviders(
+      <Screen keyboardAware testID="screen">
+        <Text>Fixed form</Text>
+      </Screen>,
+    );
+    expect(screen.getByText('Fixed form')).toBeOnTheScreen();
+  });
 });
