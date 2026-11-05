@@ -8,7 +8,10 @@ export type FeatureName =
   | 'ci-github'
   | 'ai-claude'
   | 'ai-cursor'
-  | 'ai-copilot';
+  | 'ai-copilot'
+  | 'webview'
+  | 'file-picker'
+  | 'maps';
 
 export declare const FEATURE_NAMES: readonly FeatureName[];
 

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://unpkg.com/@rn-tempo/contracts/schemas/feature-manifest.schema.json",
+  "name": "file-picker",
+  "title": "File pickers",
+  "description": "FilePicker and MultiFilePicker (camera, photos, files) with form wrappers, backed by services/files.",
+  "defaultEnabled": false,
+  "requires": [],
+  "conflicts": [],
+  "deleteGlobs": [
+    "src/services/files/**",
+    "src/shared/components/FileRow/**",
+    "src/shared/components/FilePicker/**",
+    "src/shared/components/MultiFilePicker/**",
+    "src/shared/components/FormFilePicker/**",
+    "src/shared/components/FormMultiFilePicker/**"
+  ],
+  "dependencies": [
+    "@react-native-documents/picker",
+    "react-native-image-picker"
+  ],
+  "devDependencies": [],
+  "envKeys": [],
+  "jsonPatches": [
+    {
+      "file": "src/locales/en/common.json",
+      "op": "remove",
+      "path": "/filePicker"
+    },
+    {
+      "file": "src/locales/ar/common.json",
+      "op": "remove",
+      "path": "/filePicker"
+    },
+    {
+      "file": "src/locales/en/items.json",
+      "op": "remove",
+      "path": "/create/attachment"
+    },
+    {
+      "file": "src/locales/ar/items.json",
+      "op": "remove",
+      "path": "/create/attachment"
+    }
+  ],
+  "postRemove": [
+    "pods"
+  ],
+  "docs": "/docs/features/file-picker"
+}

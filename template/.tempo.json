@@ -40,7 +40,10 @@
     "ci-github",
     "ai-claude",
     "ai-cursor",
-    "ai-copilot"
+    "ai-copilot",
+    "webview",
+    "file-picker",
+    "maps"
   ],
   "ai": {
     "tools": [

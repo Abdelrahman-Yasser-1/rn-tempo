@@ -1,0 +1,44 @@
+{
+  "$schema": "https://unpkg.com/@rn-tempo/contracts/schemas/feature-manifest.schema.json",
+  "name": "webview",
+  "title": "In-app web view",
+  "description": "WebView component and WebViewScreen with a loading bar, error state, retry and safe external links.",
+  "defaultEnabled": false,
+  "requires": [],
+  "conflicts": [],
+  "deleteGlobs": [
+    "src/shared/components/WebView/**",
+    "src/app/screens/WebViewScreen/**"
+  ],
+  "dependencies": [
+    "react-native-webview"
+  ],
+  "devDependencies": [],
+  "envKeys": [],
+  "jsonPatches": [
+    {
+      "file": "src/locales/en/common.json",
+      "op": "remove",
+      "path": "/webView"
+    },
+    {
+      "file": "src/locales/ar/common.json",
+      "op": "remove",
+      "path": "/webView"
+    },
+    {
+      "file": "src/locales/en/items.json",
+      "op": "remove",
+      "path": "/details/openProduct"
+    },
+    {
+      "file": "src/locales/ar/items.json",
+      "op": "remove",
+      "path": "/details/openProduct"
+    }
+  ],
+  "postRemove": [
+    "pods"
+  ],
+  "docs": "/docs/features/webview"
+}
