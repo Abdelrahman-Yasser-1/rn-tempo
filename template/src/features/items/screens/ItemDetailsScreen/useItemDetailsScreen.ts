@@ -26,7 +26,7 @@ export function useItemDetailsScreen(route: RouteProp<HomeStackParamList, 'ItemD
   const onOpenProductPage = () => {
     if (navigationRef.isReady()) {
       navigationRef.navigate('WebView', {
-        url: `${PRODUCT_PAGE_URL}/${String(route.params.itemId)}`,
+        url: PRODUCT_PAGE_URL,
         title: data?.title,
       });
     }

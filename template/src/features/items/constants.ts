@@ -16,8 +16,11 @@ export const PICKUP_SLOTS = [
 ] as const;
 
 // @tempo-feature:webview:start
-/** Product pages the "Open product page" button shows in the in-app browser; the item id follows. */
-export const PRODUCT_PAGE_URL = 'https://dummyjson.com/products';
+/**
+ * Page the "Open product page" button shows in the in-app browser. dummyjson has no per-product
+ * web page (`/products/<id>` is the JSON API), so the sample opens its products documentation.
+ */
+export const PRODUCT_PAGE_URL = 'https://dummyjson.com/docs/products';
 // @tempo-feature:webview:end
 
 // @tempo-feature:file-picker:start
