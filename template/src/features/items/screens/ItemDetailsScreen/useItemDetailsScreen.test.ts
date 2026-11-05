@@ -92,7 +92,7 @@ describe('useItemDetailsScreen', () => {
     result.current.onOpenProductPage();
 
     expect(mockRootNavigate).toHaveBeenCalledWith('WebView', {
-      url: 'https://dummyjson.com/products/4',
+      url: 'https://dummyjson.com/docs/products',
       title: 'Product 4',
     });
   });
