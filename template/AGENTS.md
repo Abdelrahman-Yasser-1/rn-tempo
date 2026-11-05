@@ -111,6 +111,8 @@ One topic per file in `ai/rules/`; the examples there are the source of truth.
 
 Skills, commands and subagents are in `ai/skills`, `ai/commands` and `ai/agents`. After editing anything in `ai/`, run `yarn ai:sync` and commit the generated files.
 
+Vendored third-party skills (React Native performance, advanced TypeScript types) live in `ai/skills/` with their licenses; `ai/skills-lock.json` pins each commit and `yarn ai:skills:update` refreshes them. Do not edit them by hand.
+
 MCP servers are configured in `.mcp.json` (copied to `.cursor/mcp.json` by `yarn ai:sync`). Packages run through `npx` are pinned to an exact version older than 24 hours and are bumped deliberately, never with `latest`.
 
 ## Add an icon
