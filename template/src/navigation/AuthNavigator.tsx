@@ -4,6 +4,7 @@ import { ForgotPasswordScreen, LoginScreen, OtpScreen, RegisterScreen } from '@f
 import { OnboardingScreen, useShouldShowOnboarding } from '@features/onboarding';
 
 import { LINK_PATHS } from './linking';
+import { ScreenErrorLayout } from './ScreenErrorLayout';
 
 /**
  * Signed-out stack. Onboarding sits in its own group gated by `useShouldShowOnboarding`; with no
@@ -12,6 +13,7 @@ import { LINK_PATHS } from './linking';
 export function createAuthNavigator() {
   return createNativeStackNavigator({
     screenOptions: { headerShown: false },
+    screenLayout: ScreenErrorLayout,
     groups: {
       Onboarding: {
         if: useShouldShowOnboarding,

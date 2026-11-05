@@ -8,6 +8,7 @@ import { EditProfileScreen, ProfileScreen } from '@features/profile';
 import { AboutScreen, LanguageScreen, SettingsScreen, ThemeScreen } from '@features/settings';
 
 import { LINK_PATHS } from './linking';
+import { ScreenErrorLayout } from './ScreenErrorLayout';
 
 // Screens render the shared Header themselves, so native headers stay hidden in every stack.
 const stackScreenOptions = { headerShown: false } as const;
@@ -16,6 +17,7 @@ const stackScreenOptions = { headerShown: false } as const;
 export function createHomeStack() {
   return createNativeStackNavigator({
     screenOptions: stackScreenOptions,
+    screenLayout: ScreenErrorLayout,
     screens: {
       Home: { screen: HomeScreen, linking: LINK_PATHS.Home },
       // @tempo-feature:samples:start
@@ -34,6 +36,7 @@ export function createHomeStack() {
 export function createProfileStack() {
   return createNativeStackNavigator({
     screenOptions: stackScreenOptions,
+    screenLayout: ScreenErrorLayout,
     screens: {
       Profile: { screen: ProfileScreen, linking: LINK_PATHS.Profile },
       EditProfile: { screen: EditProfileScreen, linking: LINK_PATHS.EditProfile },
@@ -45,6 +48,7 @@ export function createProfileStack() {
 export function createSettingsStack() {
   return createNativeStackNavigator({
     screenOptions: stackScreenOptions,
+    screenLayout: ScreenErrorLayout,
     screens: {
       Settings: { screen: SettingsScreen, linking: LINK_PATHS.Settings },
       Language: { screen: LanguageScreen, linking: LINK_PATHS.Language },

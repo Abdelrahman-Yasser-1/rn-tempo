@@ -29,7 +29,10 @@
     "confirm": "Confirm"
   },
   "errorBoundary": {
-    "restart": "Restart app"
+    "goBack": "Go back",
+    "restart": "Restart app",
+    "screenTitle": "This screen ran into a problem",
+    "tryAgain": "Try again"
   },
   "errorState": {
     "retry": "Retry",
