@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PermissionsAndroid, Platform } from 'react-native';
 import type { Region } from 'react-native-maps';
@@ -34,6 +34,8 @@ export function useMapPicker({ value, onChange, defaultCenter, mapRef }: UseMapP
   const [draft, setDraft] = useState<MapCenter>(start);
   const [isShowingUser, setIsShowingUser] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
+  // The newest position the map reported while it shows the user; it reports only on changes.
+  const userCenterRef = useRef<MapCenter | undefined>(undefined);
   const fine = usePermissions(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
   const coarse = usePermissions(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION);
 
@@ -99,6 +101,7 @@ export function useMapPicker({ value, onChange, defaultCenter, mapRef }: UseMapP
       setIsOpen(false);
       setIsShowingUser(false);
       setIsLocating(false);
+      userCenterRef.current = undefined;
     },
     onRegionChangeComplete: (region: Region) => {
       setDraft({ latitude: region.latitude, longitude: region.longitude });
@@ -114,6 +117,11 @@ export function useMapPicker({ value, onChange, defaultCenter, mapRef }: UseMapP
       setIsLocating(true);
       if (await hasLocationAccess()) {
         setIsShowingUser(true);
+        // The map is already tracking the user and will not report an unchanged position again.
+        if (userCenterRef.current !== undefined) {
+          setIsLocating(false);
+          jumpTo(userCenterRef.current);
+        }
       } else {
         setIsLocating(false);
         showDenied();
@@ -123,13 +131,14 @@ export function useMapPicker({ value, onChange, defaultCenter, mapRef }: UseMapP
       nativeEvent: { coordinate?: { latitude: number; longitude: number }; error?: unknown };
     }) => {
       const { coordinate, error } = event.nativeEvent;
-      if (!isLocating) {
-        return;
-      }
       if (coordinate !== undefined) {
-        setIsLocating(false);
-        jumpTo({ latitude: coordinate.latitude, longitude: coordinate.longitude });
-      } else if (error !== undefined) {
+        const center = { latitude: coordinate.latitude, longitude: coordinate.longitude };
+        userCenterRef.current = center;
+        if (isLocating) {
+          setIsLocating(false);
+          jumpTo(center);
+        }
+      } else if (isLocating && error !== undefined) {
         setIsLocating(false);
         setIsShowingUser(false);
         showDenied();
