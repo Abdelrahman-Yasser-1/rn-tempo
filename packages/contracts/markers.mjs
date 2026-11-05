@@ -11,6 +11,7 @@ export const FEATURE_NAMES = Object.freeze([
   'ai-claude',
   'ai-cursor',
   'ai-copilot',
+  'ai-vendored-skills',
   'webview',
   'file-picker',
   'maps',
