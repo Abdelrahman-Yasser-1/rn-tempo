@@ -9,3 +9,7 @@ coverage
 .tempo.json
 yarn.lock
 .rnstorybook/storybook.requires.ts
+# @tempo-feature:ai-vendored-skills:start
+ai/skills/react-native-best-practices
+ai/skills/typescript-advanced-types
+# @tempo-feature:ai-vendored-skills:end

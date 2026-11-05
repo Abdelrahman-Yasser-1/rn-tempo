@@ -51,6 +51,8 @@
     "ai:report": "node scripts/ai-log/report.mjs",
     "test:ai-log": "node --test \"scripts/ai-log/__tests__/*.test.mjs\"",
     "ai:sync": "node scripts/ai-sync/sync.mjs",
+    "ai:skills:update": "node scripts/ai-skills-update.mjs",
+    "test:ai-skills": "node --test \"scripts/__tests__/ai-skills-update.test.mjs\"",
     "test:ai-sync": "node --test \"scripts/ai-sync/__tests__/*.test.mjs\"",
     "spec:check": "node scripts/spec-check.mjs",
     "verify": "yarn typecheck && yarn lint && yarn format:check && yarn lint:files && yarn i18n:check && yarn lint:deadcode && yarn test --ci",

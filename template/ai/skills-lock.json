@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "skills": {
+    "react-native-best-practices": {
+      "source": "callstackincubator/agent-skills",
+      "skillPath": "skills/react-native-best-practices",
+      "commit": "59e9d17446a248b21d86f078fcd0bd2d36db1ca4",
+      "license": "MIT",
+      "licensePath": "LICENSE",
+      "computedHash": "3e350a43ebaa6e55ac12a2a85b24ec6da87d0ad58de8b70d860a5cc6a6f180a7",
+      "vendoredAt": "2026-11-05"
+    },
+    "typescript-advanced-types": {
+      "source": "wshobson/agents",
+      "skillPath": "plugins/javascript-typescript/skills/typescript-advanced-types",
+      "commit": "7e2fb559cf4b824b27f1fec49fe88f7511066d26",
+      "license": "MIT",
+      "licensePath": "LICENSE",
+      "computedHash": "062ac5c74e449cf163a7de17d03238d08b7239f7f05ae0923c688fddb09b5bf4",
+      "vendoredAt": "2026-11-05"
+    }
+  }
+}

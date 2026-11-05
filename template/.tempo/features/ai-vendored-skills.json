@@ -1,0 +1,35 @@
+{
+  "$schema": "https://unpkg.com/@rn-tempo/contracts/schemas/feature-manifest.schema.json",
+  "name": "ai-vendored-skills",
+  "title": "Vendored AI skills",
+  "description": "Third-party agent skills (React Native performance, advanced TypeScript types) copied into ai/skills, with a lock file and an update script.",
+  "defaultEnabled": true,
+  "requires": [],
+  "conflicts": [],
+  "deleteGlobs": [
+    "ai/skills/react-native-best-practices/**",
+    "ai/skills/typescript-advanced-types/**",
+    ".claude/skills/react-native-best-practices/**",
+    ".claude/skills/typescript-advanced-types/**",
+    "ai/skills-lock.json",
+    "scripts/ai-skills-update.mjs",
+    "scripts/__tests__/ai-skills-update.test.mjs"
+  ],
+  "dependencies": [],
+  "devDependencies": [],
+  "envKeys": [],
+  "jsonPatches": [
+    {
+      "file": "package.json",
+      "op": "remove",
+      "path": "/scripts/ai:skills:update"
+    },
+    {
+      "file": "package.json",
+      "op": "remove",
+      "path": "/scripts/test:ai-skills"
+    }
+  ],
+  "postRemove": [],
+  "docs": "/docs/features/ai-vendored-skills"
+}
