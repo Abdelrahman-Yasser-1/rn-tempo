@@ -70,4 +70,84 @@ describe('ErrorBoundary', () => {
     await user.press(screen.getByRole('button', { name: 'Restart app' }));
     expect(RNRestart.restart).toHaveBeenCalled();
   });
+
+  it('shows "Try again" for a screen and re-renders the children from it', async () => {
+    let shouldThrow = true;
+    function Flaky() {
+      if (shouldThrow) {
+        throw new Error('flaky');
+      }
+      return <Text>Back to normal</Text>;
+    }
+    const onReset = jest.fn();
+    const { user } = await renderWithProviders(
+      <ErrorBoundary variant="screen" onReset={onReset}>
+        <Flaky />
+      </ErrorBoundary>,
+    );
+    expect(screen.queryByRole('button', { name: 'Restart app' })).not.toBeOnTheScreen();
+
+    shouldThrow = false;
+    await user.press(screen.getByRole('button', { name: 'Try again' }));
+
+    expect(screen.getByText('Back to normal')).toBeOnTheScreen();
+    expect(onReset).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers "Go back" only for a screen that has somewhere to go', async () => {
+    const onGoBack = jest.fn();
+    const { user } = await renderWithProviders(
+      <ErrorBoundary variant="screen" onGoBack={onGoBack}>
+        <Boom message="kaboom" />
+      </ErrorBoundary>,
+    );
+    await user.press(screen.getByRole('button', { name: 'Go back' }));
+    expect(onGoBack).toHaveBeenCalledTimes(1);
+  });
+
+  it('has no "Go back" without a handler', async () => {
+    await renderWithProviders(
+      <ErrorBoundary variant="screen">
+        <Boom message="kaboom" />
+      </ErrorBoundary>,
+    );
+    expect(screen.queryByRole('button', { name: 'Go back' })).not.toBeOnTheScreen();
+  });
+
+  it('resets when a reset key changes, and not when it stays the same', async () => {
+    let shouldThrow = true;
+    function Flaky() {
+      if (shouldThrow) {
+        throw new Error('flaky');
+      }
+      return <Text>Reset by key</Text>;
+    }
+    const tree = (key: string) => (
+      <ErrorBoundary variant="screen" resetKeys={[key]}>
+        <Flaky />
+      </ErrorBoundary>
+    );
+    const { rerender } = await renderWithProviders(tree('a'));
+    shouldThrow = false;
+
+    await rerender(tree('a'));
+    expect(screen.queryByText('Reset by key')).not.toBeOnTheScreen();
+
+    await rerender(tree('b'));
+    expect(screen.getByText('Reset by key')).toBeOnTheScreen();
+  });
+
+  it('names the screen in the log line', async () => {
+    const logError = jest.spyOn(logger, 'error').mockImplementation(jest.fn());
+    await renderWithProviders(
+      <ErrorBoundary variant="screen" screenName="ItemDetails">
+        <Boom message="kaboom" />
+      </ErrorBoundary>,
+    );
+    expect(logError).toHaveBeenCalledWith(
+      'Unhandled render error in ItemDetails',
+      expect.any(Error),
+      expect.any(String),
+    );
+  });
 });

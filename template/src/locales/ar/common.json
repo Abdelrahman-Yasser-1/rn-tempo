@@ -29,7 +29,10 @@
     "confirm": "تأكيد"
   },
   "errorBoundary": {
-    "restart": "إعادة تشغيل التطبيق"
+    "goBack": "رجوع",
+    "restart": "إعادة تشغيل التطبيق",
+    "screenTitle": "واجهت هذه الشاشة مشكلة",
+    "tryAgain": "حاول مرة أخرى"
   },
   "errorState": {
     "retry": "إعادة المحاولة",

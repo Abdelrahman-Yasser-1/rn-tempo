@@ -7,6 +7,7 @@ import { isProd } from '@config/env';
 import { createAuthNavigator } from './AuthNavigator';
 import { LINK_PATHS } from './linking';
 import { createMainTabs } from './MainTabs';
+import { ScreenErrorLayout } from './ScreenErrorLayout';
 import type { RootStackParamList } from './types';
 import { useIsSignedIn, useIsSignedOut } from './useIsSignedIn';
 
@@ -39,6 +40,7 @@ export type AppScreens = {
 export function createRootNavigator(screens: Readonly<AppScreens>) {
   const RootStack = createNativeStackNavigator({
     screenOptions: { headerShown: false },
+    screenLayout: ScreenErrorLayout,
     groups: {
       SignedOut: {
         if: useIsSignedOut,
