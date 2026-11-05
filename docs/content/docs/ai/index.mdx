@@ -6,3 +6,7 @@ description: Set up AI tools, the skills catalog and session logging.
 <Callout title="Coming in WS13" type="info">
   This section is a stub. The content is written in workstream WS13.
 </Callout>
+
+## Skills
+
+Project skills live in `ai/skills/` and `yarn ai:sync` copies them to `.claude/skills/`. Besides the project's own skills, the template vendors two third-party ones (React Native performance and advanced TypeScript types), pinned in `ai/skills-lock.json` and refreshed with `yarn ai:skills:update`. See [Vendored AI skills](/docs/features/ai-vendored-skills).

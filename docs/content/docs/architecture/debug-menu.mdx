@@ -1,0 +1,23 @@
+---
+title: Debug menu and network log
+description: The non-production debug menu, the shake gesture and the network log.
+---
+
+The debug menu (`DebugMenu` route, deep link `debug`) exists only outside production. It shows the environment, overrides the API base URL and feature flags, clears data, and opens the network log.
+
+## Open it
+
+- **Shake the device** anywhere in the app (`react-native-shake`). The hook skips the shake while the debug menu or network log is already showing, or before navigation is ready.
+  - On the iOS Simulator use Device > Shake (the React Native dev menu also opens in debug builds; dismiss it).
+  - Android emulators are unreliable: the detector counts about eight alternating acceleration peaks, which the extended controls (Virtual sensors) can only approximate, so the library itself advises real devices. On an emulator use the deep link below instead.
+- Deep link: `xcrun simctl openurl booted tempo-dev://debug` on iOS, `adb shell am start -a android.intent.action.VIEW -d tempo-dev://debug` on Android; `debug/network` opens the log.
+
+The `isProd` checks are runtime guards: the code ships in production bundles but never subscribes to the sensor, registers the routes or starts the logger.
+
+## Network log
+
+`react-native-network-logger` patches `XMLHttpRequest`, which axios uses, and `NetworkLogScreen` shows its viewer in our theme (route `NetworkLog`, deep link `debug/network`). It starts once from `index.js`, only when not `isProd`, and keeps 200 requests.
+
+<Callout title="The network log shows Authorization headers" type="warn">
+  The library has no hook to transform or redact what it stores (only `ignoredHosts`, `ignoredUrls` and `ignoredPatterns`). Requests to the endpoints in `SENSITIVE_ENDPOINTS` (see [HTTP client rules](/docs/architecture/http)) and Metro traffic are not recorded at all. Every other request is shown as sent, **`Authorization` header included**. Use it in dev and staging builds only, and add new sensitive endpoints to the shared list.
+</Callout>

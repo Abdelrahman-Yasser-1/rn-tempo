@@ -1,0 +1,21 @@
+---
+title: Keyboard handling
+description: How screens keep the focused field above the keyboard.
+---
+
+The template uses [`react-native-keyboard-controller`](https://github.com/kirillzyusko/react-native-keyboard-controller). `AppProviders` wraps the app in `KeyboardProvider`, inside `SafeAreaProvider`. Storybook uses the same providers, so stories with fields behave like the app.
+
+## Screen
+
+`Screen` keeps its props. With `keyboardAware`:
+
+| `preset`  | What renders                                                                                       |
+| --------- | -------------------------------------------------------------------------------------------------- |
+| `scroll`  | The library's `KeyboardAwareScrollView`, which scrolls the focused field into view (offset: `xl`). |
+| `fixed`   | The library's `KeyboardAvoidingView` with `behavior="padding"`.                                    |
+
+Without `keyboardAware`, `scroll` is a plain `ScrollView`. `ScreenLayout` and `AuthLayout` pass the prop through, so Login, Register, Item create and Edit profile need no change.
+
+## Android
+
+The manifest already uses `windowSoftInputMode="adjustResize"`, and the project uses `react-native-edge-to-edge`, which makes the provider run edge-to-edge. No `AndroidManifest.xml` change was needed. The module is core UX, not a removable module.

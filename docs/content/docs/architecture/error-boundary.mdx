@@ -1,0 +1,20 @@
+---
+title: Error boundaries
+description: The app-level boundary and the per-screen boundary that keeps one broken screen from taking down the app.
+---
+
+`ErrorBoundary` (`src/shared/components/ErrorBoundary`) catches render errors below it, logs them and shows an error state.
+
+| Prop        | Meaning                                                                                      |
+| ----------- | -------------------------------------------------------------------------------------------- |
+| `variant`   | `app` (default): "Restart app". `screen`: "Try again" re-renders the children.               |
+| `resetKeys` | The boundary resets when any entry changes (compared with `Object.is`).                      |
+| `onReset`   | Called after a reset, from "Try again" or from a `resetKeys` change.                         |
+| `onGoBack`  | Screen variant: shows a "Go back" action.                                                    |
+| `screenName`| Added to the log line (`Unhandled render error in ItemDetails`).                             |
+
+## Per screen
+
+Every navigator sets `screenLayout: ScreenErrorLayout` (`src/navigation/ScreenErrorLayout.tsx`). It wraps each screen in a `screen` boundary keyed on the route, with the route name in the log and "Go back" when the stack can go back. A screen that throws shows its fallback inside its own area: the tab bar and the other tabs keep working. The app-level boundary stays in `AppProviders` as the last resort.
+
+No query in the template uses `throwOnError`; if you add one, pass `QueryErrorResetBoundary`'s `reset` as `onReset`.

@@ -1,0 +1,32 @@
+---
+title: Logical style properties
+description: Why styles use start and end instead of left and right, and the lint rule that enforces it.
+---
+
+Arabic is a first-class language of the template, so layouts must mirror. React Native mirrors `start` and `end` with the layout direction, but not `left` and `right`.
+
+## The rule
+
+In every `styles.ts` file and in inline `StyleSheet.create` calls inside `.tsx` files, these keys are lint errors:
+
+| Physical key                                                                                        | Use instead                                                              |
+| --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `marginLeft`, `marginRight`                                                                         | `marginStart`, `marginEnd`                                               |
+| `paddingLeft`, `paddingRight`                                                                       | `paddingStart`, `paddingEnd`                                             |
+| `left`, `right`                                                                                     | `start`, `end`                                                           |
+| `borderLeft*`, `borderRight*`                                                                       | `borderStartWidth`, `borderEndColor`, ...                                |
+| `borderTopLeftRadius`, `borderTopRightRadius`, `borderBottomLeftRadius`, `borderBottomRightRadius` | `borderTopStartRadius`, `borderTopEndRadius`, `borderBottomStartRadius`, ... |
+| `textAlign: 'left'` or `'right'`                                                                    | `'auto'` (follows the text direction) or `'center'`                      |
+
+`textAlign: 'left'` does not mirror in React Native. The shared `Text` component exposes `align="start"`, which maps to `'auto'`.
+
+## Exceptions
+
+A graphic that must stay left-to-right in every language (a chart axis, a logo lockup) may keep a physical key with a reason:
+
+```ts
+// eslint-disable-next-line no-restricted-syntax -- LTR-only waveform, never mirrored
+left: 0,
+```
+
+The rule lives in `@rn-tempo/eslint-config` (`logicalPropertiesConfig`). It repeats the enum ban, because a later `no-restricted-syntax` entry replaces an earlier one for the same files.

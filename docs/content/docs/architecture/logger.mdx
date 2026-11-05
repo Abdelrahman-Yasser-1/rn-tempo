@@ -1,0 +1,19 @@
+---
+title: Logger and redaction
+description: The single logging entry point, and how secrets are removed before any log sink sees them.
+---
+
+All logging goes through `@services/logger`: `logger.debug`, `info`, `warn` and `error`. `console` is a lint error everywhere else. Production builds keep only `warn` and `error`, and hand them to the transport you plug in with `setLogTransport` (the Sentry recipe uses it).
+
+## Redaction
+
+Every message and every argument is redacted **before** it reaches any sink: the dev console and the transport both receive the safe copy. The redactor (`src/services/logger/redact.ts`) is pure and never mutates its input.
+
+- **Keys.** The whole value is replaced by `[REDACTED]` when the key matches `token`, `secret`, `password`, `passwd`, `authorization`, `cookie`, `signature`, `otp`, `pin`, `apikey`, `api_key` or `refresh` (case-insensitive, anywhere in the key).
+- **Strings.** At any depth, JWTs and `Bearer <value>` are masked, and emails keep their first letter and domain (`j***@example.com`).
+- **Errors.** `message` and `stack` are redacted, `name` is kept, and `cause` and extra fields are walked. For axios errors, `config.data`, `response.data` and the raw `request` are replaced, and header objects (including `AxiosHeaders` instances) are redacted by key, at any depth, including `response.config`.
+- **Structure.** Arrays and plain objects are copied. `Map`, `Date` and class instances pass through as they are. Cycles become `[Circular]` and anything deeper than 8 levels becomes `[Depth]`.
+
+<Callout title="Keys match anywhere" type="info">
+  `pin` also matches keys such as `shipping`, so a value may be hidden that did not need to be. Rename the key or log a different field if you need to see it.
+</Callout>
