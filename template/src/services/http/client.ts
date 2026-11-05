@@ -12,6 +12,7 @@ import { storage } from '@services/storage/storage';
 
 import { normalizeError } from './errors';
 import { createRequestId } from './requestId';
+import { shouldSkipRefresh } from './skipRefresh';
 
 let resolvedBaseUrl: string | undefined;
 
@@ -101,6 +102,11 @@ declare module 'axios' {
   interface InternalAxiosRequestConfig {
     isRetry?: boolean;
   }
+  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- required by axios typing contract
+  interface AxiosRequestConfig {
+    /** Set on a request whose 401 must not trigger a token refresh or a sign-out. */
+    skipAuthRefresh?: boolean;
+  }
 }
 
 const REFRESH_PATH = '/auth/refresh';
@@ -181,6 +187,10 @@ async function handleUnauthorized(error: unknown): Promise<never> {
     throw error;
   }
   const config = error.config;
+  if (shouldSkipRefresh(config)) {
+    // A login-style 401 is an answer, not an expired session: normalize and reject it.
+    throw error;
+  }
   const sentHeader = config.headers.get('Authorization');
   if (typeof sentHeader !== 'string') {
     // The request was anonymous (e.g. wrong password on login): nothing to refresh.
