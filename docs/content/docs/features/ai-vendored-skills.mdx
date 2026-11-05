@@ -1,0 +1,43 @@
+---
+title: Vendored AI skills
+description: Third-party agent skills copied into the template, pinned to a commit and refreshed with one command.
+---
+
+<FeatureBadge name="ai-vendored-skills" />
+
+## What it is
+
+The `ai-vendored-skills` module copies two open-source agent skills into `ai/skills/`, so a generated project has them without any install step:
+
+| Skill                         | Source                                                                                                                                                                    | Covers                                                                           |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `react-native-best-practices` | [`callstackincubator/agent-skills`](https://github.com/callstackincubator/agent-skills)                                                                                   | JS, native and bundle performance: lists, re-renders, startup, memory, profiling |
+| `typescript-advanced-types`   | [`wshobson/agents`](https://github.com/wshobson/agents)                                                                                                                   | Generics, conditional and mapped types, template literal types                   |
+
+Both are MIT-licensed. Each skill folder keeps the upstream `LICENSE` and a `VENDORED.md` with the source repository, path, commit and date. Only text files (`.md`, `.yaml`) are kept, and image links are removed, so the two skills weigh about 210 KB together.
+
+<Callout title="Not vendored: Vercel's React skills" type="warn">
+  `vercel-react-native-skills` and `vercel-react-best-practices` (from `vercel-labs/agent-skills`) are not included. That repository declares MIT in its README and in each `SKILL.md`, but ships no `LICENSE` file, so there is no license text to keep next to the copy. Add them once upstream publishes one: put their entries in `ai/skills-lock.json` and run the update command.
+</Callout>
+
+## Enable and remove
+
+<CommandTabs yarn="tempo feature add ai-vendored-skills" npm="npx tempo feature add ai-vendored-skills" />
+
+<CommandTabs yarn="tempo feature remove ai-vendored-skills" npm="npx tempo feature remove ai-vendored-skills" />
+
+Removing it deletes the two skill folders, their generated copies in `.claude/skills/`, the lock file, the update script and its two `package.json` scripts. The module is on by default.
+
+## Update
+
+`ai/skills-lock.json` pins each skill to a commit and a content hash. The update script needs no dependencies (Node 22+, `fetch`):
+
+```bash
+yarn ai:skills:update              # re-fetch every skill at its pinned commit
+yarn ai:skills:update --latest     # move to the default branch HEAD and rewrite the lock
+yarn ai:skills:update --only typescript-advanced-types
+yarn ai:skills:update --check      # offline: fail if a vendored file was edited by hand
+yarn ai:sync                       # refresh .claude/skills afterwards
+```
+
+Set `GITHUB_TOKEN` if you hit the unauthenticated GitHub API limit. Do not edit the vendored folders: the next update overwrites them. Prettier ignores them through `.prettierignore`.

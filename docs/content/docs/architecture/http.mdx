@@ -1,0 +1,19 @@
+---
+title: HTTP client rules
+description: Token refresh, endpoints that skip it, and the list of endpoints that tools must not record.
+---
+
+All requests go through `request()` and the axios instance in `@services/http`.
+
+## Token refresh and the skip list
+
+A `401` on a request that sent a token triggers one refresh (shared by concurrent requests) and a replay. Some `401`s are plain answers, not an expired session: a wrong password, a wrong code. Those must not refresh or sign the user out.
+
+`SKIP_REFRESH_PATHS` (`src/services/http/skipRefresh.ts`) lists them: `/auth/login`, `/auth/refresh`, `/auth/otp/verify`, `/auth/otp/resend`, `/auth/forgot-password`. For these the error is normalized to an `ApiError` (`UNAUTHORIZED`) and rejected.
+
+- Matching is **exact** on the path alone: the base URL, query string and hash are ignored, so `/auth/login?next=/home` is skipped and `/auth/login-history` is not.
+- A single request can opt out with `skipAuthRefresh: true` in its axios config.
+
+## Sensitive endpoints
+
+`SENSITIVE_ENDPOINTS` (`src/services/http/sensitiveEndpoints.ts`) lists endpoints whose requests or responses carry credentials or personal data: the skip list plus `/auth/me`, `/users/add` and `/users/:id`. A `:name` segment matches one segment. Matching ignores the base URL, query string, repeated or trailing slashes and case, and everything under `/auth/` always counts, listed or not. Tools that record traffic read this list; today that is the debug network log.
