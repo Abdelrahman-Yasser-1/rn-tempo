@@ -13063,6 +13063,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native-shake@npm:6.11.0":
+  version: 6.11.0
+  resolution: "react-native-shake@npm:6.11.0"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 10c0/d6553369e13712104f68d48c78e1fc7d47ca1dee67fbf73624f8d02adbae8780ed2647c245e64fe69757069c364180f7a303059e3fc0fdd3da47476fd990656f
+  languageName: node
+  linkType: hard
+
 "react-native-ssl-public-key-pinning@npm:1.2.6":
   version: 1.2.6
   resolution: "react-native-ssl-public-key-pinning@npm:1.2.6"
@@ -14423,6 +14433,7 @@ __metadata:
     react-native-restart: "npm:0.0.29"
     react-native-safe-area-context: "npm:5.10.1"
     react-native-screens: "npm:4.30.0"
+    react-native-shake: "npm:6.11.0"
     react-native-ssl-public-key-pinning: "npm:1.2.6"
     react-native-svg: "npm:15.16.0"
     react-native-toast-message: "npm:2.5.2"
