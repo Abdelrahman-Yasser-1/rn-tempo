@@ -19,6 +19,12 @@
     "dialogTitle": "Log out?",
     "title": "Log out"
   },
+  "notifications": {
+    "blocked": "Turned off in the system settings",
+    "off": "Off",
+    "on": "On",
+    "title": "Notifications"
+  },
   "theme": {
     "dark": "Dark",
     "light": "Light",

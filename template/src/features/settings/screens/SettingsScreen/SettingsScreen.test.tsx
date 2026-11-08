@@ -49,6 +49,14 @@ describe('SettingsScreen', () => {
     expect(mockNavigation.navigate).toHaveBeenLastCalledWith('About');
   });
 
+  // @tempo-feature:push-notifications:start
+  test('shows the Notifications row between Theme and About', async () => {
+    await renderSettings();
+
+    expect(await screen.findByText('Notifications')).toBeOnTheScreen();
+  });
+  // @tempo-feature:push-notifications:end
+
   test('AC-5: cancelling the log-out dialog keeps the user signed in', async () => {
     const { user } = await renderSettings();
 
