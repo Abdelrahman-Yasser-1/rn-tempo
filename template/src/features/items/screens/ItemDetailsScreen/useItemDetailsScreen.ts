@@ -8,6 +8,7 @@ import { navigationRef } from '@navigation/navigationRef';
 // @tempo-feature:webview:end
 import type { HomeStackParamList } from '@navigation/types';
 import { useLanguage } from '@services/i18n/useLanguage';
+import { useFocusNotifyOnChangeProps } from '@shared/hooks';
 
 // @tempo-feature:webview:start
 // @tempo-feature:webview:end
@@ -16,7 +17,10 @@ import { useLanguage } from '@services/i18n/useLanguage';
 export function useItemDetailsScreen(route: RouteProp<HomeStackParamList, 'ItemDetails'>) {
   const navigation = useNavigation<NativeStackNavigationProp<HomeStackParamList, 'ItemDetails'>>();
   const { language } = useLanguage();
-  const { data, error, isError, refetch } = useItemQuery(route.params.itemId);
+  const notifyOnChangeProps = useFocusNotifyOnChangeProps();
+  const { data, error, isError, refetch } = useItemQuery(route.params.itemId, {
+    notifyOnChangeProps,
+  });
 
   const onRetry = () => {
     void refetch();

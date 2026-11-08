@@ -40,6 +40,15 @@ The reasoning is in [ADR-002](/docs/adr/002-zustand-tanstack-query).
 - Responses are validated with the Zod schemas in the feature's `api/schemas.ts` before they reach a screen.
 - Screens only talk to hooks. They never import the client.
 
+## Screens that stay mounted
+
+A stack keeps the screens below the top one mounted, so a list screen would re-render on every query update while a details screen covers it. Pass `useFocusNotifyOnChangeProps()` (`@shared/hooks`) as the query's `notifyOnChangeProps` and the out-of-focus screen is left alone until it is focused again. The items list and details screens do this through the optional second argument of `useItemsInfiniteQuery` and `useItemQuery`.
+
+```ts
+const notifyOnChangeProps = useFocusNotifyOnChangeProps();
+const { data } = useItemQuery(itemId, { notifyOnChangeProps });
+```
+
 ## App start
 
 On launch `useBootstrap` runs the steps in `app/bootstrap` in order: security checks, auth restore, remote config, i18n. The remote config comes from `GET /app-config` and falls back to safe local defaults, so a failing endpoint never blocks startup ([ADR-010](/docs/adr/010-app-config-endpoint)). The splash hides when bootstrap ends.
