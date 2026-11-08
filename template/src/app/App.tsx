@@ -6,6 +6,7 @@ import { linking, startPendingLinkResume } from '@navigation/linking';
 import { navigationRef } from '@navigation/navigationRef';
 import { createRootNavigator } from '@navigation/RootNavigator';
 import { startNetworkMonitoring } from '@services/network/network';
+import { flushPushLinks } from '@services/push/routing'; // @tempo-feature:push-notifications
 import { useAppTheme } from '@theme/index';
 
 import { useSecurityStore } from './bootstrap/securityStore';
@@ -80,6 +81,17 @@ function AppContent() {
 
   useEffect(() => startNetworkMonitoring(), []);
   useEffect(() => startPendingLinkResume(), []);
+  // @tempo-feature:push-notifications:start
+  // A notification that opened the app is routed once the navigator exists. One macrotask later,
+  // so the linking listener is subscribed (same trick as the pending link replay).
+  const isReady = bootstrap.status === 'ready';
+  useEffect(() => {
+    const timer = isReady ? setTimeout(flushPushLinks, 0) : undefined;
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [isReady]);
+  // @tempo-feature:push-notifications:end
   useShakeToOpenDebugMenu();
 
   if (bootstrap.status === 'loading') {

@@ -5,6 +5,7 @@ import { initStorage } from '@services/storage/storage';
 
 import { initAuth } from './initAuth';
 import { initI18n } from './initI18n';
+import { initPush } from './initPush'; // @tempo-feature:push-notifications
 import { initRemoteConfig } from './initRemoteConfig';
 import { initSecurity, type SecurityResult } from './initSecurity';
 import { initTheme } from './initTheme';
@@ -32,6 +33,8 @@ export type BootstrapSteps = {
   initSecurity: () => Promise<SecurityResult>;
   initAuth: () => Promise<void>;
   initRemoteConfig: () => Promise<AppConfig>;
+  /** Starts push notifications (listeners only; never asks for the permission). */
+  initPush: () => Promise<void>; // @tempo-feature:push-notifications
   evaluateGate: (config: AppConfig) => ReturnType<typeof evaluateGate>;
   hideSplash: () => Promise<void>;
 };
@@ -44,6 +47,7 @@ export const defaultSteps: BootstrapSteps = {
   initSecurity,
   initAuth,
   initRemoteConfig,
+  initPush, // @tempo-feature:push-notifications
   evaluateGate,
   hideSplash,
 };
@@ -129,6 +133,18 @@ export function createBootstrapSteps(steps: BootstrapSteps): BootstrapStep<Block
         return gate === 'open' ? undefined : { blockReason: gate };
       },
     },
+    // @tempo-feature:push-notifications:start
+    // After the session is known, and only when startup is not blocked. A failure never stops the app.
+    {
+      id: 'push',
+      dependsOn: ['auth'],
+      onError: 'continue',
+      failureMessage: 'Push notifications could not start, continuing without them',
+      run: async () => {
+        await steps.initPush();
+      },
+    },
+    // @tempo-feature:push-notifications:end
   ];
 }
 
