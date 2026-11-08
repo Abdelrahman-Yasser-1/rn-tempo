@@ -9,6 +9,7 @@ Client state lives in Zustand; server state lives in TanStack Query. Never copy 
 
 - **Zustand** (`zustand` 5): one store per `features/<name>/store/<name>.store.ts`, with a test `<name>.store.test.ts`. Expose small selector hooks from the feature `index.ts`; do not export the raw store when a hook is enough.
 - Persist a store only when needed, through the MMKV `zustandStorage` adapter (`@services/storage/zustandStorage`). The MMKV key is `zustand.<store-name>`.
+- Build the `persist` options with `createPersistOptions` (`@services/storage/persist`): `{ name, version, migrations, partialize? }`. `migrations[n]` upgrades the persisted state from `n - 1` to `n`; bump `version` with every shape change. A missing or throwing step discards the persisted state (the store starts from its initial state) and logs a warning. No store persists today; add the first one this way, never with a bare `persist({ name })`.
 - **TanStack Query** (`@tanstack/react-query` 5): all reads and writes against the API. The shared `queryClient` (`@services/http/queryClient`) sets `staleTime` 30 s, `gcTime` 5 min, `retry` max 2 for retryable errors, and wires `onlineManager` and `focusManager`.
 - **Tokens never go into Zustand or MMKV.** Access/refresh tokens live in `@services/secure-storage` (`tokenStore`, Keychain service `<bundleId>.auth-tokens`, in-memory cache). The auth store holds only `{ status, user, pendingLink }` and is **not persisted**.
 - Flags resolve in this order: debug-menu override (non-prod), `AppConfig.flags`, `FLAG_DEFAULTS` (`src/services/flags/flags.ts`).
