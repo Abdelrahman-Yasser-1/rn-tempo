@@ -43,15 +43,15 @@ describe('KeyValueRow', () => {
       <KeyValueRow label="Plan" value={<Badge label="Pro" />} testID="row" />,
     );
     expect(screen.queryByLabelText('Plan, Pro')).not.toBeOnTheScreen();
-    // eslint-disable-next-line no-restricted-syntax -- non-accessible container has no role query
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- non-accessible container has no role query
     expect(screen.getByTestId('row')).toHaveProp('accessible', false);
   });
 
   it('passes the testID to the row and its parts', async () => {
     await renderWithProviders(<KeyValueRow label="City" value="Riyadh" testID="row" />);
-    // eslint-disable-next-line no-restricted-syntax -- checks the testID plumbing itself
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- checks the testID plumbing itself
     expect(screen.getByTestId('row.label')).toHaveTextContent('City');
-    // eslint-disable-next-line no-restricted-syntax -- checks the testID plumbing itself
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- checks the testID plumbing itself
     expect(screen.getByTestId('row.value')).toHaveTextContent('Riyadh');
   });
 });

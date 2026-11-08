@@ -16,7 +16,7 @@ describe('NetworkLogScreen', () => {
     jest.mocked(useNavigation).mockReturnValue({ goBack });
     const { user } = await renderWithProviders(<NetworkLogScreen />);
 
-    // eslint-disable-next-line no-restricted-syntax -- the viewer is a third-party view with no role
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- the viewer is a third-party view with no role
     expect(screen.getByTestId('network-logger')).toBeOnTheScreen();
     expect(screen.getByText('Network log')).toBeOnTheScreen();
 

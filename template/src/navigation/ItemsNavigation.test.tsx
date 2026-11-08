@@ -21,7 +21,7 @@ describe('home stack navigation (real navigator)', () => {
 
     await user.press(await screen.findByRole('button', { name: 'Browse items' }));
 
-    // eslint-disable-next-line no-restricted-syntax -- screen container has no role query
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- screen container has no role query
     expect(await screen.findByTestId('items-list-screen')).toBeOnTheScreen();
   });
 });

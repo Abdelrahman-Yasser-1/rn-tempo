@@ -67,7 +67,7 @@ describe('Card', () => {
 
   it('has no media section without media', async () => {
     await renderWithProviders(<Card testID="card" />);
-    // eslint-disable-next-line no-restricted-syntax -- the media wrapper has no role
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- the media wrapper has no role
     expect(screen.queryByTestId('card.media')).not.toBeOnTheScreen();
   });
 

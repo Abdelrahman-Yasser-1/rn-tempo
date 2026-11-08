@@ -35,7 +35,7 @@ describe('AuthLayout', () => {
 
   it('shows no header unless a title or back handler is given', async () => {
     await renderWithProviders(<AuthLayout title="Sign in" testID="login-screen" />);
-    // eslint-disable-next-line no-restricted-syntax -- header is addressed by testID
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- header is addressed by testID
     expect(screen.queryByTestId('login.header')).not.toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: 'Back' })).not.toBeOnTheScreen();
   });
@@ -49,10 +49,10 @@ describe('AuthLayout', () => {
         testID="forgot-password-screen"
       />,
     );
-    /* eslint-disable no-restricted-syntax -- Maestro flows address these IDs */
+    /* eslint-disable rn-tempo/discouraged-syntax -- Maestro flows address these IDs */
     expect(screen.getByTestId('forgot-password-screen')).toBeOnTheScreen();
     expect(screen.getByTestId('forgot-password.header')).toBeOnTheScreen();
-    /* eslint-enable no-restricted-syntax */
+    /* eslint-enable rn-tempo/discouraged-syntax */
   });
 
   it('shows the header with only a back button', async () => {

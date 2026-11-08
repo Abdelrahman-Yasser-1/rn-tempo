@@ -21,7 +21,7 @@ describe('RadioGroup', () => {
     );
     // The container is not an accessibility element (grouping it would hide its children), so
     // the role is only observable on the host view.
-    // eslint-disable-next-line no-restricted-syntax -- non-accessible container has no role query
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- non-accessible container has no role query
     expect(screen.getByTestId('group')).toHaveProp('accessibilityRole', 'radiogroup');
     expect(screen.getByRole('radio', { name: 'Option A' })).toBeOnTheScreen();
   });
@@ -32,7 +32,7 @@ describe('RadioGroup', () => {
         <Radio value="a" label="Option A" />
       </RadioGroup>,
     );
-    // eslint-disable-next-line no-restricted-syntax -- non-accessible container has no role query
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- non-accessible container has no role query
     expect(screen.getByTestId('group')).toHaveProp('accessibilityLabel', 'Plan');
   });
 

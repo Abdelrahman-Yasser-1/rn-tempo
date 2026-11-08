@@ -28,9 +28,9 @@ describe('Loader', () => {
         <Loader size="lg" testID="large" />
       </>,
     );
-    // eslint-disable-next-line no-restricted-syntax -- ActivityIndicator has no accessible role
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- ActivityIndicator has no accessible role
     expect(screen.getByTestId('small.spinner')).toHaveProp('size', 'small');
-    // eslint-disable-next-line no-restricted-syntax -- ActivityIndicator has no accessible role
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- ActivityIndicator has no accessible role
     expect(screen.getByTestId('large.spinner')).toHaveProp('size', 'large');
   });
 

@@ -102,10 +102,10 @@ describe('Pagination', () => {
     await renderWithProviders(
       <Pagination page={1} pageCount={3} onChange={jest.fn()} testID="pager" />,
     );
-    /* eslint-disable no-restricted-syntax -- checks the testID plumbing itself */
+    /* eslint-disable rn-tempo/discouraged-syntax -- checks the testID plumbing itself */
     expect(screen.getByTestId('pager.previous')).toBeOnTheScreen();
     expect(screen.getByTestId('pager.page-2')).toBeOnTheScreen();
     expect(screen.getByTestId('pager.next')).toBeOnTheScreen();
-    /* eslint-enable no-restricted-syntax */
+    /* eslint-enable rn-tempo/discouraged-syntax */
   });
 });

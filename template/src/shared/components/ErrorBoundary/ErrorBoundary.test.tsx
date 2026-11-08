@@ -38,7 +38,7 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>,
     );
     expect(screen.getByRole('button', { name: 'Restart app' })).toBeOnTheScreen();
-    // eslint-disable-next-line no-restricted-syntax -- error state wrapper has no role
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- error state wrapper has no role
     expect(screen.getByTestId('boundary.state', { includeHiddenElements: true })).toBeOnTheScreen();
   });
 

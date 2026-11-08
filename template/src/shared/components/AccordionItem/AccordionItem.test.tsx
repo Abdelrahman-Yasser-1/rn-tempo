@@ -70,7 +70,7 @@ describe('AccordionItem', () => {
       </AccordionItem>,
     );
     // The panel stays mounted (it animates its height), so its hiding is observable by testID.
-    // eslint-disable-next-line no-restricted-syntax -- hidden panel has no role to query
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- hidden panel has no role to query
     const panel = screen.getByTestId('item.content', { includeHiddenElements: true });
     expect(panel).toHaveProp('accessibilityElementsHidden', true);
     expect(panel).toHaveProp('importantForAccessibility', 'no-hide-descendants');
@@ -107,7 +107,7 @@ describe('AccordionItem', () => {
     );
     expect(screen.getByText('30 days')).toBeOnTheScreen();
     // The chevron is a decorative icon, hidden from assistive tech.
-    // eslint-disable-next-line no-restricted-syntax -- decorative icon has no role to query
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- decorative icon has no role to query
     expect(screen.getByTestId('item.chevron', { includeHiddenElements: true })).toBeOnTheScreen();
   });
 });

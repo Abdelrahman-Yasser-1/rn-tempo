@@ -21,13 +21,13 @@ describe('DescriptionList', () => {
   it('puts a divider between rows only', async () => {
     await renderWithProviders(<DescriptionList items={ITEMS} testID="list" />);
     // Dividers are decorative and hidden from assistive tech, so they have no role to query.
-    // eslint-disable-next-line no-restricted-syntax -- decorative views have no accessible role
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- decorative views have no accessible role
     expect(screen.getByTestId('list').children).toHaveLength(3);
   });
 
   it('omits dividers when asked', async () => {
     await renderWithProviders(<DescriptionList items={ITEMS} dividers={false} testID="list" />);
-    // eslint-disable-next-line no-restricted-syntax -- decorative views have no accessible role
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- decorative views have no accessible role
     expect(screen.getByTestId('list').children).toHaveLength(2);
   });
 
@@ -48,15 +48,15 @@ describe('DescriptionList', () => {
       />,
     );
     expect(screen.getByText('Pro')).toBeOnTheScreen();
-    // eslint-disable-next-line no-restricted-syntax -- checks the testID plumbing itself
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- checks the testID plumbing itself
     expect(screen.getByTestId('list.plan')).toBeOnTheScreen();
-    // eslint-disable-next-line no-restricted-syntax -- checks the testID plumbing itself
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- checks the testID plumbing itself
     expect(screen.getByTestId('list.city.value')).toHaveTextContent('London');
   });
 
   it('renders nothing but the container without items', async () => {
     await renderWithProviders(<DescriptionList items={[]} testID="list" />);
-    // eslint-disable-next-line no-restricted-syntax -- an empty container has no role query
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- an empty container has no role query
     expect(screen.getByTestId('list').children).toHaveLength(0);
   });
 });

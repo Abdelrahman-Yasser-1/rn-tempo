@@ -57,7 +57,7 @@ describe('Header', () => {
 
   it('omits an empty subtitle', async () => {
     await renderWithProviders(<Header title="Inbox" subtitle="" testID="head" />);
-    // eslint-disable-next-line no-restricted-syntax -- subtitle text node is absent, so no role to query
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- subtitle text node is absent, so no role to query
     expect(screen.queryByTestId('head.subtitle')).not.toBeOnTheScreen();
   });
 

@@ -18,7 +18,7 @@ describe('Tabs', () => {
       <Tabs items={ITEMS} value="open" onChange={jest.fn()} testID="tabs" />,
     );
     // The container is not an accessibility element (grouping it would hide its tabs).
-    // eslint-disable-next-line no-restricted-syntax -- non-accessible container has no role query
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- non-accessible container has no role query
     expect(screen.getByTestId('tabs')).toHaveProp('accessibilityRole', 'tablist');
     expect(screen.getAllByRole('tab')).toHaveLength(3);
     expect(screen.getByRole('tab', { name: 'Open, 3' })).toBeSelected();

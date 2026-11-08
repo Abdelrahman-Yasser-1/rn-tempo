@@ -109,12 +109,12 @@ describe('OtpScreen', () => {
   test('lays out the header, title and masked subtitle with the Maestro test IDs', async () => {
     await renderOtp();
 
-    /* eslint-disable no-restricted-syntax -- Maestro flows address these IDs */
+    /* eslint-disable rn-tempo/discouraged-syntax -- Maestro flows address these IDs */
     expect(screen.getByTestId('otp-screen')).toBeOnTheScreen();
     expect(screen.getByTestId('otp.header')).toBeOnTheScreen();
     expect(screen.getByTestId('otp.input')).toBeOnTheScreen();
     expect(screen.getByTestId('otp.resend-button')).toBeOnTheScreen();
-    /* eslint-enable no-restricted-syntax */
+    /* eslint-enable rn-tempo/discouraged-syntax */
     expect(screen.getByRole('header', { name: 'Enter the code' })).toBeOnTheScreen();
     expect(screen.getByText(/We sent a 6-digit code to/)).toBeOnTheScreen();
   });

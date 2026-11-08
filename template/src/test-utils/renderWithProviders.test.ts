@@ -1,4 +1,4 @@
-/* eslint-disable no-restricted-imports -- sample test of the helper itself; no shared Text exists yet */
+/* eslint-disable rn-tempo/restricted-syntax -- sample test of the helper itself; no shared Text exists yet */
 import { screen } from '@testing-library/react-native';
 import { http, HttpResponse } from 'msw';
 import { createElement, useEffect, useState } from 'react';

@@ -6,26 +6,30 @@ import { qualityConfig } from "./configs/quality.mjs";
 import { reactConfig } from "./configs/react.mjs";
 import { reactNativeConfig } from "./configs/react-native.mjs";
 import {
-  logicalPropertiesConfig,
-  restrictionsConfig,
-  screenLogicConfig,
-} from "./configs/restrictions.mjs";
+  dependenciesConfig,
+  DEPENDENCY_POLICY,
+} from "./configs/dependencies.mjs";
+import { screenLogicConfig } from "./configs/restrictions.mjs";
 import { structureConfig } from "./configs/structure.mjs";
+import { syntaxConfig } from "./configs/syntax.mjs";
 import { testsConfig } from "./configs/tests.mjs";
+import { rnTempoPlugin } from "./plugin/index.mjs";
+
+export { DEPENDENCY_POLICY, rnTempoPlugin };
 
 /**
  * Builds the RN-TEMPO flat config.
- * @param {{ root: string, structure?: boolean }} options `root` is the project folder (usually `import.meta.dirname`).
+ * @param {{ root: string, structure?: boolean, dependencies?: Record<string, object> }} options `root` is the project folder (usually `import.meta.dirname`); `dependencies` adds or overrides entries of `DEPENDENCY_POLICY`.
  */
-export function createConfig({ root, structure = false }) {
+export function createConfig({ root, structure = false, dependencies = {} }) {
   return [
     ...baseConfig(root),
     ...reactConfig(),
     ...reactNativeConfig(),
     ...qualityConfig(root),
-    ...restrictionsConfig(),
+    ...syntaxConfig(),
+    ...dependenciesConfig(dependencies),
     ...screenLogicConfig(),
-    ...logicalPropertiesConfig(),
     ...testsConfig(),
     ...(structure ? [...boundariesConfig(root), ...structureConfig(root)] : []),
     eslintConfigPrettier,

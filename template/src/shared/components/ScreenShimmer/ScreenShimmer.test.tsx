@@ -5,7 +5,7 @@ import { renderWithProviders } from '@test-utils/renderWithProviders';
 import { ScreenShimmer } from './ScreenShimmer';
 
 // Shimmer containers have no role of their own; testID is the only handle on them.
-/* eslint-disable no-restricted-syntax -- container without a role: testID is the only handle */
+/* eslint-disable rn-tempo/discouraged-syntax -- container without a role: testID is the only handle */
 describe('ScreenShimmer', () => {
   it('announces the whole screen as a busy loading placeholder', async () => {
     await renderWithProviders(<ScreenShimmer />);

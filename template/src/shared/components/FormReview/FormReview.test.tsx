@@ -59,12 +59,12 @@ describe('FormReview', () => {
     await renderWithProviders(
       <FormReview sections={SECTIONS} onEdit={jest.fn()} testID="review" />,
     );
-    /* eslint-disable no-restricted-syntax -- checks the testID plumbing itself */
+    /* eslint-disable rn-tempo/discouraged-syntax -- checks the testID plumbing itself */
     expect(screen.getByTestId('review.plan')).toBeOnTheScreen();
     expect(screen.getByTestId('review.plan.title')).toHaveTextContent('Plan');
     expect(screen.getByTestId('review.plan.edit')).toBeOnTheScreen();
     expect(screen.getByTestId('review.plan.list.tier')).toBeOnTheScreen();
-    /* eslint-enable no-restricted-syntax */
+    /* eslint-enable rn-tempo/discouraged-syntax */
   });
 
   it('renders nothing without sections', async () => {
