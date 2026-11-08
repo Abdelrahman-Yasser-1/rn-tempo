@@ -4,7 +4,11 @@ import { fileURLToPath } from "node:url";
 import { ESLint } from "eslint";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { createConfig } from "../index.mjs";
+import { createConfig, DEPENDENCY_POLICY } from "../index.mjs";
+import {
+  DISCOURAGED_SYNTAX_ENTRIES,
+  RESTRICTED_SYNTAX_ENTRIES,
+} from "../configs/syntax.mjs";
 
 const fixtures = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -184,6 +188,51 @@ describe("eslint-config fixtures", () => {
       "rn-tempo/restricted-syntax",
     ],
     [
+      "async-storage",
+      "src/shared/utils/usesAsyncStorage.ts",
+      "rn-tempo/restricted-syntax",
+    ],
+    [
+      "a parent import",
+      "src/shared/utils/parentImport.ts",
+      "rn-tempo/restricted-syntax",
+    ],
+    [
+      "export star",
+      "src/shared/utils/exportStar.ts",
+      "rn-tempo/restricted-syntax",
+    ],
+    [
+      "process.env outside config",
+      "src/shared/utils/readsProcessEnv.ts",
+      "rn-tempo/restricted-syntax",
+    ],
+    [
+      "branching on an environment name",
+      "src/shared/utils/branchesOnEnv.ts",
+      "rn-tempo/restricted-syntax",
+    ],
+    [
+      "a color literal",
+      "src/shared/utils/colorLiteral.ts",
+      "rn-tempo/restricted-syntax",
+    ],
+    [
+      "Appearance outside theme and app",
+      "src/shared/utils/usesAppearance.ts",
+      "rn-tempo/restricted-syntax",
+    ],
+    [
+      "StatusBar outside theme and app",
+      "src/shared/utils/usesStatusBar.ts",
+      "rn-tempo/restricted-syntax",
+    ],
+    [
+      "owned packages imported by a non-owner",
+      "src/shared/utils/ownedImports.ts",
+      "rn-tempo/dependency-owner",
+    ],
+    [
       "getByTestId in a test",
       "src/shared/utils/byTestId.test.ts",
       "rn-tempo/discouraged-syntax",
@@ -200,6 +249,27 @@ describe("eslint-config fixtures", () => {
     const texts = await lintMessages("invalid", "src/shared/types/status.ts");
     expect(texts.join("\n")).toMatch(/Enums are forbidden/);
   });
+
+  it("reports the guidance of every restriction entry and owned dependency", async () => {
+    const messages = [
+      ...RESTRICTED_SYNTAX_ENTRIES,
+      ...DISCOURAGED_SYNTAX_ENTRIES,
+    ].map((entry) => entry.message);
+    const seen = new Set();
+    for (const file of Object.keys(invalid)) {
+      for (const text of await lintMessages("invalid", file)) seen.add(text);
+    }
+    const all = [...seen].join("\n");
+    const missing = messages.filter((message) => !all.includes(message));
+    expect(missing).toEqual([]);
+    for (const [name, entry] of Object.entries(DEPENDENCY_POLICY)) {
+      if (entry.kind === "free") continue;
+      const message = entry.message ?? entry.reason;
+      expect(all, `no fixture reports the ownership of ${name}`).toContain(
+        message,
+      );
+    }
+  }, 120_000);
 
   it("covers at least 12 invalid cases", () => {
     expect(cases.length).toBeGreaterThanOrEqual(12);

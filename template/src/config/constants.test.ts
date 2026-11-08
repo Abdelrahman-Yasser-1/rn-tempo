@@ -1,3 +1,4 @@
+// eslint-disable-next-line rn-tempo/restricted-syntax -- package.json sits at the project root, which has no path alias
 import { version } from '../../package.json';
 
 import { APP_BUNDLE_ID, APP_VERSION } from './constants';

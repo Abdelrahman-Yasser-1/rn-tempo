@@ -12,6 +12,7 @@ import { initI18nInstance } from '@services/i18n/i18n';
 import { getInitialLanguage } from '@services/i18n/languageManager';
 import { initStorage } from '@services/storage/storage';
 
+// eslint-disable-next-line rn-tempo/restricted-syntax -- app.json sits at the project root, which has no path alias
 import { name as appName } from '../app.json';
 
 import { view } from './storybook.requires';
