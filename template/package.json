@@ -129,6 +129,7 @@
     "@rn-tempo/eslint-config": "link:../packages/eslint-config",
     "@rn-tempo/prettier-config": "link:../packages/prettier-config",
     "@rn-tempo/tsconfig": "link:../packages/tsconfig",
+    "@rnx-kit/align-deps": "5.0.1",
     "@rozenite/metro": "2.5.0",
     "@rozenite/mmkv-plugin": "2.1.0",
     "@rozenite/network-activity-plugin": "2.5.0",
