@@ -2,6 +2,22 @@ apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 
+// @tempo-feature:push-notifications:start
+// Firebase config files are per project and not in the repository, so builds must work without them.
+// The google-services plugin fails the build when a flavor has no file, hence it is applied only when
+// a google-services.json exists where the plugin looks for it: app/, app/src/<flavor>/, app/src/<buildType>/,
+// app/src/<flavor><BuildType>/ or app/src/<flavor>/<buildType>/. With per-flavor files, add one for every
+// flavor you build. Without any file the app builds and push stays off (nothing initialises Firebase).
+def googleServicesFiles = fileTree(dir: projectDir, include: [
+    "google-services.json", "src/*/google-services.json", "src/*/*/google-services.json"
+])
+if (googleServicesFiles.isEmpty()) {
+    logger.lifecycle("push-notifications: no google-services.json found, building without Firebase (push is off).")
+} else {
+    apply plugin: "com.google.gms.google-services"
+}
+// @tempo-feature:push-notifications:end
+
 // Maps each build variant (lowercase) to its env file. Must be set before the dotenv.gradle `apply from`.
 project.ext.envConfigFiles = [
     devdebug: ".env.dev", devrelease: ".env.dev",

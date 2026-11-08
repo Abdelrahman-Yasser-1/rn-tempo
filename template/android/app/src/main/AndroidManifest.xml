@@ -1,6 +1,11 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- @tempo-feature:push-notifications:start -->
+    <!-- Android 13+ runtime permission. It is asked from the Settings Notifications row, never at startup. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- @tempo-feature:push-notifications:end -->
     <!-- @tempo-feature:maps:start -->
     <!-- Requested at runtime, and only when the user presses "Use my location" in the map picker. -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -33,6 +38,14 @@
       android:theme="@style/AppTheme"
       android:usesCleartextTraffic="${usesCleartextTraffic}"
       android:supportsRtl="true">
+      <!-- @tempo-feature:push-notifications:start -->
+      <!-- Channel (created in MainApplication.kt) for notifications that FCM shows while the app is closed.
+           React Native Firebase declares the same key with an empty value, hence tools:replace. -->
+      <meta-data
+        android:name="com.google.firebase.messaging.default_notification_channel_id"
+        android:value="default"
+        tools:replace="android:value" />
+      <!-- @tempo-feature:push-notifications:end -->
       <!-- @tempo-feature:maps:start -->
       <!-- Google Maps key from GOOGLE_MAPS_API_KEY (see build.gradle). It must stay present even when
            empty: without the entry the Maps SDK crashes on start, with an empty key it draws blank tiles. -->

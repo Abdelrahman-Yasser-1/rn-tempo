@@ -1,0 +1,4 @@
+<resources>
+    <!-- Name of the notification channel shown in the system notification settings. -->
+    <string name="push_channel_default">General notifications</string>
+</resources>
