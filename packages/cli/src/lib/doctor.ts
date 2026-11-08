@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { loadManifests } from './manifest.ts';
@@ -37,6 +37,32 @@ export function isMoreThanOneMinorBehind(current: string, latest: string): boole
   const [lMajor, lMinor] = parseVersion(latest);
   if (lMajor > cMajor) return true;
   return lMajor === cMajor && lMinor - cMinor > 1;
+}
+
+/** Keys of a dotenv text: `KEY=value` lines; blanks and `#` comments (feature markers included) are skipped. */
+export function parseEnvKeys(text: string): Set<string> {
+  const keys = new Set<string>();
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (line === '' || line.startsWith('#')) continue;
+    const match = /^(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=/.exec(line);
+    if (match?.[1]) keys.add(match[1]);
+  }
+  return keys;
+}
+
+/** Per-file `missing`/`extra` keys against `.env.example`; matching files are left out. */
+export function envKeyMismatches(files: Readonly<Record<string, string>>): Record<string, { missing: string[]; extra: string[] }> {
+  const expected = parseEnvKeys(files['.env.example'] ?? '');
+  const result: Record<string, { missing: string[]; extra: string[] }> = {};
+  for (const [name, text] of Object.entries(files)) {
+    if (name === '.env.example') continue;
+    const keys = parseEnvKeys(text);
+    const missing = [...expected].filter((key) => !keys.has(key)).sort();
+    const extra = [...keys].filter((key) => !expected.has(key)).sort();
+    if (missing.length > 0 || extra.length > 0) result[name] = { missing, extra };
+  }
+  return result;
 }
 
 async function readJson(file: string): Promise<Record<string, unknown> | null> {
@@ -115,6 +141,25 @@ export async function runDoctor(dir: string, options: DoctorOptions = {}): Promi
       const file = `.env.${environment.name}`;
       const present = await pathExists(path.join(dir, file));
       add(`env-${environment.name}`, file, present ? 'ok' : 'error', present ? 'present' : `missing (copy .env.example to ${file})`);
+    }
+
+    // key parity of the env files with .env.example, and no tracked root .env
+    const envNames = (await readdir(dir).catch(() => [] as string[])).filter((name) => name === '.env.example' || /^\.env\.[A-Za-z0-9_-]+$/.test(name));
+    if (!envNames.includes('.env.example')) {
+      add('env-files', 'Env files', 'error', '.env.example is missing');
+    } else {
+      const files: Record<string, string> = {};
+      for (const name of envNames) files[name] = await readFile(path.join(dir, name), 'utf8');
+      const mismatches = envKeyMismatches(files);
+      const tracked = await exec('git', ['ls-files', '.env'], { cwd: dir });
+      if (Object.keys(mismatches).length > 0) {
+        const detail = Object.entries(mismatches).map(([name, { missing, extra }]) => `${name}${missing.length > 0 ? ` missing ${missing.join(', ')}` : ''}${extra.length > 0 ? ` extra ${extra.join(', ')}` : ''}`);
+        add('env-files', 'Env files', 'error', `keys differ from .env.example: ${detail.join('; ')}`);
+      } else if (tracked.exitCode === 0 && tracked.stdout.trim() === '.env') {
+        add('env-files', 'Env files', 'warn', '.env is tracked by git (the iOS pre-action copies it; run `git rm --cached .env`)');
+      } else {
+        add('env-files', 'Env files', 'ok', `${envNames.length} file(s) match .env.example`);
+      }
     }
 
     // feature markers and manifests

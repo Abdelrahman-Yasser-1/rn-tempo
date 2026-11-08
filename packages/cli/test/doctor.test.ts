@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { hasErrors, isMoreThanOneMinorBehind, renderMarkdown, runDoctor, structureMessages } from '../src/lib/doctor.ts';
+import { envKeyMismatches, hasErrors, isMoreThanOneMinorBehind, parseEnvKeys, renderMarkdown, runDoctor, structureMessages } from '../src/lib/doctor.ts';
 import type { Capturer } from '../src/lib/pm.ts';
 import { copyTemplate, makeTempDir } from './helpers.ts';
 
@@ -40,6 +40,17 @@ describe('structureMessages', () => {
   });
 });
 
+describe('env key parity', () => {
+  it('parses keys and skips blanks and comments', () => {
+    expect([...parseEnvKeys('# c\nA=1\n\n# note\nB=\n')]).toEqual(['A', 'B']);
+  });
+
+  it('lists missing and extra keys per file and ignores matching files', () => {
+    const files = { '.env.example': 'A=1\nB=2\n', '.env.dev': 'B=9\nA=8\n', '.env.prod': 'A=1\nC=3\n' };
+    expect(envKeyMismatches(files)).toEqual({ '.env.prod': { missing: ['B'], extra: ['C'] } });
+  });
+});
+
 describe('runDoctor', () => {
   let dir = '';
   let cleanup = async () => {};
@@ -62,9 +73,20 @@ describe('runDoctor', () => {
     expect(byId['env-staging']?.status).toBe('error'); // .env.staging is gitignored in the template
     expect(byId['markers']?.status).toBe('ok');
     expect(hasErrors(checks)).toBe(true);
-    await writeFile(path.join(dir, '.env.staging'), '');
-    await writeFile(path.join(dir, '.env.prod'), '');
+    await cp(path.join(dir, '.env.example'), path.join(dir, '.env.staging'));
+    await cp(path.join(dir, '.env.example'), path.join(dir, '.env.prod'));
     expect(hasErrors(await run())).toBe(false);
+  });
+
+  it('checks env files against .env.example and a tracked root .env', async () => {
+    expect((await run()).find((c) => c.id === 'env-files')?.status).toBe('ok');
+    const tracked = await run(fakeCapturer({ 'git ls-files .env': { stdout: '.env\n' } }));
+    expect(tracked.find((c) => c.id === 'env-files')?.status).toBe('warn');
+    await writeFile(path.join(dir, '.env.dev'), 'APP_ENV=dev\nEXTRA=1\n');
+    const mismatch = (await run()).find((c) => c.id === 'env-files');
+    expect(mismatch?.status).toBe('error');
+    expect(mismatch?.message).toContain('.env.dev');
+    expect(mismatch?.message).toContain('extra EXTRA');
   });
 
   it('flags old Java, a wrong Node major and a broken .tempo.json', async () => {
