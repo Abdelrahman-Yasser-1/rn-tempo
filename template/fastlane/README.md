@@ -15,7 +15,7 @@ Environments follow the matrix in `.tempo.json`: bundle IDs `com.rntempo.app.dev
 
 ## Versions
 
-- Version name: `version` in `package.json` (Android `-PtempoVersionName`, iOS `MARKETING_VERSION`).
+- Version name: `version` in `package.json`, the single source. release-please bumps it in the release PR, together with `ios/Config/Version.xcconfig` (the `MARKETING_VERSION` every iOS env xcconfig includes). Android reads `package.json` in `android/app/build.gradle` when `-PtempoVersionName` is absent, so a plain Android Studio or `yarn android:*` build already carries the right name. The lanes still pass both values explicitly. `node --test scripts/__tests__/native-version.test.mjs` (part of `yarn verify`) fails when the native projects stop resolving to the `package.json` version, for example after hand-editing `MARKETING_VERSION` in Xcode: change versions only by releasing, and re-run `yarn ios:envs` instead of editing `project.pbxproj`.
 - Build number: `GITHUB_RUN_NUMBER` in CI, or minutes since the epoch locally (Android `-PtempoVersionCode`, iOS `CURRENT_PROJECT_VERSION`). Do not upload local builds to a store, a local number is larger than any CI run number.
 
 ## Secrets
