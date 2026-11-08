@@ -1,0 +1,29 @@
+---
+title: Device test matrix
+description: A table to copy and fill in for each release, covering OS, theme, language and direction, font scale, screen size and connectivity.
+---
+
+Unit tests pass on bugs that only a device shows: a bottom sheet that screen readers cannot reach, text clipped on Android, taps that miss. Copy this table into the release pull request and fill it in. Mark each cell pass, fail (with an issue link) or not applicable.
+
+## Matrix
+
+| Device and OS | Light | Dark | `en` (LTR) | `ar` (RTL) | Font scale 200% | Small screen | Offline | Tester and date |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| iPhone, latest iOS | | | | | | | | |
+| iPhone SE size, oldest supported iOS | | | | | | | | |
+| Android phone, latest | | | | | | | | |
+| Android phone, oldest supported | | | | | | | | |
+| Android small screen | | | | | | | | |
+
+## What to do in each column
+
+- **Light and dark.** Switch the system theme, not only the in-app setting. Look for unreadable text and missing contrast.
+- **`en` and `ar`.** Switching language restarts the app. In `ar`, check mirrored layouts, icon direction, alignment, text clipping and number and date formats.
+- **Font scale 200%.** Set the largest system font size. Nothing may be cut off or overlap, and every control must stay tappable.
+- **Small screen.** Check keyboards over forms, bottom sheets and long lists.
+- **Offline.** Turn on airplane mode: the connection banner shows, cached content stays visible, and actions fail with a message instead of hanging.
+- **Environments.** Run the build that ships (`staging` or `prod`) at least once per release, with the matching `.env` file.
+
+## Automated flows
+
+Maestro flows cover the core journeys against the mocked API. They live in `e2e/flows/` when the Maestro feature is enabled, and the `e2e` workflow runs them on an Android emulator for pull requests labelled `e2e` and nightly. See [ADR 006](/docs/adr/006-maestro). They do not replace this matrix: they cannot judge layout, RTL or accessibility.

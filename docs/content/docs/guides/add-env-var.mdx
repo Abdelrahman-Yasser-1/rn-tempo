@@ -1,0 +1,35 @@
+---
+title: Add an env var
+description: Add a typed environment variable to the schema, every env file, CI secrets and the docs, and prove the files stay in step.
+---
+
+Env vars are read once, validated with Zod and exported as `ENV`. Never read `react-native-config` or `process.env` elsewhere; ESLint rejects it.
+
+## Steps
+
+1. **Add the key to the schema** in `src/config/env.ts`. Give it a type and, when a missing value is acceptable, a default:
+
+   ```ts
+   FEATURE_X_ENABLED: bool.default(false),
+   ```
+
+   The app throws at startup with a readable message when a value does not parse, so a broken build never reaches users.
+
+2. **Add the key to `.env.example`**, with a safe value for local development. This file is the full list of keys.
+
+3. **Add the key to every `.env.*` file** you have: `.env.dev` (committed, no secrets) and your local `.env.staging` and `.env.prod`. Values may differ; the set of keys must not.
+
+4. **Run `yarn lint:env`.** It fails when any `.env.*` file has different keys from `.env.example` and lists the missing and extra keys per file. It also fails when a root `.env` is tracked by git. `tempo doctor` runs the same comparison as its `env-files` check. `yarn verify` includes `lint:env`.
+
+5. **Update the CI secrets.** CI writes `.env.staging` and `.env.prod` from the `ENV_FILE_STAGING` and `ENV_FILE_PROD` secrets, as the complete file contents. Edit both secrets in the repository settings to add the new line, or native builds in CI will miss the key. See `fastlane/README.md` for the secret list.
+
+6. **Use it** through `ENV` from `@config/env`: `ENV.FEATURE_X_ENABLED`.
+
+7. **Document it.** Add the key to the env table of your `PROJECT.md`, and to the [environments page](/docs/getting-started/run-envs) when the template itself gains the key.
+
+## Rules
+
+- Never put a secret in `.env.dev` or `.env.example`; both are committed. `gitleaks` and the pre-commit `env-guard` block secrets and the staging and prod files.
+- The iOS scheme pre-action copies `.env.<env>` to `.env`. Keep that file untracked.
+- A value that is read only by native code (for example the Google Maps key) still belongs in every env file, so `lint:env` keeps them in step.
+- Feature-owned keys sit between `@tempo-feature` marker comments in `.env.example`. Marker lines are comments and are ignored by the check.

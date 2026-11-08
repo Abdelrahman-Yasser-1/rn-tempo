@@ -1,0 +1,40 @@
+---
+title: Add an icon
+description: Find or add an SVG icon, regenerate the registry and rely on automatic RTL mirroring.
+---
+
+Every Tabler icon is already in `src/assets/icons/`, and every name autocompletes in `<Icon name="..." />`. Check there first.
+
+## Steps
+
+1. **Find it.** `yarn icons:search arrow` lists local names. Add `--remote` to see Tabler icons you can fetch.
+
+2. **If it is missing, add it:**
+
+   ```bash
+   yarn icons:add ./my-icon.svg        # copy a file in (normalized, kebab-case) and regenerate
+   yarn icons:add heart-plus --filled  # fetch a Tabler icon (needs network)
+   yarn icons:add ./x.svg --as close   # choose the name
+   ```
+
+   Or save `my-icon.svg` into `src/assets/icons/` and run `yarn assets`. Use a single-color 24x24 `currentColor` file. `yarn assets` rejects a missing `viewBox`, several colors, `<style>`, scripts, filters and animation.
+
+3. **Use it** through the shared component only:
+
+   ```tsx
+   <Icon name="arrow-left" size="md" color="textPrimary" />
+   ```
+
+   `size` is a token (`xs`, `sm`, `md`, `lg`, `xl`) or a number, and `color` is a semantic color token. Importing `*.svg` or `react-native-svg` elsewhere is a lint error.
+
+4. **Label it when it carries meaning.** Icons are hidden from screen readers unless you pass `accessibilityLabel`. A control that holds only an icon needs a translated label.
+
+5. **Commit the SVG and `src/assets/generated/`.** `yarn assets:check` fails when the generated files are stale and runs in the pre-commit hook.
+
+## The registry
+
+`yarn assets` generates one component per icon, the `ICONS` registry and the `IconName` union under `src/assets/generated/`. Never edit that folder. Release builds prune it to the icons the code names (`yarn icons:prune`). A name built at runtime must be listed in `ICON_KEEP` in `src/assets/icons.keep.ts`, or the icon renders nothing in release.
+
+## RTL mirroring
+
+`Icon` mirrors every name in `ICON_MIRRORED_IN_RTL` (generated into `src/assets/generated/icons.rtl.ts`): arrows, chevrons, carets and corners that point left or right, plus `login`, `logout`, `send`, `reply`, `forward`, `undo` and `redo`. Never flip an icon by hand with `scaleX`, and never choose `chevron-left` or `chevron-right` by direction. Name a new directional icon the same way and it flips on its own. Check it in Arabic.

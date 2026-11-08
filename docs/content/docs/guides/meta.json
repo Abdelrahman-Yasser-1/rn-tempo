@@ -1,0 +1,6 @@
+{
+  "title": "Guides",
+  "description": "Step-by-step guides for everyday tasks: env vars, translations, icons and release testing.",
+  "icon": "list-checks",
+  "pages": ["index", "add-env-var", "add-translation-keys", "add-icon", "device-test-matrix"]
+}
