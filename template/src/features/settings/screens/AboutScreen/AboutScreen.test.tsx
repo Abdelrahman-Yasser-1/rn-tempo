@@ -34,7 +34,6 @@ async function renderAbout() {
 
 /** Presses the version row once, then lets `gapMs` of fake time pass before the next press. */
 async function tapVersion(gapMs: number) {
-  // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent returns an act promise
   await fireEvent.press(screen.getByText('Version'));
   await act(() => {
     jest.advanceTimersByTime(gapMs);

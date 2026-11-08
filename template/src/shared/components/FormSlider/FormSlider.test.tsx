@@ -43,7 +43,6 @@ describe('FormSlider', () => {
   it('binds the stepped value to the form value', async () => {
     const onValid = jest.fn();
     const { user } = await renderWithProviders(<Harness onValid={onValid} />);
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent(
       screen.getByRole('adjustable', { name: 'Volume' }),
       'RNCSliderAccessibilityAction',
@@ -104,7 +103,6 @@ describe('FormSlider default and error states', () => {
 
   it('writes a dragged value to the form', async () => {
     await renderWithProviders(<Extra />);
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent(screen.getByRole('adjustable', { name: 'Volume' }), 'valueChange', 60);
     expect(screen.getByRole('adjustable', { name: 'Volume' })).toHaveAccessibilityValue({
       now: 60,
@@ -116,7 +114,6 @@ describe('FormSlider default and error states', () => {
     const { user } = await renderWithProviders(<Extra />);
     await user.press(screen.getByRole('button', { name: 'Submit' }));
     expect(await screen.findByRole('alert')).toBeOnTheScreen();
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent(screen.getByRole('adjustable', { name: 'Volume' }), 'valueChange', 50);
     await waitFor(() => {
       expect(screen.queryByRole('alert')).not.toBeOnTheScreen();

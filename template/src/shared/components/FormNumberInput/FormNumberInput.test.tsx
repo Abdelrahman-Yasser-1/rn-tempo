@@ -97,11 +97,9 @@ describe('FormNumberInput default, clamping and error states', () => {
     const onValid = jest.fn();
     const { user } = await renderWithProviders(<Extra defaultValue={3} onValid={onValid} />);
     const input = screen.getByRole('adjustable', { name: 'Quantity' });
-    /* eslint-disable testing-library/no-await-sync-events -- RNTL 14 fireEvent is async */
     await fireEvent(input, 'focus');
     await fireEvent.changeText(input, '99');
     await fireEvent(input, 'blur');
-    /* eslint-enable testing-library/no-await-sync-events -- end of the block disabled above */
     await user.press(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() => {
       expect(onValid).toHaveBeenCalledWith({ field: 5 });

@@ -221,6 +221,16 @@ describe("eslint-config fixtures", () => {
       "@eslint-react/no-array-index-key",
     ],
     [
+      "test helpers imported by non-test code",
+      "src/features/home/utils/usesTestUtils.ts",
+      "rn-tempo/restricted-syntax",
+    ],
+    [
+      "msw imported by non-test code",
+      "src/shared/utils/ownedImports.ts",
+      "rn-tempo/dependency-owner",
+    ],
+    [
       "async-storage",
       "src/shared/utils/usesAsyncStorage.ts",
       "rn-tempo/restricted-syntax",

@@ -56,7 +56,6 @@ describe('DebugMenuScreen', () => {
   test('toggling a flag stores a local override, and reset removes it', async () => {
     const { user } = await renderWithProviders(<DebugMenuScreen />);
 
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 made fireEvent async
     await fireEvent(
       screen.getByRole('switch', { name: 'biometricLoginEnabled' }),
       'valueChange',

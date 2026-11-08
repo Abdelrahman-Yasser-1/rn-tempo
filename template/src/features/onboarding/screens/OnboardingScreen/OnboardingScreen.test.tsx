@@ -41,7 +41,6 @@ async function showSlide(index: number) {
   if (heading === undefined) {
     throw new Error(`No slide heading at index ${String(index)}`);
   }
-  // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 made fireEvent async
   await fireEvent(heading, 'viewableItemsChanged', {
     viewableItems: [{ index, item: SLIDES.at(index), key: SLIDES.at(index)?.id, isViewable: true }],
     changed: [],

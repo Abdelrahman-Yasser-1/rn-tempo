@@ -39,10 +39,8 @@ describe('NumberInput', () => {
     const onChange = jest.fn();
     await renderWithProviders(<NumberInput label="Quantity" value={3} onChange={onChange} />);
     const input = screen.getByRole('adjustable', { name: 'Quantity' });
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent(input, 'accessibilityAction', { nativeEvent: { actionName: 'increment' } });
     expect(onChange).toHaveBeenLastCalledWith(4);
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent(input, 'accessibilityAction', { nativeEvent: { actionName: 'decrement' } });
     expect(onChange).toHaveBeenLastCalledWith(2);
   });
@@ -53,12 +51,10 @@ describe('NumberInput', () => {
       <NumberInput label="Quantity" value={3} min={1} max={10} onChange={onChange} />,
     );
     const input = screen.getByRole('adjustable', { name: 'Quantity' });
-    /* eslint-disable testing-library/no-await-sync-events -- RNTL 14 fireEvent is async */
     await fireEvent(input, 'focus');
     await fireEvent.changeText(input, '4a2');
     expect(input).toHaveDisplayValue('42');
     await fireEvent(input, 'blur');
-    /* eslint-enable testing-library/no-await-sync-events -- end of the block disabled above */
     expect(onChange).toHaveBeenLastCalledWith(10);
   });
 
@@ -128,13 +124,11 @@ describe('NumberInput', () => {
       <NumberInput label="Quantity" value={3} min={1} onChange={onChange} />,
     );
     const input = screen.getByRole('adjustable', { name: 'Quantity' });
-    /* eslint-disable testing-library/no-await-sync-events -- RNTL 14 fireEvent is async */
     await fireEvent(input, 'focus');
     await fireEvent.changeText(input, 'abc');
     expect(input).toHaveDisplayValue('');
     await fireEvent.changeText(input, '-1.5e');
     expect(input).toHaveDisplayValue('15');
-    /* eslint-enable testing-library/no-await-sync-events -- end of the block disabled above */
   });
 
   it('keeps the value when the field is left empty', async () => {
@@ -143,11 +137,9 @@ describe('NumberInput', () => {
       <NumberInput label="Quantity" value={3} min={1} onChange={onChange} />,
     );
     const input = screen.getByRole('adjustable', { name: 'Quantity' });
-    /* eslint-disable testing-library/no-await-sync-events -- RNTL 14 fireEvent is async */
     await fireEvent(input, 'focus');
     await fireEvent.changeText(input, '');
     await fireEvent(input, 'blur');
-    /* eslint-enable testing-library/no-await-sync-events -- end of the block disabled above */
     expect(onChange).not.toHaveBeenCalled();
     expect(input).toHaveDisplayValue('3');
   });
@@ -158,11 +150,9 @@ describe('NumberInput', () => {
       <NumberInput label="Quantity" value={3} min={1} max={10} onChange={onChange} />,
     );
     const input = screen.getByRole('adjustable', { name: 'Quantity' });
-    /* eslint-disable testing-library/no-await-sync-events -- RNTL 14 fireEvent is async */
     await fireEvent(input, 'focus');
     await fireEvent.changeText(input, '7');
     await fireEvent(input, 'blur');
-    /* eslint-enable testing-library/no-await-sync-events -- end of the block disabled above */
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange).toHaveBeenLastCalledWith(7);
   });
@@ -173,11 +163,9 @@ describe('NumberInput', () => {
       <NumberInput label="Quantity" value={8} min={5} max={10} onChange={onChange} />,
     );
     const input = screen.getByRole('adjustable', { name: 'Quantity' });
-    /* eslint-disable testing-library/no-await-sync-events -- RNTL 14 fireEvent is async */
     await fireEvent(input, 'focus');
     await fireEvent.changeText(input, '2');
     await fireEvent(input, 'blur');
-    /* eslint-enable testing-library/no-await-sync-events -- end of the block disabled above */
     expect(onChange).toHaveBeenLastCalledWith(5);
   });
 
@@ -187,12 +175,10 @@ describe('NumberInput', () => {
       <NumberInput label="Quantity" value={3} min={1} max={10} onChange={onChange} />,
     );
     const input = screen.getByRole('adjustable', { name: 'Quantity' });
-    /* eslint-disable testing-library/no-await-sync-events -- RNTL 14 fireEvent is async */
     await fireEvent(input, 'focus');
     await fireEvent.changeText(input, '99');
     await fireEvent(input, 'submitEditing');
     await fireEvent(input, 'blur');
-    /* eslint-enable testing-library/no-await-sync-events -- end of the block disabled above */
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange).toHaveBeenLastCalledWith(10);
   });
@@ -208,10 +194,8 @@ describe('NumberInput', () => {
     );
     const input = screen.getByRole('adjustable', { name: 'Weight' });
     expect(input).toHaveAccessibilityValue({ now: 7, text: '7 kg' });
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent(input, 'focus');
     expect(input).toHaveDisplayValue('7');
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent(input, 'blur');
     expect(input).toHaveDisplayValue('7 kg');
   });
@@ -229,13 +213,10 @@ describe('NumberInput', () => {
       <NumberInput label="Quantity" value={9} min={0} max={10} step={5} onChange={onChange} />,
     );
     const input = screen.getByRole('adjustable', { name: 'Quantity' });
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent(input, 'accessibilityAction', { nativeEvent: { actionName: 'increment' } });
     expect(onChange).toHaveBeenLastCalledWith(10);
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent(input, 'accessibilityAction', { nativeEvent: { actionName: 'decrement' } });
     expect(onChange).toHaveBeenLastCalledWith(4);
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent(input, 'accessibilityAction', { nativeEvent: { actionName: 'activate' } });
     expect(onChange).toHaveBeenCalledTimes(2);
   });

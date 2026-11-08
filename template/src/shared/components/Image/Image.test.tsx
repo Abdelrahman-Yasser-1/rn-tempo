@@ -8,11 +8,11 @@ import { Image } from './Image';
 const SOURCE = { uri: 'https://example.com/photo.png' };
 
 /** Fails the native load; FastImage reports it through its `onFastImageError` prop. */
-function failNativeLoad() {
+async function failNativeLoad() {
   // The image container is hidden from screen readers until it fails, so testID is the handle.
   // eslint-disable-next-line rn-tempo/discouraged-syntax -- decorative native view: testID is the only handle
   const nativeImage = screen.getByTestId('pic.image', { includeHiddenElements: true });
-  void fireEvent(nativeImage, 'fastImageError');
+  await fireEvent(nativeImage, 'fastImageError');
 }
 
 /** Test ids of decorative, screen-reader-hidden views are the only handle on them. */
@@ -47,7 +47,7 @@ describe('Image', () => {
 
   it('swaps in the default fallback icon when loading fails', async () => {
     await renderWithProviders(<Image source={SOURCE} testID="pic" accessibilityLabel="Broken" />);
-    failNativeLoad();
+    await failNativeLoad();
     // eslint-disable-next-line rn-tempo/discouraged-syntax -- fallback wrapper has no role
     const fallback = await screen.findByTestId('pic.fallback', { includeHiddenElements: true });
     expect(fallback).toBeOnTheScreen();
@@ -63,7 +63,7 @@ describe('Image', () => {
         fallback={<Text>No photo</Text>}
       />,
     );
-    failNativeLoad();
+    await failNativeLoad();
     expect(await screen.findByText('No photo')).toBeOnTheScreen();
   });
 
@@ -71,7 +71,7 @@ describe('Image', () => {
     await renderWithProviders(<Image source={SOURCE} testID="pic" accessibilityLabel="Sunset" />);
     expect(getHidden('pic.loading')).toBeOnTheScreen();
 
-    void fireEvent(getHidden('pic.image'), 'fastImageLoad');
+    await fireEvent(getHidden('pic.image'), 'fastImageLoad');
     await waitFor(() => {
       expect(queryHidden('pic.loading')).not.toBeOnTheScreen();
     });
@@ -79,7 +79,7 @@ describe('Image', () => {
 
   it('drops the placeholder and image once loading fails', async () => {
     await renderWithProviders(<Image source={SOURCE} testID="pic" accessibilityLabel="Broken" />);
-    failNativeLoad();
+    await failNativeLoad();
     await waitFor(() => {
       expect(queryHidden('pic.loading')).not.toBeOnTheScreen();
       expect(queryHidden('pic.image')).not.toBeOnTheScreen();
@@ -90,7 +90,7 @@ describe('Image', () => {
     const { rerender } = await renderWithProviders(
       <Image source={SOURCE} testID="pic" accessibilityLabel="Photo" />,
     );
-    failNativeLoad();
+    await failNativeLoad();
     await waitFor(() => {
       expect(getHidden('pic.fallback')).toBeOnTheScreen();
     });

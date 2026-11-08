@@ -125,7 +125,6 @@ describe('PaginatedList', () => {
   it('loads the next page when the end is reached and there is one', async () => {
     const fetchNextPage = jest.fn();
     await renderList(makeQuery({ fetchNextPage, hasNextPage: true }));
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent returns an act promise
     await fireEvent(screen.getByText('Alpha'), 'endReached');
     expect(fetchNextPage).toHaveBeenCalledTimes(1);
   });
@@ -133,7 +132,6 @@ describe('PaginatedList', () => {
   it('does not load more at the end of the last page', async () => {
     const fetchNextPage = jest.fn();
     await renderList(makeQuery({ fetchNextPage, hasNextPage: false }));
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent returns an act promise
     await fireEvent(screen.getByText('Alpha'), 'endReached');
     expect(fetchNextPage).not.toHaveBeenCalled();
   });
@@ -141,7 +139,6 @@ describe('PaginatedList', () => {
   it('does not load more while a next page is already loading', async () => {
     const fetchNextPage = jest.fn();
     await renderList(makeQuery({ fetchNextPage, hasNextPage: true, isFetchingNextPage: true }));
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent returns an act promise
     await fireEvent(screen.getByText('Alpha'), 'endReached');
     expect(fetchNextPage).not.toHaveBeenCalled();
   });
@@ -149,7 +146,6 @@ describe('PaginatedList', () => {
   it('refetches on pull to refresh', async () => {
     const refetch = jest.fn();
     await renderList(makeQuery({ refetch }));
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent returns an act promise
     await fireEvent(screen.getByText('Alpha'), 'refresh');
     expect(refetch).toHaveBeenCalledTimes(1);
   });

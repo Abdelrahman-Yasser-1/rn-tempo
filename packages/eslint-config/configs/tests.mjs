@@ -14,6 +14,35 @@ export const TEST_ENTRIES = [
   },
 ];
 
+const TEST_UTILS = String.raw`/^@test-utils(\/|$)/`;
+
+/**
+ * Test support stays in tests: `@test-utils/*` may be imported only by test files, stories (via
+ * the shared exemption) and src/test-utils itself. Packages such as msw and @testing-library/*
+ * are covered by the ownership policy.
+ */
+export const TEST_SUPPORT_ENTRIES = [
+  {
+    selector: [
+      `ImportDeclaration[source.value=${TEST_UTILS}]`,
+      `ExportNamedDeclaration[source.value=${TEST_UTILS}]`,
+      `ExportAllDeclaration[source.value=${TEST_UTILS}]`,
+      `ImportExpression[source.value=${TEST_UTILS}]`,
+      `CallExpression[callee.name='require'][arguments.0.value=${TEST_UTILS}]`,
+    ].join(', '),
+    message:
+      'Test helpers (@test-utils) are for tests and stories only. Move shared code to @shared or @services.',
+    files: ['src/**', '.rnstorybook/**'],
+    ignores: [
+      ...TEST_FILES,
+      '**/*.stories.tsx',
+      'src/test-utils/**',
+      // Dev mock mode reuses the MSW route table; the file is stripped from release bundles.
+      'src/services/http/devMockAdapter.ts',
+    ],
+  },
+];
+
 /** Jest and Testing Library rules for `*.test.ts(x)`. */
 export function testsConfig() {
   return [
@@ -27,6 +56,14 @@ export function testsConfig() {
       settings: { jest: { version: 30 } },
       rules: {
         'testing-library/prefer-screen-queries': 'error',
+        // RNTL 14: render, fireEvent and userEvent all return promises.
+        'testing-library/await-async-events': [
+          'error',
+          { eventModule: ['fireEvent', 'userEvent'] },
+        ],
+        'testing-library/await-async-utils': 'error',
+        // Off because fireEvent is async here, so `await fireEvent.press()` is correct.
+        'testing-library/no-await-sync-events': 'off',
       },
     },
   ];
