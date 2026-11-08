@@ -5062,6 +5062,82 @@ __metadata:
   languageName: node
   linkType: soft
 
+"@rnx-kit/align-deps@npm:5.0.1":
+  version: 5.0.1
+  resolution: "@rnx-kit/align-deps@npm:5.0.1"
+  dependencies:
+    "@rnx-kit/types-kit-config": "npm:^2.0.0"
+    "@rnx-kit/types-node": "npm:^1.0.1"
+    oxc-resolver: "npm:^11.0.0"
+  bin:
+    rnx-align-deps: lib/index.js
+  checksum: 10c0/3de61de8cab2f2b6a894cf38e41ed554c411e99f1a6eb6cdfa20fc3dead82692d243506760bd683e52c4ff75f390748b941c164afd217230325f153391539632
+  languageName: node
+  linkType: hard
+
+"@rnx-kit/types-bundle-config@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@rnx-kit/types-bundle-config@npm:1.0.1"
+  dependencies:
+    "@rnx-kit/types-metro-serializer-esbuild": "npm:^1.0.0"
+    "@rnx-kit/types-plugin-cyclic-dependencies": "npm:^1.0.0"
+    "@rnx-kit/types-plugin-duplicates-checker": "npm:^1.0.0"
+    "@rnx-kit/types-plugin-typescript": "npm:^1.0.0"
+  peerDependencies:
+    metro: ">=0.83.0"
+  peerDependenciesMeta:
+    metro:
+      optional: true
+  checksum: 10c0/0d6b8c3bf43d0ce2fbe509fb7a1de057412352c8384c6e459a2a99caa1ba1c03384cea990e2c04dd50329442401ee5eabf6a39c948d4e84a047c3c2b0ba225a1
+  languageName: node
+  linkType: hard
+
+"@rnx-kit/types-kit-config@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "@rnx-kit/types-kit-config@npm:2.0.0"
+  dependencies:
+    "@rnx-kit/types-bundle-config": "npm:^1.0.1"
+  checksum: 10c0/4b120545fb3a392e2e7103341059bf41f75bf79469d1bfaebdbe3aa7abac1495393e5683d527d610a8611196f92bf102e2ba8e7bbbbaab688c4e2611fc8ce05a
+  languageName: node
+  linkType: hard
+
+"@rnx-kit/types-metro-serializer-esbuild@npm:^1.0.0":
+  version: 1.0.2
+  resolution: "@rnx-kit/types-metro-serializer-esbuild@npm:1.0.2"
+  checksum: 10c0/90cebe6c5296654a071ff69934cc8b64475604e0fa2fa67b524faa636e36a6784485ac534c76c8a965649214d2e14b7d38f812477805446f14188c31c376141d
+  languageName: node
+  linkType: hard
+
+"@rnx-kit/types-node@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@rnx-kit/types-node@npm:1.0.1"
+  dependencies:
+    "@rnx-kit/types-kit-config": "npm:^2.0.0"
+  checksum: 10c0/a5eb4d0aa63c57d747d711bbcf23bb330fa6d2a7e17417a3a53ab88a604b6cd789da9c157d2a9d1d695591c3538491c0dd369d3b45641ce49af64adbba0fa92d
+  languageName: node
+  linkType: hard
+
+"@rnx-kit/types-plugin-cyclic-dependencies@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@rnx-kit/types-plugin-cyclic-dependencies@npm:1.0.0"
+  checksum: 10c0/75d2ad3a17943e01472cb3385287749168d0535b6ab65a9ffc14117c25737c564ef7c06e8ac69645f40fc5d602ead7c4a9219256b8a47c786dc465d982aa845c
+  languageName: node
+  linkType: hard
+
+"@rnx-kit/types-plugin-duplicates-checker@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@rnx-kit/types-plugin-duplicates-checker@npm:1.0.0"
+  checksum: 10c0/1d1cb8ef1f7ce28eafc486131f212f836df656bbc6fb6261934e76ca6cd26123b71d9eaec9c0ec86dc3ea803be5fb3487bd1bc0ca940fe5bfbe8a90fb0b1fedf
+  languageName: node
+  linkType: hard
+
+"@rnx-kit/types-plugin-typescript@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@rnx-kit/types-plugin-typescript@npm:1.0.0"
+  checksum: 10c0/c792f81a3cbb8e15acbe66d0d23afa8b2e2090e725281bef90dd315bff03c01409601bf910d4d79137009e4246e4d60497fb50690477c96128c1184780ea852d
+  languageName: node
+  linkType: hard
+
 "@rozenite/agent-bridge@npm:2.1.0":
   version: 2.1.0
   resolution: "@rozenite/agent-bridge@npm:2.1.0"
@@ -12164,7 +12240,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"oxc-resolver@npm:11.24.2":
+"oxc-resolver@npm:11.24.2, oxc-resolver@npm:^11.0.0":
   version: 11.24.2
   resolution: "oxc-resolver@npm:11.24.2"
   dependencies:
@@ -14397,6 +14473,7 @@ __metadata:
     "@rn-tempo/eslint-config": "link:../packages/eslint-config"
     "@rn-tempo/prettier-config": "link:../packages/prettier-config"
     "@rn-tempo/tsconfig": "link:../packages/tsconfig"
+    "@rnx-kit/align-deps": "npm:5.0.1"
     "@rozenite/metro": "npm:2.5.0"
     "@rozenite/mmkv-plugin": "npm:2.1.0"
     "@rozenite/network-activity-plugin": "npm:2.5.0"
