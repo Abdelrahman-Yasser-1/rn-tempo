@@ -35,8 +35,42 @@ const navigationContract = {
   element: { type: 'navigation', fileInternalPath: '{types,navigationRef}.ts' },
 };
 
-/** The allowed-dependency matrix. Anything not listed is an error (`default: 'disallow'`). */
+/**
+ * Shown when an edge is disallowed and no policy below names it. The `{{...}}` placeholders are
+ * Handlebars, filled in by eslint-plugin-boundaries.
+ */
+const DEFAULT_MESSAGE =
+  "'{{from.type}}' must not import '{{to.type}}' ({{dependency.source}}). Check the dependency matrix in AGENTS.md (Imports follow the boundary matrix) and move the code or pass it in as a prop.";
+
+/**
+ * The allowed-dependency matrix. Anything not listed is an error (`default: 'disallow'`).
+ * The last matching policy wins, so the disallow policies with guidance come first and the allow
+ * policies after them re-allow the legal edges.
+ */
 const POLICIES = [
+  {
+    // Re-allowed below for the same feature and for `index.ts`.
+    disallow: { to: types('feature') },
+    message:
+      "features/{{to.captured.feature}} may be imported only through its index.ts: import from '@features/{{to.captured.feature}}' and export what is missing from that barrel.",
+  },
+  {
+    from: types('shared-ui', 'shared-core'),
+    disallow: { to: types('feature') },
+    message:
+      'Shared code must not import features. Move the shared part to @shared, or pass the feature value in as a prop.',
+  },
+  {
+    from: types('services'),
+    disallow: { to: types('shared-ui', 'feature', 'app', 'navigation', 'theme', 'assets') },
+    message: 'Services must not import UI. Return data and let the caller render it.',
+  },
+  {
+    // Re-allowed below for tests, stories and src/test-utils itself.
+    disallow: { to: types('test-utils') },
+    message:
+      'src/test-utils is for tests and stories only. Import it from *.test.ts(x), *.stories.tsx or src/test-utils.',
+  },
   {
     from: { element: { type: 'app' } },
     allow: {
@@ -116,7 +150,10 @@ export function boundariesConfig(root) {
         },
       },
       rules: {
-        'boundaries/dependencies': ['error', { default: 'disallow', policies: POLICIES }],
+        'boundaries/dependencies': [
+          'error',
+          { default: 'disallow', message: DEFAULT_MESSAGE, policies: POLICIES },
+        ],
       },
     },
     {
@@ -128,6 +165,7 @@ export function boundariesConfig(root) {
           'error',
           {
             default: 'disallow',
+            message: DEFAULT_MESSAGE,
             policies: [...POLICIES, { allow: { to: types('test-utils') } }],
           },
         ],
