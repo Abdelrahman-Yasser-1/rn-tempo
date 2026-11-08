@@ -17,6 +17,7 @@ features/<kebab-name>/
   utils/        <name>.ts (+ tests)
   constants.ts
   index.ts      the only public entry of the feature
+  README.md     Purpose, Public API, Screens and routes, Data, Spec
 ```
 
 ## Rules
@@ -26,6 +27,7 @@ features/<kebab-name>/
 - Server data goes through TanStack Query with a key factory; mutations invalidate the affected keys. Client state goes in the store.
 - Every user-facing string is a key in `src/locales/{en,ar}/<feature>.json`.
 - Every unit gets a test next to it; spec'd tests start with `AC-n:`.
+- Keep `README.md` current: its `## Public API` section lists exactly the names `index.ts` exports, one `- \`Name\`` bullet each (`yarn lint:readmes`, part of `verify`). Update it after `tempo g screen` adds a barrel export.
 - Name the feature scope in `commitlint.config.mjs` and keep `specs/<feature>/` up to date.
 
 ## Generators
