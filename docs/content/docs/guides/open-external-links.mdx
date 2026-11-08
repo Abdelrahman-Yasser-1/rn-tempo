@@ -1,0 +1,32 @@
+---
+title: Open phone, mail and maps
+description: Call a number, write an email or show a place with openPhone, openEmail and openMaps, and what the Android manifest needs for them.
+---
+
+`@services/linking/linking` has one safe way to hand a link to the OS, `openUrlSafe(url)`. It asks `Linking.canOpenURL` first, never throws, and shows an error toast when nothing can open the link. Three helpers build the URL for you and go through it:
+
+```ts
+import { openEmail, openMaps, openPhone } from '@services/linking/linking';
+
+await openPhone('+20 100 123 4567'); // tel:+201001234567
+await openEmail({ to: 'help@example.com', subject: 'Order 42', body: 'Hello,\n' });
+await openMaps({ lat: 30.0444, lng: 31.2357, label: 'Cairo Tower' });
+```
+
+Each returns `true` when the link was handed to the OS and `false` after showing the toast.
+
+## What they build
+
+| Helper      | URL                                                                                                    |
+| ----------- | ------------------------------------------------------------------------------------------------------ |
+| `openPhone` | `tel:` plus the number without spaces, dashes, dots or brackets (`#` becomes `%23`).                   |
+| `openEmail` | `mailto:` plus the addresses (an array is joined with commas), then `subject` and `body` percent-encoded. |
+| `openMaps`  | iOS: `https://maps.apple.com/?ll=<lat>,<lng>&q=<label>`. Android: `geo:<lat>,<lng>?q=<lat>,<lng>(<label>)`, which drops a pin. |
+
+`openMaps` refuses a latitude outside -90 to 90 or a longitude outside -180 to 180 and reports it like a link that cannot be opened. The pure builders (`buildPhoneUrl`, `buildEmailUrl`, `buildMapsUrl`) are exported for tests.
+
+## Android package visibility
+
+Since Android 11, `canOpenURL` only sees apps the manifest declares. `android/app/src/main/AndroidManifest.xml` has a `<queries>` block for the `tel`, `mailto` and `geo` schemes. If you open another scheme with `openUrlSafe`, add its intent to that block, or `canOpenURL` returns `false` on Android 11 and later. iOS needs `LSApplicationQueriesSchemes` only for custom app schemes (for example `whatsapp://`), not for these three.
+
+The simulator and emulator often have no phone or mail app. Test these on a device, and expect the "could not open" toast on an emulator without a handler.
