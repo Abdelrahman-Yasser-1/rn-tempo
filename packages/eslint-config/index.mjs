@@ -34,5 +34,10 @@ export function createConfig({ root, structure = false, dependencies = {} }) {
     ...testsConfig(),
     ...(structure ? [...boundariesConfig(root), ...structureConfig(root)] : []),
     eslintConfigPrettier,
+    {
+      // eslint-config-prettier switches `curly` off; braces are always required here.
+      name: "rn-tempo/base/curly",
+      rules: { curly: ["error", "all"] },
+    },
   ];
 }

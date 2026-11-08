@@ -7,7 +7,7 @@ import { TS_FILES } from './base.mjs';
 export function reactConfig() {
   return [
     { ...eslintReact.configs['recommended-typescript'], files: TS_FILES },
-    { ...reactHooks.configs.flat.recommended, name: 'rn-tempo/react/hooks' },
+    { ...reactHooks.configs.flat.recommended, name: 'react-hooks/recommended' },
     {
       // Index keys reorder wrongly when a list changes; the recommended preset only warns.
       name: 'rn-tempo/react/keys',

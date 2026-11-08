@@ -231,6 +231,99 @@ describe("eslint-config fixtures", () => {
       "rn-tempo/dependency-owner",
     ],
     [
+      "a type imported without `type`",
+      "src/shared/utils/typeImport.ts",
+      "@typescript-eslint/consistent-type-imports",
+    ],
+    [
+      "an interface",
+      "src/shared/utils/typeStyle.ts",
+      "@typescript-eslint/consistent-type-definitions",
+    ],
+    [
+      "a type re-exported without `type`",
+      "src/shared/utils/typeStyle.ts",
+      "@typescript-eslint/consistent-type-exports",
+    ],
+    [
+      "imports in the wrong order",
+      "src/shared/utils/importOrder.ts",
+      "import-x/order",
+    ],
+    ["loose equality", "src/shared/utils/looseCompare.ts", "eqeqeq"],
+    ["a brace-less if", "src/shared/utils/looseCompare.ts", "curly"],
+    [
+      "cognitive complexity over 15",
+      "src/shared/utils/cognitive.ts",
+      "sonarjs/cognitive-complexity",
+    ],
+    [
+      "a bare node module specifier",
+      "src/shared/utils/unicornMisc.ts",
+      "unicorn/prefer-node-protocol",
+    ],
+    ["forEach", "src/shared/utils/unicornMisc.ts", "unicorn/no-for-each"],
+    [
+      "replace with a global regex",
+      "src/shared/utils/unicornMisc.ts",
+      "unicorn/prefer-string-replace-all",
+    ],
+    [
+      "returning undefined",
+      "src/shared/utils/unicornMisc.ts",
+      "unicorn/no-useless-undefined",
+    ],
+    [
+      "an if/else assignment",
+      "src/shared/utils/unicornMisc.ts",
+      "unicorn/prefer-ternary",
+    ],
+    [
+      "an unused style",
+      "src/shared/utils/rnStyles.tsx",
+      "react-native/no-unused-styles",
+    ],
+    [
+      "a color literal in a style",
+      "src/shared/utils/rnStyles.tsx",
+      "react-native/no-color-literals",
+    ],
+    [
+      "an invalid accessibility role",
+      "src/shared/utils/a11y.tsx",
+      "react-native-a11y/has-valid-accessibility-role",
+    ],
+    [
+      "an invalid accessibility state",
+      "src/shared/utils/a11y.tsx",
+      "react-native-a11y/has-valid-accessibility-state",
+    ],
+    [
+      "accessibility actions without a handler",
+      "src/shared/utils/a11y.tsx",
+      "react-native-a11y/has-valid-accessibility-actions",
+    ],
+    [
+      "nested touchables",
+      "src/shared/utils/a11y.tsx",
+      "react-native-a11y/no-nested-touchables",
+    ],
+    [
+      "an un-awaited fireEvent",
+      "src/shared/utils/events.test.tsx",
+      "testing-library/await-async-events",
+    ],
+    [
+      "an un-awaited waitFor",
+      "src/shared/utils/events.test.tsx",
+      "testing-library/await-async-utils",
+    ],
+    [
+      "a query taken from render",
+      "src/shared/utils/events.test.tsx",
+      "testing-library/prefer-screen-queries",
+    ],
+    [
       "async-storage",
       "src/shared/utils/usesAsyncStorage.ts",
       "rn-tempo/restricted-syntax",
@@ -345,6 +438,24 @@ describe("eslint-config fixtures", () => {
       "src/shared/utils/unusedDisable.ts",
     );
     expect(texts.join("\n")).toMatch(/Unused eslint-disable directive/);
+  });
+
+  it("has an invalid fixture for every rule the rn-tempo config blocks set", () => {
+    const config = createConfig({
+      root: path.join(fixtures, "valid"),
+      structure: true,
+    });
+    const configured = new Set();
+    for (const block of config) {
+      if (!block.name?.startsWith("rn-tempo/") || !block.rules) continue;
+      for (const [rule, setting] of Object.entries(block.rules)) {
+        const severity = Array.isArray(setting) ? setting[0] : setting;
+        if (severity !== "off" && severity !== 0) configured.add(rule);
+      }
+    }
+    const covered = new Set(cases.map(([, , rule]) => rule));
+    const uncovered = [...configured].filter((rule) => !covered.has(rule));
+    expect(uncovered).toEqual([]);
   });
 
   it("covers at least 12 invalid cases", () => {
