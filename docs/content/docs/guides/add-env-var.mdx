@@ -7,13 +7,13 @@ Env vars are read once, validated with Zod and exported as `ENV`. Never read `re
 
 ## Steps
 
-1. **Add the key to the schema** in `src/config/env.ts`. Give it a type and, when a missing value is acceptable, a default:
+1. **Add the key to the schema** in `src/config/parseEnv.ts`. Give it a type and, when a missing value is acceptable, a default:
 
    ```ts
    FEATURE_X_ENABLED: bool.default(false),
    ```
 
-   The app throws at startup with a readable message when a value does not parse, so a broken build never reaches users.
+   The app throws an `EnvError` at startup with a readable message when a value does not parse, so a broken build never reaches users. Add a case to `parseEnv.test.ts`; the function needs no native module.
 
 2. **Add the key to `.env.example`**, with a safe value for local development. This file is the full list of keys.
 
