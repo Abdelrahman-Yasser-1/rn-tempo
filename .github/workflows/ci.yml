@@ -25,6 +25,7 @@ jobs:
       - run: yarn install --immutable
       - run: yarn lint
       - run: yarn test
+      - run: yarn test:scripts
       - run: yarn typecheck
 
   cli-e2e:

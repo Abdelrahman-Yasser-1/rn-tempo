@@ -17,6 +17,8 @@
     "lint": "yarn workspaces foreach -A --exclude rn-tempo run lint",
     "test": "yarn workspaces foreach -A --exclude rn-tempo run test",
     "typecheck": "yarn workspaces foreach -A --exclude rn-tempo run typecheck",
+    "lint:links": "node scripts/check-links.mjs",
+    "test:scripts": "node --test \"scripts/__tests__/*.test.mjs\"",
     "changeset": "changeset",
     "release": "changeset publish"
   },
