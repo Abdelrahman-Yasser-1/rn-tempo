@@ -73,7 +73,7 @@ describe('renderTemplateDir', () => {
     const template = path.join(root, 'templates/demo');
     await mkdir(path.join(template, 'src/{{feature}}/{{Name}}Panel'), { recursive: true });
     await writeFile(path.join(template, 'src/{{feature}}/{{Name}}Panel/{{Name}}Panel.tsx.tmpl'), 'export const {{name}} = "{{NAME_UPPER}}";\n');
-    await writeFile(path.join(template, 'src/{{feature}}/index.ts'), "export * from './{{Name}}Panel/{{Name}}Panel';\n");
+    await writeFile(path.join(template, 'src/{{feature}}/index.ts'), "export { {{name}} } from './{{Name}}Panel/{{Name}}Panel';\n");
   });
   afterEach(async () => cleanup());
 
@@ -84,7 +84,7 @@ describe('renderTemplateDir', () => {
     expect(result.created).toEqual(['src/wallet/CardPanel/CardPanel.tsx', 'src/wallet/index.ts']);
     expect(result.templateSource).toBe('built-in');
     expect(await readFile(path.join(project, 'src/wallet/CardPanel/CardPanel.tsx'), 'utf8')).toBe('export const card = "CARD";\n');
-    expect(await readFile(path.join(project, 'src/wallet/index.ts'), 'utf8')).toBe("export * from './CardPanel/CardPanel';\n");
+    expect(await readFile(path.join(project, 'src/wallet/index.ts'), 'utf8')).toBe("export { card } from './CardPanel/CardPanel';\n");
   });
 
   it('refuses to overwrite existing files, writes nothing, and lists the conflicts', async () => {
