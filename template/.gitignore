@@ -86,3 +86,9 @@ projectStructure.cache.json
 # AI session logs and pointer: local only, never committed
 .ai/sessions/
 .ai/.current.json
+
+# Firebase config files of the push-notifications module. Google does not treat them as secrets, but
+# they differ per project and environment, so they are not part of the template. Add yours locally or in
+# CI (see docs: features/push-notifications). Remove these lines if your team chooses to commit them.
+google-services.json
+GoogleService-Info.plist
