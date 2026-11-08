@@ -80,6 +80,9 @@ def enableProguardInReleaseBuilds = true
  */
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
+// package.json (bumped by release-please) is the single source of the marketing version.
+def packageVersion = new groovy.json.JsonSlurper().parse(file("../../package.json")).version as String
+
 def uploadProp = { String name -> project.findProperty(name) ?: System.getenv(name) }
 def allowDebugSigning = (project.findProperty("tempoAllowDebugSigning") ?: System.getenv("TEMPO_ALLOW_DEBUG_SIGNING")) == "true"
 def hasUploadKey = ["TEMPO_UPLOAD_STORE_FILE", "TEMPO_UPLOAD_STORE_PASSWORD", "TEMPO_UPLOAD_KEY_ALIAS", "TEMPO_UPLOAD_KEY_PASSWORD"].every { uploadProp(it) }
@@ -94,9 +97,10 @@ android {
         applicationId "com.rntempo.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        // Fastlane passes the real values: -PtempoVersionCode=<run number> -PtempoVersionName=<package.json version>.
+        // Fastlane passes -PtempoVersionCode=<run number> (and -PtempoVersionName, which equals the
+        // package.json version); without them versionName is the package.json version.
         versionCode((project.findProperty("tempoVersionCode") ?: 1) as int)
-        versionName((project.findProperty("tempoVersionName") ?: "1.0") as String)
+        versionName((project.findProperty("tempoVersionName") ?: packageVersion) as String)
         // @tempo-feature:maps:start
         // Google Maps key for the manifest, read from the flavor's env file by react-native-config's
         // dotenv.gradle (above). Flavor placeholders below merge with this one. Empty is allowed.
