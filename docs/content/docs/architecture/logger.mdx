@@ -3,11 +3,28 @@ title: Logger and redaction
 description: The single logging entry point, and how secrets are removed before any log sink sees them.
 ---
 
-All logging goes through `@services/logger`: `logger.debug`, `info`, `warn` and `error`. `console` is a lint error everywhere else. Production builds keep only `warn` and `error`, and hand them to the transport you plug in with `setLogTransport` (the Sentry recipe uses it).
+All logging goes through `@services/logger`: `logger.debug`, `info`, `warn` and `error`. `console` is a lint error everywhere else. Production builds keep only `warn` and `error`, and hand them to every sink you add with `addLogSink`.
+
+## Sinks
+
+A sink is a function `(entry) => void` that receives each entry that passed the level filter: `{ level, message, args }`, already redacted. Add as many as you need (a crash reporter, a file, a test spy). `addLogSink` returns the function that removes the sink.
+
+```ts
+import { addLogSink } from '@services/logger/logger';
+
+const removeSink = addLogSink(({ level, message, args }) => {
+  crashReporter.log(level, message, args);
+});
+
+// later, for example in a test teardown
+removeSink();
+```
+
+A sink that throws is swallowed, so one broken reporter cannot break the app or the other sinks. The failure is not logged (that would recurse), so test your sink on its own. `setLogTransport(sink)` still works as a single replaceable slot on top of `addLogSink`; prefer `addLogSink` in new code.
 
 ## Redaction
 
-Every message and every argument is redacted **before** it reaches any sink: the dev console and the transport both receive the safe copy. The redactor (`src/services/logger/redact.ts`) is pure and never mutates its input.
+Every message and every argument is redacted **before** it reaches any sink: the dev console and every sink receive the safe copy. The redactor (`src/services/logger/redact.ts`) is pure and never mutates its input.
 
 - **Keys.** The whole value is replaced by `[REDACTED]` when the key matches `token`, `secret`, `password`, `passwd`, `authorization`, `cookie`, `signature`, `otp`, `pin`, `apikey`, `api_key` or `refresh` (case-insensitive, anywhere in the key).
 - **Strings.** At any depth, JWTs and `Bearer <value>` are masked, and emails keep their first letter and domain (`j***@example.com`).

@@ -4,7 +4,8 @@ import { redact, redactString } from './redact';
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 export type LogEntry = { level: LogLevel; message: string; args: readonly unknown[] };
-export type LogTransport = (entry: LogEntry) => void;
+/** Receives every entry that passes the level filter, already redacted. */
+export type LogSink = (entry: LogEntry) => void;
 export type LoggerOptions = {
   /** Minimum level to keep; `silent` drops everything. */
   level: LogLevel | 'silent';
@@ -20,11 +21,33 @@ const RANK: Record<LogLevel | 'silent', number> = {
   silent: 4,
 };
 
-let transport: LogTransport | undefined;
+const sinks = new Set<LogSink>();
 
-/** Plugs in a remote sink (the Sentry recipe uses this); pass `undefined` to unplug. */
-export function setLogTransport(next: LogTransport | undefined): void {
-  transport = next;
+/** Adds a sink (a remote reporter, a file, a test spy) and returns a function that removes it. */
+export function addLogSink(sink: LogSink): () => void {
+  sinks.add(sink);
+  return () => {
+    sinks.delete(sink);
+  };
+}
+
+let removeTransport: (() => void) | undefined;
+
+/** Compat wrapper over `addLogSink`: one slot, replaced on each call; pass `undefined` to unplug. */
+export function setLogTransport(next: LogSink | undefined): void {
+  removeTransport?.();
+  removeTransport = next ? addLogSink(next) : undefined;
+}
+
+function dispatch(entry: LogEntry): void {
+  // Copy first: a sink may remove itself while we iterate.
+  for (const sink of [...sinks]) {
+    try {
+      sink(entry);
+    } catch {
+      // A broken sink must not break the app or the other sinks. Not logged: that would recurse.
+    }
+  }
 }
 
 /** Builds a level-filtered logger; exported for tests, apps use the default `logger`. */
@@ -35,10 +58,10 @@ export function createLogger({ level, isProduction }: Readonly<LoggerOptions>) {
     if (RANK[entryLevel] < threshold) {
       return;
     }
-    // Redact once, before any sink: the transport and the dev console only see safe copies.
+    // Redact once, before any sink: the sinks and the dev console only see safe copies.
     const safeMessage = redactString(message);
     const safeArgs = redact(args);
-    transport?.({ level: entryLevel, message: safeMessage, args: safeArgs });
+    dispatch({ level: entryLevel, message: safeMessage, args: safeArgs });
     if (!isProduction) {
       // The only place console is allowed: it is the dev sink behind the level filter.
       // eslint-disable-next-line no-console -- logger is the single console wrapper
