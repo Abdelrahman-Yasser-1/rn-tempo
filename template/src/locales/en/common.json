@@ -82,6 +82,9 @@
   "inlineMessage": {
     "close": "Dismiss message"
   },
+  "listLoadingMore": {
+    "label": "Loading more"
+  },
   "loader": {
     "label": "Loading"
   },

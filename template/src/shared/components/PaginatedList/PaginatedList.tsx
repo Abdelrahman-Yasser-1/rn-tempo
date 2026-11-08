@@ -1,13 +1,11 @@
 import { FlashList } from '@shopify/flash-list';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
 
 import { EmptyState } from '@shared/components/EmptyState';
 import { ErrorState } from '@shared/components/ErrorState';
+import { ListLoadingMore } from '@shared/components/ListLoadingMore';
 import { ListShimmer } from '@shared/components/ListShimmer';
-import { Loader } from '@shared/components/Loader';
 
-import { styles } from './styles';
 import type { PaginatedListProps } from './types';
 import { usePaginatedList } from './usePaginatedList';
 
@@ -52,11 +50,7 @@ export function PaginatedList<TItem, TPage>({
         )
       }
       ListFooterComponent={
-        query.isFetchingNextPage ? (
-          <View style={styles.footer}>
-            <Loader testID={suffix('loading-more')} />
-          </View>
-        ) : null
+        query.isFetchingNextPage ? <ListLoadingMore testID={suffix('loading-more')} /> : null
       }
     />
   );

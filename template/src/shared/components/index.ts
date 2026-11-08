@@ -131,6 +131,8 @@ export type {
   ListItemLeading,
   ListItemTrailing,
 } from './ListItemContent';
+export { ListLoadingMore } from './ListLoadingMore';
+export type { ListLoadingMoreProps } from './ListLoadingMore';
 export { ListShimmer } from './ListShimmer';
 export type { ListShimmerProps } from './ListShimmer';
 export { Loader } from './Loader';
