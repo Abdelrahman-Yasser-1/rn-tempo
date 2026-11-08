@@ -1,7 +1,7 @@
 {
   "extends": ["@react-native/typescript-config", "@rn-tempo/tsconfig/base.json"],
   "compilerOptions": {
-    // Path aliases: keep in sync with babel.config.js (contract C4).
+    // Path aliases (contract C4). The single source: babel.config.js, jest.config.js and ESLint read these.
     "paths": {
       "@app/*": ["./src/app/*"],
       "@navigation/*": ["./src/navigation/*"],
