@@ -1,0 +1,4 @@
+// The marketing version (CFBundleShortVersionString). Kept in step with package.json by release-please.
+// x-release-please-start-version
+MARKETING_VERSION = 0.0.1
+// x-release-please-end
