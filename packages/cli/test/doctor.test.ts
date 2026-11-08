@@ -1,4 +1,4 @@
-import { writeFile, cp } from 'node:fs/promises';
+import { cp, mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -87,6 +87,18 @@ describe('runDoctor', () => {
     expect(mismatch?.status).toBe('error');
     expect(mismatch?.message).toContain('.env.dev');
     expect(mismatch?.message).toContain('extra EXTRA');
+  });
+
+  it('runs align-deps only when it is installed and reports its findings as a warning', async () => {
+    expect((await run()).find((c) => c.id === 'align-deps')).toBeUndefined();
+    await mkdir(path.join(dir, 'node_modules/.bin'), { recursive: true });
+    await writeFile(path.join(dir, 'node_modules/.bin/rnx-align-deps'), '');
+    const aligned = (await run()).find((c) => c.id === 'align-deps');
+    expect(aligned?.status).toBe('ok');
+    const stdout = 'error package.json\n      ├── dependencies["react"]: found "19.3.1", expected "19.3.0"\n      └── Re-run with \'--write\'';
+    const mismatch = (await run(fakeCapturer({ 'yarn lint:align-deps': { exitCode: 1, stdout } }))).find((c) => c.id === 'align-deps');
+    expect(mismatch?.status).toBe('warn');
+    expect(mismatch?.message).toContain('dependencies["react"]: found "19.3.1", expected "19.3.0"');
   });
 
   it('flags old Java, a wrong Node major and a broken .tempo.json', async () => {

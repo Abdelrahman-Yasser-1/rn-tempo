@@ -64,6 +64,10 @@ jobs:
       - run: yarn assets:check
       - name: Bundle dry run (iOS and Android)
         run: yarn verify:bundle
+      # Advisory: flags dependency versions outside the React Native profile. Never blocks the PR.
+      - name: Align dependencies with the React Native profile
+        run: yarn lint:align-deps
+        continue-on-error: true
 
   commitlint:
     name: Commit messages
