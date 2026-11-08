@@ -1,0 +1,39 @@
+{
+  "$schema": "https://unpkg.com/@rn-tempo/contracts/schemas/feature-manifest.schema.json",
+  "name": "push-notifications",
+  "title": "Push notifications (FCM)",
+  "description": "Firebase Cloud Messaging: token handler, contextual permission, foreground toast, data.link routing and a Settings row. Needs your own Firebase config files.",
+  "defaultEnabled": false,
+  "requires": [],
+  "conflicts": [],
+  "deleteGlobs": [
+    "src/services/push/**",
+    "src/app/bootstrap/initPush.ts",
+    "src/app/bootstrap/initPush.test.ts",
+    "src/features/settings/components/NotificationsRow/**",
+    "android/app/src/main/res/values/strings.xml",
+    "android/app/src/main/res/values-ar/strings.xml"
+  ],
+  "dependencies": [
+    "@react-native-firebase/app",
+    "@react-native-firebase/messaging"
+  ],
+  "devDependencies": [],
+  "envKeys": [],
+  "jsonPatches": [
+    {
+      "file": "src/locales/en/settings.json",
+      "op": "remove",
+      "path": "/notifications"
+    },
+    {
+      "file": "src/locales/ar/settings.json",
+      "op": "remove",
+      "path": "/notifications"
+    }
+  ],
+  "postRemove": [
+    "pods"
+  ],
+  "docs": "/docs/features/push-notifications"
+}
