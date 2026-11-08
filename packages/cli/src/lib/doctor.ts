@@ -212,6 +212,13 @@ export async function runDoctor(dir: string, options: DoctorOptions = {}): Promi
     add('structure', 'File and folder rules', 'info', 'skipped (run yarn install first)');
   }
 
+  // react-native ecosystem versions (advisory: only when @rnx-kit/align-deps is installed)
+  if (await pathExists(path.join(dir, 'node_modules/.bin/rnx-align-deps'))) {
+    const aligned = await exec('yarn', ['lint:align-deps'], { cwd: dir });
+    const findings = (aligned.stdout + '\n' + aligned.stderr).split('\n').filter((line) => /(?:dependencies|devDependencies)\[".+"\]: found/.test(line)).map((line) => line.replace(/^[\s├└─│]+/u, '').trim());
+    add('align-deps', 'React Native dependency alignment', aligned.exitCode === 0 ? 'ok' : 'warn', aligned.exitCode === 0 ? 'aligned with the React Native profile' : findings.length > 0 ? `${findings.length} mismatch(es): ${findings.slice(0, 5).join('; ')}` : 'rnx-align-deps reported problems (run yarn lint:align-deps)');
+  }
+
   return checks;
 }
 

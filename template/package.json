@@ -24,6 +24,7 @@
     "ios:envs": "bundle exec ruby scripts/native/ios-envs.rb --project ios/TempoApp.xcodeproj --target TempoApp --envs dev:Dev,staging:Staging,prod:Prod",
     "pods": "cd ios && bundle exec pod install",
     "lint": "eslint . --max-warnings=0",
+    "lint:align-deps": "rnx-align-deps --diff-mode allow-subset",
     "lint:deps": "node scripts/check-dependencies.mjs",
     "lint:env": "node scripts/check-env.mjs",
     "lint:fix": "eslint . --fix",
@@ -158,5 +159,30 @@
   "engines": {
     "node": ">=24.3.0"
   },
-  "packageManager": "yarn@4.18.1"
+  "packageManager": "yarn@4.18.1",
+  "rnx-kit": {
+    "kitType": "app",
+    "alignDeps": {
+      "requirements": [
+        "react-native@0.88"
+      ],
+      "capabilities": [
+        "animation",
+        "babel-preset-react-native",
+        "community/cli",
+        "community/cli-android",
+        "community/cli-ios",
+        "core",
+        "core-android",
+        "core-ios",
+        "core/metro-config",
+        "gestures",
+        "navigation/native",
+        "netinfo",
+        "safe-area",
+        "screens",
+        "svg"
+      ]
+    }
+  }
 }
