@@ -1,0 +1,47 @@
+---
+title: App bootstrap
+description: The startup steps as a dependency graph, what each failure does, and how to add a step.
+---
+
+`useBootstrap` runs `runBootstrap` (`src/app/bootstrap/bootstrap.ts`) once when the app starts. Startup is a list of steps. Each step names the steps it needs, and a small runner (`stepGraph.ts`) runs them one after another in dependency order.
+
+```ts
+type BootstrapStep<TBlock> = {
+  id: string;
+  dependsOn: readonly string[];
+  run: () => Promise<TBlock | undefined>;
+  onError: 'fatal' | 'block-security' | 'continue';
+  failureMessage: string;
+};
+```
+
+## The steps
+
+| Step            | Depends on | If it throws                                          |
+| --------------- | ---------- | ----------------------------------------------------- |
+| `storage`       | none       | `fatal`: startup error screen                         |
+| `theme`         | `storage`  | `continue`: the system theme stays                    |
+| `i18n`          | `storage`  | `fatal`: startup error screen                         |
+| `security`      | `i18n`     | `block-security`: security screen (fails closed)      |
+| `auth`          | `security` | `fatal`: startup error screen                         |
+| `remote-config` | `auth`     | `continue`: local defaults, no gate                   |
+
+A step can also stop startup without throwing by returning a block: `security` returns a security block when the device is unsafe, and `remote-config` returns `forceUpdate` or `maintenance` from the version gate.
+
+## Failure policies
+
+- `fatal`: logs an error, loads a fallback English translation so the blocking screen has text, and stops with the startup error screen.
+- `block-security`: logs an error and stops with the security screen. Use it for checks that must not be skipped.
+- `continue`: logs a warning and runs the next step.
+
+The splash screen is hidden at the end whatever the outcome.
+
+## Order
+
+The runner sorts steps so each one comes after its dependencies. When several steps are ready, the one declared first runs first, so the order is the same on every launch. Steps run one at a time; nothing runs in parallel.
+
+`orderSteps` throws on a duplicate id, an unknown dependency or a cycle. The bootstrap tests run it on the real graph, so a wrong edit fails in CI, not on a device.
+
+## Add a step
+
+Add an entry to `createBootstrapSteps` and a function to `BootstrapSteps` so tests can replace it. Pick the failure policy first: ask what the app should do when the step fails, not whether it usually works. Then list what it needs in `dependsOn`, and add the step to the order test in `bootstrap.test.ts`.
