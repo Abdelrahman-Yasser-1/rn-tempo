@@ -1,6 +1,6 @@
 import type { FieldPath, FieldValues, UseControllerProps } from 'react-hook-form';
 
-import type { MultiSelectProps } from '../MultiSelect';
+import type { MultiSelectProps } from '@shared/components/MultiSelect';
 
 export type FormMultiSelectProps<
   TFieldValues extends FieldValues = FieldValues,

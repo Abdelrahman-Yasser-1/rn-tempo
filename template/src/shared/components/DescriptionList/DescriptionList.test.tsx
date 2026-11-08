@@ -1,8 +1,7 @@
 import { screen } from '@testing-library/react-native';
 
+import { Badge } from '@shared/components/Badge';
 import { renderWithProviders } from '@test-utils/renderWithProviders';
-
-import { Badge } from '../Badge';
 
 import { DescriptionList } from './DescriptionList';
 

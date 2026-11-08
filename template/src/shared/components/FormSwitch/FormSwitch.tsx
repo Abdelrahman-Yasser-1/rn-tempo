@@ -3,9 +3,9 @@ import { useController } from 'react-hook-form';
 import type { FieldPath, FieldValues } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
-import { Box } from '../Box';
-import { FieldMessage } from '../FieldMessage';
-import { Switch } from '../Switch';
+import { Box } from '@shared/components/Box';
+import { FieldMessage } from '@shared/components/FieldMessage';
+import { Switch } from '@shared/components/Switch';
 
 import { styles } from './styles';
 import type { FormSwitchProps } from './types';

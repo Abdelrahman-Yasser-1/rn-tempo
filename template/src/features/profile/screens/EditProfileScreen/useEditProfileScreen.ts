@@ -4,10 +4,9 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useForm } from 'react-hook-form';
 
 import { useCurrentUser } from '@features/auth';
+import { useUpdateProfileMutation } from '@features/profile/api/mutations';
+import { UpdateProfileSchema, type UpdateProfile } from '@features/profile/api/schemas';
 import type { ProfileStackParamList } from '@navigation/types';
-
-import { useUpdateProfileMutation } from '../../api/mutations';
-import { UpdateProfileSchema, type UpdateProfile } from '../../api/schemas';
 
 /** Logic of the edit-profile screen: form prefilled from the user and optimistic save. */
 export function useEditProfileScreen() {

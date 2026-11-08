@@ -7,11 +7,10 @@ import { useUnistyles } from 'react-native-unistyles';
 
 import type { IconName } from '@assets/generated/icons.types';
 import type { ToastExtras, ToastType } from '@services/toast/toast';
-
-import { Button } from '../Button';
-import { Icon } from '../Icon';
-import { IconButton } from '../IconButton';
-import { Text } from '../Text';
+import { Button } from '@shared/components/Button';
+import { Icon } from '@shared/components/Icon';
+import { IconButton } from '@shared/components/IconButton';
+import { Text } from '@shared/components/Text';
 
 import { styles } from './styles';
 import type { ToastHostProps } from './types';

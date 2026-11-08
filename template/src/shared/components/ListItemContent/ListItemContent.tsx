@@ -1,11 +1,11 @@
 import { View } from 'react-native';
 
-import { Avatar } from '../Avatar';
-import { Badge } from '../Badge';
-import { Icon } from '../Icon';
-import { Image } from '../Image';
-import { Switch } from '../Switch';
-import { Text } from '../Text';
+import { Avatar } from '@shared/components/Avatar';
+import { Badge } from '@shared/components/Badge';
+import { Icon } from '@shared/components/Icon';
+import { Image } from '@shared/components/Image';
+import { Switch } from '@shared/components/Switch';
+import { Text } from '@shared/components/Text';
 
 import { styles } from './styles';
 import type { ListItemContentProps, ListItemLeading, ListItemTrailing } from './types';

@@ -2,12 +2,11 @@ import { ActivityIndicator, Pressable } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useUnistyles } from 'react-native-unistyles';
 
+import type { ButtonSize } from '@shared/components/Button';
+import { Icon } from '@shared/components/Icon';
 import { HIT_SLOP } from '@shared/constants/touch';
 import { usePressFeedback } from '@shared/hooks';
 import { getButtonContentColor } from '@theme/buttonVariants';
-
-import type { ButtonSize } from '../Button';
-import { Icon } from '../Icon';
 
 import { styles } from './styles';
 import type { IconButtonProps } from './types';

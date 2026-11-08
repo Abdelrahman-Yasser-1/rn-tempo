@@ -1,6 +1,6 @@
 import { createContext, use, useMemo } from 'react';
 
-import { Box } from '../Box';
+import { Box } from '@shared/components/Box';
 
 import { styles } from './styles';
 import type { RadioGroupContextValue, RadioGroupProps } from './types';

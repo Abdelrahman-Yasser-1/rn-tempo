@@ -1,10 +1,9 @@
 import { screen } from '@testing-library/react-native';
 
+import { Icon } from '@shared/components/Icon';
 import { renderWithProviders } from '@test-utils/renderWithProviders';
 import { contrast } from '@theme/testContrast';
 import { darkColors, lightColors } from '@theme/tokens';
-
-import { Icon } from '../Icon';
 
 import { Tooltip } from './Tooltip';
 

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 
-import { Badge } from '../Badge';
+import { Badge } from '@shared/components/Badge';
 
 import { DescriptionList } from './DescriptionList';
 

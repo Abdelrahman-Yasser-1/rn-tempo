@@ -1,12 +1,11 @@
 import { act, waitFor } from '@testing-library/react-native';
 import { http, HttpResponse } from 'msw';
 
+import { ITEMS_PAGE_SIZE, SEARCH_DEBOUNCE_MS } from '@features/items/constants';
 import { setFlagOverride } from '@services/flags/flagOverrides';
 import { useNetworkStore } from '@services/network/network';
 import { server } from '@test-utils/msw/server';
 import { renderHookWithProviders } from '@test-utils/renderWithProviders';
-
-import { ITEMS_PAGE_SIZE, SEARCH_DEBOUNCE_MS } from '../../constants';
 
 import { useItemsListScreen } from './useItemsListScreen';
 

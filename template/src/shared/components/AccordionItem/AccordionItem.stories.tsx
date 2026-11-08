@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 import { action } from 'storybook/actions';
 
-import { Column } from '../Column';
-import { Text } from '../Text';
+import { Column } from '@shared/components/Column';
+import { Text } from '@shared/components/Text';
 
 import { AccordionItem } from './AccordionItem';
 

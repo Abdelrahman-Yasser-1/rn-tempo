@@ -1,9 +1,8 @@
 import { Pressable } from 'react-native';
 
+import { Icon } from '@shared/components/Icon';
+import { Text } from '@shared/components/Text';
 import { CHIP_HIT_SLOP } from '@shared/constants/touch';
-
-import { Icon } from '../Icon';
-import { Text } from '../Text';
 
 import { styles } from './styles';
 import type { ChipProps } from './types';

@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 import { action } from 'storybook/actions';
 
-import { Badge } from '../Badge';
-import { CardSection } from '../CardSection';
-import { Column } from '../Column';
-import { Text } from '../Text';
+import { Badge } from '@shared/components/Badge';
+import { CardSection } from '@shared/components/CardSection';
+import { Column } from '@shared/components/Column';
+import { Text } from '@shared/components/Text';
 
 import { Card } from './Card';
 import type { CardVariant } from './types';

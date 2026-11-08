@@ -1,6 +1,5 @@
 import { ENV } from '@config/env';
-
-import { MOCK_ACCESS_TOKEN, MOCK_REFRESH_TOKEN } from '../routes';
+import { MOCK_ACCESS_TOKEN, MOCK_REFRESH_TOKEN } from '@test-utils/msw/routes';
 
 const base = ENV.API_BASE_URL;
 const json = { 'content-type': 'application/json' };

@@ -1,11 +1,11 @@
 import { useTranslation } from 'react-i18next';
 import { Pressable } from 'react-native';
 
-import { Box } from '../Box';
-import { Icon } from '../Icon';
-import { IconButton } from '../IconButton';
-import { MonthYearGrid } from '../MonthYearGrid';
-import { Text } from '../Text';
+import { Box } from '@shared/components/Box';
+import { Icon } from '@shared/components/Icon';
+import { IconButton } from '@shared/components/IconButton';
+import { MonthYearGrid } from '@shared/components/MonthYearGrid';
+import { Text } from '@shared/components/Text';
 
 import { styles } from './styles';
 import type { CalendarProps } from './types';

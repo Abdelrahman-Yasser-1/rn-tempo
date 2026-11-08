@@ -2,10 +2,10 @@ import { FlashList } from '@shopify/flash-list';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
-import { EmptyState } from '../EmptyState';
-import { ErrorState } from '../ErrorState';
-import { ListShimmer } from '../ListShimmer';
-import { Loader } from '../Loader';
+import { EmptyState } from '@shared/components/EmptyState';
+import { ErrorState } from '@shared/components/ErrorState';
+import { ListShimmer } from '@shared/components/ListShimmer';
+import { Loader } from '@shared/components/Loader';
 
 import { styles } from './styles';
 import type { PaginatedListProps } from './types';

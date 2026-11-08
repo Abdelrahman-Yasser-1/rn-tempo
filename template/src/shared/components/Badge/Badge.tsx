@@ -1,8 +1,7 @@
 import { View } from 'react-native';
 
+import { Text } from '@shared/components/Text';
 import type { ColorTokens } from '@theme/tokens';
-
-import { Text } from '../Text';
 
 import { styles } from './styles';
 import type { BadgeProps, BadgeVariant } from './types';

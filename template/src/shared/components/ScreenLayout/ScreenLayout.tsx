@@ -1,8 +1,8 @@
 import { ScrollView, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
-import { Header } from '../Header';
-import { Screen } from '../Screen';
+import { Header } from '@shared/components/Header';
+import { Screen } from '@shared/components/Screen';
 
 import { styles } from './styles';
 import type { ScreenLayoutProps } from './types';

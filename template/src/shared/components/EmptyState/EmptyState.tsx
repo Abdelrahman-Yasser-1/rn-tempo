@@ -1,8 +1,8 @@
 import { View } from 'react-native';
 
-import { Button } from '../Button';
-import { Icon } from '../Icon';
-import { Text } from '../Text';
+import { Button } from '@shared/components/Button';
+import { Icon } from '@shared/components/Icon';
+import { Text } from '@shared/components/Text';
 
 import { styles } from './styles';
 import type { EmptyStateProps } from './types';

@@ -1,6 +1,5 @@
+import { UserSchema } from '@features/auth/types';
 import { request } from '@services/http/request';
-
-import { UserSchema } from '../types';
 
 import {
   LoginResponseSchema,

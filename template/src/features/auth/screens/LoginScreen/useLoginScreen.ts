@@ -5,12 +5,11 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
+import { useLoginMutation } from '@features/auth/api/mutations';
+import { LoginRequestSchema, type LoginRequest } from '@features/auth/api/schemas';
 import type { AuthStackParamList } from '@navigation/types';
 import { normalizeError, getErrorMessageKey } from '@services/http/errors';
 import { useIsOnline } from '@shared/hooks';
-
-import { useLoginMutation } from '../../api/mutations';
-import { LoginRequestSchema, type LoginRequest } from '../../api/schemas';
 
 const INVALID_CREDENTIALS_CODES = new Set(['VALIDATION', 'UNAUTHORIZED']);
 

@@ -1,8 +1,7 @@
 import { z } from 'zod';
 
+import { UserSchema } from '@features/auth/types';
 import { emailSchema, nameSchema, passwordSchema } from '@shared/utils';
-
-import { UserSchema } from '../types';
 
 // Keys of the `validation` namespace, declared here so the i18n extractor keeps them.
 // t('username.required', { ns: 'validation', defaultValue: 'Enter your username.' })

@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { rejectFile } from '@services/files/fileRules';
-
-import { useFileSourceSheet } from '../FileSourceSheet';
+import { useFileSourceSheet } from '@shared/components/FileSourceSheet';
 
 import type { FilePickerProps } from './types';
 

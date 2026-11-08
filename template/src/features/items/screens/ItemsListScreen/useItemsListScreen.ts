@@ -2,13 +2,12 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useState } from 'react';
 
+import { useItemsInfiniteQuery } from '@features/items/api/queries';
+import { SEARCH_DEBOUNCE_MS } from '@features/items/constants';
 import type { HomeStackParamList } from '@navigation/types';
 import { useFeatureFlag } from '@services/flags/useFeatureFlag';
 import { useLanguage } from '@services/i18n/useLanguage';
 import { useDebounce } from '@shared/hooks';
-
-import { useItemsInfiniteQuery } from '../../api/queries';
-import { SEARCH_DEBOUNCE_MS } from '../../constants';
 
 /** Logic of the items list: debounced search, the paged query and navigation. */
 export function useItemsListScreen() {

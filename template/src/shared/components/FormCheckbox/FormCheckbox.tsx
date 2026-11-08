@@ -3,9 +3,9 @@ import { useController } from 'react-hook-form';
 import type { FieldPath, FieldValues } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
-import { Box } from '../Box';
-import { Checkbox } from '../Checkbox';
-import { FieldMessage } from '../FieldMessage';
+import { Box } from '@shared/components/Box';
+import { Checkbox } from '@shared/components/Checkbox';
+import { FieldMessage } from '@shared/components/FieldMessage';
 
 import { styles } from './styles';
 import type { FormCheckboxProps } from './types';

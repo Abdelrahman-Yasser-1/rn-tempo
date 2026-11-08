@@ -1,12 +1,11 @@
 import { act } from '@testing-library/react-native';
 import type { FlatList } from 'react-native';
 
+import { SLIDES } from '@features/onboarding/constants';
+import { useOnboardingStore } from '@features/onboarding/store/onboarding.store';
 import { STORAGE_KEYS } from '@services/storage/keys';
 import { initStorage, storage } from '@services/storage/storage';
 import { renderHookWithProviders } from '@test-utils/renderWithProviders';
-
-import { SLIDES } from '../../constants';
-import { useOnboardingStore } from '../../store/onboarding.store';
 
 import { useOnboardingScreen } from './useOnboardingScreen';
 

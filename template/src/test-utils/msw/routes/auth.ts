@@ -1,4 +1,4 @@
-import { createUser } from '../../factories/user';
+import { createUser } from '@test-utils/factories/user';
 
 import type { MockRoute } from './types';
 

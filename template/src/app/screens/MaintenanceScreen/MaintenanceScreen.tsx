@@ -1,9 +1,8 @@
 import { useTranslation } from 'react-i18next';
 
+import { MessageButton, MessageScreen } from '@app/screens/MessageScreen';
 import { queryClient } from '@services/http/queryClient';
 import { APP_CONFIG_QUERY_KEY, useAppConfig } from '@services/remote-config/remoteConfig';
-
-import { MessageButton, MessageScreen } from '../MessageScreen';
 
 type Props = {
   /** Re-runs startup; defaults to refetching the remote config. */

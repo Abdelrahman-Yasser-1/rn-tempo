@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 import { useState } from 'react';
 
-import { Button } from '../Button';
-import { Column } from '../Column';
-import { Text } from '../Text';
+import { Button } from '@shared/components/Button';
+import { Column } from '@shared/components/Column';
+import { Text } from '@shared/components/Text';
 
 import { TimePickerSheet } from './TimePickerSheet';
 

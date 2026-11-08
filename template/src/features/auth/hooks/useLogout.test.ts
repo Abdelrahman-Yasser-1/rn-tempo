@@ -1,11 +1,10 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
+import { authKeys } from '@features/auth/api/keys';
+import { useAuthStore } from '@features/auth/store/auth.store';
 import { queryClient } from '@services/http/queryClient';
 import { tokenStore } from '@services/secure-storage/tokenStore';
 import { createUser } from '@test-utils/factories/user';
-
-import { authKeys } from '../api/keys';
-import { useAuthStore } from '../store/auth.store';
 
 import { useLogout } from './useLogout';
 

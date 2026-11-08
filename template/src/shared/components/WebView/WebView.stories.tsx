@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 
-import { Box } from '../Box';
+import { Box } from '@shared/components/Box';
 
 import type { WebViewProps } from './types';
 import { WebView } from './WebView';

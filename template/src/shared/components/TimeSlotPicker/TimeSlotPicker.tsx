@@ -1,11 +1,11 @@
 import { useTranslation } from 'react-i18next';
 
-import { Box } from '../Box';
-import { Chip } from '../Chip';
-import { EmptyState } from '../EmptyState';
-import { PickerField } from '../PickerField';
-import { PickerSheet } from '../PickerSheet';
-import { Text } from '../Text';
+import { Box } from '@shared/components/Box';
+import { Chip } from '@shared/components/Chip';
+import { EmptyState } from '@shared/components/EmptyState';
+import { PickerField } from '@shared/components/PickerField';
+import { PickerSheet } from '@shared/components/PickerSheet';
+import { Text } from '@shared/components/Text';
 
 import { styles } from './styles';
 import type { TimeSlotPickerProps } from './types';

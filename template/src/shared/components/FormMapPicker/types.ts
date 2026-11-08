@@ -1,6 +1,6 @@
 import type { FieldPath, FieldValues, UseControllerProps } from 'react-hook-form';
 
-import type { MapPickerProps } from '../MapPicker';
+import type { MapPickerProps } from '@shared/components/MapPicker';
 
 export type FormMapPickerProps<
   TFieldValues extends FieldValues = FieldValues,

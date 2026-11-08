@@ -2,11 +2,10 @@ import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { createElement, type ReactNode } from 'react';
 
+import { ITEMS_PAGE_SIZE } from '@features/items/constants';
 import { useNetworkStore } from '@services/network/network';
 import { server } from '@test-utils/msw/server';
 import { createTestQueryClient } from '@test-utils/renderWithProviders';
-
-import { ITEMS_PAGE_SIZE } from '../constants';
 
 import { fetchItems } from './items.api';
 import { useItemsInfiniteQuery } from './queries';

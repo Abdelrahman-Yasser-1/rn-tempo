@@ -1,15 +1,14 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
+import { SLIDES } from '@features/onboarding/constants';
+import { useShouldShowOnboarding } from '@features/onboarding/hooks/useShouldShowOnboarding';
+import { useOnboardingStore } from '@features/onboarding/store/onboarding.store';
 import { clearFlagOverrides } from '@services/flags/flagOverrides';
 import { APP_CONFIG_QUERY_KEY } from '@services/remote-config/remoteConfig';
 import { STORAGE_KEYS } from '@services/storage/keys';
 import { initStorage, storage } from '@services/storage/storage';
 import { Text } from '@shared/components';
 import { renderWithProviders } from '@test-utils/renderWithProviders';
-
-import { SLIDES } from '../../constants';
-import { useShouldShowOnboarding } from '../../hooks/useShouldShowOnboarding';
-import { useOnboardingStore } from '../../store/onboarding.store';
 
 import { OnboardingScreen } from './OnboardingScreen';
 

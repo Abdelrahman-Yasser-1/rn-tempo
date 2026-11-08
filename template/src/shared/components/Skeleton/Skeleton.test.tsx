@@ -1,9 +1,8 @@
 import { screen } from '@testing-library/react-native';
 import { Text } from 'react-native';
 
+import { Bone } from '@shared/components/Bone';
 import { renderWithProviders } from '@test-utils/renderWithProviders';
-
-import { Bone } from '../Bone';
 
 import { Skeleton } from './Skeleton';
 

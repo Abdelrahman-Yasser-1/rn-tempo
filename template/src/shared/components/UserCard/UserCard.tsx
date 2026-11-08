@@ -1,9 +1,8 @@
 import { Pressable, View } from 'react-native';
 
+import { Avatar } from '@shared/components/Avatar';
+import { Text } from '@shared/components/Text';
 import { HIT_SLOP } from '@shared/constants/touch';
-
-import { Avatar } from '../Avatar';
-import { Text } from '../Text';
 
 import { styles } from './styles';
 import type { UserCardProps } from './types';

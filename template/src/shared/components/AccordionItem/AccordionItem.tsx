@@ -1,8 +1,8 @@
 import { Pressable, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
-import { Icon } from '../Icon';
-import { Text } from '../Text';
+import { Icon } from '@shared/components/Icon';
+import { Text } from '@shared/components/Text';
 
 import { styles } from './styles';
 import type { AccordionItemProps } from './types';

@@ -3,10 +3,10 @@ import { useController } from 'react-hook-form';
 import type { FieldPath, FieldValues } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
-import { Box } from '../Box';
-import { FieldLabel } from '../FieldLabel';
-import { FieldMessage } from '../FieldMessage';
-import { RadioGroup } from '../RadioGroup';
+import { Box } from '@shared/components/Box';
+import { FieldLabel } from '@shared/components/FieldLabel';
+import { FieldMessage } from '@shared/components/FieldMessage';
+import { RadioGroup } from '@shared/components/RadioGroup';
 
 import { styles } from './styles';
 import type { FormRadioGroupProps } from './types';

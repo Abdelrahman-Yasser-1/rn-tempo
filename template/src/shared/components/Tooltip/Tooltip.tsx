@@ -1,9 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { Modal, Pressable, View } from 'react-native';
 
+import { Text } from '@shared/components/Text';
 import { useReducedMotion } from '@shared/hooks';
-
-import { Text } from '../Text';
 
 import { HIT_SLOP, styles } from './styles';
 import type { TooltipProps } from './types';

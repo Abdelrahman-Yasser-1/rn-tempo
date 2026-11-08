@@ -1,10 +1,9 @@
 import type { RouteProp } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 
+import { OTP_LENGTH } from '@features/auth/constants';
 import type { AuthStackParamList } from '@navigation/types';
 import { AuthLayout, Button, OtpInput } from '@shared/components';
-
-import { OTP_LENGTH } from '../../constants';
 
 import { useOtpScreen } from './useOtpScreen';
 

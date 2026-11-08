@@ -1,6 +1,6 @@
 import type { FieldPath, FieldValues, UseControllerProps } from 'react-hook-form';
 
-import type { SliderProps } from '../Slider';
+import type { SliderProps } from '@shared/components/Slider';
 
 export type FormSliderProps<
   TFieldValues extends FieldValues = FieldValues,

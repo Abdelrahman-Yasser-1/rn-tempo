@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 
-import { Box } from '../Box';
-import { Text } from '../Text';
+import { Box } from '@shared/components/Box';
+import { Text } from '@shared/components/Text';
 
 import { Column } from './Column';
 

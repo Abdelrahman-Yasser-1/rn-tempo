@@ -1,9 +1,9 @@
 import { useTranslation } from 'react-i18next';
 
-import { Box } from '../Box';
-import { Icon } from '../Icon';
-import { Text } from '../Text';
-import { Tooltip } from '../Tooltip';
+import { Box } from '@shared/components/Box';
+import { Icon } from '@shared/components/Icon';
+import { Text } from '@shared/components/Text';
+import { Tooltip } from '@shared/components/Tooltip';
 
 import { styles } from './styles';
 import type { FieldLabelProps } from './types';

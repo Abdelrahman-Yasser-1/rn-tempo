@@ -4,11 +4,10 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
+import { useRegisterMutation } from '@features/auth/api/mutations';
+import { RegisterRequestSchema, type RegisterRequest } from '@features/auth/api/schemas';
 import type { AuthStackParamList } from '@navigation/types';
 import { getErrorMessageKey } from '@services/http/errors';
-
-import { useRegisterMutation } from '../../api/mutations';
-import { RegisterRequestSchema, type RegisterRequest } from '../../api/schemas';
 
 /** Logic of the register screen: form, submit, error mapping and the hand-off to OTP. */
 export function useRegisterScreen() {

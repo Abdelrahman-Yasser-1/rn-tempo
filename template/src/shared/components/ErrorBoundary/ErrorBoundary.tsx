@@ -3,9 +3,8 @@ import type { ErrorInfo, ReactNode } from 'react';
 import { View } from 'react-native';
 
 import { logger } from '@services/logger/logger';
-
-import { Button } from '../Button';
-import { ErrorState } from '../ErrorState';
+import { Button } from '@shared/components/Button';
+import { ErrorState } from '@shared/components/ErrorState';
 
 import { styles } from './styles';
 import type { ErrorBoundaryProps, ErrorBoundaryState, ErrorFallbackProps } from './types';

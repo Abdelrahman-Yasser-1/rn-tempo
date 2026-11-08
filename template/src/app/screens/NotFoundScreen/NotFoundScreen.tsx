@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
-import { MessageButton, MessageScreen } from '../MessageScreen';
+import { MessageButton, MessageScreen } from '@app/screens/MessageScreen';
 
 import { useNotFoundScreen } from './useNotFoundScreen';
 

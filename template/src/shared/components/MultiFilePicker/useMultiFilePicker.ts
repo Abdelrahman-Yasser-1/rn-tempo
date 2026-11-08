@@ -3,8 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import { rejectFile } from '@services/files/fileRules';
 import type { PickedFile } from '@services/files/types';
-
-import { useFileSourceSheet } from '../FileSourceSheet';
+import { useFileSourceSheet } from '@shared/components/FileSourceSheet';
 
 import type { MultiFilePickerProps } from './types';
 

@@ -9,15 +9,14 @@ import { useTranslation } from 'react-i18next';
 import { Pressable } from 'react-native';
 import { useUnistyles } from 'react-native-unistyles';
 
+import { Box } from '@shared/components/Box';
+import { EmptyState } from '@shared/components/EmptyState';
+import { FieldLabel } from '@shared/components/FieldLabel';
+import { FieldMessage } from '@shared/components/FieldMessage';
+import { Icon } from '@shared/components/Icon';
+import { IconButton } from '@shared/components/IconButton';
+import { Text } from '@shared/components/Text';
 import { HIT_SLOP } from '@shared/constants/touch';
-
-import { Box } from '../Box';
-import { EmptyState } from '../EmptyState';
-import { FieldLabel } from '../FieldLabel';
-import { FieldMessage } from '../FieldMessage';
-import { Icon } from '../Icon';
-import { IconButton } from '../IconButton';
-import { Text } from '../Text';
 
 import { styles } from './styles';
 import type { SelectOption, SelectProps } from './types';

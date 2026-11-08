@@ -3,7 +3,7 @@ import { useController } from 'react-hook-form';
 import type { FieldPath, FieldValues } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
-import { TimeSlotPicker } from '../TimeSlotPicker';
+import { TimeSlotPicker } from '@shared/components/TimeSlotPicker';
 
 import type { FormTimeSlotProps } from './types';
 

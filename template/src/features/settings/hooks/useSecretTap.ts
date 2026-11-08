@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react';
 
-import { SECRET_TAP_COUNT, SECRET_TAP_WINDOW_MS } from '../constants';
+import { SECRET_TAP_COUNT, SECRET_TAP_WINDOW_MS } from '@features/settings/constants';
 
 /** Returns a press handler that calls `onUnlock` after enough taps inside the time window. */
 export function useSecretTap(onUnlock: () => void) {

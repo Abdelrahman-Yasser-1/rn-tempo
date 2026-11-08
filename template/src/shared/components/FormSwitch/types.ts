@@ -1,6 +1,6 @@
 import type { FieldPath, FieldValues, UseControllerProps } from 'react-hook-form';
 
-import type { SwitchProps } from '../Switch';
+import type { SwitchProps } from '@shared/components/Switch';
 
 export type FormSwitchProps<
   TFieldValues extends FieldValues = FieldValues,

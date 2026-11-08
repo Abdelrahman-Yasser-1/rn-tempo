@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 import { action } from 'storybook/actions';
 
-import { Column } from '../Column';
-import { Icon } from '../Icon';
+import { Column } from '@shared/components/Column';
+import { Icon } from '@shared/components/Icon';
 
 import { TextField } from './TextField';
 

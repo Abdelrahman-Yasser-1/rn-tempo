@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { BackHandler, Platform } from 'react-native';
 
-import type { SecurityReason } from '../../bootstrap/securityStore';
-import { MessageButton, MessageScreen } from '../MessageScreen';
+import type { SecurityReason } from '@app/bootstrap/securityStore';
+import { MessageButton, MessageScreen } from '@app/screens/MessageScreen';
 
 type Props = {
   reasons?: readonly SecurityReason[];

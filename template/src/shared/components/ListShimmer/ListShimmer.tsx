@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 
-import { CardShimmer } from '../CardShimmer';
-import { Skeleton } from '../Skeleton';
+import { CardShimmer } from '@shared/components/CardShimmer';
+import { Skeleton } from '@shared/components/Skeleton';
 
 import { styles } from './styles';
 import type { ListShimmerProps } from './types';

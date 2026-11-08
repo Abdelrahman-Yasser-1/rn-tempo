@@ -4,11 +4,13 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
+import { useForgotPasswordMutation } from '@features/auth/api/mutations';
+import {
+  ForgotPasswordRequestSchema,
+  type ForgotPasswordRequest,
+} from '@features/auth/api/schemas';
 import type { AuthStackParamList } from '@navigation/types';
 import { getErrorMessageKey } from '@services/http/errors';
-
-import { useForgotPasswordMutation } from '../../api/mutations';
-import { ForgotPasswordRequestSchema, type ForgotPasswordRequest } from '../../api/schemas';
 
 /** Logic of the forgot-password screen: form, submit, error mapping and the hand-off to OTP. */
 export function useForgotPasswordScreen() {

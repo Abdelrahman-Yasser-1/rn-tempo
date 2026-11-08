@@ -1,4 +1,4 @@
-import type { PickerFieldProps } from '../PickerField';
+import type { PickerFieldProps } from '@shared/components/PickerField';
 
 export type MonthYearPickerProps = Readonly<
   Pick<

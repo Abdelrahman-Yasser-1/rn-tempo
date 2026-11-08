@@ -1,8 +1,7 @@
 import { screen } from '@testing-library/react-native';
 
+import { Text } from '@shared/components/Text';
 import { renderWithProviders } from '@test-utils/renderWithProviders';
-
-import { Text } from '../Text';
 
 import { CardSection } from './CardSection';
 

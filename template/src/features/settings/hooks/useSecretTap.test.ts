@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react-native';
 
-import { SECRET_TAP_COUNT, SECRET_TAP_WINDOW_MS } from '../constants';
+import { SECRET_TAP_COUNT, SECRET_TAP_WINDOW_MS } from '@features/settings/constants';
 
 import { useSecretTap } from './useSecretTap';
 

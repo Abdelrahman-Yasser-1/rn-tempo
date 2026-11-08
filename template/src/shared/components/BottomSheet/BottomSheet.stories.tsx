@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { action } from 'storybook/actions';
 
-import { Button } from '../Button';
-import { Text } from '../Text';
+import { Button } from '@shared/components/Button';
+import { Text } from '@shared/components/Text';
 
 import { BottomSheet } from './BottomSheet';
 import type { BottomSheetProps } from './types';

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import type { StepperVariant } from '../Stepper';
+import type { StepperVariant } from '@shared/components/Stepper';
 
 export type StepperLayoutStep = Readonly<{
   key: string;

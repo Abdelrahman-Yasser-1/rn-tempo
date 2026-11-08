@@ -11,7 +11,7 @@ jest.mock('@services/linking/linking', () => ({
 }));
 
 // Icons are SVGs with no accessible handle, so each one is swapped for a text naming the icon.
-jest.mock('../Icon', () => {
+jest.mock('@shared/components/Icon', () => {
   const { Text } = jest.requireActual<{ Text: ComponentType<{ children: string }> }>(
     'react-native',
   );

@@ -1,9 +1,9 @@
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, View } from 'react-native';
 
-import { Badge } from '../Badge';
-import { Chip } from '../Chip';
-import { Icon } from '../Icon';
+import { Badge } from '@shared/components/Badge';
+import { Chip } from '@shared/components/Chip';
+import { Icon } from '@shared/components/Icon';
 
 import { styles } from './styles';
 import type { FilterBarProps } from './types';

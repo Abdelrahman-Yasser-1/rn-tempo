@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 import { useState } from 'react';
 
-import { Radio } from '../Radio';
+import { Radio } from '@shared/components/Radio';
 
 import { RadioGroup } from './RadioGroup';
 

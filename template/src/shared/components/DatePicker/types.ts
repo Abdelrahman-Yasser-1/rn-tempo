@@ -1,5 +1,5 @@
-import type { DatePickerSheetProps } from '../DatePickerSheet';
-import type { PickerFieldProps } from '../PickerField';
+import type { DatePickerSheetProps } from '@shared/components/DatePickerSheet';
+import type { PickerFieldProps } from '@shared/components/PickerField';
 
 export type DatePickerProps = Readonly<
   Pick<

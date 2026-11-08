@@ -1,6 +1,6 @@
 import { http, HttpResponse, type RequestHandler } from 'msw';
 
-import { routes, type MockRoute } from '../routes';
+import { routes, type MockRoute } from '@test-utils/msw/routes';
 
 /** Wildcard hosts keep the debug-menu API URL override working against the mocks. */
 export function toHandler(route: MockRoute): RequestHandler {

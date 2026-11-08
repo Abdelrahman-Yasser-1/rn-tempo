@@ -3,9 +3,8 @@ import { screen, waitFor } from '@testing-library/react-native';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import { Button } from '@shared/components/Button';
 import { renderWithProviders } from '@test-utils/renderWithProviders';
-
-import { Button } from '../Button';
 
 import { FormMultiFilePicker } from './FormMultiFilePicker';
 

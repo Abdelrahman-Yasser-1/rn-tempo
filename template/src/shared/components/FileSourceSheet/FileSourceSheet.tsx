@@ -2,9 +2,8 @@ import { useTranslation } from 'react-i18next';
 
 import type { IconName } from '@assets/generated/icons.types';
 import type { FileSource } from '@services/files/types';
-
-import { ListItem } from '../ListItem';
-import { PickerSheet } from '../PickerSheet';
+import { ListItem } from '@shared/components/ListItem';
+import { PickerSheet } from '@shared/components/PickerSheet';
 
 import type { FileSourceSheetProps } from './types';
 

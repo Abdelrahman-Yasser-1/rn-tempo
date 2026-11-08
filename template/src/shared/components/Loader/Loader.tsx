@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, View } from 'react-native';
 import { useUnistyles } from 'react-native-unistyles';
 
-import { Text } from '../Text';
+import { Text } from '@shared/components/Text';
 
 import { styles } from './styles';
 import type { LoaderProps } from './types';

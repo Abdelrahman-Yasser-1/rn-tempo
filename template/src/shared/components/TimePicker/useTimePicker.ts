@@ -2,10 +2,9 @@ import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { DEFAULT_TIME } from '@shared/components/TimePickerSheet/useTimePickerSheet';
 import { isAndroid } from '@shared/utils/platform';
 import { formatTime, timeToDate, toTime } from '@shared/utils/time';
-
-import { DEFAULT_TIME } from '../TimePickerSheet/useTimePickerSheet';
 
 import type { TimePickerProps } from './types';
 

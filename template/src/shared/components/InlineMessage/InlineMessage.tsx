@@ -3,12 +3,11 @@ import { View } from 'react-native';
 import { useUnistyles } from 'react-native-unistyles';
 
 import type { IconName } from '@assets/generated/icons.types';
+import { Icon } from '@shared/components/Icon';
+import { IconButton } from '@shared/components/IconButton';
+import { Link } from '@shared/components/Link';
+import { Text } from '@shared/components/Text';
 import { getStatusTint } from '@theme/statusTints';
-
-import { Icon } from '../Icon';
-import { IconButton } from '../IconButton';
-import { Link } from '../Link';
-import { Text } from '../Text';
 
 import { styles } from './styles';
 import type { InlineMessageProps, InlineMessageVariant } from './types';

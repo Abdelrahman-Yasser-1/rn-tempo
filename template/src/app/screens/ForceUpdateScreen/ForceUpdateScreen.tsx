@@ -1,8 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
+import { MessageButton, MessageScreen } from '@app/screens/MessageScreen';
 import { openStore } from '@services/linking/linking';
-
-import { MessageButton, MessageScreen } from '../MessageScreen';
 
 /** Blocking screen shown when the app is older than the remote `minSupportedVersion`. */
 export function ForceUpdateScreen() {

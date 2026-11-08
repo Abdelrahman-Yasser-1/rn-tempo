@@ -1,12 +1,11 @@
 import { Pressable } from 'react-native';
 
+import { Box } from '@shared/components/Box';
+import { FieldLabel } from '@shared/components/FieldLabel';
+import { FieldMessage } from '@shared/components/FieldMessage';
+import { Icon } from '@shared/components/Icon';
+import { Text } from '@shared/components/Text';
 import { HIT_SLOP } from '@shared/constants/touch';
-
-import { Box } from '../Box';
-import { FieldLabel } from '../FieldLabel';
-import { FieldMessage } from '../FieldMessage';
-import { Icon } from '../Icon';
-import { Text } from '../Text';
 
 import { styles } from './styles';
 import type { PickerFieldProps } from './types';

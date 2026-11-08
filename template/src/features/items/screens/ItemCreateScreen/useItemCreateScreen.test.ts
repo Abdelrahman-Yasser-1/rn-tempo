@@ -1,12 +1,11 @@
 import { act, waitFor } from '@testing-library/react-native';
 import { http, HttpResponse } from 'msw';
 
+import { CreateItemSchema } from '@features/items/types';
 import { setFlagOverride } from '@services/flags/flagOverrides';
 import { fillFields } from '@test-utils/form';
 import { server } from '@test-utils/msw/server';
 import { renderHookWithProviders } from '@test-utils/renderWithProviders';
-
-import { CreateItemSchema } from '../../types';
 
 import { useItemCreateScreen } from './useItemCreateScreen';
 

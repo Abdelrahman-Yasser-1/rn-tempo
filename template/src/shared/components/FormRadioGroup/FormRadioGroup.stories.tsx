@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 import { useForm } from 'react-hook-form';
 
-import { Button } from '../Button';
-import { Column } from '../Column';
-import { Radio } from '../Radio';
+import { Button } from '@shared/components/Button';
+import { Column } from '@shared/components/Column';
+import { Radio } from '@shared/components/Radio';
 
 import { FormRadioGroup } from './FormRadioGroup';
 

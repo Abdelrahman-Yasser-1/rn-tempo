@@ -1,10 +1,10 @@
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
-import { Button } from '../Button';
-import { Icon } from '../Icon';
-import { Modal } from '../Modal';
-import { Text } from '../Text';
+import { Button } from '@shared/components/Button';
+import { Icon } from '@shared/components/Icon';
+import { Modal } from '@shared/components/Modal';
+import { Text } from '@shared/components/Text';
 
 import { styles } from './styles';
 import type { ConnectionModalProps } from './types';

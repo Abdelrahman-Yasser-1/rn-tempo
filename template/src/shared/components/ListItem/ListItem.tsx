@@ -1,10 +1,9 @@
 import { Pressable, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
+import { ListItemContent } from '@shared/components/ListItemContent';
 import { HIT_SLOP } from '@shared/constants/touch';
 import { usePressFeedback } from '@shared/hooks';
-
-import { ListItemContent } from '../ListItemContent';
 
 import { styles } from './styles';
 import type { ListItemProps } from './types';

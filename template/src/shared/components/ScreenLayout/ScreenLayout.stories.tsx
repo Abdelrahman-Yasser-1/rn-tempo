@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 import { action } from 'storybook/actions';
 
-import { Button } from '../Button';
-import { Text } from '../Text';
+import { Button } from '@shared/components/Button';
+import { Text } from '@shared/components/Text';
 
 import { ScreenLayout } from './ScreenLayout';
 

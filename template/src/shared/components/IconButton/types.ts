@@ -1,8 +1,7 @@
 import type { PressableProps } from 'react-native';
 
 import type { IconName } from '@assets/generated/icons.types';
-
-import type { ButtonSize, ButtonVariant } from '../Button';
+import type { ButtonSize, ButtonVariant } from '@shared/components/Button';
 
 export type IconButtonProps = Readonly<
   Omit<PressableProps, 'children' | 'style' | 'accessibilityLabel'> & {

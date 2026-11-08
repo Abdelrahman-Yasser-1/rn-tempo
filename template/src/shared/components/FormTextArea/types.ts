@@ -1,6 +1,6 @@
 import type { FieldPath, FieldValues, UseControllerProps } from 'react-hook-form';
 
-import type { TextAreaProps } from '../TextArea';
+import type { TextAreaProps } from '@shared/components/TextArea';
 
 export type FormTextAreaProps<
   TFieldValues extends FieldValues = FieldValues,

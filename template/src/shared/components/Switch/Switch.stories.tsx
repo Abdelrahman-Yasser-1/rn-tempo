@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native';
 import { useState } from 'react';
 import { action } from 'storybook/actions';
 
-import { Column } from '../Column';
+import { Column } from '@shared/components/Column';
 
 import { Switch } from './Switch';
 import type { SwitchProps } from './types';

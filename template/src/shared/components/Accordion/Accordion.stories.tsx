@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 
-import { Text } from '../Text';
+import { Text } from '@shared/components/Text';
 
 import { Accordion } from './Accordion';
 

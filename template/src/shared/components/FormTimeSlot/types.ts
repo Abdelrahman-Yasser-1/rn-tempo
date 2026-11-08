@@ -1,6 +1,6 @@
 import type { FieldPath, FieldValues, UseControllerProps } from 'react-hook-form';
 
-import type { TimeSlotPickerProps } from '../TimeSlotPicker';
+import type { TimeSlotPickerProps } from '@shared/components/TimeSlotPicker';
 
 export type FormTimeSlotProps<
   TFieldValues extends FieldValues = FieldValues,

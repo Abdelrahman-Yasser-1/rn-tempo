@@ -1,10 +1,9 @@
 import { Pressable } from 'react-native';
 
+import { Box } from '@shared/components/Box';
+import { Icon } from '@shared/components/Icon';
+import { Text } from '@shared/components/Text';
 import { HIT_SLOP } from '@shared/constants/touch';
-
-import { Box } from '../Box';
-import { Icon } from '../Icon';
-import { Text } from '../Text';
 
 import { styles } from './styles';
 import type { CheckboxProps } from './types';

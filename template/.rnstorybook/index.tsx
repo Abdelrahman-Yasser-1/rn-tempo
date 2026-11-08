@@ -2,7 +2,7 @@
 // file, so it repeats the app entry's early imports and registers under the same app name.
 import 'react-native-get-random-values';
 
-import '../src/theme/unistyles';
+import '@theme/unistyles';
 
 import { useEffect, useState } from 'react';
 import { AppRegistry } from 'react-native';

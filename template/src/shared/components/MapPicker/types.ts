@@ -1,7 +1,7 @@
 import type { RefObject } from 'react';
 import type MapView from 'react-native-maps';
 
-import type { PickerFieldProps } from '../PickerField';
+import type { PickerFieldProps } from '@shared/components/PickerField';
 
 /** A chosen place. `address` is optional and never filled in by the picker itself. */
 export type MapLocation = Readonly<{

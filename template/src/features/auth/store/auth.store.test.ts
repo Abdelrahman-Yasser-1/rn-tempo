@@ -1,7 +1,6 @@
+import { UserSchema, type User } from '@features/auth/types';
 import { queryClient } from '@services/http/queryClient';
 import { tokenStore } from '@services/secure-storage/tokenStore';
-
-import { UserSchema, type User } from '../types';
 
 import { useAuthStore } from './auth.store';
 

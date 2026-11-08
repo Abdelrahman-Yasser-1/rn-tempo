@@ -1,6 +1,6 @@
 import type { FieldPath, FieldValues, UseControllerProps } from 'react-hook-form';
 
-import type { NumberInputProps } from '../NumberInput';
+import type { NumberInputProps } from '@shared/components/NumberInput';
 
 export type FormNumberInputProps<
   TFieldValues extends FieldValues = FieldValues,

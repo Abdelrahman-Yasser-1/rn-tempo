@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 import { useState } from 'react';
 
-import { Column } from '../Column';
+import { Column } from '@shared/components/Column';
 
 import { ListItemContent } from './ListItemContent';
 import type { ListItemContentProps, ListItemLayout } from './types';

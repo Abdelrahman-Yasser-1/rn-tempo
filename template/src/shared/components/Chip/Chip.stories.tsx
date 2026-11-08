@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 import { useState } from 'react';
 
-import { Row } from '../Row';
+import { Row } from '@shared/components/Row';
 
 import { Chip } from './Chip';
 import type { ChipProps } from './types';

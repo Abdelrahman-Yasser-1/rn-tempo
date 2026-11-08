@@ -1,9 +1,8 @@
 import { View } from 'react-native';
 
+import { Image } from '@shared/components/Image';
+import { Text } from '@shared/components/Text';
 import { initials } from '@shared/utils';
-
-import { Image } from '../Image';
-import { Text } from '../Text';
 
 import { AVATAR_SIZES, styles } from './styles';
 import type { AvatarProps } from './types';

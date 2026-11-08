@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
+import { ATTACHMENT_MAX_MB } from '@features/items/constants';
 import {
   Button,
   EmptyState,
@@ -20,7 +21,6 @@ import {
 } from '@shared/components';
 
 // @tempo-feature:file-picker:start
-import { ATTACHMENT_MAX_MB } from '../../constants';
 
 // @tempo-feature:file-picker:end
 import { styles } from './styles';

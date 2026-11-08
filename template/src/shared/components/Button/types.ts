@@ -1,9 +1,8 @@
 import type { PressableProps } from 'react-native';
 
 import type { IconName } from '@assets/generated/icons.types';
+import type { TextProps } from '@shared/components/Text';
 import type { ButtonVariant } from '@theme/buttonVariants';
-
-import type { TextProps } from '../Text';
 
 export type { ButtonVariant };
 export type ButtonSize = 'sm' | 'md' | 'lg';

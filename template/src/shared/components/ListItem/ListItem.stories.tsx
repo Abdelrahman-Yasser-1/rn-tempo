@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 import { action } from 'storybook/actions';
 
-import { Avatar } from '../Avatar';
-import { Badge } from '../Badge';
-import { Column } from '../Column';
-import { Icon } from '../Icon';
+import { Avatar } from '@shared/components/Avatar';
+import { Badge } from '@shared/components/Badge';
+import { Column } from '@shared/components/Column';
+import { Icon } from '@shared/components/Icon';
 
 import { ListItem } from './ListItem';
 

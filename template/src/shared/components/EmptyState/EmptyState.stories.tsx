@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 import { action } from 'storybook/actions';
 
-import { Box } from '../Box';
-import { Icon } from '../Icon';
+import { Box } from '@shared/components/Box';
+import { Icon } from '@shared/components/Icon';
 
 import { EmptyState } from './EmptyState';
 
