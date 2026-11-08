@@ -1,0 +1,72 @@
+---
+title: Storage and persisted state
+description: Encrypted MMKV areas, what happens when the encryption key is lost, and versioned migrations for persisted Zustand stores.
+---
+
+App data goes through `@services/storage`; nothing else imports `react-native-mmkv`. The data is encrypted with a key that lives in the keychain, so storage opens asynchronously: `initStorage()` runs first in bootstrap, and using storage before it resolves throws `StorageNotReadyError`.
+
+## Areas
+
+An area is a named MMKV instance with its own file. The same key encrypts all of them.
+
+| Area    | Id            | Holds                                                         |
+| ------- | ------------- | ------------------------------------------------------------- |
+| `app`   | `app-storage` | Settings, flags, persisted stores. Survives sign-out.         |
+| `cache` | `app-cache`   | Data you can lose at any time. Safe to wipe on sign-out.      |
+
+`storage` is the typed facade of the default `app` area. `getArea(name)` returns the same facade for any area:
+
+```ts
+import { getArea } from '@services/storage/storage';
+
+const cache = getArea('cache');
+cache.setJSON('items.last-seen', { id: 3 });
+cache.clearAll(); // leaves the `app` area untouched
+```
+
+To add an area, add its id to `STORAGE_AREA_IDS` in `src/services/storage/keys.ts`. The ids are the same in every environment. Dev, staging and prod are different bundle ids, so the files are already separate on a device, and renaming a shipped id would orphan the user's data.
+
+## When the encryption key is lost
+
+The key can disappear while the files stay (a restored backup) or the files can disappear while the key stays (an iOS reinstall). The second case needs nothing: MMKV creates empty files. For the first, `initStorage()` does this per area:
+
+1. The keychain has no key, so a new one is created, but the area file already exists. It was written with a key that is gone, so it is deleted and recreated empty.
+2. MMKV throws when opening the area. The file is deleted and opening is retried once.
+3. Both times a warning is logged (`Storage area "app" exists but its encryption key was lost, resetting it`), and the app continues with empty storage. If the retry fails too, `initStorage()` rejects and bootstrap shows the startup error screen.
+
+The user loses the cached data, never the app. Tokens are in the keychain, not in MMKV, so they follow their own rules (see the security rules).
+
+## Persisted Zustand stores
+
+Build the `persist` options with `createPersistOptions` instead of writing them by hand. It wires the MMKV storage, the schema version and the migrations:
+
+```ts
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+import { createPersistOptions } from '@services/storage/persist';
+
+export const useDraftStore = create<DraftState>()(
+  persist(
+    (set) => ({ title: '', body: '', setTitle: (title) => set({ title }) }),
+    createPersistOptions({
+      name: 'draft',
+      version: 2,
+      partialize: ({ title, body }) => ({ title, body }),
+      migrations: {
+        // v0 -> v1: `text` was renamed to `body`
+        1: (state) => {
+          const { text, ...rest } = state as { text: string };
+          return { ...rest, body: text };
+        },
+        // v1 -> v2: `title` is new
+        2: (state) => ({ title: '', ...(state as object) }),
+      },
+    }),
+  ),
+);
+```
+
+`migrations[n]` upgrades the persisted state from version `n - 1` to `n`. When the stored version is older than `version`, the steps from the stored version up to `version` run in order. The MMKV key is `zustand.<name>`.
+
+A migration that throws, a missing step, or a state written by a newer app all discard the persisted state: the store keeps its initial values and a warning is logged. Losing a draft is better than crashing on launch with a shape the code no longer understands. Bump `version` with every change to the persisted shape, and never persist tokens.

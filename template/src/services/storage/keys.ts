@@ -15,8 +15,17 @@ export const STORAGE_KEYS = {
   flagOverridePrefix: 'flags.override.',
 } as const;
 
-/** MMKV instance id (contract C15). */
-export const STORAGE_ID = 'app-storage';
+/**
+ * MMKV instance ids by area (contract C15). Ids are never derived from the environment: dev,
+ * staging and prod are different bundle ids, so their sandboxes (and files) are already separate
+ * on a device. Renaming a shipped id would orphan the user's data, so these stay stable.
+ */
+export const STORAGE_AREA_IDS = {
+  /** Default area: settings, flags, persisted stores. Survives sign-out. */
+  app: 'app-storage',
+  /** Disposable data; safe to `clearAll()` on sign-out. */
+  cache: 'app-cache',
+} as const;
 
 /** Keychain services (contract C15), namespaced by bundle id. */
 export const KEYCHAIN_SERVICES = {

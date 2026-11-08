@@ -101,4 +101,19 @@ describe('storage', () => {
     storage.clearAll();
     expect(storage.getBoolean(STORAGE_KEYS.onboardingCompleted)).toBeUndefined();
   });
+
+  test('areas are isolated: clearing the cache keeps the app data', async () => {
+    const { module } = loadStorage();
+    await module.initStorage();
+    const app = module.getArea('app');
+    const cache = module.getArea('cache');
+
+    app.setString('same-key', 'app value');
+    cache.setString('same-key', 'cache value');
+    cache.clearAll();
+
+    expect(cache.getString('same-key')).toBeUndefined();
+    expect(app.getString('same-key')).toBe('app value');
+    expect(module.storage.getString('same-key')).toBe('app value');
+  });
 });
