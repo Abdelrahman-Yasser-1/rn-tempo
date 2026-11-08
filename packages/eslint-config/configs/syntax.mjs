@@ -1,6 +1,7 @@
 import { rnTempoPlugin } from '../plugin/index.mjs';
 
 import { ENUM_ENTRIES } from './base.mjs';
+import { CHEAP_BAN_ENTRIES } from './bans.mjs';
 import { IMPORT_ENTRIES, LOGICAL_PROPERTY_ENTRIES } from './restrictions.mjs';
 import { TEST_ENTRIES } from './tests.mjs';
 
@@ -9,6 +10,7 @@ export const RESTRICTED_SYNTAX_ENTRIES = [
   ...ENUM_ENTRIES,
   ...IMPORT_ENTRIES,
   ...LOGICAL_PROPERTY_ENTRIES,
+  ...CHEAP_BAN_ENTRIES,
 ];
 
 /** Entries reported as warnings (a reviewer decides). */
