@@ -1,6 +1,7 @@
 import { DEFAULT_APP_CONFIG } from '@services/remote-config/appConfig';
 
-import { runBootstrap, type BootstrapSteps } from './bootstrap';
+import { createBootstrapSteps, runBootstrap, type BootstrapSteps } from './bootstrap';
+import { orderSteps } from './stepGraph';
 
 function createSteps(overrides: Partial<BootstrapSteps> = {}) {
   const calls: string[] = [];
@@ -23,6 +24,40 @@ function createSteps(overrides: Partial<BootstrapSteps> = {}) {
   };
   return { steps, calls };
 }
+
+describe('bootstrap step graph', () => {
+  test('is valid: known dependencies, no cycle, and the planned order', () => {
+    const { steps } = createSteps();
+
+    const ordered = orderSteps(createBootstrapSteps(steps));
+
+    expect(ordered.map((step) => step.id)).toEqual([
+      'storage',
+      'theme',
+      'i18n',
+      'security',
+      'auth',
+      'remote-config',
+    ]);
+  });
+
+  test('declares the failure policy of every step', () => {
+    const { steps } = createSteps();
+
+    const policies = Object.fromEntries(
+      createBootstrapSteps(steps).map((step) => [step.id, step.onError]),
+    );
+
+    expect(policies).toEqual({
+      storage: 'fatal',
+      theme: 'continue',
+      i18n: 'fatal',
+      security: 'block-security',
+      auth: 'fatal',
+      'remote-config': 'continue',
+    });
+  });
+});
 
 describe('runBootstrap', () => {
   test('AC-8: runs the steps in the planned order and hides the splash last', async () => {
