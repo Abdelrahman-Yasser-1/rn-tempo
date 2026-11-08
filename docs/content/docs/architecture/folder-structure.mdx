@@ -115,10 +115,10 @@ The complete skeleton from contract C5. Folders marked with `<name>` repeat once
 
 ## Path aliases
 
-Each top-level folder has an alias (`@app/*`, `@navigation/*`, `@features/*`, `@shared/*`, `@services/*`, `@theme/*`, `@assets/*`, `@locales/*`, `@config/*`, `@test-utils/*`). They are declared in `tsconfig.json` and mirrored in `babel.config.js`:
+Each top-level folder has an alias (`@app/*`, `@navigation/*`, `@features/*`, `@shared/*`, `@services/*`, `@theme/*`, `@assets/*`, `@locales/*`, `@config/*`, `@test-utils/*`). They are declared once, in `tsconfig.json`; Babel, Jest and ESLint read them from there. Import through them, never through `../`:
 
 <AnnotatedCode file="template/tsconfig.json" highlight="5-16">
-  <Note line={4}>Keep these in sync with `babel.config.js`. A mismatch builds in the editor and fails in Metro.</Note>
+  <Note line={4}>The single source of the aliases. `babel/aliases.js` derives the Babel and Jest lists from it.</Note>
 </AnnotatedCode>
 
 ## Naming rules

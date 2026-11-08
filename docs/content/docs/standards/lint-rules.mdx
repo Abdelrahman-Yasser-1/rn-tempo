@@ -1,0 +1,95 @@
+---
+title: Lint rules and architecture guards
+description: The project rules beyond typescript-eslint, how scoped restrictions work, who may import which package, size limits, disable directives and the cheap bans.
+---
+
+All of these live in `@rn-tempo/eslint-config`. Each rule has a failing and a passing fixture in `packages/eslint-config/test`, and a test fails when a configured rule has no failing fixture, so a rule that silently stops firing is caught.
+
+## Scoped restrictions
+
+ESLint flat config is last-wins per rule: a later block that sets `no-restricted-syntax` or `no-restricted-imports` for a file replaces every earlier entry for that file. That used to force the enum ban to be repeated in three places.
+
+The package registers a small plugin, `rn-tempo`, with two rules, `rn-tempo/restricted-syntax` (error) and `rn-tempo/discouraged-syntax` (warn). Each takes entries with a selector, a message and its own scope:
+
+```js
+{
+  selector: "MemberExpression[object.name='process'][property.name='env']",
+  message: 'Read configuration through @config/env, not process.env.',
+  files: ['src/**'],
+  ignores: ['src/config/**'],
+}
+```
+
+`files` and `ignores` are globs relative to the folder ESLint runs in. Entries never overwrite each other, and two entries with the same selector both report. The two rules are set once, in one config block, and a test fails if the core `no-restricted-syntax` or `no-restricted-imports`, or either plugin rule, is set in a second block.
+
+## Dependency ownership
+
+`rn-tempo/dependency-owner` decides which files may import a package. Every runtime dependency in `package.json` is classified in `DEPENDENCY_POLICY` as one of:
+
+| Kind     | Meaning                                                                                     |
+| -------- | ------------------------------------------------------------------------------------------- |
+| `owned`  | Only files matching `owners` may import it (subpaths included). The message says where to go. |
+| `free`   | Framework-level; usable anywhere (React, navigation, TanStack Query, Zod, ...).               |
+| `native` | Linked natively; no JS import expected, except from `owners` when given.                      |
+
+Tests, stories, `src/test-utils/**`, `jest.setup.ts` and `__mocks__/**` are exempt. Test-support packages (`@testing-library/*`, `msw`, `jest-*`) are owned by `src/test-utils/**`.
+
+### Adding a dependency
+
+Add the package to `dependencies` in `eslint.config.mjs`; the object is merged over the template's policy:
+
+```js
+export const dependencies = {
+  'react-native-some-sdk': {
+    kind: 'owned',
+    owners: ['src/services/some/**'],
+    message: 'Use @services/some instead of the SDK.',
+  },
+};
+```
+
+`yarn lint:deps` (part of `yarn verify`) fails and lists every runtime dependency without an entry. Policy keys may end with `*` to cover a family (`@scope/*`).
+
+## Size and quality guards
+
+For `src/**/*.{ts,tsx}`:
+
+| Rule                                    | Limit                                                  |
+| --------------------------------------- | ------------------------------------------------------ |
+| `max-lines`                             | 300 (blank lines and comments skipped; tests and stories exempt) |
+| `max-params`                            | 4                                                      |
+| `max-depth`                             | 4                                                      |
+| `arrow-body-style`                      | `as-needed`                                            |
+| `@stylistic/jsx-self-closing-comp`      | components and HTML elements without children self-close |
+
+`max-lines-per-function` (80), `complexity` (15) and `rn-tempo/one-component-per-file` exist but are not switched on yet: the template has too many existing violations to fix without refactoring components.
+
+## Disable directives
+
+- `require-description`: every `eslint-disable` and `eslint-enable` carries `-- reason`.
+- `no-unlimited-disable`: name the rule you silence.
+- `disable-enable-pair`: a block disable is closed by an enable; a disable before any code applies to the whole file.
+- Unused directives are errors: delete a disable that no longer silences anything.
+- `@eslint-react/no-array-index-key` is an error.
+
+## Cheap bans
+
+Each message says what to use instead.
+
+| Ban                                                                 | Scope                                                     |
+| ------------------------------------------------------------------- | --------------------------------------------------------- |
+| `../` imports, re-exports, `import()`, `require()` and `jest.mock`  | `src`, `.rnstorybook`: use a path alias                   |
+| `export *`                                                          | `src`, `.rnstorybook`: name the exports                   |
+| `process.env`                                                       | outside `src/config`: use `@config/env`                   |
+| `=== 'dev' \| 'staging' \| 'prod'` and `case 'prod':`               | outside `src/config`: use `isDev`, `isStaging`, `isProd`  |
+| Color literals (`#fff`, `rgb(...)`, `hsl(...)`)                     | outside `src/theme` (tests and stories exempt)            |
+| `Appearance`, `StatusBar` from `react-native`                       | outside `src/theme`, `src/app` (and `Screen` for StatusBar) |
+| `@test-utils/*`                                                     | tests, stories and `src/test-utils` only                  |
+
+## Aliases come from tsconfig
+
+The path aliases are declared once, in `compilerOptions.paths` of `tsconfig.json`. `babel/aliases.js` turns them into the Babel module-resolver aliases and Jest's `moduleNameMapper`, and the ESLint config builds `import-x/internal-regex` from the same file. To add an alias, edit `tsconfig.json`; `yarn test:scripts` checks that Babel and Jest cover every path.
+
+## Boundary messages
+
+A disallowed import between layers says what to do, for example: features may be imported only through their `index.ts`, shared code must not import features, and services must not import UI.

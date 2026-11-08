@@ -4,6 +4,8 @@
   "icon": "ruler",
   "pages": [
     "index",
+    "lint-rules",
+    "logical-properties",
     "..."
   ]
 }
