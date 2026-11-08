@@ -18,6 +18,18 @@ Environments follow the matrix in `.tempo.json`: bundle IDs `com.rntempo.app.dev
 - Version name: `version` in `package.json`, the single source. release-please bumps it in the release PR, together with `ios/Config/Version.xcconfig` (the `MARKETING_VERSION` every iOS env xcconfig includes). Android reads `package.json` in `android/app/build.gradle` when `-PtempoVersionName` is absent, so a plain Android Studio or `yarn android:*` build already carries the right name. The lanes still pass both values explicitly. `node --test scripts/__tests__/native-version.test.mjs` (part of `yarn verify`) fails when the native projects stop resolving to the `package.json` version, for example after hand-editing `MARKETING_VERSION` in Xcode: change versions only by releasing, and re-run `yarn ios:envs` instead of editing `project.pbxproj`.
 - Build number: `GITHUB_RUN_NUMBER` in CI, or minutes since the epoch locally (Android `-PtempoVersionCode`, iOS `CURRENT_PROJECT_VERSION`). Do not upload local builds to a store, a local number is larger than any CI run number.
 
+## Icon label
+
+dev and staging builds show `<version> (<build>)` (for example `0.0.1 (4821)`) in a dark band on top of the launcher icon, above the DEV/STG ribbon. Prod is never labelled. Every `build` and `beta` lane does this itself:
+
+1. `node scripts/native/icons.mjs --env <env> --label "<version> (<build>)"` draws the label into the committed icon files of that env (Android flavor and iOS app icon set).
+2. Gradle or gym builds.
+3. An `ensure` block runs `node scripts/native/icons.mjs --env <env>` again. Icon output is deterministic, so the working tree is clean after the lane, also when the build fails.
+
+We draw the label with our own `scripts/native/icons.mjs` (sharp, vector glyphs) instead of `fastlane-plugin-badge`: that plugin needs ImageMagick (and librsvg) on every machine and CI runner and fetches its badge image from shields.io at build time. The script works offline and has no extra system dependency. It draws capitals, digits and `. - + ( )` only; a lowercase label is shown in capitals (`1.0.0-rc.1` becomes `1.0.0-RC.1`). On the smallest Android densities (48 px) the text is too small to read; the larger launcher sizes and the iOS icon are fine.
+
+Try it without a build: `node scripts/native/icons.mjs --env dev --label "1.2.3 (45)"`, look at `android/app/src/dev/res/mipmap-xxxhdpi/ic_launcher.png`, then `yarn icons` to restore the plain icons.
+
 ## Secrets
 
 Everything is read from environment variables. In GitHub Actions they are repository (or environment) secrets.
