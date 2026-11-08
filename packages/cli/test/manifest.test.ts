@@ -33,9 +33,9 @@ const manifests = new Map<FeatureName, FeatureManifest>([
 describe('loadManifests', () => {
   it('loads and validates every template manifest', async () => {
     const loaded = await loadManifests(TEMPLATE_DIR);
-    expect(loaded.size).toBe(14);
+    expect(loaded.size).toBe(15);
     expect(defaultFeatures(loaded)).not.toContain('dynamic-forms');
-    for (const optional of ['webview', 'file-picker', 'maps']) expect(defaultFeatures(loaded)).not.toContain(optional);
+    for (const optional of ['webview', 'file-picker', 'maps', 'push-notifications']) expect(defaultFeatures(loaded)).not.toContain(optional);
     expect(defaultFeatures(loaded)).toContain('samples');
   });
 

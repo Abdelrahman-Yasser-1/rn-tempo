@@ -12,7 +12,8 @@ export type FeatureName =
   | 'ai-vendored-skills'
   | 'webview'
   | 'file-picker'
-  | 'maps';
+  | 'maps'
+  | 'push-notifications';
 
 export declare const FEATURE_NAMES: readonly FeatureName[];
 

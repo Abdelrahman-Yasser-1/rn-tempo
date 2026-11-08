@@ -44,7 +44,8 @@
     "ai-vendored-skills",
     "webview",
     "file-picker",
-    "maps"
+    "maps",
+    "push-notifications"
   ],
   "ai": {
     "tools": [

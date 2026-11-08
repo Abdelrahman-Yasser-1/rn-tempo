@@ -36,7 +36,7 @@
   },
   "$defs": {
     "featureName": {
-      "enum": ["ssl-pinning", "device-integrity", "storybook", "dynamic-forms", "samples", "maestro", "ci-github", "ai-claude", "ai-cursor", "ai-copilot", "ai-vendored-skills", "webview", "file-picker", "maps"]
+      "enum": ["ssl-pinning", "device-integrity", "storybook", "dynamic-forms", "samples", "maestro", "ci-github", "ai-claude", "ai-cursor", "ai-copilot", "ai-vendored-skills", "webview", "file-picker", "maps", "push-notifications"]
     }
   }
 }
