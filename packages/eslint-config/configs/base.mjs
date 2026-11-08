@@ -22,10 +22,12 @@ export const BOOLEAN_PREFIXES = [
   'requires',
 ];
 
-export const ENUM_RESTRICTION = {
-  selector: 'TSEnumDeclaration',
-  message: 'Enums are forbidden. Use an `as const` object plus a union type.',
-};
+export const ENUM_ENTRIES = [
+  {
+    selector: 'TSEnumDeclaration',
+    message: 'Enums are forbidden. Use an `as const` object plus a union type.',
+  },
+];
 
 const scoped = (configs, files) => configs.map((config) => ({ ...config, files }));
 
@@ -113,7 +115,6 @@ export function baseConfig(root) {
         'no-console': 'error',
         eqeqeq: 'error',
         curly: ['error', 'all'],
-        'no-restricted-syntax': ['error', ENUM_RESTRICTION],
       },
     },
     {

@@ -9,7 +9,7 @@ describe('ErrorState', () => {
   it('is an alert with the default title and a generic message', async () => {
     // The alert container has no accessibility flag, so its role is only observable by testID.
     await renderWithProviders(<ErrorState testID="error" />);
-    // eslint-disable-next-line no-restricted-syntax -- non-accessible alert container has no role query
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- non-accessible alert container has no role query
     expect(screen.getByTestId('error')).toHaveProp('accessibilityRole', 'alert');
     expect(screen.getByText('Something went wrong')).toBeOnTheScreen();
     expect(screen.getByText('Something went wrong. Please try again.')).toBeOnTheScreen();

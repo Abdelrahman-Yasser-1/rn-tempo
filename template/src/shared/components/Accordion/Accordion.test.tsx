@@ -90,7 +90,7 @@ describe('Accordion', () => {
 
   it('suffixes the testID of each item with its key', async () => {
     await renderWithProviders(<Accordion items={ITEMS} testID="faq" />);
-    // eslint-disable-next-line no-restricted-syntax -- checks the testID plumbing itself
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- checks the testID plumbing itself
     expect(screen.getByTestId('faq.b')).toBeOnTheScreen();
   });
 });

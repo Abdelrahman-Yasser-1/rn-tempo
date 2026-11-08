@@ -33,7 +33,7 @@ describe('Modal', () => {
       </Modal>,
     );
     // The panel is an accessibilityViewIsModal, so the backdrop is trapped out of role queries.
-    // eslint-disable-next-line no-restricted-syntax -- backdrop is hidden from the a11y tree
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- backdrop is hidden from the a11y tree
     await user.press(screen.getByTestId('modal.backdrop', { includeHiddenElements: true }));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
@@ -45,7 +45,7 @@ describe('Modal', () => {
         <Text>Body</Text>
       </Modal>,
     );
-    // eslint-disable-next-line no-restricted-syntax -- backdrop is hidden from the a11y tree
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- backdrop is hidden from the a11y tree
     const backdrop = screen.getByTestId('modal.backdrop', { includeHiddenElements: true });
     expect(backdrop).toBeDisabled();
     await user.press(backdrop);

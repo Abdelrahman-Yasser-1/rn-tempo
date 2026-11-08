@@ -6,10 +6,10 @@ import { renderWithProviders } from '@test-utils/renderWithProviders';
 import { ListItem } from './ListItem';
 
 /** Test ids of decorative, screen-reader-hidden views are the only handle on them. */
-/* eslint-disable no-restricted-syntax -- decorative views have no accessible role */
+/* eslint-disable rn-tempo/discouraged-syntax -- decorative views have no accessible role */
 const getHidden = (id: string) => screen.getByTestId(id, { includeHiddenElements: true });
 const queryHidden = (id: string) => screen.queryByTestId(id, { includeHiddenElements: true });
-/* eslint-enable no-restricted-syntax */
+/* eslint-enable rn-tempo/discouraged-syntax */
 
 describe('ListItem', () => {
   it('renders a non-pressable row without a button role', async () => {

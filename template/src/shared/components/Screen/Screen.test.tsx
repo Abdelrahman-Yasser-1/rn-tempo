@@ -6,7 +6,7 @@ import { renderWithProviders } from '@test-utils/renderWithProviders';
 import { Screen } from './Screen';
 
 // The safe-area container has no role, so its testID is the only handle on it.
-/* eslint-disable no-restricted-syntax -- safe-area container: testID is the only handle */
+/* eslint-disable rn-tempo/discouraged-syntax -- safe-area container: testID is the only handle */
 describe('Screen', () => {
   it('renders its children inside a safe-area container', async () => {
     await renderWithProviders(

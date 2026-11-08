@@ -92,16 +92,16 @@ describe('ItemsListScreen', () => {
     );
     await renderItemsList();
 
-    /* eslint-disable no-restricted-syntax -- the shimmer is decorative and has no role */
+    /* eslint-disable rn-tempo/discouraged-syntax -- the shimmer is decorative and has no role */
     expect(
       screen.getByTestId('items-list.loading', { includeHiddenElements: true }),
     ).toBeOnTheScreen();
-    /* eslint-enable no-restricted-syntax */
+    /* eslint-enable rn-tempo/discouraged-syntax */
     expect(screen.queryByText('Product 1')).not.toBeOnTheScreen();
 
     release(undefined);
     expect(await screen.findByText('Product 1')).toBeOnTheScreen();
-    // eslint-disable-next-line no-restricted-syntax -- the shimmer is decorative and has no role
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- the shimmer is decorative and has no role
     expect(screen.queryByTestId('items-list.loading')).not.toBeOnTheScreen();
   });
 

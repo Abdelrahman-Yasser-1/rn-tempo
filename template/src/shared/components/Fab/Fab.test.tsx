@@ -31,7 +31,7 @@ describe('Fab', () => {
     await renderWithProviders(
       <Fab icon="plus" accessibilityLabel="Add item" onPress={jest.fn()} testID="fab" />,
     );
-    // eslint-disable-next-line no-restricted-syntax -- checks the testID plumbing itself
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- checks the testID plumbing itself
     expect(screen.queryByTestId('fab.label')).not.toBeOnTheScreen();
     expect(screen.queryByText('Add item')).not.toBeOnTheScreen();
   });
@@ -40,7 +40,7 @@ describe('Fab', () => {
     await renderWithProviders(
       <Fab icon="plus" label="" accessibilityLabel="Add item" onPress={jest.fn()} testID="fab" />,
     );
-    // eslint-disable-next-line no-restricted-syntax -- checks the testID plumbing itself
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- checks the testID plumbing itself
     expect(screen.queryByTestId('fab.label')).not.toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Add item' })).toBeOnTheScreen();
   });

@@ -50,13 +50,13 @@ describe('ItemDetailsScreen', () => {
     await renderDetails(1);
 
     // The shimmer has no text or role, so its testID is the only handle.
-    // eslint-disable-next-line no-restricted-syntax -- decorative shimmer: testID is the only handle
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- decorative shimmer: testID is the only handle
     expect(screen.getByTestId('item-details.loading')).toBeOnTheScreen();
 
     expect(await screen.findByText('Product 1')).toBeOnTheScreen();
     expect(screen.getByLabelText('Product 1')).toBeOnTheScreen();
     expect(screen.getByText('$6.00')).toBeOnTheScreen();
-    // eslint-disable-next-line no-restricted-syntax -- decorative shimmer: testID is the only handle
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- decorative shimmer: testID is the only handle
     expect(screen.queryByTestId('item-details.loading')).not.toBeOnTheScreen();
   });
 

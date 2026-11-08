@@ -2,9 +2,17 @@ import globals from 'globals';
 import jest from 'eslint-plugin-jest';
 import testingLibrary from 'eslint-plugin-testing-library';
 
-import { ENUM_RESTRICTION } from './base.mjs';
-
 export const TEST_FILES = ['**/*.test.{ts,tsx}'];
+
+/** Test-file syntax that needs a reviewer decision (warn): see `rn-tempo/discouraged-syntax`. */
+export const TEST_ENTRIES = [
+  {
+    selector:
+      'CallExpression[callee.property.name=/^(get|find|query)(All)?ByTestId$/], CallExpression[callee.name=/^(get|find|query)(All)?ByTestId$/]',
+    message: 'Prefer getByRole (or another accessible query) over getByTestId.',
+    files: TEST_FILES,
+  },
+];
 
 /** Jest and Testing Library rules for `*.test.ts(x)`. */
 export function testsConfig() {
@@ -19,17 +27,6 @@ export function testsConfig() {
       settings: { jest: { version: 30 } },
       rules: {
         'testing-library/prefer-screen-queries': 'error',
-        // Warn only: the reviewer decides whether a role query was possible.
-        // This key replaces the base `no-restricted-syntax`, so the enum ban is repeated here.
-        'no-restricted-syntax': [
-          'warn',
-          ENUM_RESTRICTION,
-          {
-            selector:
-              'CallExpression[callee.property.name=/^(get|find|query)(All)?ByTestId$/], CallExpression[callee.name=/^(get|find|query)(All)?ByTestId$/]',
-            message: 'Prefer getByRole (or another accessible query) over getByTestId.',
-          },
-        ],
       },
     },
   ];

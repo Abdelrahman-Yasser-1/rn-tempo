@@ -117,9 +117,9 @@ describe('Tooltip', () => {
         <Icon name="info" />
       </Tooltip>,
     );
-    // eslint-disable-next-line no-restricted-syntax -- checks the testID plumbing itself
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- checks the testID plumbing itself
     expect(screen.getByTestId('tip.bubble')).toHaveTextContent('Ten digits');
-    // eslint-disable-next-line no-restricted-syntax -- checks the testID plumbing itself
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- checks the testID plumbing itself
     expect(screen.getByTestId('tip.backdrop')).toBeOnTheScreen();
   });
 });

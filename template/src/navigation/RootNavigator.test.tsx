@@ -1,4 +1,4 @@
-/* eslint-disable no-restricted-imports -- test double screens render plain RN Text */
+/* eslint-disable rn-tempo/restricted-syntax -- test double screens render plain RN Text */
 import { act, render, screen, waitFor } from '@testing-library/react-native';
 import type { ComponentType } from 'react';
 import { Linking, Text } from 'react-native';

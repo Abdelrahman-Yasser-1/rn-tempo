@@ -30,9 +30,9 @@ describe('Timeline', () => {
       <Timeline items={[{ key: 'a', title: 'Shipped', status: 'done' }]} testID="timeline" />,
     );
     expect(screen.getByLabelText('Shipped, Completed')).toBeOnTheScreen();
-    // eslint-disable-next-line no-restricted-syntax -- checks the testID plumbing itself
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- checks the testID plumbing itself
     expect(screen.queryByTestId('timeline.a.timestamp')).not.toBeOnTheScreen();
-    // eslint-disable-next-line no-restricted-syntax -- checks the testID plumbing itself
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- checks the testID plumbing itself
     expect(screen.queryByTestId('timeline.a.description')).not.toBeOnTheScreen();
   });
 
@@ -66,7 +66,7 @@ describe('Timeline', () => {
 
   it('renders nothing for an empty list', async () => {
     await renderWithProviders(<Timeline items={[]} testID="timeline" />);
-    // eslint-disable-next-line no-restricted-syntax -- an empty container has no role query
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- an empty container has no role query
     expect(screen.getByTestId('timeline').children).toHaveLength(0);
   });
 });

@@ -46,14 +46,14 @@ describe('ScreenLayout', () => {
         <Text>Body</Text>
       </ScreenLayout>,
     );
-    /* eslint-disable no-restricted-syntax -- layout parts are addressed by testID */
+    /* eslint-disable rn-tempo/discouraged-syntax -- layout parts are addressed by testID */
     const content = screen.getByTestId('layout-screen.content');
     expect(within(content).getByText('Body')).toBeOnTheScreen();
     expect(within(content).queryByText('Footer action')).not.toBeOnTheScreen();
     expect(
       within(screen.getByTestId('layout-screen.footer')).getByText('Footer action'),
     ).toBeOnTheScreen();
-    /* eslint-enable no-restricted-syntax */
+    /* eslint-enable rn-tempo/discouraged-syntax */
   });
 
   it('renders no footer container without a footer', async () => {
@@ -62,7 +62,7 @@ describe('ScreenLayout', () => {
         <Text>Body</Text>
       </ScreenLayout>,
     );
-    // eslint-disable-next-line no-restricted-syntax -- layout parts are addressed by testID
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- layout parts are addressed by testID
     expect(screen.queryByTestId('layout-screen.footer')).not.toBeOnTheScreen();
   });
 
@@ -72,10 +72,10 @@ describe('ScreenLayout', () => {
         <Text>Body</Text>
       </ScreenLayout>,
     );
-    /* eslint-disable no-restricted-syntax -- layout parts are addressed by testID */
+    /* eslint-disable rn-tempo/discouraged-syntax -- layout parts are addressed by testID */
     expect(screen.getByTestId('layout-screen')).toBeOnTheScreen();
     expect(screen.getByTestId('layout-screen.header')).toBeOnTheScreen();
-    /* eslint-enable no-restricted-syntax */
+    /* eslint-enable rn-tempo/discouraged-syntax */
   });
 
   it('renders fixed content without scrolling', async () => {
@@ -93,7 +93,7 @@ describe('ScreenLayout', () => {
         <Text>Body</Text>
       </ScreenLayout>,
     );
-    // eslint-disable-next-line no-restricted-syntax -- layout parts are addressed by testID
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- layout parts are addressed by testID
     expect(screen.getByTestId('layout-screen.content')).toHaveStyle({
       opacity: 0,
       transform: [{ translateY: 16 }],
@@ -106,7 +106,7 @@ describe('ScreenLayout', () => {
         <Text>Body</Text>
       </ScreenLayout>,
     );
-    // eslint-disable-next-line no-restricted-syntax -- layout parts are addressed by testID
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- layout parts are addressed by testID
     expect(screen.getByTestId('layout-screen.content')).toHaveStyle({ opacity: 1 });
   });
 
@@ -117,7 +117,7 @@ describe('ScreenLayout', () => {
         <Text>Body</Text>
       </ScreenLayout>,
     );
-    // eslint-disable-next-line no-restricted-syntax -- layout parts are addressed by testID
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- layout parts are addressed by testID
     expect(screen.getByTestId('layout-screen.content')).toHaveStyle({
       opacity: 1,
       transform: [{ translateY: 0 }],

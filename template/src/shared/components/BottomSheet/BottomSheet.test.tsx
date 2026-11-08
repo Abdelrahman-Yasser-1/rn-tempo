@@ -86,7 +86,7 @@ describe('BottomSheet', () => {
         <Text>Body</Text>
       </BottomSheet>,
     );
-    // eslint-disable-next-line no-restricted-syntax -- absence check on a plain layout box
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- absence check on a plain layout box
     expect(screen.queryByTestId('sheet.footer')).not.toBeOnTheScreen();
   });
 
@@ -96,11 +96,11 @@ describe('BottomSheet', () => {
         <Text>Body</Text>
       </BottomSheet>,
     );
-    // eslint-disable-next-line no-restricted-syntax -- layout box without a role
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- layout box without a role
     const footer = screen.getByTestId('sheet.footer');
     // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent(footer, 'layout', { nativeEvent: { layout: { height: 88, width: 300 } } });
-    // eslint-disable-next-line no-restricted-syntax -- layout box without a role
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- layout box without a role
     expect(screen.getByTestId('sheet.content')).toHaveStyle({ paddingBottom: 88 });
   });
 

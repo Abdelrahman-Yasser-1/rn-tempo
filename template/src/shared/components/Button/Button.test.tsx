@@ -44,7 +44,7 @@ describe('Button', () => {
       <Button title="Save" loading onPress={onPress} testID="save" />,
     );
     const button = screen.getByRole('button', { name: 'Save' });
-    // eslint-disable-next-line no-restricted-syntax -- ActivityIndicator has no accessible role
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- ActivityIndicator has no accessible role
     expect(screen.getByTestId('save.spinner')).toBeOnTheScreen();
     expect(button).toBeBusy();
     expect(button).toBeDisabled();

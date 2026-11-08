@@ -35,7 +35,7 @@ describe('TimePickerSheet', () => {
         onClose={jest.fn()}
       />,
     );
-    // eslint-disable-next-line no-restricted-syntax -- the native wheel has no role to query
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- the native wheel has no role to query
     const picker = screen.getByTestId('sheet.picker');
     expect(picker).toHaveProp('minuteInterval', 15);
     expect(picker).toHaveProp('mode', 'time');
@@ -53,7 +53,7 @@ describe('TimePickerSheet', () => {
         onClose={jest.fn()}
       />,
     );
-    // eslint-disable-next-line no-restricted-syntax -- the native wheel has no role to query
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- the native wheel has no role to query
     const picker = screen.getByTestId('sheet.picker');
     /* eslint-disable testing-library/no-await-sync-events -- RNTL 14 fireEvent is async */
     await fireEvent(picker, 'change', {
@@ -77,7 +77,7 @@ describe('TimePickerSheet', () => {
       />
     );
     const { user, rerender } = await renderWithProviders(element(true));
-    // eslint-disable-next-line no-restricted-syntax -- the native wheel has no role to query
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- the native wheel has no role to query
     const picker = screen.getByTestId('sheet.picker');
     /* eslint-disable testing-library/no-await-sync-events -- RNTL 14 fireEvent is async */
     await fireEvent(picker, 'change', {

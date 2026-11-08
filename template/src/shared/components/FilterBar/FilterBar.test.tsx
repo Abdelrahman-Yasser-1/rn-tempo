@@ -85,7 +85,7 @@ describe('FilterBar', () => {
       />,
     );
     expect(screen.getByRole('button', { name: 'Filters' })).toBeOnTheScreen();
-    // eslint-disable-next-line no-restricted-syntax -- checks the testID plumbing itself
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- checks the testID plumbing itself
     expect(screen.queryByTestId('bar.badge')).not.toBeOnTheScreen();
   });
 
@@ -100,7 +100,7 @@ describe('FilterBar', () => {
         testID="bar"
       />,
     );
-    // eslint-disable-next-line no-restricted-syntax -- checks the testID plumbing itself
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- checks the testID plumbing itself
     expect(screen.queryByTestId('bar.badge')).not.toBeOnTheScreen();
     await rerender(
       <FilterBar
@@ -113,7 +113,7 @@ describe('FilterBar', () => {
       />,
     );
     expect(screen.getByRole('button', { name: 'Filters, 1 active' })).toBeOnTheScreen();
-    // eslint-disable-next-line no-restricted-syntax -- checks the testID plumbing itself
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- checks the testID plumbing itself
     expect(screen.getByTestId('bar.badge')).toBeOnTheScreen();
   });
 
@@ -127,7 +127,7 @@ describe('FilterBar', () => {
         testID="bar"
       />,
     );
-    // eslint-disable-next-line no-restricted-syntax -- checks the testID plumbing itself
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- checks the testID plumbing itself
     expect(screen.queryByTestId('bar.badge')).not.toBeOnTheScreen();
   });
 
@@ -135,7 +135,7 @@ describe('FilterBar', () => {
     await renderWithProviders(
       <FilterBar filters={FILTERS} selected={[]} onToggle={jest.fn()} testID="bar" />,
     );
-    // eslint-disable-next-line no-restricted-syntax -- checks the testID plumbing itself
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- checks the testID plumbing itself
     expect(screen.getByTestId('bar.chip-done')).toBeOnTheScreen();
   });
 });

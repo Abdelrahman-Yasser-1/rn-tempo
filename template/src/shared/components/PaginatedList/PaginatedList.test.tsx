@@ -80,10 +80,10 @@ describe('PaginatedList', () => {
 
   it('shows the shimmer, and neither items nor an error, while the first page loads', async () => {
     await renderList(makeQuery({ isPending: true, data: undefined }));
-    /* eslint-disable no-restricted-syntax -- the shimmer is decorative and has no role */
+    /* eslint-disable rn-tempo/discouraged-syntax -- the shimmer is decorative and has no role */
     expect(screen.getByTestId('list.loading', { includeHiddenElements: true })).toBeOnTheScreen();
     expect(screen.queryByTestId('list.list')).not.toBeOnTheScreen();
-    /* eslint-enable no-restricted-syntax */
+    /* eslint-enable rn-tempo/discouraged-syntax */
     expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeOnTheScreen();
   });
 
@@ -156,7 +156,7 @@ describe('PaginatedList', () => {
 
   it('shows the footer loader only while the next page is loading', async () => {
     const { rerender } = await renderList(makeQuery());
-    // eslint-disable-next-line no-restricted-syntax -- the loader is decorative and has no role
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- the loader is decorative and has no role
     expect(screen.queryByTestId('list.loading-more')).not.toBeOnTheScreen();
 
     await rerender(
@@ -169,7 +169,7 @@ describe('PaginatedList', () => {
       />,
     );
     await settle();
-    // eslint-disable-next-line no-restricted-syntax -- the loader is decorative and has no role
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- the loader is decorative and has no role
     expect(screen.getByTestId('list.loading-more')).toBeOnTheScreen();
   });
 });

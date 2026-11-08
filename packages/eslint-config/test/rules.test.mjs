@@ -78,29 +78,29 @@ describe("eslint-config fixtures", () => {
     [
       "raw Text",
       "src/features/home/components/RawText/RawText.tsx",
-      "no-restricted-imports",
+      "rn-tempo/restricted-syntax",
     ],
     [
       "react-native-config outside env",
       "src/services/http/readsConfig.ts",
-      "no-restricted-imports",
+      "rn-tempo/dependency-owner",
     ],
     [
       "axios outside services/http",
       "src/services/storage/usesAxios.ts",
-      "no-restricted-imports",
+      "rn-tempo/dependency-owner",
     ],
     [
       "react-native StyleSheet in a shared component",
       "src/shared/components/RnSheet/RnSheet.tsx",
-      "no-restricted-imports",
+      "rn-tempo/restricted-syntax",
     ],
     [
       "a service folder nested two levels deep",
       "src/services/security/pinning/deep/tooDeep.ts",
       "project-structure/folder-structure",
     ],
-    ["an enum", "src/shared/types/status.ts", "no-restricted-syntax"],
+    ["an enum", "src/shared/types/status.ts", "rn-tempo/restricted-syntax"],
     ["console", "src/shared/utils/logs.ts", "no-console"],
     [
       "a missing story file",
@@ -161,32 +161,32 @@ describe("eslint-config fixtures", () => {
     [
       "an svg file import",
       "src/shared/utils/usesSvgFile.ts",
-      "no-restricted-imports",
+      "rn-tempo/restricted-syntax",
     ],
     [
       "react-native-svg outside Icon",
       "src/features/auth/utils/usesRnSvg.ts",
-      "no-restricted-imports",
+      "rn-tempo/dependency-owner",
     ],
     [
       "the document picker outside services/files",
       "src/features/auth/utils/usesFilePicker.ts",
-      "no-restricted-imports",
+      "rn-tempo/dependency-owner",
     ],
     [
       "a physical key in a styles file",
       "src/shared/utils/styles.ts",
-      "no-restricted-syntax",
+      "rn-tempo/restricted-syntax",
     ],
     [
       "a physical key in an inline StyleSheet.create",
       "src/features/home/components/Physical/Physical.tsx",
-      "no-restricted-syntax",
+      "rn-tempo/restricted-syntax",
     ],
     [
       "getByTestId in a test",
       "src/shared/utils/byTestId.test.ts",
-      "no-restricted-syntax",
+      "rn-tempo/discouraged-syntax",
     ],
   ];
 

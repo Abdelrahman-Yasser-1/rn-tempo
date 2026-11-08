@@ -68,9 +68,9 @@ describe('SegmentedControl', () => {
       <SegmentedControl items={ITEMS} value="day" onChange={jest.fn()} testID="seg" />,
     );
     // The track holds the tabs, so it is not an accessibility element itself.
-    // eslint-disable-next-line no-restricted-syntax -- non-accessible container has no role query
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- non-accessible container has no role query
     expect(screen.getByTestId('seg')).toHaveProp('accessibilityRole', 'tablist');
-    // eslint-disable-next-line no-restricted-syntax -- the thumb is decorative
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- the thumb is decorative
     expect(screen.getByTestId('seg.thumb')).toBeOnTheScreen();
   });
 });

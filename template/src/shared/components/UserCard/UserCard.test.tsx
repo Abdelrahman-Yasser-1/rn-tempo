@@ -64,7 +64,7 @@ describe('UserCard', () => {
 
   it('passes the testID to the card and its name', async () => {
     await renderWithProviders(<UserCard name="Ada" testID="user" />);
-    // eslint-disable-next-line no-restricted-syntax -- checks the testID plumbing itself
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- checks the testID plumbing itself
     expect(screen.getByTestId('user.name')).toHaveTextContent('Ada');
   });
 });

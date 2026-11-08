@@ -67,7 +67,7 @@ describe('Stepper', () => {
     await renderWithProviders(
       <Stepper steps={STEPS} current={0} variant="progress" testID="stepper" />,
     );
-    // eslint-disable-next-line no-restricted-syntax -- checks the testID plumbing itself
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- checks the testID plumbing itself
     expect(screen.getByTestId('stepper.label')).toHaveTextContent('Step 1 of 3');
   });
 
@@ -78,7 +78,7 @@ describe('Stepper', () => {
 
   it('suffixes each numbered step testID with its key', async () => {
     await renderWithProviders(<Stepper steps={STEPS} current={0} testID="stepper" />);
-    // eslint-disable-next-line no-restricted-syntax -- checks the testID plumbing itself
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- checks the testID plumbing itself
     expect(screen.getByTestId('stepper.profile')).toBeOnTheScreen();
   });
 });

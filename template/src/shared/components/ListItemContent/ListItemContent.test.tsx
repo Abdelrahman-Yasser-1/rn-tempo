@@ -12,10 +12,10 @@ function textOrder(): string[] {
 }
 
 /** Test ids of decorative, screen-reader-hidden views are the only handle on them. */
-/* eslint-disable no-restricted-syntax -- decorative views have no accessible role */
+/* eslint-disable rn-tempo/discouraged-syntax -- decorative views have no accessible role */
 const getHidden = (id: string) => screen.getByTestId(id, { includeHiddenElements: true });
 const queryHidden = (id: string) => screen.queryByTestId(id, { includeHiddenElements: true });
-/* eslint-enable no-restricted-syntax */
+/* eslint-enable rn-tempo/discouraged-syntax */
 
 describe('ListItemContent', () => {
   it('renders the title, subtitle and meta', async () => {

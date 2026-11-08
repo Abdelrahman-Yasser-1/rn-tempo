@@ -3,7 +3,7 @@ import { AccessibilityInfo } from 'react-native';
 import type { View as RNView } from 'react-native';
 
 // Decorative views have no accessible role, so testID is the only handle on them.
-/* eslint-disable no-restricted-syntax -- decorative element: testID is the only handle */
+/* eslint-disable rn-tempo/discouraged-syntax -- decorative element: testID is the only handle */
 import { renderWithProviders } from '@test-utils/renderWithProviders';
 
 import { Bone } from './Bone';

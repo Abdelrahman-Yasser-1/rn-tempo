@@ -40,7 +40,7 @@ describe('SectionHeader', () => {
 
   it('shows no subtitle when it is empty', async () => {
     await renderWithProviders(<SectionHeader title="Recent" subtitle="" testID="section" />);
-    // eslint-disable-next-line no-restricted-syntax -- checks the testID plumbing itself
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- checks the testID plumbing itself
     expect(screen.queryByTestId('section.subtitle')).not.toBeOnTheScreen();
   });
 });

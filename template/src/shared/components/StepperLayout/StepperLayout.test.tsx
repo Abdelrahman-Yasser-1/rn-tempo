@@ -157,7 +157,7 @@ describe('StepperLayout', () => {
         testID="wizard-screen"
       />,
     );
-    // eslint-disable-next-line no-restricted-syntax -- two Back buttons; the footer one has a testID
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- two Back buttons; the footer one has a testID
     expect(screen.getByTestId('wizard-screen.back')).toBeDisabled();
   });
 
@@ -202,7 +202,7 @@ describe('StepperLayout', () => {
       />,
     );
     expect(screen.getByRole('progressbar', { name: 'Step 1 of 2' })).toBeOnTheScreen();
-    // eslint-disable-next-line no-restricted-syntax -- checks the testID plumbing itself
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- checks the testID plumbing itself
     expect(screen.getByTestId('wizard-screen.next')).toBeOnTheScreen();
   });
 

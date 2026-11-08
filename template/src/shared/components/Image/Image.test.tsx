@@ -10,16 +10,16 @@ const SOURCE = { uri: 'https://example.com/photo.png' };
 /** Fails the native load; FastImage reports it through its `onFastImageError` prop. */
 function failNativeLoad() {
   // The image container is hidden from screen readers until it fails, so testID is the handle.
-  // eslint-disable-next-line no-restricted-syntax -- decorative native view: testID is the only handle
+  // eslint-disable-next-line rn-tempo/discouraged-syntax -- decorative native view: testID is the only handle
   const nativeImage = screen.getByTestId('pic.image', { includeHiddenElements: true });
   void fireEvent(nativeImage, 'fastImageError');
 }
 
 /** Test ids of decorative, screen-reader-hidden views are the only handle on them. */
-/* eslint-disable no-restricted-syntax -- decorative views have no accessible role */
+/* eslint-disable rn-tempo/discouraged-syntax -- decorative views have no accessible role */
 const getHidden = (id: string) => screen.getByTestId(id, { includeHiddenElements: true });
 const queryHidden = (id: string) => screen.queryByTestId(id, { includeHiddenElements: true });
-/* eslint-enable no-restricted-syntax */
+/* eslint-enable rn-tempo/discouraged-syntax */
 
 describe('Image', () => {
   it('is an informative image when given an accessibilityLabel', async () => {
@@ -31,7 +31,7 @@ describe('Image', () => {
     // Decorative images have no role, so the container is only reachable by testID.
 
     await renderWithProviders(<Image source={SOURCE} testID="pic" />);
-    // eslint-disable-next-line no-restricted-syntax -- decorative element: testID is the only handle
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- decorative element: testID is the only handle
     expect(screen.getByTestId('pic', { includeHiddenElements: true })).toHaveProp(
       'accessibilityElementsHidden',
       true,
@@ -48,7 +48,7 @@ describe('Image', () => {
   it('swaps in the default fallback icon when loading fails', async () => {
     await renderWithProviders(<Image source={SOURCE} testID="pic" accessibilityLabel="Broken" />);
     failNativeLoad();
-    // eslint-disable-next-line no-restricted-syntax -- fallback wrapper has no role
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- fallback wrapper has no role
     const fallback = await screen.findByTestId('pic.fallback', { includeHiddenElements: true });
     expect(fallback).toBeOnTheScreen();
     expect(screen.getByRole('image', { name: 'Broken' })).toBeOnTheScreen();

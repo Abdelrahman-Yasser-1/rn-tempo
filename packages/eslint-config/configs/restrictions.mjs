@@ -1,5 +1,3 @@
-import { ENUM_RESTRICTION } from "./base.mjs";
-
 const RN_COMPONENTS = [
   "Text",
   "TouchableOpacity",
@@ -10,129 +8,32 @@ const RN_COMPONENTS = [
   "TextInput",
 ];
 
-const RESTRICTIONS = {
-  reactNative: {
-    name: "react-native",
-    importNames: RN_COMPONENTS,
+const RN_IMPORT =
+  "ImportDeclaration[source.value='react-native'] ImportSpecifier";
+
+/** Import bans that are about *what* is imported, not *who owns a package* (see dependencies.mjs). */
+export const IMPORT_ENTRIES = [
+  {
+    selector: `${RN_IMPORT}[imported.name=/^(${RN_COMPONENTS.join("|")})$/]`,
     message: "Use @shared/components and react-native-unistyles instead.",
+    ignores: ["src/shared/components/**"],
   },
-  // Never allowed, not even in shared components: styles come from react-native-unistyles.
-  reactNativeStyleSheet: {
-    name: "react-native",
-    importNames: ["StyleSheet"],
+  {
+    // Never allowed, not even in shared components: styles come from react-native-unistyles.
+    selector: `${RN_IMPORT}[imported.name='StyleSheet']`,
     message: "Use StyleSheet from react-native-unistyles instead.",
   },
-  config: { name: "react-native-config", message: "Use @config/env instead." },
-  asyncStorage: {
-    name: "@react-native-async-storage/async-storage",
-    message: "Use @services/storage instead.",
-  },
-  axios: { name: "axios", message: "Only src/services/http may import axios." },
-  mmkv: {
-    name: "react-native-mmkv",
-    message: "Only src/services/storage may import MMKV.",
-  },
-  documentPicker: {
-    name: "@react-native-documents/picker",
-    message: "Only src/services/files may import the document picker.",
-  },
-  imagePicker: {
-    name: "react-native-image-picker",
-    message: "Only src/services/files may import the image picker.",
-  },
-  reactNativeSvg: {
-    name: "react-native-svg",
-    message:
-      "Draw icons with <Icon name=... /> from @shared/components; only Icon uses react-native-svg.",
-  },
-  keychain: {
-    name: "react-native-keychain",
-    message:
-      "Only src/services/secure-storage (and storage/encryptionKey.ts) may import Keychain.",
-  },
-};
-
-// Pattern restrictions, by key; `allowed` skips them like the path restrictions.
-const PATTERN_RESTRICTIONS = {
-  svgFiles: {
-    group: ["*.svg", "**/*.svg"],
+  {
+    selector: String.raw`ImportDeclaration[source.value=/\.svg$/]`,
     message:
       "Use <Icon name=... /> from @shared/components. Add icons with `yarn icons:add` or by dropping the file into src/assets/icons.",
+    ignores: ["src/shared/components/Icon/**", "src/assets/generated/**"],
   },
-};
-
-/**
- * Builds a `no-restricted-imports` entry that skips the named restrictions.
- * @param {string[]} allowed Keys of RESTRICTIONS or PATTERN_RESTRICTIONS that are allowed in the scoped files.
- */
-function restrict(allowed = []) {
-  const paths = Object.entries(RESTRICTIONS)
-    .filter(([key]) => !allowed.includes(key))
-    .map(([, value]) => value);
-  const patterns = Object.entries(PATTERN_RESTRICTIONS)
-    .filter(([key]) => !allowed.includes(key))
-    .map(([, value]) => value);
-  return ["error", { paths, patterns }];
-}
-
-/** Import restrictions (error). Each allowed location re-declares the rule without that entry. */
-export function restrictionsConfig() {
-  return [
-    {
-      name: "rn-tempo/restrictions",
-      rules: { "no-restricted-imports": restrict() },
-    },
-    {
-      name: "rn-tempo/restrictions/shared-components",
-      files: ["src/shared/components/**"],
-      rules: { "no-restricted-imports": restrict(["reactNative"]) },
-    },
-    {
-      // Icon draws the generated react-native-svg components; nothing else does.
-      name: "rn-tempo/restrictions/icon",
-      files: ["src/shared/components/Icon/**", "src/assets/generated/**"],
-      rules: {
-        "no-restricted-imports": restrict([
-          "reactNative",
-          "reactNativeSvg",
-          "svgFiles",
-        ]),
-      },
-    },
-    {
-      name: "rn-tempo/restrictions/env",
-      files: ["src/config/env.ts"],
-      rules: { "no-restricted-imports": restrict(["config"]) },
-    },
-    {
-      name: "rn-tempo/restrictions/http",
-      files: ["src/services/http/**"],
-      rules: { "no-restricted-imports": restrict(["axios"]) },
-    },
-    {
-      name: "rn-tempo/restrictions/storage",
-      files: ["src/services/storage/**"],
-      rules: { "no-restricted-imports": restrict(["mmkv"]) },
-    },
-    {
-      name: "rn-tempo/restrictions/files",
-      files: ["src/services/files/**"],
-      rules: {
-        "no-restricted-imports": restrict(["documentPicker", "imagePicker"]),
-      },
-    },
-    {
-      name: "rn-tempo/restrictions/storage-key",
-      files: ["src/services/storage/encryptionKey.ts"],
-      rules: { "no-restricted-imports": restrict(["mmkv", "keychain"]) },
-    },
-    {
-      name: "rn-tempo/restrictions/secure-storage",
-      files: ["src/services/secure-storage/**"],
-      rules: { "no-restricted-imports": restrict(["keychain"]) },
-    },
-  ];
-}
+  {
+    selector: String.raw`ImportDeclaration[source.value=/^@react-native-async-storage\/async-storage/]`,
+    message: "Use @services/storage instead.",
+  },
+];
 
 const SCREEN_LOGIC_MESSAGE =
   "Move screen logic into use<Name>Screen.ts (WS9b convention).";
@@ -191,49 +92,27 @@ const PHYSICAL_MESSAGE =
 const TEXT_ALIGN_MESSAGE =
   "textAlign 'left' and 'right' do not mirror in RTL. Use 'auto' (follows the text direction) or 'center'.";
 
-/** Builds the selectors for one scope: `prefix` narrows where a property is looked for. */
-function physicalStyleSelectors(prefix) {
+/** Builds the entries for one scope: `prefix` narrows where a property is looked for. */
+function physicalStyleEntries(prefix, scope) {
   return [
     {
       selector: `${prefix}Property[key.name=${PHYSICAL_KEYS}]`,
       message: PHYSICAL_MESSAGE,
+      ...scope,
     },
     {
       selector: `${prefix}Property[key.name='textAlign'][value.value=/^(left|right)$/]`,
       message: TEXT_ALIGN_MESSAGE,
+      ...scope,
     },
   ];
 }
 
-/**
- * Logical properties only: physical keys in `styles.ts` files and in inline `StyleSheet.create`
- * calls are errors. `no-restricted-syntax` replaces earlier entries for the same files, so the
- * enum ban is repeated here.
- */
-export function logicalPropertiesConfig() {
-  return [
-    {
-      name: "rn-tempo/restrictions/logical-properties-styles",
-      files: ["**/styles.ts"],
-      rules: {
-        "no-restricted-syntax": [
-          "error",
-          ENUM_RESTRICTION,
-          ...physicalStyleSelectors(""),
-        ],
-      },
-    },
-    {
-      name: "rn-tempo/restrictions/logical-properties-inline",
-      files: ["**/*.tsx"],
-      ignores: ["**/*.test.tsx"],
-      rules: {
-        "no-restricted-syntax": [
-          "error",
-          ENUM_RESTRICTION,
-          ...physicalStyleSelectors(`${STYLE_CREATE} `),
-        ],
-      },
-    },
-  ];
-}
+/** Logical properties only: physical keys in `styles.ts` files and in inline `StyleSheet.create` calls. */
+export const LOGICAL_PROPERTY_ENTRIES = [
+  ...physicalStyleEntries("", { files: ["**/styles.ts"] }),
+  ...physicalStyleEntries(`${STYLE_CREATE} `, {
+    files: ["**/*.tsx"],
+    ignores: ["**/*.test.tsx"],
+  }),
+];

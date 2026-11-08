@@ -37,7 +37,7 @@ describe('TimePicker', () => {
       <TimePicker label="Time" testID="time" value="14:30" onChange={onChange} />,
     );
     await user.press(screen.getByRole('button', { name: 'Time' }));
-    // eslint-disable-next-line no-restricted-syntax -- the native wheel has no role to query
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- the native wheel has no role to query
     const wheel = screen.getByTestId('time.sheet.picker');
     /* eslint-disable testing-library/no-await-sync-events -- RNTL 14 fireEvent is async */
     await fireEvent(wheel, 'change', {
@@ -71,7 +71,7 @@ describe('TimePicker', () => {
     await renderWithProviders(
       <TimePicker label="Time" testID="time" minuteInterval={15} onChange={jest.fn()} />,
     );
-    // eslint-disable-next-line no-restricted-syntax -- the native wheel has no role to query
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- the native wheel has no role to query
     expect(screen.getByTestId('time.sheet.picker')).toHaveProp('minuteInterval', 15);
   });
 

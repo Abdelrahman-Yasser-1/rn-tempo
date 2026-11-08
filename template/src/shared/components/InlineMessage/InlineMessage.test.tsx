@@ -40,13 +40,13 @@ describe('InlineMessage', () => {
     await renderWithProviders(<InlineMessage title="Heads up" variant={variant} testID="msg" />);
     // The banner holds a link and a button, so it is not an accessibility element itself and
     // its role is only observable by testID.
-    // eslint-disable-next-line no-restricted-syntax -- non-accessible container has no role query
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- non-accessible container has no role query
     expect(screen.getByTestId('msg')).toHaveProp('accessibilityRole', 'alert');
   });
 
   it('does not use the alert role for info', async () => {
     await renderWithProviders(<InlineMessage title="FYI" testID="msg" />);
-    // eslint-disable-next-line no-restricted-syntax -- non-accessible container has no role query
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- non-accessible container has no role query
     expect(screen.getByTestId('msg')).not.toHaveProp('accessibilityRole', 'alert');
   });
 
@@ -80,7 +80,7 @@ describe('InlineMessage', () => {
     'announces %s politely, without an alert role',
     async (variant) => {
       await renderWithProviders(<InlineMessage title="Heads up" variant={variant} testID="msg" />);
-      // eslint-disable-next-line no-restricted-syntax -- non-accessible container has no role query
+      // eslint-disable-next-line rn-tempo/discouraged-syntax -- non-accessible container has no role query
       const banner = screen.getByTestId('msg');
       expect(banner).not.toHaveProp('accessibilityRole');
       expect(banner).toHaveProp('accessibilityLiveRegion', 'polite');
@@ -89,7 +89,7 @@ describe('InlineMessage', () => {
 
   it.each(['warning', 'error'] as const)('leaves a %s to the alert role alone', async (variant) => {
     await renderWithProviders(<InlineMessage title="Heads up" variant={variant} testID="msg" />);
-    // eslint-disable-next-line no-restricted-syntax -- non-accessible container has no role query
+    // eslint-disable-next-line rn-tempo/discouraged-syntax -- non-accessible container has no role query
     expect(screen.getByTestId('msg')).not.toHaveProp('accessibilityLiveRegion');
   });
 
