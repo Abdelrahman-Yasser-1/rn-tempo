@@ -52,6 +52,7 @@
     "storybook": "yarn assets && STORYBOOK_ENABLED=true react-native start",
     "storybook:generate": "sb-rn-get-stories",
     "test": "jest",
+    "test:integration": "jest src/test-utils/integration",
     "ai:start": "node scripts/ai-log/session-start.mjs",
     "ai:prompt": "node scripts/ai-log/prompt.mjs",
     "ai:stop": "node scripts/ai-log/session-stop.mjs",
