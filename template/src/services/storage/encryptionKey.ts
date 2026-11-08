@@ -1,5 +1,6 @@
 import * as Keychain from 'react-native-keychain';
 
+import { StorageError } from './errors';
 import { KEYCHAIN_SERVICES } from './keys';
 
 // MMKV takes the key as a string and uses its UTF-8 bytes as raw key material: at most 32 bytes
@@ -47,14 +48,20 @@ export type EncryptionKey = { value: string; isNew: boolean };
 
 /** Returns the MMKV encryption key from the keychain, creating and storing it on first launch. */
 export async function getOrCreateEncryptionKey(): Promise<EncryptionKey> {
-  const existing = await Keychain.getGenericPassword({ service: KEYCHAIN_SERVICES.mmkvKey });
-  if (existing) {
-    return { value: existing.password, isNew: false };
+  try {
+    const existing = await Keychain.getGenericPassword({ service: KEYCHAIN_SERVICES.mmkvKey });
+    if (existing) {
+      return { value: existing.password, isNew: false };
+    }
+    const key = generateEncryptionKey();
+    await Keychain.setGenericPassword('mmkv-encryption-key', key, {
+      service: KEYCHAIN_SERVICES.mmkvKey,
+      accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+    });
+    return { value: key, isNew: true };
+  } catch (error) {
+    throw new StorageError('Could not access the storage encryption key in the keychain', {
+      cause: error,
+    });
   }
-  const key = generateEncryptionKey();
-  await Keychain.setGenericPassword('mmkv-encryption-key', key, {
-    service: KEYCHAIN_SERVICES.mmkvKey,
-    accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
-  });
-  return { value: key, isNew: true };
 }

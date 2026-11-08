@@ -3,7 +3,7 @@ import { createMMKV, deleteMMKV, existsMMKV, type MMKV } from 'react-native-mmkv
 import { logger } from '@services/logger/logger';
 
 import type { EncryptionKey } from './encryptionKey';
-import { StorageNotReadyError } from './errors';
+import { StorageError, StorageNotReadyError } from './errors';
 import { createStorageFacade, type StorageFacade } from './facade';
 import { STORAGE_AREA_IDS } from './keys';
 
@@ -32,7 +32,11 @@ function openArea(name: StorageAreaName, { value, isNew }: Readonly<EncryptionKe
   } catch (error) {
     logger.warn(`Storage area "${name}" failed to open, resetting it`, error);
     deleteMMKV(id);
-    return open();
+    try {
+      return open();
+    } catch (retryError) {
+      throw new StorageError(`Storage area "${name}" could not be opened`, { cause: retryError });
+    }
   }
 }
 

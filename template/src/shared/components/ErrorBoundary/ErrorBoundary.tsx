@@ -2,7 +2,7 @@ import { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
 import { View } from 'react-native';
 
-import { logger } from '@services/logger/logger';
+import { logError } from '@services/logger/logger';
 import { Button } from '@shared/components/Button';
 import { ErrorState } from '@shared/components/ErrorState';
 
@@ -55,7 +55,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   override componentDidCatch(error: Error, info: ErrorInfo): void {
     const stack = info.componentStack ?? '';
     const { screenName } = this.props;
-    logger.error(
+    logError(
       screenName === undefined
         ? 'Unhandled render error'
         : `Unhandled render error in ${screenName}`,

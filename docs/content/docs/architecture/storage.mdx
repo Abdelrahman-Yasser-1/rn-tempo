@@ -34,7 +34,7 @@ The key can disappear while the files stay (a restored backup) or the files can 
 2. MMKV throws when opening the area. The file is deleted and opening is retried once.
 3. Both times a warning is logged (`Storage area "app" exists but its encryption key was lost, resetting it`), and the app continues with empty storage. If the retry fails too, `initStorage()` rejects and bootstrap shows the startup error screen.
 
-The user loses the cached data, never the app. Tokens are in the keychain, not in MMKV, so they follow their own rules (see the security rules).
+A keychain or MMKV failure that recovery cannot fix is rethrown as a `StorageError` (the original error is its `cause`, and `isOperational` is `true`). `StorageNotReadyError` extends it with `isOperational: false`, because using storage before init is a bug. The user loses the cached data, never the app. Tokens are in the keychain, not in MMKV, so they follow their own rules (see the security rules).
 
 ## Persisted Zustand stores
 

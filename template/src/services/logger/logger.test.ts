@@ -1,5 +1,14 @@
 /* eslint-disable testing-library/no-debugging-utils -- `debug` here is the logger method, not RNTL debug() */
-import { addLogSink, createLogger, setLogTransport } from './logger';
+import { ApiError } from '@services/http/errors';
+
+import {
+  addLogSink,
+  createLogger,
+  isOperationalError,
+  logError,
+  logger,
+  setLogTransport,
+} from './logger';
 
 describe('logger', () => {
   const spies = {
@@ -156,6 +165,31 @@ describe('logger', () => {
       expect(secondTransport).toHaveBeenCalledTimes(1);
       expect(sink).toHaveBeenCalledTimes(1);
       removeSink();
+    });
+  });
+
+  describe('operational errors', () => {
+    test('isOperationalError reads the flag and ignores everything else', () => {
+      expect(isOperationalError(new ApiError({ code: 'NETWORK', message: 'x' }))).toBe(true);
+      expect(isOperationalError(new ApiError({ code: 'UNKNOWN', message: 'x' }))).toBe(false);
+      expect(isOperationalError(new Error('plain'))).toBe(false);
+      expect(isOperationalError('text')).toBe(false);
+      expect(isOperationalError(null)).toBe(false);
+    });
+
+    test('logError warns for an operational error and errors for a bug', () => {
+      const warn = jest.spyOn(logger, 'warn').mockImplementation(jest.fn());
+      const error = jest.spyOn(logger, 'error').mockImplementation(jest.fn());
+      const offline = new ApiError({ code: 'NETWORK', message: 'offline' });
+      const bug = new TypeError('undefined is not a function');
+
+      logError('Request failed', offline, 'extra');
+      logError('Render failed', bug);
+
+      expect(warn).toHaveBeenCalledWith('Request failed', offline, 'extra');
+      expect(error).toHaveBeenCalledWith('Render failed', bug);
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(error).toHaveBeenCalledTimes(1);
     });
   });
 });

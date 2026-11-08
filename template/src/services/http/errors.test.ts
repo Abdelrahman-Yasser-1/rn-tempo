@@ -48,6 +48,31 @@ describe('normalizeError', () => {
   });
 });
 
+describe('ApiError.isOperational', () => {
+  test.each([
+    ['NETWORK', undefined],
+    ['TIMEOUT', undefined],
+    ['UNAUTHORIZED', 401],
+    ['VALIDATION', 422],
+    ['SERVER', 503],
+    ['UNKNOWN', 409],
+  ] as const)('%s (status %s) is operational', (code, status) => {
+    expect(new ApiError({ code, message: 'x', status }).isOperational).toBe(true);
+  });
+
+  test('an unexpected response shape or error is not operational', () => {
+    expect(new ApiError({ code: 'UNKNOWN', message: 'bad shape' }).isOperational).toBe(false);
+    expect(normalizeError(new Error('plain')).isOperational).toBe(false);
+    expect(normalizeError(axiosError(502)).isOperational).toBe(true);
+  });
+
+  test('the flag can be overridden', () => {
+    expect(new ApiError({ code: 'SERVER', message: 'x', isOperational: false }).isOperational).toBe(
+      false,
+    );
+  });
+});
+
 describe('error helpers', () => {
   test('getErrorMessageKey maps every code to an errors-namespace key', () => {
     expect(getErrorMessageKey(new ApiError({ code: 'NOT_FOUND', message: '' }))).toBe('notFound');

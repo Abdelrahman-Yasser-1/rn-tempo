@@ -131,7 +131,11 @@ describe('storage areas', () => {
       throw new Error('disk full');
     });
 
-    await expect(module.initStorage()).rejects.toThrow('disk full');
+    const failure: unknown = await module.initStorage().catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(module.StorageError);
+    expect(failure).toMatchObject({ isOperational: true });
+    expect(failure).toHaveProperty('cause.message', 'disk full');
 
     mmkv.createMMKV.mockImplementation(fakeInstance);
     await module.initStorage();
