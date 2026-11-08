@@ -19,7 +19,7 @@ describe('tempo clean', () => {
     project = path.join(root, 'app');
     tmp = path.join(root, 'tmp');
     home = path.join(root, 'home');
-    for (const rel of ['node_modules/.cache', 'ios/Pods', 'ios/build/generated', 'android/.gradle', 'android/app/build']) {
+    for (const rel of ['node_modules/.cache', 'ios/Pods', 'ios/build/generated', 'android/.gradle', 'android/app/build', 'android/build']) {
       await mkdir(path.join(project, rel), { recursive: true });
     }
     await mkdir(path.join(tmp, 'metro-cache'), { recursive: true });
@@ -32,7 +32,7 @@ describe('tempo clean', () => {
 
   it('lists only existing targets and matches the app-specific DerivedData', async () => {
     const targets = await planClean(project, 'AcmeShop', { tmpdir: tmp, home });
-    expect(targets.map((target) => target.id)).toEqual(['node-cache', 'metro', 'pods', 'ios-build', 'gradle', 'android-build', 'derived-data', 'watchman']);
+    expect(targets.map((target) => target.id)).toEqual(['node-cache', 'metro', 'pods', 'ios-build', 'gradle', 'android-build', 'android-root-build', 'derived-data', 'watchman']);
     const derived = targets.find((target) => target.id === 'derived-data');
     expect(derived?.paths).toEqual([path.join(home, 'Library/Developer/Xcode/DerivedData/AcmeShop-abc')]);
   });
