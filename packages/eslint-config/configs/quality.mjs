@@ -1,5 +1,6 @@
 import path from 'node:path';
 
+import stylistic from '@stylistic/eslint-plugin';
 import tanstackQuery from '@tanstack/eslint-plugin-query';
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
 import i18next from 'eslint-plugin-i18next';
@@ -31,6 +32,7 @@ export function aliasRegex(root) {
   return `^(${names.join('|')})(/|$)`;
 }
 
+const SOURCE_FILES = ['src/**/*.{ts,tsx}'];
 const TEST_FILES = ['**/*.test.{ts,tsx}'];
 const STORY_FILES = ['**/*.stories.tsx'];
 
@@ -68,6 +70,37 @@ export function qualityConfig(root) {
       name: 'rn-tempo/quality/no-secrets',
       plugins: { 'no-secrets': noSecrets },
       rules: { 'no-secrets/no-secrets': ['error', { tolerance: 4.5 }] },
+    },
+    {
+      // Loose numbers on purpose: they catch the outliers, not the style.
+      // Not enabled yet (too many existing violations to fix without refactoring app code):
+      // max-lines-per-function (80), complexity (15) and rn-tempo/one-component-per-file.
+      name: 'rn-tempo/quality/size',
+      files: SOURCE_FILES,
+      rules: {
+        'max-params': ['error', 4],
+        'max-depth': ['error', 4],
+        'arrow-body-style': ['error', 'as-needed'],
+      },
+    },
+    {
+      name: 'rn-tempo/quality/length',
+      files: SOURCE_FILES,
+      ignores: [
+        ...TEST_FILES,
+        ...STORY_FILES,
+        // A data table (country names, dial codes), not logic.
+        'src/shared/constants/countries.ts',
+      ],
+      rules: { 'max-lines': ['error', { max: 300, skipBlankLines: true, skipComments: true }] },
+    },
+    {
+      name: 'rn-tempo/quality/jsx',
+      files: ['src/**/*.tsx'],
+      plugins: { '@stylistic': stylistic },
+      rules: {
+        '@stylistic/jsx-self-closing-comp': ['error', { component: true, html: true }],
+      },
     },
     {
       name: 'rn-tempo/quality/jsdoc',

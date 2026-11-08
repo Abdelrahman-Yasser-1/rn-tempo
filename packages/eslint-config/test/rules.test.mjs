@@ -187,6 +187,19 @@ describe("eslint-config fixtures", () => {
       "src/features/home/components/Physical/Physical.tsx",
       "rn-tempo/restricted-syntax",
     ],
+    ["a file over 300 lines", "src/shared/utils/tooLong.ts", "max-lines"],
+    ["too many parameters", "src/shared/utils/manyParams.ts", "max-params"],
+    ["nesting deeper than 4", "src/shared/utils/deepNesting.ts", "max-depth"],
+    [
+      "an arrow function with a block body",
+      "src/shared/utils/arrowBody.ts",
+      "arrow-body-style",
+    ],
+    [
+      "an empty component that is not self-closing",
+      "src/shared/utils/selfClosing.tsx",
+      "@stylistic/jsx-self-closing-comp",
+    ],
     [
       "async-storage",
       "src/shared/utils/usesAsyncStorage.ts",

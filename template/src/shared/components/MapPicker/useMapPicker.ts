@@ -65,11 +65,10 @@ export function useMapPicker({ value, onChange, defaultCenter, mapRef }: UseMapP
     });
   };
 
-  const hasLocationAccess = async () => {
-    return Platform.OS !== 'android'
+  const hasLocationAccess = async () =>
+    Platform.OS !== 'android'
       ? true
       : (await fine.request()) === 'granted' || (await coarse.check()) === 'granted';
-  };
 
   const jumpTo = (center: MapCenter) => {
     setDraft(center);
