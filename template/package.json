@@ -60,6 +60,7 @@
     "test:ai-sync": "node --test \"scripts/ai-sync/__tests__/*.test.mjs\"",
     "spec:check": "node scripts/spec-check.mjs",
     "verify": "yarn typecheck && yarn lint && yarn lint:deps && yarn lint:env && yarn test:node && yarn format:check && yarn lint:files && yarn i18n:check && yarn lint:deadcode && yarn test --ci",
+    "verify:bundle": "node scripts/verify-bundle.mjs",
     "verify:changed": "node scripts/verify-changed.mjs"
   },
   "dependencies": {

@@ -62,6 +62,8 @@ jobs:
       - run: yarn test:ai-sync
       - run: yarn test:assets
       - run: yarn assets:check
+      - name: Bundle dry run (iOS and Android)
+        run: yarn verify:bundle
 
   commitlint:
     name: Commit messages
