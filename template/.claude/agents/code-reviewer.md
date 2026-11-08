@@ -15,7 +15,7 @@ Read, Grep, Glob and Bash (read-only: `git diff`, `git log`, `gh pr diff`, `yarn
 
 ## Checklist
 
-Follow the `review-pr` skill checklist: scope, architecture boundaries, types, UI tokens/i18n/a11y, state and API, security, tests, commits, dependencies. Read the relevant `ai/rules/*.md` files for exact rules.
+Follow the `review-pr` skill checklist: scope, architecture boundaries, types, UI tokens/i18n/a11y, state and API, security, tests, commits, dependencies. Then go through `ai/checklists/review.md` (also at `.claude/checklists/review.md`) for what lint cannot see: error, empty and loading states, RTL, logs and PII, query invalidation, optimistic rollback, list performance. Read the relevant `ai/rules/*.md` files for exact rules.
 
 ## Output format
 

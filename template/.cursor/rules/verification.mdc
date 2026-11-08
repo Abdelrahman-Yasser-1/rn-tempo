@@ -10,13 +10,14 @@ alwaysApply: true
 
 Run `yarn verify:changed` before you finish any task, and `yarn verify` before every push. Never claim done with failing checks.
 
-| Command                                 | What it runs                                                                             |
-| --------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `yarn verify:changed`                   | eslint and prettier on changed files, ls-lint, `tsc --noEmit`, jest on related tests     |
-| `yarn verify`                           | typecheck, eslint (`--max-warnings=0`), prettier check, ls-lint, i18n check, `jest --ci` |
-| `yarn lint:fix`, `yarn format`          | auto-fix lint and formatting                                                             |
-| `yarn spec:check`                       | every AC of `implemented`/`verified` specs has a linked test                             |
-| `yarn test:ai-log`, `yarn test:ai-sync` | tests for the `scripts/` helpers (`node --test`)                                         |
+| Command                        | What it runs                                                                                                                                                              |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `yarn verify:changed`          | eslint and prettier on changed files, ls-lint, `tsc --noEmit`, jest on related tests; the full `yarn verify` when a config file changed (`--pr` prints a Markdown report) |
+| `yarn verify`                  | typecheck, eslint (`--max-warnings=0`), dependency ownership, env files, node tests, prettier check, ls-lint, i18n check, knip, `jest --ci`                               |
+| `yarn verify:bundle`           | production bundle dry run for iOS and Android (slow; after dependency upgrades)                                                                                           |
+| `yarn lint:fix`, `yarn format` | auto-fix lint and formatting                                                                                                                                              |
+| `yarn spec:check`              | every AC of `implemented`/`verified` specs has a linked test                                                                                                              |
+| `yarn test:node`               | every `node --test` suite of the `scripts/` helpers (also `test:ai-log`, `test:ai-sync`)                                                                                  |
 
 - Fix the cause; do not silence it. No `any`, no `@ts-ignore`, no `eslint-disable` without a `-- reason`, no `console`.
 - No literal `TODO` / `FIXME` comments (`sonarjs/todo-tag` fails). Write hand-off notes as `WS<N> (task x.y): ...` or open an issue.

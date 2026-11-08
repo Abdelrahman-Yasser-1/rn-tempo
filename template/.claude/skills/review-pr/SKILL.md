@@ -19,4 +19,5 @@ description: Review a pull request or the current diff against this project's ch
    - Commits: Conventional with scope, small, trailers present, checkboxes ticked.
    - Dependencies: no unplanned adds or bumps; pins exact.
    - PR: description complete, screenshots for UI (iOS + Android, light + dark, en + ar).
-4. Report findings grouped as Blocking, Should fix, Nit, each with `file:line` and a concrete suggestion.
+4. Walk through the manual checklist for what lint cannot see: `ai/checklists/review.md` (copied to `.claude/checklists/review.md`). Mention only the items that fail.
+5. Report findings grouped as Blocking, Should fix, Nit, each with `file:line` and a concrete suggestion.
