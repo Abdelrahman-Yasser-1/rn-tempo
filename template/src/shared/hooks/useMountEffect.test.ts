@@ -16,9 +16,7 @@ describe('useMountEffect', () => {
   it('runs the cleanup on unmount', async () => {
     const cleanup = jest.fn();
     const { unmount } = await renderHook(() => {
-      useMountEffect(() => {
-        return cleanup;
-      });
+      useMountEffect(() => cleanup);
     });
     expect(cleanup).not.toHaveBeenCalled();
     await unmount();
