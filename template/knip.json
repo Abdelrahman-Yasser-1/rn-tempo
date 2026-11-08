@@ -9,7 +9,7 @@
   ],
   "project": ["src/**/*.{ts,tsx}"],
   "ignoreDependencies": ["babel-jest"],
-  "ignoreBinaries": ["tempo"],
+  "ignoreBinaries": ["tempo", "adb"],
   "ignoreExportsUsedInFile": true,
   "ignoreIssues": {
     "src/navigation/types.ts": ["types"],

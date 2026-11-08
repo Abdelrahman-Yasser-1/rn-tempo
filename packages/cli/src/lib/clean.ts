@@ -46,6 +46,7 @@ export async function planClean(
     { id: 'ios-build', label: 'ios/build (codegen output, restored by pod install)', paths: [path.join(dir, 'ios/build')], needsPods: true },
     { id: 'gradle', label: 'android/.gradle', paths: [path.join(dir, 'android/.gradle')] },
     { id: 'android-build', label: 'android/app/build', paths: [path.join(dir, 'android/app/build')] },
+    { id: 'android-root-build', label: 'android/build', paths: [path.join(dir, 'android/build')] },
     {
       id: 'derived-data',
       label: `Xcode DerivedData for ${appName}`,

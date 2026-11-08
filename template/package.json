@@ -5,6 +5,7 @@
   "scripts": {
     "preinstall": "node scripts/check-node.mjs",
     "android": "react-native run-android",
+    "android:reverse": "adb reverse tcp:8081 tcp:8081",
     "android:dev": "react-native run-android --mode devDebug --appIdSuffix dev",
     "android:staging": "react-native run-android --mode stagingDebug --appIdSuffix staging",
     "android:prod": "react-native run-android --mode prodDebug",
@@ -22,6 +23,7 @@
     "ios:staging:release": "node scripts/icons-prune.mjs --exec react-native run-ios --scheme TempoApp-Staging --mode Release-Staging",
     "ios:prod:release": "node scripts/icons-prune.mjs --exec react-native run-ios --scheme TempoApp-Prod --mode Release-Prod",
     "ios:envs": "bundle exec ruby scripts/native/ios-envs.rb --project ios/TempoApp.xcodeproj --target TempoApp --envs dev:Dev,staging:Staging,prod:Prod",
+    "fresh-install": "node scripts/fresh-install.mjs",
     "pods": "cd ios && bundle exec pod install",
     "lint": "eslint . --max-warnings=0",
     "lint:align-deps": "rnx-align-deps --diff-mode allow-subset",
