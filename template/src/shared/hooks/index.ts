@@ -5,6 +5,7 @@ export { useCountdown } from './useCountdown';
 export { useDebounce } from './useDebounce';
 export { useDebouncedCallback } from './useDebouncedCallback';
 export { useDisclosure } from './useDisclosure';
+export { useFocusNotifyOnChangeProps } from './useFocusNotifyOnChangeProps';
 export { useInterval } from './useInterval';
 export { useIsOnline } from './useIsOnline';
 export { useKeyboard } from './useKeyboard';

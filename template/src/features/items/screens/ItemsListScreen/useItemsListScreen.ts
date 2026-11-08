@@ -7,7 +7,7 @@ import { SEARCH_DEBOUNCE_MS } from '@features/items/constants';
 import type { HomeStackParamList } from '@navigation/types';
 import { useFeatureFlag } from '@services/flags/useFeatureFlag';
 import { useLanguage } from '@services/i18n/useLanguage';
-import { useDebounce } from '@shared/hooks';
+import { useDebounce, useFocusNotifyOnChangeProps } from '@shared/hooks';
 
 /** Logic of the items list: debounced search, the paged query and navigation. */
 export function useItemsListScreen() {
@@ -16,7 +16,9 @@ export function useItemsListScreen() {
   const canCreate = useFeatureFlag('itemsCreateEnabled');
   const [search, setSearch] = useState('');
   const query = useDebounce(search.trim(), SEARCH_DEBOUNCE_MS);
-  const itemsQuery = useItemsInfiniteQuery(query);
+  // The list stays mounted under the details screen; it must not re-render while out of focus.
+  const notifyOnChangeProps = useFocusNotifyOnChangeProps();
+  const itemsQuery = useItemsInfiniteQuery(query, { notifyOnChangeProps });
 
   const onItemPress = (itemId: number) => {
     navigation.navigate('ItemDetails', { itemId });

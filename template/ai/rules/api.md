@@ -8,6 +8,7 @@ globs: src/**/api/**,src/services/http/**
 Every request goes through `request()` with a Zod schema; every query has a key from a key factory; every mutation invalidates what it changed.
 
 - Only `src/services/http/**` may import `axios`. Features never call `axios` or `fetch` directly.
+- A screen that stays mounted under another one in a stack passes `useFocusNotifyOnChangeProps()` (`@shared/hooks`) as the query's `notifyOnChangeProps`, so it does not re-render while out of focus (see `useItemQuery`).
 - `request<T>(config, schema: z.ZodType<T>): Promise<T>` (`@services/http/request`) validates the response with Zod. A parse failure becomes an `ApiError` with code `UNKNOWN`.
 - Errors are `ApiError { status?, code, message, details? }` with `code` one of `NETWORK | TIMEOUT | UNAUTHORIZED | FORBIDDEN | NOT_FOUND | VALIDATION | SERVER | UNKNOWN`. Use `normalizeError(e)` and `getErrorMessageKey(err)` (maps to the `errors` i18n namespace) from `@services/http/errors`. Never show raw server messages. `ApiError.isOperational` (and `StorageError.isOperational`) is true for expected runtime failures (offline, timeout, 4xx, 5xx) and false for bugs such as a response that does not match its schema; log caught errors with `logError` (`@services/logger/logger`), which warns for operational errors and errors for bugs.
 - Feature API layout (`src/features/<name>/api/`): `<name>.api.ts` (request functions), `schemas.ts` (Zod schemas and inferred types), `keys.ts` (key factory), `queries.ts` (`useQuery` hooks), `mutations.ts` (`useMutation` hooks).
