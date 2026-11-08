@@ -42,6 +42,7 @@
 		8325F9011A35FE4F8B8AC882 /* Pods-TempoApp.release-dev.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TempoApp.release-dev.xcconfig"; path = "Target Support Files/Pods-TempoApp/Pods-TempoApp.release-dev.xcconfig"; sourceTree = "<group>"; };
 		8457ADA25E29FE95E58D2567 /* Pods-TempoApp.release-staging.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TempoApp.release-staging.xcconfig"; path = "Target Support Files/Pods-TempoApp/Pods-TempoApp.release-staging.xcconfig"; sourceTree = "<group>"; };
 		88FEA429B5BC9DB6C14F1C57 /* Dev.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = Dev.release.xcconfig; sourceTree = "<group>"; };
+		9170B2421F0CAF983A51E762 /* Version.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = Version.xcconfig; sourceTree = "<group>"; };
 		9B63BB17E254CE35A7427ED7 /* IBMPlexSansArabic-Bold.ttf */ = {isa = PBXFileReference; includeInIndex = 1; path = "IBMPlexSansArabic-Bold.ttf"; sourceTree = "<group>"; };
 		9DAD177C06B26BD40C08DC87 /* Prod.shared.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = Prod.shared.xcconfig; sourceTree = "<group>"; };
 		A2697D0468DF63E5AFD3EEF5 /* IBMPlexSansArabic.ttf */ = {isa = PBXFileReference; includeInIndex = 1; path = IBMPlexSansArabic.ttf; sourceTree = "<group>"; };
@@ -106,6 +107,7 @@
 				9DAD177C06B26BD40C08DC87 /* Prod.shared.xcconfig */,
 				B5C1AF6B3B3006220A499AE2 /* Prod.debug.xcconfig */,
 				1174C91D907D294A2FE01DE5 /* Prod.release.xcconfig */,
+				9170B2421F0CAF983A51E762 /* Version.xcconfig */,
 			);
 			name = Config;
 			path = Config;
@@ -345,7 +347,6 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -456,7 +457,6 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -558,7 +558,6 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -741,7 +740,6 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -851,7 +849,6 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -879,7 +876,6 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
