@@ -61,7 +61,8 @@ module.exports = {
     // svgr output: one component per icon and the registries, built by `yarn assets`.
     '!src/assets/generated/**',
   ],
+  // A ratchet: thresholds only go up. Raise them when coverage rises; never lower them to pass.
   coverageThreshold: {
-    global: { lines: 70, branches: 60, functions: 70, statements: 70 },
+    global: { lines: 80, branches: 70, functions: 80, statements: 80 },
   },
 };
