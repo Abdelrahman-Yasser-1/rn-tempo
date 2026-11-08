@@ -25,8 +25,8 @@ In every `styles.ts` file and in inline `StyleSheet.create` calls inside `.tsx` 
 A graphic that must stay left-to-right in every language (a chart axis, a logo lockup) may keep a physical key with a reason:
 
 ```ts
-// eslint-disable-next-line no-restricted-syntax -- LTR-only waveform, never mirrored
+// eslint-disable-next-line rn-tempo/restricted-syntax -- LTR-only waveform, never mirrored
 left: 0,
 ```
 
-The rule lives in `@rn-tempo/eslint-config` (`logicalPropertiesConfig`). It repeats the enum ban, because a later `no-restricted-syntax` entry replaces an earlier one for the same files.
+The rule lives in `@rn-tempo/eslint-config` as scoped entries of `rn-tempo/restricted-syntax` (see [Lint rules](/docs/standards/lint-rules)), so it never overwrites the enum ban or any other entry.
