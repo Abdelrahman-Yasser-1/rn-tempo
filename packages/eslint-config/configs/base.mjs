@@ -132,7 +132,6 @@ export function baseConfig(root) {
       rules: {
         'no-console': 'error',
         eqeqeq: 'error',
-        curly: ['error', 'all'],
       },
     },
     {

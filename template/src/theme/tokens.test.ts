@@ -92,7 +92,9 @@ describe('token sources', () => {
     ['dark', darkColors],
   ])('%s opaque colors all come from the palette', (_name, colors) => {
     for (const [token, value] of Object.entries(colors)) {
-      if (value.startsWith('rgba')) continue;
+      if (value.startsWith('rgba')) {
+        continue;
+      }
       expect([token, flat]).toEqual([token, expect.arrayContaining([value])]);
     }
   });

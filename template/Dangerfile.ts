@@ -68,7 +68,9 @@ function checkSpecLink(): void {
 
 // 4. Native folders changed: label the PR so reviewers build both platforms.
 async function labelNative(): Promise<void> {
-  if (!changedFiles.some((file) => /^(?:android|ios)\//.test(file))) return;
+  if (!changedFiles.some((file) => /^(?:android|ios)\//.test(file))) {
+    return;
+  }
   await danger.github.utils.createOrAddLabel({
     name: 'native',
     color: '5319e7',
@@ -89,7 +91,9 @@ function checkAiDisclosure(): void {
 
 // 6. Dependency changes belong in their own `deps` commit.
 async function checkDepsCommit(): Promise<void> {
-  if (!changedFiles.includes('package.json')) return;
+  if (!changedFiles.includes('package.json')) {
+    return;
+  }
   const diff = await danger.git.JSONDiffForFile('package.json');
   const hasDepsChange = ['dependencies', 'devDependencies', 'peerDependencies'].some(
     (key) => key in diff,

@@ -30,7 +30,9 @@ describe.each([
 
   // Transparent fills sit on the page; `outlineOnColor` is meant for a primary-coloured surface.
   const surface = (variant: ButtonVariant, fill: string): string => {
-    if (fill !== 'transparent') return fill;
+    if (fill !== 'transparent') {
+      return fill;
+    }
     return variant === 'outlineOnColor' ? theme.colors.primary : theme.colors.background;
   };
 

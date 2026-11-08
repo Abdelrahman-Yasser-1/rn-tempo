@@ -97,8 +97,9 @@ function ribbonSvg(canvas, box, badge, clipRadius) {
   const paths = letters
     .map((letter, index) => {
       const x = startX + index * (GLYPH_WIDTH + GLYPH_GAP) * scale;
-      if (!GLYPHS[letter])
+      if (!GLYPHS[letter]) {
         throw new Error(`icons.mjs: no glyph for badge letter "${letter}"; add it to GLYPHS`);
+      }
       return `<path transform="translate(${x} ${startY}) scale(${scale})" d="${GLYPHS[letter]}"/>`;
     })
     .join('');
@@ -117,7 +118,9 @@ const PNG_OPTIONS = { compressionLevel: 9, adaptiveFiltering: false };
 /** Returns the source image with the environment ribbon composited on top (unchanged for prod). */
 async function withBadge(file, box, badge, clipRadius) {
   const input = path.join(sourceDir, file);
-  if (!badge) return sharp(input).png(PNG_OPTIONS).toBuffer();
+  if (!badge) {
+    return sharp(input).png(PNG_OPTIONS).toBuffer();
+  }
   const { width } = await sharp(input).metadata();
   return sharp(input)
     .composite([{ input: ribbonSvg(width, box, badge, clipRadius) }])
@@ -216,8 +219,9 @@ async function generateIos({ iosSet, badge }) {
 async function removeStockAndroidIcons() {
   const mainRes = path.join(root, 'android/app/src/main/res');
   for (const entry of await readdir(mainRes)) {
-    if (entry.startsWith('mipmap-'))
+    if (entry.startsWith('mipmap-')) {
       await rm(path.join(mainRes, entry), { recursive: true, force: true });
+    }
   }
 }
 
