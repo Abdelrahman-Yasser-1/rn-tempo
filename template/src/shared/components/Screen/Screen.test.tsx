@@ -1,3 +1,6 @@
+// The safe-area container has no role, so its testID is the only handle on it.
+/* eslint-disable rn-tempo/discouraged-syntax -- safe-area container: testID is the only handle */
+
 import { screen } from '@testing-library/react-native';
 import { Text } from 'react-native';
 
@@ -5,8 +8,6 @@ import { renderWithProviders } from '@test-utils/renderWithProviders';
 
 import { Screen } from './Screen';
 
-// The safe-area container has no role, so its testID is the only handle on it.
-/* eslint-disable rn-tempo/discouraged-syntax -- safe-area container: testID is the only handle */
 describe('Screen', () => {
   it('renders its children inside a safe-area container', async () => {
     await renderWithProviders(

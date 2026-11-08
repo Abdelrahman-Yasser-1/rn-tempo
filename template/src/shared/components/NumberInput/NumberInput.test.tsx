@@ -58,7 +58,7 @@ describe('NumberInput', () => {
     await fireEvent.changeText(input, '4a2');
     expect(input).toHaveDisplayValue('42');
     await fireEvent(input, 'blur');
-    /* eslint-enable testing-library/no-await-sync-events */
+    /* eslint-enable testing-library/no-await-sync-events -- end of the block disabled above */
     expect(onChange).toHaveBeenLastCalledWith(10);
   });
 
@@ -134,7 +134,7 @@ describe('NumberInput', () => {
     expect(input).toHaveDisplayValue('');
     await fireEvent.changeText(input, '-1.5e');
     expect(input).toHaveDisplayValue('15');
-    /* eslint-enable testing-library/no-await-sync-events */
+    /* eslint-enable testing-library/no-await-sync-events -- end of the block disabled above */
   });
 
   it('keeps the value when the field is left empty', async () => {
@@ -147,7 +147,7 @@ describe('NumberInput', () => {
     await fireEvent(input, 'focus');
     await fireEvent.changeText(input, '');
     await fireEvent(input, 'blur');
-    /* eslint-enable testing-library/no-await-sync-events */
+    /* eslint-enable testing-library/no-await-sync-events -- end of the block disabled above */
     expect(onChange).not.toHaveBeenCalled();
     expect(input).toHaveDisplayValue('3');
   });
@@ -162,7 +162,7 @@ describe('NumberInput', () => {
     await fireEvent(input, 'focus');
     await fireEvent.changeText(input, '7');
     await fireEvent(input, 'blur');
-    /* eslint-enable testing-library/no-await-sync-events */
+    /* eslint-enable testing-library/no-await-sync-events -- end of the block disabled above */
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange).toHaveBeenLastCalledWith(7);
   });
@@ -177,7 +177,7 @@ describe('NumberInput', () => {
     await fireEvent(input, 'focus');
     await fireEvent.changeText(input, '2');
     await fireEvent(input, 'blur');
-    /* eslint-enable testing-library/no-await-sync-events */
+    /* eslint-enable testing-library/no-await-sync-events -- end of the block disabled above */
     expect(onChange).toHaveBeenLastCalledWith(5);
   });
 
@@ -192,7 +192,7 @@ describe('NumberInput', () => {
     await fireEvent.changeText(input, '99');
     await fireEvent(input, 'submitEditing');
     await fireEvent(input, 'blur');
-    /* eslint-enable testing-library/no-await-sync-events */
+    /* eslint-enable testing-library/no-await-sync-events -- end of the block disabled above */
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange).toHaveBeenLastCalledWith(10);
   });

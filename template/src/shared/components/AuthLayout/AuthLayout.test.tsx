@@ -52,7 +52,7 @@ describe('AuthLayout', () => {
     /* eslint-disable rn-tempo/discouraged-syntax -- Maestro flows address these IDs */
     expect(screen.getByTestId('forgot-password-screen')).toBeOnTheScreen();
     expect(screen.getByTestId('forgot-password.header')).toBeOnTheScreen();
-    /* eslint-enable rn-tempo/discouraged-syntax */
+    /* eslint-enable rn-tempo/discouraged-syntax -- end of the block disabled above */
   });
 
   it('shows the header with only a back button', async () => {

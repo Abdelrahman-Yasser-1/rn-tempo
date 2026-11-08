@@ -114,7 +114,7 @@ describe('OtpScreen', () => {
     expect(screen.getByTestId('otp.header')).toBeOnTheScreen();
     expect(screen.getByTestId('otp.input')).toBeOnTheScreen();
     expect(screen.getByTestId('otp.resend-button')).toBeOnTheScreen();
-    /* eslint-enable rn-tempo/discouraged-syntax */
+    /* eslint-enable rn-tempo/discouraged-syntax -- end of the block disabled above */
     expect(screen.getByRole('header', { name: 'Enter the code' })).toBeOnTheScreen();
     expect(screen.getByText(/We sent a 6-digit code to/)).toBeOnTheScreen();
   });

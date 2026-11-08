@@ -1,3 +1,6 @@
+// Decorative icons have no role; the size and mirroring checks read the svg's testID.
+/* eslint-disable rn-tempo/discouraged-syntax -- decorative element: testID is the only handle */
+
 import { screen } from '@testing-library/react-native';
 import { I18nManager } from 'react-native';
 
@@ -9,8 +12,6 @@ import { renderWithProviders } from '@test-utils/renderWithProviders';
 
 import { Icon } from './Icon';
 
-// Decorative icons have no role; the size and mirroring checks read the svg's testID.
-/* eslint-disable rn-tempo/discouraged-syntax -- decorative element: testID is the only handle */
 describe('Icon', () => {
   it('is decorative and hidden from screen readers without a label', async () => {
     await renderWithProviders(<Icon name="check" testID="icon" />);

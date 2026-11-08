@@ -106,6 +106,6 @@ describe('Pagination', () => {
     expect(screen.getByTestId('pager.previous')).toBeOnTheScreen();
     expect(screen.getByTestId('pager.page-2')).toBeOnTheScreen();
     expect(screen.getByTestId('pager.next')).toBeOnTheScreen();
-    /* eslint-enable rn-tempo/discouraged-syntax */
+    /* eslint-enable rn-tempo/discouraged-syntax -- end of the block disabled above */
   });
 });

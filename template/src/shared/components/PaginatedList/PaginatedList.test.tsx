@@ -83,7 +83,7 @@ describe('PaginatedList', () => {
     /* eslint-disable rn-tempo/discouraged-syntax -- the shimmer is decorative and has no role */
     expect(screen.getByTestId('list.loading', { includeHiddenElements: true })).toBeOnTheScreen();
     expect(screen.queryByTestId('list.list')).not.toBeOnTheScreen();
-    /* eslint-enable rn-tempo/discouraged-syntax */
+    /* eslint-enable rn-tempo/discouraged-syntax -- end of the block disabled above */
     expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeOnTheScreen();
   });
 

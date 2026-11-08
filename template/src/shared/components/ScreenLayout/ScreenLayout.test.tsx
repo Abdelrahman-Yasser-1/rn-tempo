@@ -53,7 +53,7 @@ describe('ScreenLayout', () => {
     expect(
       within(screen.getByTestId('layout-screen.footer')).getByText('Footer action'),
     ).toBeOnTheScreen();
-    /* eslint-enable rn-tempo/discouraged-syntax */
+    /* eslint-enable rn-tempo/discouraged-syntax -- end of the block disabled above */
   });
 
   it('renders no footer container without a footer', async () => {
@@ -75,7 +75,7 @@ describe('ScreenLayout', () => {
     /* eslint-disable rn-tempo/discouraged-syntax -- layout parts are addressed by testID */
     expect(screen.getByTestId('layout-screen')).toBeOnTheScreen();
     expect(screen.getByTestId('layout-screen.header')).toBeOnTheScreen();
-    /* eslint-enable rn-tempo/discouraged-syntax */
+    /* eslint-enable rn-tempo/discouraged-syntax -- end of the block disabled above */
   });
 
   it('renders fixed content without scrolling', async () => {

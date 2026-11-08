@@ -51,7 +51,7 @@ describe('RegisterScreen', () => {
     expect(screen.getByTestId('register-screen')).toBeOnTheScreen();
     expect(screen.getByTestId('register.header')).toBeOnTheScreen();
     expect(screen.getByTestId('register.submit-button')).toBeOnTheScreen();
-    /* eslint-enable rn-tempo/discouraged-syntax */
+    /* eslint-enable rn-tempo/discouraged-syntax -- end of the block disabled above */
     // The app bar and the page title are both headings named "Create account".
     expect(screen.getAllByRole('header', { name: 'Create account' })).toHaveLength(2);
     expect(screen.getByText('Enter your details to get started.')).toBeOnTheScreen();

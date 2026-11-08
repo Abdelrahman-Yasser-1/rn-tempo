@@ -70,7 +70,7 @@ export function createAnimatedComponent<T>(component: T): T {
   return component;
 }
 
-/* eslint-disable import-x/no-default-export -- the mock must mirror the library's default export */
+// eslint-disable-next-line import-x/no-default-export -- the mock must mirror the library's default export
 export default {
   View: RNView,
   ScrollView: RNScrollView,

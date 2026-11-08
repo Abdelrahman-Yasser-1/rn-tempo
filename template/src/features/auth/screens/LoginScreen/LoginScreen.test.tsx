@@ -57,7 +57,7 @@ describe('LoginScreen', () => {
     expect(screen.getByTestId('login.register-link')).toBeOnTheScreen();
     expect(screen.getByTestId('login.submit-button')).toBeOnTheScreen();
     expect(screen.queryByTestId('login.header')).not.toBeOnTheScreen();
-    /* eslint-enable rn-tempo/discouraged-syntax */
+    /* eslint-enable rn-tempo/discouraged-syntax -- end of the block disabled above */
     expect(screen.getByRole('header', { name: 'Welcome back' })).toBeOnTheScreen();
     expect(screen.getByText('Sign in to continue.')).toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: 'Back' })).not.toBeOnTheScreen();

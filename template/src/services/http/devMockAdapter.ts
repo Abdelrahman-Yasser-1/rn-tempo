@@ -10,7 +10,7 @@ import {
   type MockMethod,
   type MockRequest,
 } from '@test-utils/msw/routes';
-/* eslint-enable boundaries/dependencies */
+/* eslint-enable boundaries/dependencies -- end of the block disabled above */
 
 export const DEV_MOCK_LATENCY_MS = 300;
 
