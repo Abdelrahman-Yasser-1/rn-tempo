@@ -1,21 +1,6 @@
 const reactNativePreset = require('@react-native/jest-preset/jest-preset');
 
-// Contract C4 aliases, kept in sync with tsconfig.json and babel.config.js.
-const ALIAS_DIRS = [
-  'app',
-  'navigation',
-  'features',
-  'shared',
-  'services',
-  'theme',
-  'assets',
-  'locales',
-  'config',
-  'test-utils',
-];
-const aliasMapper = Object.fromEntries(
-  ALIAS_DIRS.map((dir) => [`^@${dir}/(.*)$`, `<rootDir>/src/${dir}/$1`]),
-);
+const { jestModuleNameMapper } = require('./babel/aliases');
 
 const ESM_ONLY_PACKAGES =
   'msw|@msw/[^/]+|@mswjs/[^/]+|@open-draft/[^/]+|rettime|until-async|outvariant|strict-event-emitter|headers-polyfill|set-cookie-parser|tough-cookie|cookie|is-node-process';
@@ -50,7 +35,7 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   moduleNameMapper: {
     ...reactNativePreset.moduleNameMapper,
-    ...aliasMapper,
+    ...jestModuleNameMapper(),
   },
   transform: {
     // MSW and its interceptors are ESM-only and use syntax the React Native Babel preset rejects

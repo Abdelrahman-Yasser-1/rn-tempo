@@ -37,6 +37,7 @@
     "icons:add": "node scripts/icons-add.mjs",
     "icons:search": "node scripts/icons-add.mjs --search",
     "icons:prune": "node scripts/icons-prune.mjs",
+    "test:scripts": "node --test \"scripts/__tests__/aliases.test.mjs\"",
     "test:assets": "node --test scripts/__tests__/assets.test.mjs scripts/__tests__/icons-add.test.mjs scripts/__tests__/icons-prune.test.mjs",
     "start": "yarn assets && react-native start",
     "start:dev": "yarn assets && react-native start",
@@ -55,7 +56,7 @@
     "test:ai-skills": "node --test \"scripts/__tests__/ai-skills-update.test.mjs\"",
     "test:ai-sync": "node --test \"scripts/ai-sync/__tests__/*.test.mjs\"",
     "spec:check": "node scripts/spec-check.mjs",
-    "verify": "yarn typecheck && yarn lint && yarn format:check && yarn lint:files && yarn i18n:check && yarn lint:deadcode && yarn test --ci",
+    "verify": "yarn typecheck && yarn lint && yarn test:scripts && yarn format:check && yarn lint:files && yarn i18n:check && yarn lint:deadcode && yarn test --ci",
     "verify:changed": "node scripts/verify-changed.mjs"
   },
   "dependencies": {

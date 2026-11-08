@@ -10,10 +10,26 @@ import promise from 'eslint-plugin-promise';
 import regexp from 'eslint-plugin-regexp';
 import sonarjs from 'eslint-plugin-sonarjs';
 import unicorn from 'eslint-plugin-unicorn';
+import ts from 'typescript';
 
-/** Path aliases of contract C4, as a regex for `import-x/internal-regex`. */
-export const ALIAS_REGEX =
-  '^@(app|navigation|features|shared|services|theme|assets|locales|config|test-utils)(/|$)';
+/**
+ * The path aliases of the project (contract C4) as a regex for `import-x/internal-regex`, built
+ * from `compilerOptions.paths` of its tsconfig.json: the one source Babel and Jest read too.
+ * @param {string} root Absolute path of the project (the folder holding tsconfig.json).
+ */
+export function aliasRegex(root) {
+  const file = path.join(root, 'tsconfig.json');
+  const { config, error } = ts.readConfigFile(file, ts.sys.readFile);
+  if (error) {
+    throw new Error(
+      `Cannot read ${file}: ${ts.flattenDiagnosticMessageText(error.messageText, '\n')}`,
+    );
+  }
+  const names = Object.keys(config.compilerOptions?.paths ?? {}).map((alias) =>
+    alias.replace(/\/\*$/, '').replaceAll(/[$()*+.?[\\\]^{|}]/g, String.raw`\$&`),
+  );
+  return `^(${names.join('|')})(/|$)`;
+}
 
 const TEST_FILES = ['**/*.test.{ts,tsx}'];
 const STORY_FILES = ['**/*.stories.tsx'];
@@ -79,7 +95,7 @@ export function qualityConfig(root) {
         'import-x/extensions': ['.ts', '.tsx', '.cts', '.mts', '.js', '.jsx', '.cjs', '.mjs'],
         'import-x/external-module-folders': ['node_modules', 'node_modules/@types'],
         'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx', '.cts', '.mts'] },
-        'import-x/internal-regex': ALIAS_REGEX,
+        'import-x/internal-regex': aliasRegex(root),
         'import-x/resolver-next': [
           createTypeScriptImportResolver({ project: path.join(root, 'tsconfig.json') }),
         ],
