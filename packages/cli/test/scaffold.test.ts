@@ -1,4 +1,5 @@
-import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
+import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -24,6 +25,7 @@ const FEATURE_WALLET_FILES = [
   'specs/wallet/design.md',
   'specs/wallet/spec.md',
   'specs/wallet/tasks.md',
+  'src/features/wallet/README.md',
   'src/features/wallet/api/keys.ts',
   'src/features/wallet/api/queries.ts',
   'src/features/wallet/constants.ts',
@@ -84,6 +86,17 @@ describe('scaffold generators', () => {
 
       expect(JSON.parse(await read('src/locales/en/wallet.json'))).toEqual({ screens: { wallet: { title: 'Wallet' } } });
       expect(await read('src/features/wallet/index.ts')).toContain("export { WalletScreen } from './screens/WalletScreen';");
+    });
+
+    it('generates a README that passes the template feature-readme checker', async () => {
+      await generateFeature('wallet', options());
+      await rm(path.join(dir, 'src/features/items'), { recursive: true, force: true }); // the fixture's hand-made feature has no README
+      await mkdir(path.join(dir, 'scripts'), { recursive: true });
+      await cp(path.join(TEMPLATE_DIR, 'scripts/check-feature-readmes.mjs'), path.join(dir, 'scripts/check-feature-readmes.mjs'));
+
+      // The script reads src/features of the project it sits in and exits 1 with a report otherwise.
+      expect(() => execFileSync('node', ['scripts/check-feature-readmes.mjs'], { cwd: dir, stdio: 'pipe' })).not.toThrow();
+      expect(await read('src/features/wallet/README.md')).toContain('- `WalletScreen`');
     });
 
     it('refuses an existing feature without --force, and a forced rerun does not duplicate registrations', async () => {
