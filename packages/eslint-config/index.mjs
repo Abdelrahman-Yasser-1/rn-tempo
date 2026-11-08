@@ -13,9 +13,10 @@ import { screenLogicConfig } from "./configs/restrictions.mjs";
 import { structureConfig } from "./configs/structure.mjs";
 import { syntaxConfig } from "./configs/syntax.mjs";
 import { testsConfig } from "./configs/tests.mjs";
+import { findPolicyEntry } from "./plugin/dependency-owner.mjs";
 import { rnTempoPlugin } from "./plugin/index.mjs";
 
-export { DEPENDENCY_POLICY, rnTempoPlugin };
+export { DEPENDENCY_POLICY, findPolicyEntry, rnTempoPlugin };
 
 /**
  * Builds the RN-TEMPO flat config.
