@@ -1,0 +1,25 @@
+# {{FeatureName}}
+
+## Purpose
+
+Describe what the {{feature}} feature does for the user, in one or two sentences.
+
+## Public API
+
+Everything `index.ts` exports. `yarn lint:readmes` fails when this list and the barrel differ, so update both together (also after `tempo g screen`).
+
+- `{{FeatureName}}Screen`: the first screen of the feature.
+- `{{featureCamel}}Keys`: query key factory.
+- `{{FeatureName}}Item`: type of one item.
+
+## Screens and routes
+
+`{{FeatureName}}Screen` is the route `{{FeatureName}}`. Register it in a navigator with `tempo g screen --register`, or add it to a stack in `src/navigation/stacks.ts`.
+
+## Data
+
+`api/queries.ts` has `use{{FeatureName}}ListQuery`, a placeholder until the endpoint exists. Query keys are in `api/keys.ts`; add requests through `request()` from `@services/http` with a Zod schema.
+
+## Spec
+
+[`specs/{{feature}}/spec.md`](../../../specs/{{feature}}/spec.md), with its [design](../../../specs/{{feature}}/design.md) and [tasks](../../../specs/{{feature}}/tasks.md).

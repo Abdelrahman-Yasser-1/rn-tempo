@@ -53,6 +53,8 @@ yarn verify:changed --pr --out verify-report.md
 
 `yarn lint:env` compares the keys of `.env.example` with every `.env.*` file present in the app folder (`.env.dev` is committed; `.env.staging` and `.env.prod` exist locally or in CI). Values and order do not matter, only the set of keys. It also fails when a root `.env` is tracked by git: the iOS scheme pre-action copies `.env.<env>` to `.env`, and that copy must stay untracked. `tempo doctor` runs the same comparison as its `env-files` check.
 
+`yarn lint:readmes` checks the feature READMEs. Every `src/features/<name>/` needs a `README.md` with a `## Public API` section that lists, one `` - `Name` `` bullet each, exactly the names exported by that feature's `index.ts` (`export { a, b } from`, `export type { C }`, `export const|function|type`). It reports the names missing from the README and the names listed that the barrel no longer exports. `tempo g feature` writes the README; after `tempo g screen` adds a barrel export, add its bullet. `yarn verify` includes it.
+
 ## Bundle check
 
 `yarn verify:bundle` runs a production `react-native bundle` for iOS and Android into a temporary folder and prints each bundle size. It is slow, so it is not part of `yarn verify`; Renovate pull requests and dependency upgrades run it. See [Upgrades](/docs/upgrades).

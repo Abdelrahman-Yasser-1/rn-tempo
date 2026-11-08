@@ -26,29 +26,30 @@ A React Native app created from RN-TEMPO. Product context, glossary, environment
 
 Run everything from the project root.
 
-| Command                                                    | Purpose                                                                                                   |
-| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `yarn install && yarn pods`                                | Install JS deps and iOS pods                                                                              |
-| `yarn start`                                               | Metro                                                                                                     |
-| `yarn ios:dev` / `yarn android:dev`                        | Run the dev app (also `:staging`, `:prod`)                                                                |
-| `yarn verify`                                              | Typecheck, lint, dependency ownership, env files, node tests, format, ls-lint, i18n, knip, jest           |
-| `yarn verify:changed` (`--pr`)                             | Same checks scoped to changed files; full `verify` when a config changed; `--pr` prints a Markdown report |
-| `yarn verify:bundle`                                       | Production bundle dry run for iOS and Android (slow, not in `verify`)                                     |
-| `yarn test:node`                                           | Every `node --test` suite under `scripts/`                                                                |
-| `yarn lint:env`                                            | Every `.env.*` has the keys of `.env.example`; root `.env` is untracked                                   |
-| `yarn fresh-install` / `yarn android:reverse`              | Clean caches, `node_modules`, reinstall; forward Metro to an Android device                               |
-| `yarn lint:fix` / `yarn format`                            | Auto-fix lint and formatting                                                                              |
-| `yarn test` / `yarn jest <path>`                           | Jest                                                                                                      |
-| `yarn typecheck`                                           | `tsc --noEmit`                                                                                            |
-| `yarn i18n:check`                                          | Locale keys identical in `en` and `ar`, none missing                                                      |
-| `yarn lint:deadcode`                                       | knip                                                                                                      |
-| `yarn spec:check`                                          | Every AC of implemented specs is covered by a test                                                        |
-| `yarn tempo g <kind> ...`                                  | Generators (when the CLI is installed; see `ai/rules/generators.md`)                                      |
-| `yarn icons:search <term>` / `yarn icons:add <name\|file>` | Find an icon; add your own SVG or a Tabler icon (see Add an icon)                                         |
-| `yarn icons:prune` (`--restore`)                           | Release builds only: keep just the icons the code uses                                                    |
-| `yarn assets` / `yarn assets:check`                        | Validate `src/assets`, generate (or verify) `src/assets/generated`                                        |
-| `yarn ai:sync`                                             | Regenerate tool files from `ai/` (after editing `ai/`)                                                    |
-| `yarn ai:start` / `ai:prompt` / `ai:stop` / `ai:report`    | AI session logging                                                                                        |
+| Command                                                    | Purpose                                                                                                          |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `yarn install && yarn pods`                                | Install JS deps and iOS pods                                                                                     |
+| `yarn start`                                               | Metro                                                                                                            |
+| `yarn ios:dev` / `yarn android:dev`                        | Run the dev app (also `:staging`, `:prod`)                                                                       |
+| `yarn verify`                                              | Typecheck, lint, dependency ownership, env files, feature READMEs, node tests, format, ls-lint, i18n, knip, jest |
+| `yarn verify:changed` (`--pr`)                             | Same checks scoped to changed files; full `verify` when a config changed; `--pr` prints a Markdown report        |
+| `yarn verify:bundle`                                       | Production bundle dry run for iOS and Android (slow, not in `verify`)                                            |
+| `yarn test:node`                                           | Every `node --test` suite under `scripts/`                                                                       |
+| `yarn lint:env`                                            | Every `.env.*` has the keys of `.env.example`; root `.env` is untracked                                          |
+| `yarn lint:readmes`                                        | Every feature has a README whose Public API lists exactly the exports of its `index.ts`                          |
+| `yarn fresh-install` / `yarn android:reverse`              | Clean caches, `node_modules`, reinstall; forward Metro to an Android device                                      |
+| `yarn lint:fix` / `yarn format`                            | Auto-fix lint and formatting                                                                                     |
+| `yarn test` / `yarn jest <path>`                           | Jest                                                                                                             |
+| `yarn typecheck`                                           | `tsc --noEmit`                                                                                                   |
+| `yarn i18n:check`                                          | Locale keys identical in `en` and `ar`, none missing                                                             |
+| `yarn lint:deadcode`                                       | knip                                                                                                             |
+| `yarn spec:check`                                          | Every AC of implemented specs is covered by a test                                                               |
+| `yarn tempo g <kind> ...`                                  | Generators (when the CLI is installed; see `ai/rules/generators.md`)                                             |
+| `yarn icons:search <term>` / `yarn icons:add <name\|file>` | Find an icon; add your own SVG or a Tabler icon (see Add an icon)                                                |
+| `yarn icons:prune` (`--restore`)                           | Release builds only: keep just the icons the code uses                                                           |
+| `yarn assets` / `yarn assets:check`                        | Validate `src/assets`, generate (or verify) `src/assets/generated`                                               |
+| `yarn ai:sync`                                             | Regenerate tool files from `ai/` (after editing `ai/`)                                                           |
+| `yarn ai:start` / `ai:prompt` / `ai:stop` / `ai:report`    | AI session logging                                                                                               |
 
 ## Folder map
 
