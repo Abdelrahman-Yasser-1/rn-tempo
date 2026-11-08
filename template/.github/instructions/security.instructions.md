@@ -8,7 +8,7 @@ applyTo: 'src/services/**,src/config/**,.env*'
 
 No secrets in the repo, no tokens outside the Keychain, no direct env access.
 
-- **Env:** import `ENV` from `@config/env` (zod-validated at startup, fails fast). Importing `react-native-config` anywhere else is a lint error. A new variable goes in `src/config/env.ts` (schema) and `.env.example`, plus the `.env.*` files.
+- **Env:** import `ENV` from `@config/env` (zod-validated at startup, fails fast). Importing `react-native-config` anywhere else is a lint error. A new variable goes in `src/config/parseEnv.ts` (schema; `env.ts` calls it and throws `EnvError` when the config is bad) and `.env.example`, plus the `.env.*` files.
 - `.env.dev` is committed and must **never** contain secrets. `.env.staging` and `.env.prod` are gitignored; CI writes them from the `ENV_FILE_STAGING` and `ENV_FILE_PROD` secrets. The pre-commit `env-guard` and `gitleaks` block secrets; never bypass hooks.
 - `eslint-plugin-no-secrets` flags high-entropy strings. Do not hard-code keys, tokens, passwords or private URLs; do not paste them into prompts (prompt logs are redacted, but do not rely on it).
 - **Tokens:** only in `@services/secure-storage` (`tokenStore`: Keychain service `<bundleId>.auth-tokens`, `WHEN_UNLOCKED_THIS_DEVICE_ONLY`, in-memory cache). Never in Zustand, MMKV, logs or analytics. Only `src/services/secure-storage/**` (and `storage/encryptionKey.ts`) may import `react-native-keychain`.
