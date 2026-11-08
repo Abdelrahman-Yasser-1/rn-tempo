@@ -47,7 +47,13 @@ A screen with logic splits into a view and a hook:
 
 `@app/*` `@navigation/*` `@features/*` `@shared/*` `@services/*` `@theme/*` `@assets/*` `@locales/*` `@config/*` `@test-utils/*` map to the folder of the same name under `src/`.
 
+The aliases are declared once, in `compilerOptions.paths` of `tsconfig.json`; Babel, Jest and ESLint read them from there, so adding an alias means editing that file only.
+
+Import through an alias, never through `../` (lint error). `./` is fine inside the same folder.
+
 ## Barrels
+
+Barrels name their exports: `export { Button } from './Button';` and `export type { ButtonProps } from './types';`. `export *` is a lint error.
 
 An `index.ts` barrel is allowed only at: each feature root, each component/screen folder, `src/shared/components/index.ts`, `src/shared/hooks/index.ts`, `src/shared/utils/index.ts`, `src/theme/index.ts`, `src/assets/*/index.ts`.
 
@@ -70,7 +76,11 @@ An `index.ts` barrel is allowed only at: each feature root, each component/scree
 `shared-ui` = `src/shared/{components,hooks}`. `shared-core` = `src/shared/{utils,types,constants}` (pure code).
 Only `*.test.ts(x)`, `*.stories.tsx` and `src/test-utils/**` may import `@test-utils/*`.
 
-## Restricted imports
+## Dependency ownership
+
+Every runtime dependency in `package.json` is classified in `DEPENDENCY_POLICY` (`@rn-tempo/eslint-config`) plus the project's `dependencies` export in `eslint.config.mjs`: `owned` (only the listed folders may import it), `free` (anywhere) or `native` (no JS import expected). A new dependency needs an entry or `yarn lint:deps` (part of `yarn verify`) fails. The `rn-tempo/dependency-owner` rule reports an import from a file that does not own the package, and says where to go instead. Tests, stories, `src/test-utils/**`, `jest.setup.ts` and `__mocks__/**` are exempt.
+
+## Restricted imports and syntax
 
 | Import                                                                                                                           | Allowed only in                                                              |
 | -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
@@ -84,7 +94,11 @@ Only `*.test.ts(x)`, `*.stories.tsx` and `src/test-utils/**` may import `@test-u
 | `react-native-svg`                                                                                                               | `src/shared/components/Icon/**` (and generated icons)                        |
 | `*.svg` files                                                                                                                    | `src/shared/components/Icon/**` (draw icons with `<Icon />`)                 |
 
-Also: no default exports (`import-x/no-default-export`), no import cycles (`import-x/no-cycle`).
+Examples of owned packages: `@react-native-community/netinfo` (`src/services/network/**`), `react-native-localize` and `react-native-restart` (`src/services/i18n/**`), `react-native-toast-message` (`src/services/toast/**`), the pickers (`src/services/files/**`). The full list is `configs/dependencies.mjs` in `@rn-tempo/eslint-config`.
+
+Also banned, with a message that says what to use: `process.env` and `'dev' | 'staging' | 'prod'` comparisons outside `src/config/**` (use `@config/env`), color literals outside `src/theme/**`, `Appearance` and `StatusBar` outside `src/theme/**`, `src/app/**` and `Screen`, and `@test-utils/*` outside tests and stories.
+
+Also: no default exports (`import-x/no-default-export`), no import cycles (`import-x/no-cycle`). Size guards: files up to 300 lines, at most 4 parameters, nesting depth 4. Every `eslint-disable` needs a `-- reason`, whole-file disables go at the top, and a disable that silences nothing is an error.
 
 ## Examples
 
