@@ -91,6 +91,15 @@ export const DEPENDENCY_POLICY = {
     'Shake detection belongs to the app providers.',
   ),
 
+  '@react-native-firebase/app': owned(
+    ['src/services/push/**'],
+    'Push notifications live in src/services/push; do not call Firebase from other code.',
+  ),
+  '@react-native-firebase/messaging': owned(
+    ['src/services/push/**'],
+    'Use @services/push for tokens, permission and notification links.',
+  ),
+
   // UI libraries wrapped by one shared component.
   'react-native-svg': owned(
     ['src/shared/components/Icon/**', 'src/assets/generated/**'],

@@ -24,6 +24,8 @@ import 'react-native-fast-shimmer';
 import 'react-native-keyboard-controller';
 import 'react-native-maps';
 import 'react-native-webview';
+import '@react-native-firebase/app';
+import '@react-native-firebase/messaging';
 import '@react-native/normalize-colors';
 import 'react-native-edge-to-edge';
 import 'react-native-get-random-values';
