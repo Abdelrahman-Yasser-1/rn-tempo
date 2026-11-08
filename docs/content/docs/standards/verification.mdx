@@ -1,0 +1,58 @@
+---
+title: Verification commands
+description: What yarn verify and yarn verify:changed run, when verify:changed escalates, and how to get a Markdown report for a PR.
+---
+
+Two commands check a project before you push. Both run from the app folder (`template/` in this repo).
+
+| Command               | What it runs                                                                                                                                      |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `yarn verify`         | typecheck, eslint (`--max-warnings=0`), dependency ownership, env files, node script tests, prettier check, ls-lint, i18n check, knip, `jest --ci` |
+| `yarn verify:changed` | the same kinds of checks, scoped to the files you changed                                                                                         |
+
+## verify:changed
+
+`yarn verify:changed` collects the files changed since `HEAD` (staged, unstaged and untracked), then runs:
+
+1. eslint on the changed code files
+2. prettier `--check` on the changed formattable files
+3. ls-lint
+4. `tsc --noEmit`
+5. jest on the tests related to the changed code (`--findRelatedTests`)
+
+It stops at the first failing step and prints that step's output.
+
+### Escalation to the full run
+
+A change to a configuration file can break files you did not touch. When any changed file is one of these, `yarn verify:changed` runs the full `yarn verify` instead and exits with its status:
+
+- `package.json`, `yarn.lock`, `.yarnrc.yml`
+- `tsconfig.json`, `babel.config.js`, `babel/**`, `metro.config.js`
+- `jest.config.js`, `jest.setup.ts`, `__mocks__/**`
+- `eslint.config.mjs`, `prettier.config.mjs`, `.ls-lint.yml`, `knip.json`, `i18next.config.ts`
+- `.env.example`
+
+### Report mode for pull requests
+
+`yarn verify:changed --pr` compares against the merge base with `origin/main` (or `main` when there is no `origin/main`) instead of `HEAD`. It runs every step even after a failure, captures each step's output, and prints a Markdown report to stdout:
+
+- a table with one row per step: result (✅ or ❌) and duration
+- the last 40 lines of each failed step, inside a `<details>` block
+
+Use `--out <file>` to write the report to a file. The exit code is still non-zero when a step failed, so the same command works in CI and in a PR description.
+
+```bash
+yarn verify:changed --pr --out verify-report.md
+```
+
+## Node script tests
+
+`yarn test:node` runs every `node --test` suite under `scripts/` (the helpers for assets, icons, AI logging, AI sync, env checks and so on). `yarn verify` runs it. The narrower scripts (`yarn test:assets`, `yarn test:ai-log`, `yarn test:ai-sync`, `yarn test:ai-skills`) run one suite each.
+
+## Env files
+
+`yarn lint:env` compares the keys of `.env.example` with every `.env.*` file present in the app folder (`.env.dev` is committed; `.env.staging` and `.env.prod` exist locally or in CI). Values and order do not matter, only the set of keys. It also fails when a root `.env` is tracked by git: the iOS scheme pre-action copies `.env.<env>` to `.env`, and that copy must stay untracked. `tempo doctor` runs the same comparison as its `env-files` check.
+
+## Bundle check
+
+`yarn verify:bundle` runs a production `react-native bundle` for iOS and Android into a temporary folder and prints each bundle size. It is slow, so it is not part of `yarn verify`; Renovate pull requests and dependency upgrades run it. See [Upgrades](/docs/upgrades).
