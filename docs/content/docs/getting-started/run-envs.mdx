@@ -25,14 +25,15 @@ Use `staging` or `prod` in place of `dev` for the other environments. All three 
 | `.env.dev` | yes | Holds no secrets |
 | `.env.staging`, `.env.prod` | no | CI writes them from the `ENV_FILE_STAGING` and `ENV_FILE_PROD` secrets |
 
-On iOS, a scheme pre-action copies `.env.<env>` to `.env` before the build. `src/config/env.ts` validates every key with Zod and throws at startup when one is wrong, so a broken build never reaches users:
+On iOS, a scheme pre-action copies `.env.<env>` to `.env` before the build. `src/config/env.ts` hands the values to `parseEnv` (`src/config/parseEnv.ts`), which validates every key with Zod and throws an `EnvError` at startup when one is wrong, so a broken build never reaches users. Import `ENV` from `@config/env`, never `react-native-config`; ESLint enforces it.
 
-<AnnotatedCode file="template/src/config/env.ts" highlight="9,30-38,42-46">
-  <Note line={4}>Import `ENV`, never `react-native-config`. ESLint enforces it.</Note>
-  <Note line={9}>`APP_ENV` is the only key every part of the app can rely on to tell environments apart.</Note>
-  <Note line={31}>Cross-field rule: SSL pinning on requires at least two pins, so a pin can be rotated.</Note>
-  <Note line={44}>Fail fast with a readable message instead of a broken request later.</Note>
+<AnnotatedCode file="template/src/config/parseEnv.ts" highlight="7,28-36,55-57">
+  <Note line={7}>`APP_ENV` is the only key every part of the app can rely on to tell environments apart.</Note>
+  <Note line={29}>Cross-field rule: SSL pinning on requires at least two pins, so a pin can be rotated.</Note>
+  <Note line={56}>Fail fast with a readable message instead of a broken request later. The error lists the Zod issues in `issues`.</Note>
 </AnnotatedCode>
+
+`parseEnv` is a pure function, so a test can call it with any object and needs no native module.
 
 ## Release builds
 

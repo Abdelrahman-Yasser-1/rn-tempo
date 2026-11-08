@@ -62,7 +62,7 @@ src/
   theme/        tokens, themes, scaling
   assets/       fonts, images, icons, animations, generated/ (built by `yarn assets`)
   locales/      en/<ns>.json, ar/<ns>.json
-  config/       env.ts, constants.ts
+  config/       env.ts, parseEnv.ts, constants.ts
   test-utils/   renderWithProviders, msw/, factories/
 ai/             sources for all AI tool files (rules, skills, commands, agents)
 specs/          product.md, tech.md, one folder per feature
