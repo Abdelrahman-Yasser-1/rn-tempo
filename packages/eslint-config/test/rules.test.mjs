@@ -304,6 +304,31 @@ describe("eslint-config fixtures", () => {
     }
   }, 120_000);
 
+  it.each([
+    [
+      "src/shared/utils/importsFeature.ts",
+      /Shared code must not import features\. Move the shared part to @shared/,
+    ],
+    [
+      "src/features/auth/utils/deepImport.ts",
+      /may be imported only through its index\.ts: import from '@features\/home'/,
+    ],
+    [
+      "src/services/http/usesUi.ts",
+      /Services must not import UI\. Return data and let the caller render it\./,
+    ],
+    [
+      "src/features/home/utils/usesTestUtils.ts",
+      /src\/test-utils is for tests and stories only/,
+    ],
+  ])(
+    "tells what to do about the boundary violation in %s",
+    async (file, pattern) => {
+      const texts = await lintMessages("invalid", file);
+      expect(texts.join("\n")).toMatch(pattern);
+    },
+  );
+
   it("reports a disable directive that silences nothing", async () => {
     const texts = await lintMessages(
       "invalid",
