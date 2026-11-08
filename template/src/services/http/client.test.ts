@@ -3,7 +3,9 @@ import { delay, http, HttpResponse } from 'msw';
 import { ENV } from '@config/env';
 import { initI18nInstance } from '@services/i18n/i18n';
 import { tokenStore } from '@services/secure-storage/tokenStore';
+// @tempo-feature:ssl-pinning:start
 import * as pinning from '@services/security/pinning/pinning';
+// @tempo-feature:ssl-pinning:end
 import { STORAGE_KEYS } from '@services/storage/keys';
 import { initStorage, storage } from '@services/storage/storage';
 import { server } from '@test-utils/msw/server';
@@ -81,6 +83,7 @@ describe('httpClient request interceptor', () => {
   });
 });
 
+// @tempo-feature:ssl-pinning:start
 describe('httpClient pinning gate', () => {
   test('AC-6: blocks requests until pinning is ready when pinning is enabled', async () => {
     jest.replaceProperty(ENV, 'SSL_PINNING_ENABLED', true);
@@ -95,6 +98,7 @@ describe('httpClient pinning gate', () => {
     jest.restoreAllMocks();
   });
 });
+// @tempo-feature:ssl-pinning:end
 
 describe('httpClient token refresh', () => {
   const unauthorized = jest.fn();
@@ -246,6 +250,7 @@ describe('httpClient token refresh', () => {
     jest.restoreAllMocks();
   });
 
+  // @tempo-feature:ssl-pinning:start
   test('a refresh blocked by pinning rejects without reaching the network or signing out', async () => {
     jest.replaceProperty(ENV, 'SSL_PINNING_ENABLED', true);
     // The original request passes the gate; the refresh that follows does not.
@@ -262,6 +267,7 @@ describe('httpClient token refresh', () => {
     expect(tokenStore.getRefreshToken()).toBe('ref-old');
     jest.restoreAllMocks();
   });
+  // @tempo-feature:ssl-pinning:end
 
   test('AC-4: a replayed request that is rejected again signs out without looping', async () => {
     server.use(
