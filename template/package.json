@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
+    "preinstall": "node scripts/check-node.mjs",
     "android": "react-native run-android",
     "android:dev": "react-native run-android --mode devDebug --appIdSuffix dev",
     "android:staging": "react-native run-android --mode stagingDebug --appIdSuffix staging",

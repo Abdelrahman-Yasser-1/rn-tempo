@@ -12,6 +12,7 @@
     "docs"
   ],
   "scripts": {
+    "preinstall": "node scripts/check-node.mjs",
     "prepare": "lefthook install",
     "lint": "yarn workspaces foreach -A --exclude rn-tempo run lint",
     "test": "yarn workspaces foreach -A --exclude rn-tempo run test",
