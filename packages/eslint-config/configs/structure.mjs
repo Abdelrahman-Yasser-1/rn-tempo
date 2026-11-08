@@ -114,6 +114,8 @@ export const FOLDER_STRUCTURE = {
         file('.gitkeep'),
         file('{camelCase}.ts'),
         file('{camelCase}.test.ts'),
+        // Integration smoke tests that render (src/test-utils/integration).
+        file('{camelCase}.test.tsx'),
         { name: '{camelCase}', ruleId: 'test_utils_folder' },
       ],
     },
