@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import type { CardPadding } from '../Card';
+import type { CardPadding } from '@shared/components/Card';
 
 export type CardSectionProps = Readonly<{
   /** Draws a divider line above the section, to separate it from the one before. */

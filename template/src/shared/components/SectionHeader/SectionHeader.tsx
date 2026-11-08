@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 
-import { Link } from '../Link';
-import { Text } from '../Text';
+import { Link } from '@shared/components/Link';
+import { Text } from '@shared/components/Text';
 
 import { styles } from './styles';
 import type { SectionHeaderProps } from './types';

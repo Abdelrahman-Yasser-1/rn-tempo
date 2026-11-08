@@ -1,9 +1,9 @@
 import { View } from 'react-native';
 
-import { Bone } from '../Bone';
-import { CardShimmer } from '../CardShimmer';
-import { Screen } from '../Screen';
-import { Skeleton } from '../Skeleton';
+import { Bone } from '@shared/components/Bone';
+import { CardShimmer } from '@shared/components/CardShimmer';
+import { Screen } from '@shared/components/Screen';
+import { Skeleton } from '@shared/components/Skeleton';
 
 import { styles } from './styles';
 import type { ScreenShimmerProps } from './types';

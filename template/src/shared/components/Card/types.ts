@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { PressableProps } from 'react-native';
 
-import type { ImageProps } from '../Image';
+import type { ImageProps } from '@shared/components/Image';
 
 export type CardVariant = 'elevated' | 'outlined' | 'filled';
 export type CardPadding = 'none' | 'sm' | 'md' | 'lg' | 'xl';

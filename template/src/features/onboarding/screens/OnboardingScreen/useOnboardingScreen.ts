@@ -1,8 +1,8 @@
 import { useCallback, useRef, useState } from 'react';
 import type { FlatList, FlatListProps } from 'react-native';
 
-import { SLIDES, type Slide } from '../../constants';
-import { useOnboardingStore } from '../../store/onboarding.store';
+import { SLIDES, type Slide } from '@features/onboarding/constants';
+import { useOnboardingStore } from '@features/onboarding/store/onboarding.store';
 
 type ViewableChangeHandler = NonNullable<FlatListProps<Slide>['onViewableItemsChanged']>;
 

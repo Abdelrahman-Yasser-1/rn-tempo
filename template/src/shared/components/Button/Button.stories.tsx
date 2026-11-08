@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 import { action } from 'storybook/actions';
 
-import { Box } from '../Box';
-import { Column } from '../Column';
-import { Row } from '../Row';
+import { Box } from '@shared/components/Box';
+import { Column } from '@shared/components/Column';
+import { Row } from '@shared/components/Row';
 
 import { Button } from './Button';
 import type { ButtonSize, ButtonVariant } from './types';

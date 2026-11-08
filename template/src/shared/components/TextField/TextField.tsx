@@ -3,11 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { TextInput } from 'react-native';
 import { useUnistyles } from 'react-native-unistyles';
 
-import { Box } from '../Box';
-import { FieldLabel } from '../FieldLabel';
-import { FieldMessage } from '../FieldMessage';
-import { IconButton } from '../IconButton';
-import { Text } from '../Text';
+import { Box } from '@shared/components/Box';
+import { FieldLabel } from '@shared/components/FieldLabel';
+import { FieldMessage } from '@shared/components/FieldMessage';
+import { IconButton } from '@shared/components/IconButton';
+import { Text } from '@shared/components/Text';
 
 import { styles } from './styles';
 import type { TextFieldProps } from './types';

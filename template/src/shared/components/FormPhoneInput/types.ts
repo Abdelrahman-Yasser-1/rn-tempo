@@ -1,6 +1,6 @@
 import type { FieldPath, FieldValues, UseControllerProps } from 'react-hook-form';
 
-import type { PhoneInputProps } from '../PhoneInput';
+import type { PhoneInputProps } from '@shared/components/PhoneInput';
 
 export type FormPhoneInputProps<
   TFieldValues extends FieldValues = FieldValues,

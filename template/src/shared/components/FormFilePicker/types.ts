@@ -1,6 +1,6 @@
 import type { FieldPath, FieldValues, UseControllerProps } from 'react-hook-form';
 
-import type { FilePickerProps } from '../FilePicker';
+import type { FilePickerProps } from '@shared/components/FilePicker';
 
 export type FormFilePickerProps<
   TFieldValues extends FieldValues = FieldValues,

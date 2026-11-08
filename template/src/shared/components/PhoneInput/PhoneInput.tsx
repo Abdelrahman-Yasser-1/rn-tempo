@@ -1,5 +1,5 @@
-import { CountryPicker } from '../CountryPicker';
-import { TextField } from '../TextField';
+import { CountryPicker } from '@shared/components/CountryPicker';
+import { TextField } from '@shared/components/TextField';
 
 import type { PhoneInputProps } from './types';
 import { usePhoneInput } from './usePhoneInput';

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 import { action } from 'storybook/actions';
 
-import { Text } from '../Text';
+import { Text } from '@shared/components/Text';
 
 import { StepperLayout } from './StepperLayout';
 

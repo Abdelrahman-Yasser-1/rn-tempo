@@ -1,10 +1,10 @@
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
-import { Card } from '../Card';
-import { DescriptionList } from '../DescriptionList';
-import { Link } from '../Link';
-import { Text } from '../Text';
+import { Card } from '@shared/components/Card';
+import { DescriptionList } from '@shared/components/DescriptionList';
+import { Link } from '@shared/components/Link';
+import { Text } from '@shared/components/Text';
 
 import { styles } from './styles';
 import type { FormReviewProps } from './types';

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 
-import { Card } from '../Card';
-import { Text } from '../Text';
+import { Card } from '@shared/components/Card';
+import { Text } from '@shared/components/Text';
 
 import { CardSection } from './CardSection';
 

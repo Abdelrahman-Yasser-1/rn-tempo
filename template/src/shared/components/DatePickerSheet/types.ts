@@ -1,4 +1,4 @@
-import type { CalendarProps } from '../Calendar';
+import type { CalendarProps } from '@shared/components/Calendar';
 
 export type DatePickerSheetProps = Readonly<
   Omit<CalendarProps, 'value' | 'onChange' | 'testID'> & {

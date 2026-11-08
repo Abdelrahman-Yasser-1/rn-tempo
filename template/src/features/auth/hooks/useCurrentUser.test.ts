@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react-native';
 
-import { useAuthStore } from '../store/auth.store';
-import { UserSchema } from '../types';
+import { useAuthStore } from '@features/auth/store/auth.store';
+import { UserSchema } from '@features/auth/types';
 
 import { useAuthStatus } from './useAuthStatus';
 import { useCurrentUser } from './useCurrentUser';

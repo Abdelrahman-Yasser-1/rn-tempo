@@ -1,10 +1,9 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
+import { THEME_OPTIONS } from '@features/settings/constants';
 import type { SettingsStackParamList } from '@navigation/types';
 import { useAppTheme, type ThemePreference } from '@theme/index';
-
-import { THEME_OPTIONS } from '../../constants';
 
 const isThemePreference = (value: string): value is ThemePreference =>
   THEME_OPTIONS.some((option) => option === value);

@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
-import { PickerField } from '../PickerField';
-import { TimePickerSheet } from '../TimePickerSheet';
+import { PickerField } from '@shared/components/PickerField';
+import { TimePickerSheet } from '@shared/components/TimePickerSheet';
 
 import type { TimePickerProps } from './types';
 import { useTimePicker } from './useTimePicker';

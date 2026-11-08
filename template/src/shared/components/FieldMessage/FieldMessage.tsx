@@ -1,6 +1,6 @@
-import { Box } from '../Box';
-import { Icon } from '../Icon';
-import { Text } from '../Text';
+import { Box } from '@shared/components/Box';
+import { Icon } from '@shared/components/Icon';
+import { Text } from '@shared/components/Text';
 
 import { styles } from './styles';
 import type { FieldMessageProps } from './types';

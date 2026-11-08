@@ -1,9 +1,8 @@
 import { Pressable } from 'react-native';
 
 import { openUrlSafe } from '@services/linking/linking';
+import { Text } from '@shared/components/Text';
 import { HIT_SLOP } from '@shared/constants/touch';
-
-import { Text } from '../Text';
 
 import { styles } from './styles';
 import type { LinkProps } from './types';

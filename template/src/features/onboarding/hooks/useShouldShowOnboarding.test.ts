@@ -1,13 +1,12 @@
 import { screen } from '@testing-library/react-native';
 import { createElement } from 'react';
 
+import { useOnboardingStore } from '@features/onboarding/store/onboarding.store';
 import { clearFlagOverrides, setFlagOverride } from '@services/flags/flagOverrides';
 import { STORAGE_KEYS } from '@services/storage/keys';
 import { initStorage, storage } from '@services/storage/storage';
 import { Text } from '@shared/components';
 import { renderWithProviders } from '@test-utils/renderWithProviders';
-
-import { useOnboardingStore } from '../store/onboarding.store';
 
 import { useShouldShowOnboarding } from './useShouldShowOnboarding';
 

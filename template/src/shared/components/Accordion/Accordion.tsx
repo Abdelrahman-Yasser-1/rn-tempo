@@ -1,8 +1,8 @@
 import { Fragment } from 'react';
 import { View } from 'react-native';
 
-import { AccordionItem } from '../AccordionItem';
-import { Divider } from '../Divider';
+import { AccordionItem } from '@shared/components/AccordionItem';
+import { Divider } from '@shared/components/Divider';
 
 import { styles } from './styles';
 import type { AccordionProps } from './types';

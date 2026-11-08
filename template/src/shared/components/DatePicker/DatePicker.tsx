@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
-import { DatePickerSheet } from '../DatePickerSheet';
-import { PickerField } from '../PickerField';
+import { DatePickerSheet } from '@shared/components/DatePickerSheet';
+import { PickerField } from '@shared/components/PickerField';
 
 import type { DatePickerProps } from './types';
 import { useDatePicker } from './useDatePicker';

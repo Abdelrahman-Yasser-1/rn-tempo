@@ -3,7 +3,7 @@ import { useController } from 'react-hook-form';
 import type { FieldPath, FieldValues } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
-import { MapPicker } from '../MapPicker';
+import { MapPicker } from '@shared/components/MapPicker';
 
 import type { FormMapPickerProps } from './types';
 

@@ -1,9 +1,8 @@
 import { screen } from '@testing-library/react-native';
 
 import { openUrlSafe } from '@services/linking/linking';
+import { Text } from '@shared/components/Text';
 import { renderWithProviders } from '@test-utils/renderWithProviders';
-
-import { Text } from '../Text';
 
 import { Link } from './Link';
 

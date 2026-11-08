@@ -3,7 +3,7 @@ import { useController } from 'react-hook-form';
 import type { FieldPath, FieldValues } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
-import { PhoneInput } from '../PhoneInput';
+import { PhoneInput } from '@shared/components/PhoneInput';
 
 import type { FormPhoneInputProps } from './types';
 

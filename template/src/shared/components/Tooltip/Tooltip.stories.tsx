@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 
-import { Box } from '../Box';
-import { Icon } from '../Icon';
+import { Box } from '@shared/components/Box';
+import { Icon } from '@shared/components/Icon';
 
 import { Tooltip } from './Tooltip';
 

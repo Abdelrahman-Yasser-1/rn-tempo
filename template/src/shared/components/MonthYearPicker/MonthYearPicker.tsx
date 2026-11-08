@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next';
 
-import { MonthYearGrid } from '../MonthYearGrid';
-import { PickerField } from '../PickerField';
-import { PickerSheet } from '../PickerSheet';
+import { MonthYearGrid } from '@shared/components/MonthYearGrid';
+import { PickerField } from '@shared/components/PickerField';
+import { PickerSheet } from '@shared/components/PickerSheet';
 
 import type { MonthYearPickerProps } from './types';
 import { useMonthYearPicker } from './useMonthYearPicker';

@@ -2,7 +2,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
 import { useUnistyles } from 'react-native-unistyles';
 
-import { PickerSheet } from '../PickerSheet';
+import { PickerSheet } from '@shared/components/PickerSheet';
 
 import type { TimePickerSheetProps } from './types';
 import { useTimePickerSheet } from './useTimePickerSheet';

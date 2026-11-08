@@ -1,9 +1,8 @@
 import { create } from 'zustand';
 
+import type { User } from '@features/auth/types';
 import { queryClient } from '@services/http/queryClient';
 import { tokenStore, type AuthTokens } from '@services/secure-storage/tokenStore';
-
-import type { User } from '../types';
 
 export type AuthStatus = 'unknown' | 'signedIn' | 'signedOut';
 

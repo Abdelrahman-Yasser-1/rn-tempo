@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 
-import { Row } from '../Row';
+import { Row } from '@shared/components/Row';
 
 import { Badge } from './Badge';
 import type { BadgeVariant } from './types';

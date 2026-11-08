@@ -2,9 +2,8 @@ import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { fireEvent, screen } from '@testing-library/react-native';
 import { Text } from 'react-native';
 
+import { Button } from '@shared/components/Button';
 import { renderWithProviders } from '@test-utils/renderWithProviders';
-
-import { Button } from '../Button';
 
 import { BottomSheet } from './BottomSheet';
 

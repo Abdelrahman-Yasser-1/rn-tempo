@@ -1,10 +1,9 @@
 import { Pressable } from 'react-native';
 
+import { Box } from '@shared/components/Box';
+import { useRadioGroup } from '@shared/components/RadioGroup';
+import { Text } from '@shared/components/Text';
 import { HIT_SLOP } from '@shared/constants/touch';
-
-import { Box } from '../Box';
-import { useRadioGroup } from '../RadioGroup';
-import { Text } from '../Text';
 
 import { styles } from './styles';
 import type { RadioProps } from './types';

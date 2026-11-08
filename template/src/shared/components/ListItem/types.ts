@@ -1,7 +1,11 @@
 import type { ReactNode } from 'react';
 import type { PressableProps } from 'react-native';
 
-import type { ListItemLayout, ListItemLeading, ListItemTrailing } from '../ListItemContent';
+import type {
+  ListItemLayout,
+  ListItemLeading,
+  ListItemTrailing,
+} from '@shared/components/ListItemContent';
 
 export type ListItemProps = Readonly<
   Omit<PressableProps, 'children' | 'style'> & {

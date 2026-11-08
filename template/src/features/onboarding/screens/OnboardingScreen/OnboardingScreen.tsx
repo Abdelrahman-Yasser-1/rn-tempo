@@ -1,9 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { FlatList, useWindowDimensions, View } from 'react-native';
 
+import { SLIDES } from '@features/onboarding/constants';
 import { Button, Icon, Screen, Text } from '@shared/components';
-
-import { SLIDES } from '../../constants';
 
 import { styles } from './styles';
 import { useOnboardingScreen } from './useOnboardingScreen';

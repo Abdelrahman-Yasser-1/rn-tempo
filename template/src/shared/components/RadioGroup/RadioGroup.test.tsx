@@ -1,9 +1,8 @@
 import { screen } from '@testing-library/react-native';
 import { Text } from 'react-native';
 
+import { Radio } from '@shared/components/Radio';
 import { renderWithProviders } from '@test-utils/renderWithProviders';
-
-import { Radio } from '../Radio';
 
 import { RadioGroup, useRadioGroup } from './RadioGroup';
 

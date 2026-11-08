@@ -1,9 +1,9 @@
 import FastImage, { type ImageStyle } from '@d11/react-native-fast-image';
 import { View } from 'react-native';
 
-import { Bone } from '../Bone';
-import { Icon } from '../Icon';
-import { Skeleton } from '../Skeleton';
+import { Bone } from '@shared/components/Bone';
+import { Icon } from '@shared/components/Icon';
+import { Skeleton } from '@shared/components/Skeleton';
 
 import { styles } from './styles';
 import type { ImageProps } from './types';

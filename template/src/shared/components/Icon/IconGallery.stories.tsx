@@ -4,10 +4,9 @@ import { FlatList } from 'react-native';
 
 import { ICONS } from '@assets/generated/icons.registry';
 import type { IconName } from '@assets/generated/icons.types';
-
-import { Box } from '../Box';
-import { Text } from '../Text';
-import { TextField } from '../TextField';
+import { Box } from '@shared/components/Box';
+import { Text } from '@shared/components/Text';
+import { TextField } from '@shared/components/TextField';
 
 import { Icon } from './Icon';
 

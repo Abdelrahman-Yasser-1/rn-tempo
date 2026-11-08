@@ -1,8 +1,7 @@
 import { act } from '@testing-library/react-native';
 
+import { SECRET_TAP_COUNT, SECRET_TAP_WINDOW_MS } from '@features/settings/constants';
 import { renderHookWithProviders } from '@test-utils/renderWithProviders';
-
-import { SECRET_TAP_COUNT, SECRET_TAP_WINDOW_MS } from '../../constants';
 
 import { useAboutScreen } from './useAboutScreen';
 

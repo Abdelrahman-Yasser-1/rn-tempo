@@ -3,7 +3,7 @@ import { useController } from 'react-hook-form';
 import type { FieldPath, FieldValues } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
-import { Slider } from '../Slider';
+import { Slider } from '@shared/components/Slider';
 
 import type { FormSliderProps } from './types';
 

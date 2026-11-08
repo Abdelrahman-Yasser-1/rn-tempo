@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
+import type { Item, ItemsPage } from '@features/items/types';
 import {
   EmptyState,
   Header,
@@ -12,8 +13,6 @@ import {
 } from '@shared/components';
 import type { HeaderAction } from '@shared/components';
 import { formatCurrency } from '@shared/utils';
-
-import type { Item, ItemsPage } from '../../types';
 
 import { styles } from './styles';
 import { useItemsListScreen } from './useItemsListScreen';

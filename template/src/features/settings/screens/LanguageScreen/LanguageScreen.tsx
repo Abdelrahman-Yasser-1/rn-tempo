@@ -1,8 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
+import { LANGUAGE_OPTIONS } from '@features/settings/constants';
 import { Dialog, Header, Radio, RadioGroup, Screen } from '@shared/components';
-
-import { LANGUAGE_OPTIONS } from '../../constants';
 
 import { styles } from './styles';
 import { useLanguageScreen } from './useLanguageScreen';

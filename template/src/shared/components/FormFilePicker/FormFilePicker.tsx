@@ -3,7 +3,7 @@ import { useController } from 'react-hook-form';
 import type { FieldPath, FieldValues } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
-import { FilePicker } from '../FilePicker';
+import { FilePicker } from '@shared/components/FilePicker';
 
 import type { FormFilePickerProps } from './types';
 

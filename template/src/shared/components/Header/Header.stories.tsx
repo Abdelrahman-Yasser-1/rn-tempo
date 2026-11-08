@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 import { action } from 'storybook/actions';
 
-import { Column } from '../Column';
+import { Column } from '@shared/components/Column';
 
 import { Header } from './Header';
 import type { HeaderAction } from './types';

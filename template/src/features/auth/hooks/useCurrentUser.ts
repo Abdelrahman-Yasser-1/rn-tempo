@@ -1,4 +1,4 @@
-import { useAuthStore } from '../store/auth.store';
+import { useAuthStore } from '@features/auth/store/auth.store';
 
 /** The signed-in user, or `null`. */
 export function useCurrentUser() {

@@ -1,9 +1,8 @@
 import { isImageType } from '@services/files/fileRules';
-
-import { Box } from '../Box';
-import { Icon } from '../Icon';
-import { IconButton } from '../IconButton';
-import { Text } from '../Text';
+import { Box } from '@shared/components/Box';
+import { Icon } from '@shared/components/Icon';
+import { IconButton } from '@shared/components/IconButton';
+import { Text } from '@shared/components/Text';
 
 import type { FileRowProps } from './types';
 import { useFileRow } from './useFileRow';

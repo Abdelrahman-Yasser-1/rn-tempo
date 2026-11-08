@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import NativeWebView from 'react-native-webview';
 
-import { ErrorState } from '../ErrorState';
+import { ErrorState } from '@shared/components/ErrorState';
 
 import { styles } from './styles';
 import type { WebViewProps } from './types';

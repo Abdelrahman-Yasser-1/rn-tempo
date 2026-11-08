@@ -5,13 +5,12 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
+import { useCreateItemMutation } from '@features/items/api/mutations';
+import { PICKUP_SLOTS } from '@features/items/constants';
+import { CreateItemSchema, type CreateItem, type CreateItemInput } from '@features/items/types';
 import type { HomeStackParamList } from '@navigation/types';
 import { useFeatureFlag } from '@services/flags/useFeatureFlag';
 import { toISODate } from '@shared/utils/calendar';
-
-import { useCreateItemMutation } from '../../api/mutations';
-import { PICKUP_SLOTS } from '../../constants';
-import { CreateItemSchema, type CreateItem, type CreateItemInput } from '../../types';
 
 /** Logic of the create-item screen: feature flag, form, tag options and submit-then-go-back. */
 export function useItemCreateScreen() {

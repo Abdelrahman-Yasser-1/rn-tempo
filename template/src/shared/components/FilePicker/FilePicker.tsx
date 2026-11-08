@@ -1,9 +1,9 @@
 import { useTranslation } from 'react-i18next';
 
-import { Box } from '../Box';
-import { FileRow } from '../FileRow';
-import { FileSourceSheet } from '../FileSourceSheet';
-import { PickerField } from '../PickerField';
+import { Box } from '@shared/components/Box';
+import { FileRow } from '@shared/components/FileRow';
+import { FileSourceSheet } from '@shared/components/FileSourceSheet';
+import { PickerField } from '@shared/components/PickerField';
 
 import type { FilePickerProps } from './types';
 import { useFilePicker } from './useFilePicker';

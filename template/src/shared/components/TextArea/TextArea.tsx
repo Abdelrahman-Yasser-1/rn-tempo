@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next';
 
-import { Box } from '../Box';
-import { Text } from '../Text';
-import { TextField } from '../TextField';
+import { Box } from '@shared/components/Box';
+import { Text } from '@shared/components/Text';
+import { TextField } from '@shared/components/TextField';
 
 import { styles } from './styles';
 import type { TextAreaProps } from './types';

@@ -1,5 +1,5 @@
-import type { PickerFieldProps } from '../PickerField';
-import type { TimePickerSheetProps } from '../TimePickerSheet';
+import type { PickerFieldProps } from '@shared/components/PickerField';
+import type { TimePickerSheetProps } from '@shared/components/TimePickerSheet';
 
 export type TimePickerProps = Readonly<
   Pick<

@@ -1,7 +1,11 @@
+import { ITEMS_PAGE_SIZE } from '@features/items/constants';
+import {
+  CreatedItemSchema,
+  ItemSchema,
+  ItemsPageSchema,
+  type CreateItem,
+} from '@features/items/types';
 import { request } from '@services/http/request';
-
-import { ITEMS_PAGE_SIZE } from '../constants';
-import { CreatedItemSchema, ItemSchema, ItemsPageSchema, type CreateItem } from '../types';
 
 type FetchItemsParams = Readonly<{ q: string; skip: number; limit?: number }>;
 

@@ -8,6 +8,7 @@ import { act } from '@testing-library/react-native';
 import { http, HttpResponse } from 'msw';
 
 // @tempo-feature:file-picker:start
+import { itemKeys } from '@features/items/api/keys';
 import { pickDocument } from '@services/files/files';
 // @tempo-feature:file-picker:end
 import { setFlagOverride } from '@services/flags/flagOverrides';
@@ -15,8 +16,6 @@ import { toast } from '@services/toast/toast';
 import { addDays, formatFullDate, toISODate } from '@shared/utils/calendar';
 import { server } from '@test-utils/msw/server';
 import { renderWithProviders } from '@test-utils/renderWithProviders';
-
-import { itemKeys } from '../../api/keys';
 
 import { ItemCreateScreen } from './ItemCreateScreen';
 

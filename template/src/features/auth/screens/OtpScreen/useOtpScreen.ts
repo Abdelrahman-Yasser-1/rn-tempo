@@ -3,15 +3,14 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useResendOtpMutation, useVerifyOtpMutation } from '@features/auth/api/mutations';
+import { OtpRouteParamsSchema } from '@features/auth/api/schemas';
+import { OTP_RESEND_SECONDS } from '@features/auth/constants';
 import type { AuthStackParamList } from '@navigation/types';
 import { getErrorMessageKey } from '@services/http/errors';
 import { toast } from '@services/toast/toast';
 import { useCountdown } from '@shared/hooks';
 import { maskEmail } from '@shared/utils';
-
-import { useResendOtpMutation, useVerifyOtpMutation } from '../../api/mutations';
-import { OtpRouteParamsSchema } from '../../api/schemas';
-import { OTP_RESEND_SECONDS } from '../../constants';
 
 type OtpRoute = RouteProp<AuthStackParamList, 'Otp'>;
 

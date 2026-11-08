@@ -1,8 +1,8 @@
 import { Pressable, ScrollView, View } from 'react-native';
 
-import { Badge } from '../Badge';
-import { Icon } from '../Icon';
-import { Text } from '../Text';
+import { Badge } from '@shared/components/Badge';
+import { Icon } from '@shared/components/Icon';
+import { Text } from '@shared/components/Text';
 
 import { styles } from './styles';
 import type { TabItem, TabsProps } from './types';

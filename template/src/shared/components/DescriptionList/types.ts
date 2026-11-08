@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import type { KeyValueLayout } from '../KeyValueRow';
+import type { KeyValueLayout } from '@shared/components/KeyValueRow';
 
 export type DescriptionItem = Readonly<{
   key: string;

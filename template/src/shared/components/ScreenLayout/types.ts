@@ -1,8 +1,7 @@
 import type { ReactNode } from 'react';
 
+import type { HeaderProps } from '@shared/components/Header';
 import type { SpacingKey } from '@theme/tokens';
-
-import type { HeaderProps } from '../Header';
 
 export type ScreenLayoutProps = Readonly<{
   /** Props of the Header at the top; omit for a screen without a header. */

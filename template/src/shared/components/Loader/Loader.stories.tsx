@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
-import { Text } from '../Text';
+import { Text } from '@shared/components/Text';
 
 import { Loader } from './Loader';
 

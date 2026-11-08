@@ -2,8 +2,8 @@ import { useTranslation } from 'react-i18next';
 import { TextInput } from 'react-native';
 import type { TextInputInstance } from 'react-native';
 
-import { Box } from '../Box';
-import { Text } from '../Text';
+import { Box } from '@shared/components/Box';
+import { Text } from '@shared/components/Text';
 
 import { styles } from './styles';
 import type { OtpInputProps } from './types';

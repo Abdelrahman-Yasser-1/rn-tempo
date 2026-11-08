@@ -1,6 +1,6 @@
 import type { FieldPath, FieldValues, UseControllerProps } from 'react-hook-form';
 
-import type { MonthYearPickerProps } from '../MonthYearPicker';
+import type { MonthYearPickerProps } from '@shared/components/MonthYearPicker';
 
 export type FormMonthYearPickerProps<
   TFieldValues extends FieldValues = FieldValues,

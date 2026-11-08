@@ -3,7 +3,7 @@ import { useController } from 'react-hook-form';
 import type { FieldPath, FieldValues } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
-import { TextArea } from '../TextArea';
+import { TextArea } from '@shared/components/TextArea';
 
 import type { FormTextAreaProps } from './types';
 

@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
-import { useAuthStore } from '../store/auth.store';
+import { useAuthStore } from '@features/auth/store/auth.store';
 
 import { fetchMe } from './auth.api';
 import { authKeys } from './keys';

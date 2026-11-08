@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-native';
 import { useState } from 'react';
 import { action } from 'storybook/actions';
 
-import { Button } from '../Button';
-import { Text } from '../Text';
+import { Button } from '@shared/components/Button';
+import { Text } from '@shared/components/Text';
 
 import { Modal } from './Modal';
 import type { ModalProps } from './types';

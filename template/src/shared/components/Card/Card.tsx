@@ -1,10 +1,9 @@
 import { Pressable, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
+import { Image } from '@shared/components/Image';
 import { HIT_SLOP } from '@shared/constants/touch';
 import { usePressFeedback } from '@shared/hooks';
-
-import { Image } from '../Image';
 
 import { styles } from './styles';
 import type { CardProps } from './types';

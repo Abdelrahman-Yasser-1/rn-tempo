@@ -3,10 +3,9 @@ import { screen, waitFor } from '@testing-library/react-native';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import { Button } from '@shared/components/Button';
 import { phoneSchema } from '@shared/utils/schemas';
 import { renderWithProviders } from '@test-utils/renderWithProviders';
-
-import { Button } from '../Button';
 
 import { FormPhoneInput } from './FormPhoneInput';
 

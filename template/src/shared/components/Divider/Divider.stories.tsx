@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 
-import { Column } from '../Column';
-import { Row } from '../Row';
-import { Text } from '../Text';
+import { Column } from '@shared/components/Column';
+import { Row } from '@shared/components/Row';
+import { Text } from '@shared/components/Text';
 
 import { Divider } from './Divider';
 

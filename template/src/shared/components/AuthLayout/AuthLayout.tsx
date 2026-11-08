@@ -1,8 +1,8 @@
 import { View } from 'react-native';
 
-import { Header } from '../Header';
-import { Screen } from '../Screen';
-import { Text } from '../Text';
+import { Header } from '@shared/components/Header';
+import { Screen } from '@shared/components/Screen';
+import { Text } from '@shared/components/Text';
 
 import { styles } from './styles';
 import type { AuthLayoutProps } from './types';

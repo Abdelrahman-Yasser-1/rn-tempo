@@ -1,12 +1,11 @@
 import { act, waitFor } from '@testing-library/react-native';
 import { http, HttpResponse } from 'msw';
 
+import { OTP_RESEND_SECONDS } from '@features/auth/constants';
 import { toast } from '@services/toast/toast';
 import { actAsync } from '@test-utils/act';
 import { server } from '@test-utils/msw/server';
 import { renderHookWithProviders } from '@test-utils/renderWithProviders';
-
-import { OTP_RESEND_SECONDS } from '../../constants';
 
 import { useOtpScreen } from './useOtpScreen';
 

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
-import { ListItem } from '../ListItem';
+import { ListItem } from '@shared/components/ListItem';
 
 import { PaginatedList } from './PaginatedList';
 import type { PaginatedQuery } from './types';

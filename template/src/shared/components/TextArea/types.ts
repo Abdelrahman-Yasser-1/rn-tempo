@@ -1,4 +1,4 @@
-import type { TextFieldProps } from '../TextField';
+import type { TextFieldProps } from '@shared/components/TextField';
 
 export type TextAreaProps = Readonly<
   Omit<TextFieldProps, 'left' | 'right' | 'prefix' | 'suffix' | 'secureTextEntry' | 'multiline'> & {

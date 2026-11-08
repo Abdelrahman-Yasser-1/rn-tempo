@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Modal as RNModal, Pressable, View } from 'react-native';
 
-import { Text } from '../Text';
+import { Text } from '@shared/components/Text';
 
 import { styles } from './styles';
 import type { ModalProps } from './types';

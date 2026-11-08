@@ -2,10 +2,10 @@ import RNSlider from '@react-native-community/slider';
 import type { AccessibilityActionEvent } from 'react-native';
 import { useUnistyles } from 'react-native-unistyles';
 
-import { Box } from '../Box';
-import { FieldLabel } from '../FieldLabel';
-import { FieldMessage } from '../FieldMessage';
-import { Text } from '../Text';
+import { Box } from '@shared/components/Box';
+import { FieldLabel } from '@shared/components/FieldLabel';
+import { FieldMessage } from '@shared/components/FieldMessage';
+import { Text } from '@shared/components/Text';
 
 import { styles } from './styles';
 import type { SliderProps } from './types';

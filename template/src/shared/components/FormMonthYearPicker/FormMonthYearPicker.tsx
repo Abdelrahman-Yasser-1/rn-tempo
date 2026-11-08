@@ -3,7 +3,7 @@ import { useController } from 'react-hook-form';
 import type { FieldPath, FieldValues } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
-import { MonthYearPicker } from '../MonthYearPicker';
+import { MonthYearPicker } from '@shared/components/MonthYearPicker';
 
 import type { FormMonthYearPickerProps } from './types';
 

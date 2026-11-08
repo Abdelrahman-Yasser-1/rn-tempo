@@ -2,10 +2,9 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { ENV } from '@config/env';
+import { FormError } from '@features/auth/components/FormError';
+import { DEV_HINT_CREDENTIALS } from '@features/auth/constants';
 import { AuthLayout, Button, FormTextField, Text } from '@shared/components';
-
-import { FormError } from '../../components/FormError';
-import { DEV_HINT_CREDENTIALS } from '../../constants';
 
 import { styles } from './styles';
 import { useLoginScreen } from './useLoginScreen';

@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 import { action } from 'storybook/actions';
 
-import { Badge } from '../Badge';
-import { Column } from '../Column';
+import { Badge } from '@shared/components/Badge';
+import { Column } from '@shared/components/Column';
 
 import { UserCard } from './UserCard';
 

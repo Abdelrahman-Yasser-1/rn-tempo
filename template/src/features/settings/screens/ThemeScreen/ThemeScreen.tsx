@@ -1,8 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
+import { THEME_OPTIONS } from '@features/settings/constants';
 import { Header, Radio, RadioGroup, Screen } from '@shared/components';
-
-import { THEME_OPTIONS } from '../../constants';
 
 import { styles } from './styles';
 import { useThemeScreen } from './useThemeScreen';

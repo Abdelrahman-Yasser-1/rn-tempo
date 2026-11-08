@@ -1,5 +1,5 @@
-import { Box } from '../Box';
-import type { StackProps } from '../Box';
+import { Box } from '@shared/components/Box';
+import type { StackProps } from '@shared/components/Box';
 
 /** Row: a Box with `flexDirection: row`; `align` and `justify` use friendly names. */
 export function Row(props: StackProps) {

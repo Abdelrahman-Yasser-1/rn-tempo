@@ -4,14 +4,13 @@ import { View, useWindowDimensions } from 'react-native';
 import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
 import { useUnistyles } from 'react-native-unistyles';
 
+import { Box } from '@shared/components/Box';
+import { Icon } from '@shared/components/Icon';
+import { IconButton } from '@shared/components/IconButton';
+import { PickerField } from '@shared/components/PickerField';
+import { PickerSheet } from '@shared/components/PickerSheet';
+import { Text } from '@shared/components/Text';
 import { isAndroid } from '@shared/utils/platform';
-
-import { Box } from '../Box';
-import { Icon } from '../Icon';
-import { IconButton } from '../IconButton';
-import { PickerField } from '../PickerField';
-import { PickerSheet } from '../PickerSheet';
-import { Text } from '../Text';
 
 import { PIN_SIZE, styles } from './styles';
 import type { MapPickerProps } from './types';

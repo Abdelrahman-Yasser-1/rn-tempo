@@ -1,10 +1,9 @@
 import type { ReactNode } from 'react';
 
 import type { IconName } from '@assets/generated/icons.types';
-
-import type { AvatarProps } from '../Avatar';
-import type { BadgeVariant } from '../Badge';
-import type { ImageProps } from '../Image';
+import type { AvatarProps } from '@shared/components/Avatar';
+import type { BadgeVariant } from '@shared/components/Badge';
+import type { ImageProps } from '@shared/components/Image';
 
 /**
  * `default`: the text column beside the leading slot. `stacked`: the leading slot above the

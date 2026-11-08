@@ -2,14 +2,14 @@ import { useNavigation, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 // @tempo-feature:webview:start
+import { useItemQuery } from '@features/items/api/queries';
+import { PRODUCT_PAGE_URL } from '@features/items/constants';
 import { navigationRef } from '@navigation/navigationRef';
 // @tempo-feature:webview:end
 import type { HomeStackParamList } from '@navigation/types';
 import { useLanguage } from '@services/i18n/useLanguage';
 
-import { useItemQuery } from '../../api/queries';
 // @tempo-feature:webview:start
-import { PRODUCT_PAGE_URL } from '../../constants';
 // @tempo-feature:webview:end
 
 /** Logic of the item details screen: route param, item query, retry and back navigation. */

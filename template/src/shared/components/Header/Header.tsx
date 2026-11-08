@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
-import { IconButton } from '../IconButton';
-import { Text } from '../Text';
+import { IconButton } from '@shared/components/IconButton';
+import { Text } from '@shared/components/Text';
 
 import { styles } from './styles';
 import type { HeaderProps } from './types';

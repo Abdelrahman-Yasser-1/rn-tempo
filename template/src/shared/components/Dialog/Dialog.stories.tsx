@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native';
 import { useState } from 'react';
 import { action } from 'storybook/actions';
 
-import { Button } from '../Button';
+import { Button } from '@shared/components/Button';
 
 import { Dialog } from './Dialog';
 import type { DialogProps } from './types';

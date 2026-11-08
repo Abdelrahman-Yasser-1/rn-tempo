@@ -3,7 +3,7 @@ import { useController } from 'react-hook-form';
 import type { FieldPath, FieldValues } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
-import { MultiFilePicker } from '../MultiFilePicker';
+import { MultiFilePicker } from '@shared/components/MultiFilePicker';
 
 import type { FormMultiFilePickerProps } from './types';
 

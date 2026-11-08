@@ -1,4 +1,4 @@
-import type { PickerFieldProps } from '../PickerField';
+import type { PickerFieldProps } from '@shared/components/PickerField';
 
 export type TimeSlot = Readonly<{
   /** The slot's start as 24-hour `HH:mm`; also the picker's value. */

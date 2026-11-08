@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 
-import { Text } from '../Text';
+import { Text } from '@shared/components/Text';
 
 import { styles } from './styles';
 import type { KeyValueRowProps } from './types';

@@ -1,10 +1,9 @@
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
 
+import { IconButton } from '@shared/components/IconButton';
+import { Text } from '@shared/components/Text';
 import { paginationRange } from '@shared/utils';
-
-import { IconButton } from '../IconButton';
-import { Text } from '../Text';
 
 import { styles } from './styles';
 import type { PaginationProps } from './types';

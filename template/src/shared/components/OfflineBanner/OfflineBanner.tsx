@@ -1,10 +1,9 @@
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
+import { Icon } from '@shared/components/Icon';
+import { Text } from '@shared/components/Text';
 import { useIsOnline } from '@shared/hooks';
-
-import { Icon } from '../Icon';
-import { Text } from '../Text';
 
 import { styles } from './styles';
 import type { OfflineBannerProps } from './types';

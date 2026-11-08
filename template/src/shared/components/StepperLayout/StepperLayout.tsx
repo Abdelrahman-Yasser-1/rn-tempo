@@ -1,10 +1,10 @@
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
-import { Button } from '../Button';
-import { EmptyState } from '../EmptyState';
-import { ScreenLayout } from '../ScreenLayout';
-import { Stepper } from '../Stepper';
+import { Button } from '@shared/components/Button';
+import { EmptyState } from '@shared/components/EmptyState';
+import { ScreenLayout } from '@shared/components/ScreenLayout';
+import { Stepper } from '@shared/components/Stepper';
 
 import { styles } from './styles';
 import type { StepperLayoutProps } from './types';

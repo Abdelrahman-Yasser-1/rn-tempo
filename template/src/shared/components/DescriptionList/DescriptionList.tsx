@@ -1,8 +1,8 @@
 import { Fragment } from 'react';
 import { View } from 'react-native';
 
-import { Divider } from '../Divider';
-import { KeyValueRow } from '../KeyValueRow';
+import { Divider } from '@shared/components/Divider';
+import { KeyValueRow } from '@shared/components/KeyValueRow';
 
 import type { DescriptionListProps } from './types';
 

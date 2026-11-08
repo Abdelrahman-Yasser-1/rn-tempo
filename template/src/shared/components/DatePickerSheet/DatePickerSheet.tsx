@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
-import { Calendar } from '../Calendar';
-import { PickerSheet } from '../PickerSheet';
+import { Calendar } from '@shared/components/Calendar';
+import { PickerSheet } from '@shared/components/PickerSheet';
 
 import type { DatePickerSheetProps } from './types';
 import { useDatePickerSheet } from './useDatePickerSheet';

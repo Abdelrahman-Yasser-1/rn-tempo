@@ -1,4 +1,4 @@
-import type { DescriptionItem } from '../DescriptionList';
+import type { DescriptionItem } from '@shared/components/DescriptionList';
 
 export type FormReviewSection = Readonly<{
   key: string;

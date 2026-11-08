@@ -2,10 +2,9 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { getErrorMessageKey, normalizeError } from '@services/http/errors';
-
-import { Button } from '../Button';
-import { Icon } from '../Icon';
-import { Text } from '../Text';
+import { Button } from '@shared/components/Button';
+import { Icon } from '@shared/components/Icon';
+import { Text } from '@shared/components/Text';
 
 import { styles } from './styles';
 import type { ErrorStateProps } from './types';

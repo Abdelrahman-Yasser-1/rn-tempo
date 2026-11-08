@@ -9,10 +9,10 @@ import type { BottomSheetBackdropProps, BottomSheetFooterProps } from '@gorhom/b
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Box } from '../Box';
-import { Button } from '../Button';
-import { IconButton } from '../IconButton';
-import { Text } from '../Text';
+import { Box } from '@shared/components/Box';
+import { Button } from '@shared/components/Button';
+import { IconButton } from '@shared/components/IconButton';
+import { Text } from '@shared/components/Text';
 
 import { styles } from './styles';
 import type { PickerSheetProps } from './types';

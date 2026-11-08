@@ -1,8 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
+import { FormError } from '@features/auth/components/FormError';
 import { AuthLayout, Button, FormTextField } from '@shared/components';
-
-import { FormError } from '../../components/FormError';
 
 import { useRegisterScreen } from './useRegisterScreen';
 

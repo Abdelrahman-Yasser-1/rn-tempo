@@ -2,9 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-native';
 import { action } from 'storybook/actions';
 
 import { toast } from '@services/toast/toast';
-
-import { Button } from '../Button';
-import { Column } from '../Column';
+import { Button } from '@shared/components/Button';
+import { Column } from '@shared/components/Column';
 
 import { ToastHost } from './ToastHost';
 
