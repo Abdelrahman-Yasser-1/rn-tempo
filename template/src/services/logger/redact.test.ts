@@ -1,4 +1,4 @@
-import { createLogger, setLogTransport } from './logger';
+import { addLogSink, createLogger, setLogTransport } from './logger';
 import { CIRCULAR_MARK, DEPTH_MARK, REDACTED, REQUEST_MARK, redact, redactString } from './redact';
 
 // Built from parts so secret scanners do not flag the fixture.
@@ -283,5 +283,25 @@ describe('logger redaction', () => {
       message: 'failed',
       args: [{ accessToken: REDACTED }],
     });
+  });
+
+  test('every sink receives the redacted entry, never the raw one', () => {
+    const first = jest.fn();
+    const second = jest.fn();
+    const removers = [addLogSink(first), addLogSink(second)];
+    const log = createLogger({ level: 'debug', isProduction: true });
+
+    log.error('login for john@example.com', { password: 'p' });
+
+    const expected = {
+      level: 'error',
+      message: 'login for j***@example.com',
+      args: [{ password: REDACTED }],
+    };
+    expect(first).toHaveBeenCalledWith(expected);
+    expect(second).toHaveBeenCalledWith(expected);
+    for (const remove of removers) {
+      remove();
+    }
   });
 });
