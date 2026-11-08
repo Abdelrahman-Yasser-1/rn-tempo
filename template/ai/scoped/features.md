@@ -1,0 +1,38 @@
+# src/features
+
+One folder per product feature (`<kebab-name>/`). A feature owns its screens, components, hooks, API calls, store and types. Nothing here is feature-agnostic; that belongs in `src/shared`.
+
+## Layout
+
+```
+features/<kebab-name>/
+  api/          <name>.api.ts (+ tests): request() calls, Zod schemas, query key factory
+  components/   <PascalName>/ (<PascalName>.tsx, index.ts, optional test, styles.ts, types.ts, use<PascalName>.ts)
+  hooks/        use<PascalName>.ts (+ tests): queries, mutations, view logic
+  screens/      <Name>Screen/ (screen, test, styles.ts, index.ts, use<Name>Screen.ts)
+  store/        <name>.store.ts (+ tests): Zustand, client state only
+  types/        index.ts
+  utils/        <name>.ts (+ tests)
+  constants.ts
+  index.ts      the only public entry of the feature
+```
+
+## Rules
+
+- Other code imports a feature only through `@features/<name>` (its `index.ts`), never a deep path. Features do not import each other's internals.
+- Screens render, hooks think: logic lives in `use<Name>Screen.ts`, tested with `renderHook`.
+- Server data goes through TanStack Query with a key factory; mutations invalidate the affected keys. Client state goes in the store.
+- Every user-facing string is a key in `src/locales/{en,ar}/<feature>.json`.
+- Every unit gets a test next to it; spec'd tests start with `AC-n:`.
+- Name the feature scope in `commitlint.config.mjs` and keep `specs/<feature>/` up to date.
+
+## Generators
+
+Create files with the generators, not by hand:
+
+- `yarn tempo g feature <kebab-name>`
+- `yarn tempo g screen <Name> --feature <f> [--stack <Stack>]`
+- `yarn tempo g component <Name> --feature <f>`
+- `yarn tempo g hook <name>`, `yarn tempo g store <name>`, `yarn tempo g query <name>`
+
+Full rules: `ai/rules/architecture.md` and `ai/rules/generators.md`.
