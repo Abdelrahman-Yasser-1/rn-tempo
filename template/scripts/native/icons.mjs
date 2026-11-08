@@ -4,10 +4,15 @@
 //
 // Output is deterministic (no timestamps, no system fonts: ribbon letters are vector paths), so a
 // second run produces byte-identical files. Run it with `yarn icons`.
+//
+// Options (dev and staging only, prod is never labelled):
+//   --label "<text>"  also draws a label such as "1.2.3 (45)" in a band on top of the icon. Fastlane uses it
+//                     right before a build and regenerates the plain icons afterwards.
+//   --env <name>      only generate this environment (default: all).
 import { readFileSync } from 'node:fs';
 import { mkdir, readdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import sharp from 'sharp';
 
@@ -80,50 +85,110 @@ const GLYPHS = {
   R: 'M1 13V1H6Q9 1 9 4Q9 7 6 7H1M5 7L9 13',
   U: 'M1 1V11L3 13H7L9 11V1',
 };
-const GLYPH_WIDTH = 10;
 const GLYPH_HEIGHT = 14;
 const GLYPH_GAP = 3;
 const GLYPH_STROKE = 2.8;
 
-/** Builds the SVG for a ribbon with the label centered in a band of `box`. */
-function ribbonSvg(canvas, box, badge, clipRadius) {
+// Digits and punctuation for the build label, on the same grid.
+Object.assign(GLYPHS, {
+  0: 'M3 1H7L9 3V11L7 13H3L1 11V3Z',
+  1: 'M3 3L5 1V13M2 13H8',
+  2: 'M1 3L3 1H7L9 3V5L1 13H9',
+  3: 'M1 2L3 1H7L9 3V5L7 7H4M7 7L9 9V11L7 13H3L1 12',
+  4: 'M7 13V1L1 9H9',
+  5: 'M9 1H2L1 7H6L9 9V11L7 13H3L1 11',
+  6: 'M8 1H4L1 4V11L3 13H7L9 11V8L7 6H3L1 8',
+  7: 'M1 1H9L4 13',
+  8: 'M3 1H7L9 3V5L7 7H3L1 5V3ZM3 7H7L9 9V11L7 13H3L1 11V9Z',
+  9: 'M9 6H3L1 5V3L3 1H7L9 3V10L6 13H2',
+  '.': 'M1.5 12.6V13',
+  '-': 'M2 7H8',
+  '+': 'M5 3V11M1 7H9',
+  '(': 'M5 1Q1 7 5 13',
+  ')': 'M1 1Q5 7 1 13',
+  ' ': '',
+});
+// Glyph widths on the grid; anything not listed is 10 wide.
+const GLYPH_WIDTHS = { '.': 3, '(': 6, ')': 6, ' ': 4 };
+const DEFAULT_GLYPH_WIDTH = 10;
+
+const LABEL_BAND_RATIO = 0.2; // label band at the top, as a share of the icon height
+const LABEL_MAX_WIDTH_RATIO = 0.9; // the label never exceeds this share of the icon width
+const LABEL_COLOR = '#111827';
+
+/** Lays a text out on the glyph grid: each glyph's path and x offset, plus the total width. */
+function layoutText(text) {
+  let x = 0;
+  const glyphs = [];
+  for (const letter of text) {
+    if (!(letter in GLYPHS)) {
+      throw new Error(`icons.mjs: no glyph for "${letter}"; add it to GLYPHS`);
+    }
+    glyphs.push({ d: GLYPHS[letter], x });
+    x += (GLYPH_WIDTHS[letter] ?? DEFAULT_GLYPH_WIDTH) + GLYPH_GAP;
+  }
+  return { glyphs, width: Math.max(0, x - GLYPH_GAP) };
+}
+
+const glyphPaths = (glyphs, startX, startY, scale) =>
+  glyphs
+    .filter((glyph) => glyph.d !== '')
+    .map(
+      (glyph) =>
+        `<path transform="translate(${startX + glyph.x * scale} ${startY}) scale(${scale})" d="${glyph.d}"/>`,
+    )
+    .join('');
+
+/** Builds the SVG with the ribbon at the bottom of `box` and, when given, a label band on top. */
+export function ribbonSvg(canvas, box, badge, clipRadius, label = '') {
   const bandHeight = box.height * RIBBON_HEIGHT_RATIO;
   const bandY = box.y + box.height - bandHeight;
   const scale = (box.height * TEXT_HEIGHT_RATIO) / GLYPH_HEIGHT;
-  const letters = [...badge.text];
-  const textWidth = (letters.length * GLYPH_WIDTH + (letters.length - 1) * GLYPH_GAP) * scale;
+  const { glyphs, width } = layoutText(badge.text);
+  const textWidth = width * scale;
   const startX = box.x + (box.width - textWidth) / 2;
   const startY = bandY + (bandHeight - GLYPH_HEIGHT * scale) / 2;
-  const paths = letters
-    .map((letter, index) => {
-      const x = startX + index * (GLYPH_WIDTH + GLYPH_GAP) * scale;
-      if (!GLYPHS[letter]) {
-        throw new Error(`icons.mjs: no glyph for badge letter "${letter}"; add it to GLYPHS`);
-      }
-      return `<path transform="translate(${x} ${startY}) scale(${scale})" d="${GLYPHS[letter]}"/>`;
-    })
-    .join('');
+  const paths = glyphPaths(glyphs, startX, startY, scale);
+  let labelSvg = '';
+  if (label !== '') {
+    const labelHeight = box.height * LABEL_BAND_RATIO;
+    // Only capitals are drawn: "1.0.0-rc.1" shows as "1.0.0-RC.1".
+    const text = layoutText(label.toUpperCase());
+    const labelScale = Math.min(
+      (box.height * TEXT_HEIGHT_RATIO * 0.7) / GLYPH_HEIGHT,
+      (box.width * LABEL_MAX_WIDTH_RATIO) / text.width,
+    );
+    const labelX = box.x + (box.width - text.width * labelScale) / 2;
+    const labelY = box.y + (labelHeight - GLYPH_HEIGHT * labelScale) / 2;
+    labelSvg =
+      `<g clip-path="url(#clip)"><rect x="${box.x}" y="${box.y}" width="${box.width}" height="${labelHeight}" fill="${LABEL_COLOR}" fill-opacity="0.85"/></g>` +
+      `<g fill="none" stroke="#FFFFFF" stroke-width="${GLYPH_STROKE}" stroke-linecap="round" stroke-linejoin="round">${glyphPaths(text.glyphs, labelX, labelY, labelScale)}</g>`;
+  }
   // Strokes are scaled together with each glyph, so the stroke width is expressed in glyph units.
   return Buffer.from(
     `<svg xmlns="http://www.w3.org/2000/svg" width="${canvas}" height="${canvas}" viewBox="0 0 ${canvas} ${canvas}">` +
       `<defs><clipPath id="clip"><rect x="${box.x}" y="${box.y}" width="${box.width}" height="${box.height}" rx="${clipRadius}"/></clipPath></defs>` +
       `<g clip-path="url(#clip)"><rect x="${box.x}" y="${bandY}" width="${box.width}" height="${bandHeight}" fill="${badge.color}"/></g>` +
       `<g fill="none" stroke="#FFFFFF" stroke-width="${GLYPH_STROKE}" stroke-linecap="round" stroke-linejoin="round">${paths}</g>` +
+      labelSvg +
       `</svg>`,
   );
 }
 
 const PNG_OPTIONS = { compressionLevel: 9, adaptiveFiltering: false };
 
-/** Returns the source image with the environment ribbon composited on top (unchanged for prod). */
-async function withBadge(file, box, badge, clipRadius) {
+/**
+ * Returns the source image with the environment ribbon (and the label, when given) composited on
+ * top. Prod has no badge, so it is never labelled.
+ */
+export async function withBadge(file, box, badge, clipRadius, label = '') {
   const input = path.join(sourceDir, file);
   if (!badge) {
     return sharp(input).png(PNG_OPTIONS).toBuffer();
   }
   const { width } = await sharp(input).metadata();
   return sharp(input)
-    .composite([{ input: ribbonSvg(width, box, badge, clipRadius) }])
+    .composite([{ input: ribbonSvg(width, box, badge, clipRadius, label) }])
     .png(PNG_OPTIONS)
     .toBuffer();
 }
@@ -169,7 +234,7 @@ async function writeFileEnsured(file, data) {
   await writeFile(file, data);
 }
 
-async function generateAndroid({ flavor, badge }) {
+async function generateAndroid({ flavor, badge }, label) {
   const res = path.join(root, 'android/app/src', flavor, 'res');
   // Legacy icon: the ribbon spans the full-bleed square. Foreground: the ribbon sits on the 288px tile.
   const legacy = await withBadge(
@@ -177,12 +242,14 @@ async function generateAndroid({ flavor, badge }) {
     { x: 0, y: 0, width: 1024, height: 1024 },
     badge,
     0,
+    label,
   );
   const foreground = await withBadge(
     'app-icon-foreground.png',
     { x: 72, y: 72, width: 288, height: 288 },
     badge,
     48,
+    label,
   );
 
   for (const [density, size] of Object.entries(LEGACY_SIZES)) {
@@ -202,9 +269,15 @@ async function generateAndroid({ flavor, badge }) {
   await writeFileEnsured(path.join(res, 'values/ic_launcher_background.xml'), backgroundXml);
 }
 
-async function generateIos({ iosSet, badge }) {
+async function generateIos({ iosSet, badge }, label) {
   const dir = path.join(root, 'ios', iosApp, 'Images.xcassets', `${iosSet}.appiconset`);
-  const icon = await withBadge('app-icon.png', { x: 0, y: 0, width: 1024, height: 1024 }, badge, 0);
+  const icon = await withBadge(
+    'app-icon.png',
+    { x: 0, y: 0, width: 1024, height: 1024 },
+    badge,
+    0,
+    label,
+  );
   // App Store icons must not have an alpha channel.
   const flat = await sharp(icon)
     .flatten({ background: '#FFFFFF' })
@@ -225,9 +298,41 @@ async function removeStockAndroidIcons() {
   }
 }
 
-await removeStockAndroidIcons();
-for (const environment of ENVIRONMENTS) {
-  await generateAndroid(environment);
-  await generateIos(environment);
+/** Reads `--label <text>` and `--env <name>`; both are optional. */
+export function parseArgs(argv) {
+  const options = { label: '', env: undefined };
+  for (let index = 0; index < argv.length; index += 1) {
+    const flag = argv[index];
+    if (flag !== '--label' && flag !== '--env') {
+      throw new Error(`icons.mjs: unknown option "${flag}" (use --label <text> or --env <name>)`);
+    }
+    const value = argv[index + 1];
+    if (value === undefined || value.startsWith('--')) {
+      throw new Error(`icons.mjs: ${flag} needs a value`);
+    }
+    options[flag.slice(2)] = value;
+    index += 1;
+  }
+  return options;
 }
-console.log(`Generated icons for: ${ENVIRONMENTS.map((e) => e.flavor).join(', ')}`);
+
+async function main() {
+  const { label, env } = parseArgs(process.argv.slice(2));
+  const selected = env === undefined ? ENVIRONMENTS : ENVIRONMENTS.filter((e) => e.flavor === env);
+  if (selected.length === 0) {
+    throw new Error(`icons.mjs: unknown env "${env}"`);
+  }
+  await removeStockAndroidIcons();
+  for (const environment of selected) {
+    await generateAndroid(environment, label);
+    await generateIos(environment, label);
+  }
+  const suffix =
+    label === '' ? '' : ` with label "${label}" (envs without a badge are never labelled)`;
+  console.log(`Generated icons for: ${selected.map((e) => e.flavor).join(', ')}${suffix}`);
+}
+
+// Run only as a script, so tests can import the helpers above.
+if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  await main();
+}
