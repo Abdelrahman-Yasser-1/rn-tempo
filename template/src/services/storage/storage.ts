@@ -1,7 +1,7 @@
 import { areAreasOpen, getArea, getStoragesForDevTools, openAreas } from './areas';
 import { getOrCreateEncryptionKey } from './encryptionKey';
 
-export { StorageNotReadyError } from './errors';
+export { StorageError, StorageNotReadyError } from './errors';
 export { getArea, getStoragesForDevTools };
 export type { StorageAreaName } from './areas';
 

@@ -13,6 +13,13 @@ export type LoggerOptions = {
   isProduction: boolean;
 };
 
+/** Whether an error is an expected runtime failure (`isOperational: true`), like `ApiError` and `StorageError`. */
+export function isOperationalError(error: unknown): boolean {
+  return (
+    typeof error === 'object' && error !== null && Reflect.get(error, 'isOperational') === true
+  );
+}
+
 const RANK: Record<LogLevel | 'silent', number> = {
   debug: 0,
   info: 1,
@@ -91,3 +98,9 @@ export function createLogger({ level, isProduction }: Readonly<LoggerOptions>) {
 
 /** App logger, filtered by `ENV.LOG_LEVEL` (warn and error only in production builds). */
 export const logger = createLogger({ level: ENV.LOG_LEVEL, isProduction: !__DEV__ });
+
+/** Logs a caught error: `warn` when it is operational (expected at runtime), `error` when it is a bug. */
+export function logError(message: string, error: unknown, ...args: unknown[]): void {
+  const log = isOperationalError(error) ? logger.warn : logger.error;
+  log(message, error, ...args);
+}

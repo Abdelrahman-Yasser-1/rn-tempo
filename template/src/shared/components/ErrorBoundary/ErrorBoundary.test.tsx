@@ -3,6 +3,7 @@ import { screen } from '@testing-library/react-native';
 import { Text } from 'react-native';
 import RNRestart from 'react-native-restart';
 
+import { ApiError } from '@services/http/errors';
 import { logger } from '@services/logger/logger';
 import { renderWithProviders } from '@test-utils/renderWithProviders';
 
@@ -59,6 +60,25 @@ describe('ErrorBoundary', () => {
       expect.objectContaining({ message: 'kaboom' }),
       expect.any(String),
     );
+  });
+
+  it('logs an operational error as a warning, not an error', async () => {
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(jest.fn());
+    const error = jest.spyOn(logger, 'error').mockImplementation(jest.fn());
+    function Offline(): never {
+      throw new ApiError({ code: 'NETWORK', message: 'offline' });
+    }
+    await renderWithProviders(
+      <ErrorBoundary>
+        <Offline />
+      </ErrorBoundary>,
+    );
+    expect(warn).toHaveBeenCalledWith(
+      'Unhandled render error',
+      expect.objectContaining({ name: 'ApiError' }),
+      expect.any(String),
+    );
+    expect(error).not.toHaveBeenCalled();
   });
 
   it('restarts the app from the restart action', async () => {

@@ -22,6 +22,10 @@ removeSink();
 
 A sink that throws is swallowed, so one broken reporter cannot break the app or the other sinks. The failure is not logged (that would recurse), so test your sink on its own. `setLogTransport(sink)` still works as a single replaceable slot on top of `addLogSink`; prefer `addLogSink` in new code.
 
+## Operational errors
+
+`ApiError` and `StorageError` carry `isOperational`. It is `true` for failures that are expected at runtime (offline, timeout, 4xx and 5xx responses, a locked keychain) and `false` for bugs (a response that does not match its schema, `StorageNotReadyError`). `logError(message, error, ...args)` logs an operational error at `warn` and anything else at `error`, so crash reporters that listen to `error` only see real bugs. `ErrorBoundary` uses it.
+
 ## Redaction
 
 Every message and every argument is redacted **before** it reaches any sink: the dev console and every sink receive the safe copy. The redactor (`src/services/logger/redact.ts`) is pure and never mutates its input.

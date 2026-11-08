@@ -71,7 +71,10 @@ describe('storage', () => {
     const { module, keychain } = loadStorage();
     keychain.getGenericPassword.mockRejectedValueOnce(new Error('locked'));
 
-    await expect(module.initStorage()).rejects.toThrow('locked');
+    const failure: unknown = await module.initStorage().catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(module.StorageError);
+    expect(failure).toHaveProperty('cause.message', 'locked');
     await module.initStorage();
 
     expect(() => module.storage.getString('x')).not.toThrow();

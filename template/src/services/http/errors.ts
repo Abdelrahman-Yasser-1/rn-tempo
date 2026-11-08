@@ -15,21 +15,34 @@ export type ApiErrorInit = {
   message: string;
   status?: number;
   details?: unknown;
+  /** Overrides the default, see `ApiError.isOperational`. */
+  isOperational?: boolean;
 };
+
+/** Network, timeout, 4xx and 5xx are expected at runtime; an unexpected shape or error is a bug. */
+function isOperationalByDefault(code: ApiErrorCode, status: number | undefined): boolean {
+  return code !== 'UNKNOWN' || (status !== undefined && status < 500);
+}
 
 /** The only error type the data layer throws; UI maps `code` to a translated message. */
 export class ApiError extends Error {
   readonly code: ApiErrorCode;
   readonly status?: number;
   readonly details?: unknown;
+  /**
+   * True for expected runtime failures (offline, timeout, 4xx, 5xx): log at `warn`. False for
+   * programmer or contract bugs (a response that does not match its schema): log at `error`.
+   */
+  readonly isOperational: boolean;
 
   /** Builds an error from a code and message, plus optional HTTP status and raw details. */
-  constructor({ code, message, status, details }: Readonly<ApiErrorInit>) {
+  constructor({ code, message, status, details, isOperational }: Readonly<ApiErrorInit>) {
     super(message);
     this.name = 'ApiError';
     this.code = code;
     this.status = status;
     this.details = details;
+    this.isOperational = isOperational ?? isOperationalByDefault(code, status);
   }
 }
 
