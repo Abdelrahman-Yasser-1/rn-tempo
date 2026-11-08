@@ -55,11 +55,9 @@ describe('TimePickerSheet', () => {
     );
     // eslint-disable-next-line rn-tempo/discouraged-syntax -- the native wheel has no role to query
     const picker = screen.getByTestId('sheet.picker');
-    /* eslint-disable testing-library/no-await-sync-events -- RNTL 14 fireEvent is async */
     await fireEvent(picker, 'change', {
       nativeEvent: { timestamp: new Date(2026, 10, 4, 7, 5).getTime(), utcOffset: 0 },
     });
-    /* eslint-enable testing-library/no-await-sync-events -- end of the block disabled above */
     expect(onConfirm).not.toHaveBeenCalled();
     await user.press(screen.getByRole('button', { name: 'Confirm' }));
     expect(onConfirm).toHaveBeenCalledWith('07:05');
@@ -79,11 +77,9 @@ describe('TimePickerSheet', () => {
     const { user, rerender } = await renderWithProviders(element(true));
     // eslint-disable-next-line rn-tempo/discouraged-syntax -- the native wheel has no role to query
     const picker = screen.getByTestId('sheet.picker');
-    /* eslint-disable testing-library/no-await-sync-events -- RNTL 14 fireEvent is async */
     await fireEvent(picker, 'change', {
       nativeEvent: { timestamp: new Date(2026, 10, 4, 7, 5).getTime(), utcOffset: 0 },
     });
-    /* eslint-enable testing-library/no-await-sync-events -- end of the block disabled above */
     await rerender(element(false));
     await rerender(element(true));
     await user.press(screen.getByRole('button', { name: 'Confirm' }));

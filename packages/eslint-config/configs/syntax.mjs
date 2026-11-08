@@ -3,7 +3,7 @@ import { rnTempoPlugin } from '../plugin/index.mjs';
 import { ENUM_ENTRIES } from './base.mjs';
 import { CHEAP_BAN_ENTRIES } from './bans.mjs';
 import { IMPORT_ENTRIES, LOGICAL_PROPERTY_ENTRIES } from './restrictions.mjs';
-import { TEST_ENTRIES } from './tests.mjs';
+import { TEST_ENTRIES, TEST_SUPPORT_ENTRIES } from './tests.mjs';
 
 /** Entries reported as errors. Each carries its own `files`/`ignores`, so the order does not matter. */
 export const RESTRICTED_SYNTAX_ENTRIES = [
@@ -11,6 +11,7 @@ export const RESTRICTED_SYNTAX_ENTRIES = [
   ...IMPORT_ENTRIES,
   ...LOGICAL_PROPERTY_ENTRIES,
   ...CHEAP_BAN_ENTRIES,
+  ...TEST_SUPPORT_ENTRIES,
 ];
 
 /** Entries reported as warnings (a reviewer decides). */

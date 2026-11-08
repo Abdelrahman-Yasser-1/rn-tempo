@@ -136,7 +136,6 @@ describe('MultiSelect', () => {
         <MultiSelect label="Tags" searchable options={OPTIONS} value={[]} onChange={jest.fn()} />,
       );
       jest.useFakeTimers();
-      // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
       await fireEvent.changeText(screen.getByLabelText('Search options'), 'first');
       await act(async () => {
         await jest.advanceTimersByTimeAsync(250);
@@ -144,7 +143,6 @@ describe('MultiSelect', () => {
       expect(screen.getByRole('checkbox', { name: 'Alpha' })).toBeOnTheScreen();
       expect(screen.queryByRole('checkbox', { name: 'Beta' })).not.toBeOnTheScreen();
 
-      // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
       await fireEvent.changeText(screen.getByLabelText('Search options'), 'zzz');
       await act(async () => {
         await jest.advanceTimersByTimeAsync(250);
@@ -157,7 +155,6 @@ describe('MultiSelect', () => {
         <MultiSelect label="Tags" searchable options={OPTIONS} value={[]} onChange={jest.fn()} />,
       );
       jest.useFakeTimers();
-      // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
       await fireEvent.changeText(screen.getByLabelText('Search options'), 'BETA');
       await act(async () => {
         await jest.advanceTimersByTimeAsync(100);
@@ -176,13 +173,11 @@ describe('MultiSelect', () => {
         <MultiSelect label="Tags" searchable options={OPTIONS} value={[]} onChange={onChange} />,
       );
       jest.useFakeTimers();
-      // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
       await fireEvent.changeText(screen.getByLabelText('Search options'), 'a');
       await act(async () => {
         await jest.advanceTimersByTimeAsync(250);
       });
       // "a" matches Alpha, Beta, Gamma (disabled), Delta; Epsilon has no "a".
-      // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
       await fireEvent.press(screen.getByRole('button', { name: 'Select all' }));
       expect(onChange).toHaveBeenLastCalledWith(['a', 'b', 'd']);
     });

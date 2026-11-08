@@ -117,7 +117,6 @@ describe('Select', () => {
         <Select label="Plan" searchable options={OPTIONS} value={undefined} onChange={jest.fn()} />,
       );
       jest.useFakeTimers();
-      // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
       await fireEvent.changeText(screen.getByLabelText('Search options'), 'bet');
       // The query is debounced, so every option is still listed.
       expect(screen.getByRole('radio', { name: 'Alpha' })).toBeOnTheScreen();
@@ -134,7 +133,6 @@ describe('Select', () => {
         <Select label="Plan" searchable options={OPTIONS} value={undefined} onChange={jest.fn()} />,
       );
       jest.useFakeTimers();
-      // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
       await fireEvent.changeText(screen.getByLabelText('Search options'), 'ALP');
       await act(async () => {
         await jest.advanceTimersByTimeAsync(250);
@@ -149,7 +147,6 @@ describe('Select', () => {
       );
       expect(screen.queryByText('No results')).not.toBeOnTheScreen();
       jest.useFakeTimers();
-      // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
       await fireEvent.changeText(screen.getByLabelText('Search options'), 'zzz');
       await act(async () => {
         await jest.advanceTimersByTimeAsync(250);

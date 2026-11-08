@@ -55,7 +55,6 @@ async function settle() {
 
 /** Fires the list's `onEndReached` through the first rendered row (RNTL bubbles to the list). */
 async function reachEnd() {
-  // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent returns an act promise
   await fireEvent(screen.getByLabelText('Product 1'), 'endReached');
 }
 
@@ -130,7 +129,6 @@ describe('ItemsListScreen', () => {
     await screen.findByText('Product 1');
     expect(pagesAt(0)).toHaveLength(1);
 
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent returns an act promise
     await fireEvent(screen.getByLabelText('Product 1'), 'refresh');
 
     await waitFor(() => {
@@ -174,12 +172,10 @@ describe('ItemsListScreen', () => {
       await renderItemsList();
       const input = screen.getByLabelText('Search items');
 
-      // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent returns an act promise
       await fireEvent.changeText(input, 'P');
       await actAsync(() => {
         jest.advanceTimersByTime(100);
       });
-      // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent returns an act promise
       await fireEvent.changeText(input, 'Product 1');
 
       await actAsync(() => {

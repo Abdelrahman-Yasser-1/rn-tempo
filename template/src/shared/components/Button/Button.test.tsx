@@ -109,11 +109,9 @@ describe('Button', () => {
     );
     const button = screen.getByRole('button', { name: 'Terms' });
     expect(screen.getByText('Terms')).not.toHaveStyle({ textDecorationLine: 'underline' });
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent(button, 'pressIn');
     expect(screen.getByText('Terms')).toHaveStyle({ textDecorationLine: 'underline' });
     expect(onPressIn).toHaveBeenCalledTimes(1);
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent(button, 'pressOut');
     expect(screen.getByText('Terms')).not.toHaveStyle({ textDecorationLine: 'underline' });
     expect(onPressOut).toHaveBeenCalledTimes(1);
@@ -121,7 +119,6 @@ describe('Button', () => {
 
   it('does not underline the other variants while pressed', async () => {
     await renderWithProviders(<Button title="Save" />);
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent(screen.getByRole('button', { name: 'Save' }), 'pressIn');
     expect(screen.getByText('Save')).not.toHaveStyle({ textDecorationLine: 'underline' });
   });

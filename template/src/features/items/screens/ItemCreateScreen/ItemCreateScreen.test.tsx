@@ -132,11 +132,9 @@ describe('ItemCreateScreen', () => {
     await user.type(screen.getByLabelText('Description'), 'Warm light');
     await user.type(screen.getByLabelText('Category'), 'home');
     const quantity = screen.getByRole('adjustable', { name: 'Quantity' });
-    /* eslint-disable testing-library/no-await-sync-events -- RNTL 14 fireEvent is async */
     await fireEvent(quantity, 'focus');
     await fireEvent.changeText(quantity, '0');
     await fireEvent(quantity, 'blur');
-    /* eslint-enable testing-library/no-await-sync-events -- end of the block disabled above */
     await user.press(screen.getByRole('button', { name: 'Create item' }));
 
     await waitFor(() => {

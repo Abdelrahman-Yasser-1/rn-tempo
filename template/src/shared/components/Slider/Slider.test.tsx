@@ -49,13 +49,11 @@ describe('Slider', () => {
       />,
     );
     const slider = screen.getByRole('adjustable', { name: 'Volume' });
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent(slider, 'RNCSliderAccessibilityAction', {
       nativeEvent: { actionName: 'increment' },
     });
     expect(onChange).toHaveBeenLastCalledWith(50);
     expect(onChangeEnd).toHaveBeenLastCalledWith(50);
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent(slider, 'RNCSliderAccessibilityAction', {
       nativeEvent: { actionName: 'decrement' },
     });
@@ -67,7 +65,6 @@ describe('Slider', () => {
     await renderWithProviders(
       <Slider label="Volume" value={100} min={0} max={100} onChange={onChange} />,
     );
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent(
       screen.getByRole('adjustable', { name: 'Volume' }),
       'RNCSliderAccessibilityAction',
@@ -115,12 +112,10 @@ describe('Slider', () => {
       />,
     );
     const slider = screen.getByRole('adjustable', { name: 'Volume' });
-    /* eslint-disable testing-library/no-await-sync-events -- RNTL 14 fireEvent is async */
     await fireEvent(slider, 'valueChange', 55);
     expect(onChange).toHaveBeenLastCalledWith(55);
     expect(onChangeEnd).not.toHaveBeenCalled();
     await fireEvent(slider, 'slidingComplete', 60);
-    /* eslint-enable testing-library/no-await-sync-events -- end of the block disabled above */
     expect(onChangeEnd).toHaveBeenCalledTimes(1);
     expect(onChangeEnd).toHaveBeenLastCalledWith(60);
   });
@@ -129,7 +124,6 @@ describe('Slider', () => {
     await renderWithProviders(
       <Slider label="Volume" value={40} min={0} max={100} onChange={jest.fn()} />,
     );
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent(screen.getByRole('adjustable', { name: 'Volume' }), 'slidingComplete', 60);
     expect(screen.getByRole('adjustable', { name: 'Volume' })).toBeOnTheScreen();
   });
@@ -202,7 +196,6 @@ describe('Slider', () => {
       <Slider label="Volume" value={3} min={0} max={100} step={5} onChange={onChange} />,
     );
     const slider = screen.getByRole('adjustable', { name: 'Volume' });
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent(slider, 'RNCSliderAccessibilityAction', {
       nativeEvent: { actionName: 'decrement' },
     });
@@ -214,7 +207,6 @@ describe('Slider', () => {
     await renderWithProviders(
       <Slider label="Volume" value={40} min={0} max={100} onChange={onChange} />,
     );
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent(
       screen.getByRole('adjustable', { name: 'Volume' }),
       'RNCSliderAccessibilityAction',

@@ -38,7 +38,6 @@ describe('FormOtpInput', () => {
     const onValid = jest.fn();
     const { user } = await renderWithProviders(<Harness onValid={onValid} />);
     // A pasted or autofilled code lands in the first cell and spreads over the others.
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent.changeText(screen.getByLabelText('Digit 1 of 6'), '123456');
     await user.press(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() => {
@@ -83,10 +82,8 @@ describe('FormOtpInput default and error states', () => {
     const { user } = await renderWithProviders(<Extra />);
     await user.press(screen.getByRole('button', { name: 'Submit' }));
     expect(await screen.findByRole('alert', { name: 'Enter the 6-digit code.' })).toBeOnTheScreen();
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent.changeText(screen.getByLabelText('Digit 1 of 6'), '123');
     expect(await screen.findByRole('alert', { name: 'Enter the 6-digit code.' })).toBeOnTheScreen();
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent.changeText(screen.getByLabelText('Digit 1 of 6'), '123456');
     await waitFor(() => {
       expect(screen.queryByRole('alert')).not.toBeOnTheScreen();

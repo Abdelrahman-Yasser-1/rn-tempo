@@ -8,7 +8,6 @@ import { CountryPicker } from './CountryPicker';
 /** Types into the sheet's search field and lets the debounce pass (switches to fake timers). */
 async function searchFor(label: string, text: string) {
   jest.useFakeTimers();
-  // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
   await fireEvent.changeText(screen.getByLabelText(label), text);
   await act(async () => {
     await jest.advanceTimersByTimeAsync(250);
@@ -60,7 +59,6 @@ describe('CountryPicker', () => {
     await renderWithProviders(<CountryPicker label="Country" onChange={jest.fn()} />);
     jest.useFakeTimers();
     const search = async (text: string) => {
-      // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
       await fireEvent.changeText(screen.getByLabelText('Search countries'), text);
       await act(async () => {
         await jest.advanceTimersByTimeAsync(250);
@@ -115,7 +113,6 @@ describe('CountryPicker', () => {
     it('waits for the debounce before filtering', async () => {
       await renderPicker();
       jest.useFakeTimers();
-      // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
       await fireEvent.changeText(screen.getByLabelText('Search countries'), 'egy');
       expect(screen.getByRole('radio', { name: 'Afghanistan, +93' })).toBeOnTheScreen();
       await act(async () => {

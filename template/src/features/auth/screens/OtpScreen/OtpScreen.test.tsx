@@ -99,7 +99,6 @@ describe('OtpScreen', () => {
       // The request round trip runs on real timers; the countdown itself is already verified above.
       jest.useRealTimers();
 
-      // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent returns an act promise
       await fireEvent.press(screen.getByRole('button', { name: 'Resend code' }));
 
       expect(await screen.findByRole('button', { name: 'Resend in 5s' })).toBeDisabled();
@@ -122,7 +121,6 @@ describe('OtpScreen', () => {
   test('AC-9: entering 123456 shows a success toast and resets the stack to Login', async () => {
     await renderOtp('reset-password');
 
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent returns an act promise
     await fireEvent.changeText(firstDigit(), '123456');
 
     await waitFor(() => {
@@ -139,7 +137,6 @@ describe('OtpScreen', () => {
   test('a register code shows the account-created toast', async () => {
     await renderOtp('register');
 
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent returns an act promise
     await fireEvent.changeText(firstDigit(), '123456');
 
     await waitFor(() => {
@@ -152,7 +149,6 @@ describe('OtpScreen', () => {
   test('a wrong code shows the invalid-code error and clears the input', async () => {
     await renderOtp('reset-password');
 
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent returns an act promise
     await fireEvent.changeText(firstDigit(), '000000');
 
     expect(await screen.findByText('That code is incorrect. Try again.')).toBeOnTheScreen();

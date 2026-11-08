@@ -21,7 +21,7 @@ describe('OtpInput', () => {
   it('keeps only digits typed into a cell', async () => {
     const onChangeText = jest.fn();
     await renderWithProviders(<OtpInput value="" onChangeText={onChangeText} />);
-    void fireEvent.changeText(screen.getByLabelText('Digit 1 of 6'), '7x');
+    await fireEvent.changeText(screen.getByLabelText('Digit 1 of 6'), '7x');
     expect(onChangeText).toHaveBeenLastCalledWith('7');
   });
 
@@ -32,7 +32,7 @@ describe('OtpInput', () => {
       <OtpInput value="" onChangeText={onChangeText} onComplete={onComplete} />,
     );
     // A multi-digit change is a paste or SMS autofill, which arrives as one text change.
-    void fireEvent.changeText(screen.getByLabelText('Digit 1 of 6'), '123456');
+    await fireEvent.changeText(screen.getByLabelText('Digit 1 of 6'), '123456');
     expect(onChangeText).toHaveBeenLastCalledWith('123456');
     expect(onComplete).toHaveBeenCalledWith('123456');
   });
@@ -49,7 +49,7 @@ describe('OtpInput', () => {
   it('drops the previous digit on backspace from an empty cell', async () => {
     const onChangeText = jest.fn();
     await renderWithProviders(<OtpInput value="123" onChangeText={onChangeText} />);
-    void fireEvent(screen.getByLabelText('Digit 4 of 6'), 'keyPress', {
+    await fireEvent(screen.getByLabelText('Digit 4 of 6'), 'keyPress', {
       nativeEvent: { key: 'Backspace' },
     });
     expect(onChangeText).toHaveBeenLastCalledWith('12');

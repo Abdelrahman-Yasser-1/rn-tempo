@@ -68,7 +68,6 @@ describe('PhoneInput', () => {
   it('switches the country when an international number is pasted', async () => {
     const onChange = jest.fn();
     await renderWithProviders(<PhoneInput label="Mobile" value="" onChange={onChange} />);
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent.changeText(screen.getByLabelText('Mobile'), '+971 50 123 4567');
     const [e164, details] = onChange.mock.lastCall as Parameters<PhoneInputProps['onChange']>;
     expect(e164).toBe('+971501234567');
@@ -113,7 +112,6 @@ describe('PhoneInput', () => {
   it('keeps digits only when letters and separators are typed', async () => {
     const onChange = jest.fn();
     await renderWithProviders(<Stateful onChange={onChange} />);
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent.changeText(screen.getByLabelText('Mobile'), '5a1-2 3');
     expect(onChange).toHaveBeenLastCalledWith(
       '+9665123',
@@ -124,7 +122,6 @@ describe('PhoneInput', () => {
   it('reports an empty value once the number is cleared', async () => {
     const onChange = jest.fn();
     await renderWithProviders(<Stateful onChange={onChange} initialValue="+966512345678" />);
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent.changeText(screen.getByLabelText('Mobile'), '');
     const [e164, details] = onChange.mock.lastCall as Parameters<PhoneInputProps['onChange']>;
     expect(e164).toBe('');
@@ -159,7 +156,6 @@ describe('PhoneInput', () => {
   it('switches the country when a number with a 00 prefix is pasted', async () => {
     const onChange = jest.fn();
     await renderWithProviders(<Stateful onChange={onChange} />);
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent.changeText(screen.getByLabelText('Mobile'), '0020 100 123 4567');
     const [e164, details] = onChange.mock.lastCall as Parameters<PhoneInputProps['onChange']>;
     expect(e164).toBe('+201001234567');
@@ -173,7 +169,6 @@ describe('PhoneInput', () => {
   it('treats a pasted plus number with an unknown dial code as plain digits', async () => {
     const onChange = jest.fn();
     await renderWithProviders(<Stateful onChange={onChange} />);
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent.changeText(screen.getByLabelText('Mobile'), '+999123');
     expect(onChange).toHaveBeenLastCalledWith(
       '+966999123',
@@ -185,7 +180,6 @@ describe('PhoneInput', () => {
     const onChange = jest.fn();
     const { user } = await renderWithProviders(<Stateful onChange={onChange} />);
     jest.useFakeTimers();
-    // eslint-disable-next-line testing-library/no-await-sync-events -- RNTL 14 fireEvent is async
     await fireEvent.changeText(screen.getByLabelText('Search countries'), 'canada');
     await act(async () => {
       await jest.advanceTimersByTimeAsync(250);
