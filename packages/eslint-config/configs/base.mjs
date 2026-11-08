@@ -1,3 +1,4 @@
+import eslintComments from '@eslint-community/eslint-plugin-eslint-comments';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
@@ -108,6 +109,23 @@ export function baseConfig(root) {
       files: JS_FILES,
       ...tseslint.configs.disableTypeChecked,
       languageOptions: { globals: { ...globals.node, __DEV__: 'readonly' } },
+    },
+    {
+      // A disable that no longer silences anything is dead weight: it fails the lint.
+      name: 'rn-tempo/base/linter',
+      linterOptions: { reportUnusedDisableDirectives: 'error' },
+    },
+    {
+      name: 'rn-tempo/base/disable-directives',
+      plugins: { '@eslint-community/eslint-comments': eslintComments },
+      rules: {
+        '@eslint-community/eslint-comments/require-description': 'error',
+        '@eslint-community/eslint-comments/no-unlimited-disable': 'error',
+        '@eslint-community/eslint-comments/disable-enable-pair': [
+          'error',
+          { allowWholeFile: true },
+        ],
+      },
     },
     {
       name: 'rn-tempo/base/core',

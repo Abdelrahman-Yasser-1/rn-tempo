@@ -64,7 +64,7 @@ describe('FormReview', () => {
     expect(screen.getByTestId('review.plan.title')).toHaveTextContent('Plan');
     expect(screen.getByTestId('review.plan.edit')).toBeOnTheScreen();
     expect(screen.getByTestId('review.plan.list.tier')).toBeOnTheScreen();
-    /* eslint-enable rn-tempo/discouraged-syntax */
+    /* eslint-enable rn-tempo/discouraged-syntax -- end of the block disabled above */
   });
 
   it('renders nothing without sections', async () => {

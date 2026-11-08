@@ -9,7 +9,7 @@ import { ListItem } from './ListItem';
 /* eslint-disable rn-tempo/discouraged-syntax -- decorative views have no accessible role */
 const getHidden = (id: string) => screen.getByTestId(id, { includeHiddenElements: true });
 const queryHidden = (id: string) => screen.queryByTestId(id, { includeHiddenElements: true });
-/* eslint-enable rn-tempo/discouraged-syntax */
+/* eslint-enable rn-tempo/discouraged-syntax -- end of the block disabled above */
 
 describe('ListItem', () => {
   it('renders a non-pressable row without a button role', async () => {

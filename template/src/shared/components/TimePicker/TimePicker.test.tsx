@@ -43,7 +43,7 @@ describe('TimePicker', () => {
     await fireEvent(wheel, 'change', {
       nativeEvent: { timestamp: new Date(2026, 10, 4, 7, 5).getTime(), utcOffset: 0 },
     });
-    /* eslint-enable testing-library/no-await-sync-events */
+    /* eslint-enable testing-library/no-await-sync-events -- end of the block disabled above */
     expect(onChange).not.toHaveBeenCalled();
     await user.press(screen.getByRole('button', { name: 'Confirm' }));
     expect(onChange).toHaveBeenCalledWith('07:05');

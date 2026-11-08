@@ -201,6 +201,26 @@ describe("eslint-config fixtures", () => {
       "@stylistic/jsx-self-closing-comp",
     ],
     [
+      "a disable directive without a description",
+      "src/shared/utils/disableNoReason.ts",
+      "@eslint-community/eslint-comments/require-description",
+    ],
+    [
+      "an unlimited disable",
+      "src/shared/utils/unlimitedDisable.ts",
+      "@eslint-community/eslint-comments/no-unlimited-disable",
+    ],
+    [
+      "a disable that is never re-enabled",
+      "src/shared/utils/disableWithoutEnable.ts",
+      "@eslint-community/eslint-comments/disable-enable-pair",
+    ],
+    [
+      "an array index as a key",
+      "src/shared/utils/indexKey.tsx",
+      "@eslint-react/no-array-index-key",
+    ],
+    [
       "async-storage",
       "src/shared/utils/usesAsyncStorage.ts",
       "rn-tempo/restricted-syntax",
@@ -283,6 +303,14 @@ describe("eslint-config fixtures", () => {
       );
     }
   }, 120_000);
+
+  it("reports a disable directive that silences nothing", async () => {
+    const texts = await lintMessages(
+      "invalid",
+      "src/shared/utils/unusedDisable.ts",
+    );
+    expect(texts.join("\n")).toMatch(/Unused eslint-disable directive/);
+  });
 
   it("covers at least 12 invalid cases", () => {
     expect(cases.length).toBeGreaterThanOrEqual(12);

@@ -30,7 +30,7 @@ describe('ForgotPasswordScreen', () => {
     expect(screen.getByTestId('forgot-password-screen')).toBeOnTheScreen();
     expect(screen.getByTestId('forgot-password.header')).toBeOnTheScreen();
     expect(screen.getByTestId('forgot-password.submit-button')).toBeOnTheScreen();
-    /* eslint-enable rn-tempo/discouraged-syntax */
+    /* eslint-enable rn-tempo/discouraged-syntax -- end of the block disabled above */
     expect(screen.getByRole('header', { name: 'Reset your password' })).toBeOnTheScreen();
     expect(screen.getByText("Enter your email and we'll send you a code.")).toBeOnTheScreen();
   });

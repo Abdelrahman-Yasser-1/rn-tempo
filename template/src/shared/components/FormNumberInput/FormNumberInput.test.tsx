@@ -101,7 +101,7 @@ describe('FormNumberInput default, clamping and error states', () => {
     await fireEvent(input, 'focus');
     await fireEvent.changeText(input, '99');
     await fireEvent(input, 'blur');
-    /* eslint-enable testing-library/no-await-sync-events */
+    /* eslint-enable testing-library/no-await-sync-events -- end of the block disabled above */
     await user.press(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() => {
       expect(onValid).toHaveBeenCalledWith({ field: 5 });

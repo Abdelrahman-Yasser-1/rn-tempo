@@ -136,7 +136,7 @@ describe('ItemCreateScreen', () => {
     await fireEvent(quantity, 'focus');
     await fireEvent.changeText(quantity, '0');
     await fireEvent(quantity, 'blur');
-    /* eslint-enable testing-library/no-await-sync-events */
+    /* eslint-enable testing-library/no-await-sync-events -- end of the block disabled above */
     await user.press(screen.getByRole('button', { name: 'Create item' }));
 
     await waitFor(() => {

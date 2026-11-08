@@ -95,7 +95,7 @@ describe('ItemsListScreen', () => {
     expect(
       screen.getByTestId('items-list.loading', { includeHiddenElements: true }),
     ).toBeOnTheScreen();
-    /* eslint-enable rn-tempo/discouraged-syntax */
+    /* eslint-enable rn-tempo/discouraged-syntax -- end of the block disabled above */
     expect(screen.queryByText('Product 1')).not.toBeOnTheScreen();
 
     release(undefined);

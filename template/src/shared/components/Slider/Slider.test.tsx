@@ -120,7 +120,7 @@ describe('Slider', () => {
     expect(onChange).toHaveBeenLastCalledWith(55);
     expect(onChangeEnd).not.toHaveBeenCalled();
     await fireEvent(slider, 'slidingComplete', 60);
-    /* eslint-enable testing-library/no-await-sync-events */
+    /* eslint-enable testing-library/no-await-sync-events -- end of the block disabled above */
     expect(onChangeEnd).toHaveBeenCalledTimes(1);
     expect(onChangeEnd).toHaveBeenLastCalledWith(60);
   });

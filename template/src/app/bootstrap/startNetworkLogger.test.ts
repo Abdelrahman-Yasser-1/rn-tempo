@@ -12,7 +12,7 @@ function load(isProd: boolean) {
     /* eslint-disable @typescript-eslint/no-require-imports -- fresh modules against the faked env */
     starter = require('./startNetworkLogger') as typeof Starter;
     logger = require('react-native-network-logger') as typeof NetworkLogger;
-    /* eslint-enable @typescript-eslint/no-require-imports */
+    /* eslint-enable @typescript-eslint/no-require-imports -- end of the block disabled above */
   });
   if (!starter || !logger) {
     throw new Error('modules did not load');
