@@ -3,29 +3,30 @@ output:
   - failure
   - execution_out
 pre-commit:
-  parallel: true
-  commands:
-    eslint:
+  # Sequential on purpose: cheap secret checks fail first and the formatters never race on the same files.
+  piped: true
+  jobs:
+    - name: env-guard
+      glob: '{.env.staging,.env.prod,*.keystore,*.jks,*.p12,*.mobileprovision}'
+      run: echo 'Refusing to commit secrets {staged_files}' && exit 1
+    - name: gitleaks
+      run: gitleaks git --staged --redact --no-banner
+    - name: eslint
       glob: '*.{ts,tsx,js,mjs}'
       run: yarn eslint --fix --max-warnings=0 --no-warn-ignored {staged_files}
       stage_fixed: true
-    prettier:
+    - name: prettier
       glob: '*.{ts,tsx,js,mjs,json,md,yml,yaml}'
       run: yarn prettier --write {staged_files}
       stage_fixed: true
-    ls-lint:
+    - name: ls-lint
       run: yarn ls-lint
-    typecheck:
-      glob: '*.{ts,tsx}'
-      run: yarn tsc --noEmit
-    assets-check:
+    - name: assets-check
       glob: '{src/assets/**,scripts/assets.mjs}'
       run: yarn assets:check
-    env-guard:
-      glob: '{.env.staging,.env.prod,*.keystore,*.jks,*.p12,*.mobileprovision}'
-      run: echo 'Refusing to commit secrets {staged_files}' && exit 1
-    gitleaks:
-      run: gitleaks git --staged --redact --no-banner
+    - name: typecheck
+      glob: '*.{ts,tsx}'
+      run: yarn tsc --noEmit
 prepare-commit-msg:
   commands:
     ai-trailers:
