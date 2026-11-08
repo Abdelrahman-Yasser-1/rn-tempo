@@ -26,25 +26,29 @@ A React Native app created from RN-TEMPO. Product context, glossary, environment
 
 Run everything from the project root.
 
-| Command                                                    | Purpose                                                                   |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `yarn install && yarn pods`                                | Install JS deps and iOS pods                                              |
-| `yarn start`                                               | Metro                                                                     |
-| `yarn ios:dev` / `yarn android:dev`                        | Run the dev app (also `:staging`, `:prod`)                                |
-| `yarn verify`                                              | Typecheck, lint, dependency ownership, format check, ls-lint, i18n, tests |
-| `yarn verify:changed`                                      | Same checks scoped to changed files (run before finishing)                |
-| `yarn lint:fix` / `yarn format`                            | Auto-fix lint and formatting                                              |
-| `yarn test` / `yarn jest <path>`                           | Jest                                                                      |
-| `yarn typecheck`                                           | `tsc --noEmit`                                                            |
-| `yarn i18n:check`                                          | Locale keys identical in `en` and `ar`, none missing                      |
-| `yarn lint:deadcode`                                       | knip                                                                      |
-| `yarn spec:check`                                          | Every AC of implemented specs is covered by a test                        |
-| `yarn tempo g <kind> ...`                                  | Generators (when the CLI is installed; see `ai/rules/generators.md`)      |
-| `yarn icons:search <term>` / `yarn icons:add <name\|file>` | Find an icon; add your own SVG or a Tabler icon (see Add an icon)         |
-| `yarn icons:prune` (`--restore`)                           | Release builds only: keep just the icons the code uses                    |
-| `yarn assets` / `yarn assets:check`                        | Validate `src/assets`, generate (or verify) `src/assets/generated`        |
-| `yarn ai:sync`                                             | Regenerate tool files from `ai/` (after editing `ai/`)                    |
-| `yarn ai:start` / `ai:prompt` / `ai:stop` / `ai:report`    | AI session logging                                                        |
+| Command                                                    | Purpose                                                                                                   |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `yarn install && yarn pods`                                | Install JS deps and iOS pods                                                                              |
+| `yarn start`                                               | Metro                                                                                                     |
+| `yarn ios:dev` / `yarn android:dev`                        | Run the dev app (also `:staging`, `:prod`)                                                                |
+| `yarn verify`                                              | Typecheck, lint, dependency ownership, env files, node tests, format, ls-lint, i18n, knip, jest           |
+| `yarn verify:changed` (`--pr`)                             | Same checks scoped to changed files; full `verify` when a config changed; `--pr` prints a Markdown report |
+| `yarn verify:bundle`                                       | Production bundle dry run for iOS and Android (slow, not in `verify`)                                     |
+| `yarn test:node`                                           | Every `node --test` suite under `scripts/`                                                                |
+| `yarn lint:env`                                            | Every `.env.*` has the keys of `.env.example`; root `.env` is untracked                                   |
+| `yarn fresh-install` / `yarn android:reverse`              | Clean caches, `node_modules`, reinstall; forward Metro to an Android device                               |
+| `yarn lint:fix` / `yarn format`                            | Auto-fix lint and formatting                                                                              |
+| `yarn test` / `yarn jest <path>`                           | Jest                                                                                                      |
+| `yarn typecheck`                                           | `tsc --noEmit`                                                                                            |
+| `yarn i18n:check`                                          | Locale keys identical in `en` and `ar`, none missing                                                      |
+| `yarn lint:deadcode`                                       | knip                                                                                                      |
+| `yarn spec:check`                                          | Every AC of implemented specs is covered by a test                                                        |
+| `yarn tempo g <kind> ...`                                  | Generators (when the CLI is installed; see `ai/rules/generators.md`)                                      |
+| `yarn icons:search <term>` / `yarn icons:add <name\|file>` | Find an icon; add your own SVG or a Tabler icon (see Add an icon)                                         |
+| `yarn icons:prune` (`--restore`)                           | Release builds only: keep just the icons the code uses                                                    |
+| `yarn assets` / `yarn assets:check`                        | Validate `src/assets`, generate (or verify) `src/assets/generated`                                        |
+| `yarn ai:sync`                                             | Regenerate tool files from `ai/` (after editing `ai/`)                                                    |
+| `yarn ai:start` / `ai:prompt` / `ai:stop` / `ai:report`    | AI session logging                                                                                        |
 
 ## Folder map
 
@@ -87,6 +91,42 @@ Aliases: `@app` `@navigation` `@features` `@shared` `@services` `@theme` `@asset
 16. Run `yarn verify:changed` before finishing and `yarn verify` before pushing; never claim done with failing checks.
 
 Also: check library APIs with context7 for the **pinned** version, never from memory. Dependencies are exact pins; add, remove or upgrade them only when the task says so, in a separate `deps` commit. Never commit secrets.
+
+## Do not touch
+
+- `src/assets/generated/**`: run `yarn assets`.
+- Generated AI files (`CLAUDE.md`, `.claude/`, `.cursor/`, `.github/copilot-instructions.md`, nested `AGENTS.md` files, `.github/prompts/`): edit `ai/`, then `yarn ai:sync`.
+- `ios/Pods`, `ios/build`, `android/build`, `android/app/build`, `.gradle`.
+- `yarn.lock` by hand; use `yarn add -E`. `ios/Podfile.lock` unless pods changed.
+- `.env.staging` and `.env.prod`: secrets, never committed. `.env` is a copy made by the iOS scheme; keep it untracked.
+- Other people's `.ai/sessions` logs.
+
+## Definition of Done
+
+- `yarn verify` is green with zero warnings.
+- Tests cover every new unit (see Testing); spec ACs are covered (`yarn spec:check`).
+- New i18n keys exist in `en` and `ar`.
+- Accessibility props on interactive UI.
+- A docs page or recipe for anything a user must know.
+- UI checked on iOS and Android, light and dark, `en` and `ar` (RTL).
+
+## Gotchas
+
+- Metro drops dev-only code only for the exact shape `if (__DEV__) { require(...) }` (or the guarded ternary in `App.tsx`). Any other shape ships the code.
+- RNTL 14 `render` and `fireEvent` are async: `await` both.
+- The Unistyles jest mock does not resolve variants; assert on props, not on variant styles.
+- The Reanimated jest mock (`__mocks__/react-native-reanimated.ts`) supports shared `.value` and `.set` only.
+- The i18n extractor keeps only literal `t('a.b')` keys; keys built at runtime are removed from the locale files.
+- `@gorhom/bottom-sheet` modals need `accessible={false}`, or screen readers see one merged node. Never `dismiss()` a modal that was not presented.
+- Android: a custom font family with a non-400 `fontWeight` clips text (Arabic most). Use `'400'`; the family name carries the weight.
+- Static navigation screens get only `route`; use `useNavigation()` and mock the hook in tests, never pass a `navigation` prop.
+- A Pressable under an absolutely positioned `box-none` sibling can miss taps on Android; lay triggers out as rows.
+- Maestro (not app bugs): taps during a push animation are lost; right after a sheet opens (iOS) too; `label:` is not a selector; env values with spaces fail; iOS `hideKeyboard` fails (tap a non-input) and the "Save Password?" sheet needs `text: Not Now`; Android `openLink` may not navigate (use `adb shell am start -a android.intent.action.VIEW -d <url> <pkg>`). Confirm a failure on a settled screen before filing a bug.
+- macOS is case-insensitive, CI is not: file names that differ only by case pass locally and fail in CI.
+
+## Testing
+
+Rules and examples: `ai/rules/testing.md`. RNTL 14 API: <https://callstack.github.io/react-native-testing-library/>. Test behaviour through roles and labels, mock the network with MSW, name spec'd tests `AC-n: ...`.
 
 ## Where the rules live
 
