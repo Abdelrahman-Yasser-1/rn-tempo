@@ -37,6 +37,22 @@ ensure
   sh("cd #{ROOT.shellescape} && yarn icons:prune --restore")
 end
 
+# dev and staging builds carry "<version> (<build>)" on the launcher icon, under the DEV/STG ribbon, so testers can
+# tell builds apart. The label is drawn into the committed icon files right before the build and the ensure
+# regenerates the plain icons afterwards (icons.mjs is deterministic), so the working tree is clean after the lane.
+# prod is never labelled.
+def tempo_with_icon_label(env)
+  return yield if env == 'prod'
+
+  icons = "cd #{ROOT.shellescape} && node scripts/native/icons.mjs --env #{env.shellescape}"
+  begin
+    sh("#{icons} --label #{"#{tempo_version} (#{tempo_build_number})".shellescape}")
+    yield
+  ensure
+    sh(icons)
+  end
+end
+
 # Marketing version comes from package.json.
 def tempo_version
   JSON.parse(File.read(File.join(ROOT, 'package.json'))).fetch('version')
@@ -142,14 +158,16 @@ platform :android do
     tempo_require_env_file!(env)
     tempo_prepare_upload_key! if env == 'prod'
 
-    tempo_with_pruned_icons do
-      gradle(
-        task: type == 'aab' ? 'bundle' : 'assemble',
-        flavor: ENVS.fetch(env).fetch(:flavor),
-        build_type: 'Release',
-        project_dir: File.join(ROOT, 'android'),
-        properties: { 'tempoVersionCode' => tempo_build_number, 'tempoVersionName' => tempo_version }
-      )
+    tempo_with_icon_label(env) do
+      tempo_with_pruned_icons do
+        gradle(
+          task: type == 'aab' ? 'bundle' : 'assemble',
+          flavor: ENVS.fetch(env).fetch(:flavor),
+          build_type: 'Release',
+          project_dir: File.join(ROOT, 'android'),
+          properties: { 'tempoVersionCode' => tempo_build_number, 'tempoVersionName' => tempo_version }
+        )
+      end
     end
     shared = type == 'aab' ? Actions::SharedValues::GRADLE_AAB_OUTPUT_PATH : Actions::SharedValues::GRADLE_APK_OUTPUT_PATH
     lane_context.fetch(shared)
@@ -226,18 +244,20 @@ platform :ios do
       **(ENV.fetch('APPLE_TEAM_ID', '').empty? ? {} : { team_id: ENV.fetch('APPLE_TEAM_ID') })
     )
 
-    tempo_with_pruned_icons do
-      build_app(
-        workspace: File.join(ROOT, 'ios', "#{APP_NAME}.xcworkspace"),
-        scheme: "#{APP_NAME}-#{suffix}",
-        configuration: "Release-#{suffix}",
-        export_method: env == 'prod' ? 'app-store' : 'ad-hoc',
-        export_options: { provisioningProfiles: { bundle_id => profile } },
-        output_directory: File.join(ROOT, 'build', 'ios'),
-        output_name: "#{APP_NAME}-#{suffix}.ipa",
-        xcargs: "MARKETING_VERSION=#{tempo_version} CURRENT_PROJECT_VERSION=#{tempo_build_number}",
-        clean: false
-      )
+    tempo_with_icon_label(env) do
+      tempo_with_pruned_icons do
+        build_app(
+          workspace: File.join(ROOT, 'ios', "#{APP_NAME}.xcworkspace"),
+          scheme: "#{APP_NAME}-#{suffix}",
+          configuration: "Release-#{suffix}",
+          export_method: env == 'prod' ? 'app-store' : 'ad-hoc',
+          export_options: { provisioningProfiles: { bundle_id => profile } },
+          output_directory: File.join(ROOT, 'build', 'ios'),
+          output_name: "#{APP_NAME}-#{suffix}.ipa",
+          xcargs: "MARKETING_VERSION=#{tempo_version} CURRENT_PROJECT_VERSION=#{tempo_build_number}",
+          clean: false
+        )
+      end
     end
     lane_context.fetch(Actions::SharedValues::IPA_OUTPUT_PATH)
   end
