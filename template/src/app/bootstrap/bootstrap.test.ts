@@ -18,6 +18,7 @@ function createSteps(overrides: Partial<BootstrapSteps> = {}) {
     initSecurity: track('initSecurity', Promise.resolve({ isSafe: true, reasons: [] })),
     initAuth: track('initAuth', Promise.resolve()),
     initRemoteConfig: track('initRemoteConfig', Promise.resolve(DEFAULT_APP_CONFIG)),
+    initPush: track('initPush', Promise.resolve()), // @tempo-feature:push-notifications
     evaluateGate: track('evaluateGate', 'open' as const),
     hideSplash: track('hideSplash', Promise.resolve()),
     ...overrides,
@@ -38,6 +39,7 @@ describe('bootstrap step graph', () => {
       'security',
       'auth',
       'remote-config',
+      'push', // @tempo-feature:push-notifications
     ]);
   });
 
@@ -55,6 +57,7 @@ describe('bootstrap step graph', () => {
       security: 'block-security',
       auth: 'fatal',
       'remote-config': 'continue',
+      push: 'continue', // @tempo-feature:push-notifications
     });
   });
 });
@@ -73,6 +76,7 @@ describe('runBootstrap', () => {
       'initAuth',
       'initRemoteConfig',
       'evaluateGate',
+      'initPush', // @tempo-feature:push-notifications
       'hideSplash',
     ]);
   });
@@ -186,3 +190,20 @@ describe('runBootstrap', () => {
     await expect(runBootstrap(steps)).resolves.toEqual({ status: 'ready' });
   });
 });
+
+// @tempo-feature:push-notifications:start
+describe('push step', () => {
+  test('a push failure never stops startup', async () => {
+    const { steps } = createSteps({ initPush: jest.fn(() => Promise.reject(new Error('fcm'))) });
+
+    await expect(runBootstrap(steps)).resolves.toEqual({ status: 'ready' });
+  });
+
+  test('push does not start when the app is blocked by the version gate', async () => {
+    const { steps, calls } = createSteps({ evaluateGate: jest.fn(() => 'maintenance' as const) });
+
+    await expect(runBootstrap(steps)).resolves.toMatchObject({ blockReason: 'maintenance' });
+    expect(calls).not.toContain('initPush');
+  });
+});
+// @tempo-feature:push-notifications:end

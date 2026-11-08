@@ -2,6 +2,7 @@ import { ENV } from '@config/env';
 import { useAuthStore } from '@features/auth';
 
 import { interceptLink, isPublicPath, linkingPrefixes, toPath } from './linking';
+import { isKnownLinkPath } from './linking'; // @tempo-feature:push-notifications
 
 // The scheme is renamed per project, so tests read it from the env instead of hard-coding it.
 const SCHEME = `${ENV.DEEP_LINK_SCHEME}://`;
@@ -69,3 +70,30 @@ describe('interceptLink', () => {
     expect(useAuthStore.getState().pendingLink).toBeNull();
   });
 });
+
+// @tempo-feature:push-notifications:start
+describe('isKnownLinkPath', () => {
+  test.each(['home', 'items', 'items/new', 'items/5', 'settings/theme', 'profile/edit'])(
+    '%s is a known path',
+    (path) => {
+      expect(isKnownLinkPath(path)).toBe(true);
+    },
+  );
+
+  test.each(['', 'nope', 'items/5/extra', 'settings/unknown', 'https://evil.test'])(
+    '"%s" is not a known path',
+    (path) => {
+      expect(isKnownLinkPath(path)).toBe(false);
+    },
+  );
+
+  test('a notification link opened while signed out is parked until sign-in', () => {
+    // The push service opens `<scheme>://<path>`, which arrives here like any deep link.
+    const url = `${SCHEME}items/5`;
+
+    expect(interceptLink(url)).toBeNull();
+
+    expect(useAuthStore.getState().pendingLink).toBe(url);
+  });
+});
+// @tempo-feature:push-notifications:end

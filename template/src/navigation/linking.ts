@@ -51,6 +51,20 @@ export function toPath(url: string): string | null {
     .join('/');
 }
 
+// @tempo-feature:push-notifications:start
+/** Whether a bare path (`items/5`) matches one of the deep link paths above. */
+export function isKnownLinkPath(path: string): boolean {
+  const segments = path.split('/');
+  return Object.values(LINK_PATHS).some((pattern) => {
+    const parts = pattern.split('/');
+    return (
+      parts.length === segments.length &&
+      parts.every((part, index) => part.startsWith(':') || part === segments[index])
+    );
+  });
+}
+// @tempo-feature:push-notifications:end
+
 /** Whether a path is reachable while signed out (auth screens and the empty root path). */
 export function isPublicPath(path: string): boolean {
   return path === '' || AUTH_PATHS.has(path);
