@@ -1,0 +1,47 @@
+---
+title: Add translation keys
+description: Add strings to a namespace in English and Arabic, use plural forms, and run the i18n check.
+---
+
+Every user-facing string is a key in both `en` and `ar`. Literal text in JSX is a lint error (`i18next/no-literal-string`).
+
+## Steps
+
+1. **Pick the namespace.** Files are `src/locales/<lang>/<namespace>.json`. The built-in namespaces are `common`, `errors`, `validation`, `auth`, `home`, `profile`, `settings`, `items`, `app` and `forms`. A new feature adds its own namespace file in both languages and registers it in `src/services/i18n/resources.ts`.
+
+2. **Add the key to both files**, nested camelCase:
+
+   ```json
+   { "login": { "submitButton": "Sign in" } }
+   ```
+
+   Put the Arabic text under the same key in `src/locales/ar/auth.json`. The key sets of `en` and `ar` must be identical.
+
+3. **Use it** with a literal key, so the extractor can see it:
+
+   ```tsx
+   const { t } = useTranslation('auth');
+   <Text>{t('login.submitButton')}</Text>;
+   ```
+
+   The shared `Text` also accepts `tx="login.submitButton"`. Keys are typed from the English files, so a missing key is a type error. Keys built at runtime are not found by the extractor.
+
+4. **Plurals.** Pass `count` and add one key per plural form with the i18next suffixes: `_one` and `_other` for English, and `_zero`, `_one`, `_two`, `_few`, `_many` and `_other` for Arabic.
+
+   ```json
+   { "items": { "count_one": "{{count}} item", "count_other": "{{count}} items" } }
+   ```
+
+   ```tsx
+   t('items.count', { count });
+   ```
+
+5. **Run `yarn i18n:check`.** It runs `i18next-cli lint` (concatenation, punctuation and placeholder checks, all errors) and `i18next-cli extract --ci`, which fails when the locale files are out of step with the code.
+
+6. **Check it on screen in Arabic.** Switching language restarts the app to apply RTL. Look for clipped text and mirrored layouts; see the [device test matrix](/docs/guides/device-test-matrix).
+
+## Rules
+
+- Validation messages from Zod are keys in the `validation` namespace.
+- Dates, numbers and currency go through the `Intl` helpers in `@shared/utils`, not string building.
+- Never call `I18nManager` directly; use `changeLanguage` from the language manager.
