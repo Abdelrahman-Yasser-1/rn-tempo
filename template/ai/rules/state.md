@@ -14,6 +14,7 @@ Client state lives in Zustand; server state lives in TanStack Query. Never copy 
 - **Tokens never go into Zustand or MMKV.** Access/refresh tokens live in `@services/secure-storage` (`tokenStore`, Keychain service `<bundleId>.auth-tokens`, in-memory cache). The auth store holds only `{ status, user, pendingLink }` and is **not persisted**.
 - Flags resolve in this order: debug-menu override (non-prod), `AppConfig.flags`, `FLAG_DEFAULTS` (`src/services/flags/flags.ts`).
 - Storage keys are the `STORAGE_KEYS` constants (`@services/storage/keys`: `app.theme`, `app.language`, `app.onboarding-completed`, `app.api-base-url-override` (non-prod only), `zustand.<store-name>`). Never import `react-native-mmkv` or AsyncStorage directly.
+- `storage` is the default `app` area. Data that may be lost goes in the `cache` area (`getArea('cache')`, ids in `STORAGE_AREA_IDS`). Storage ids never change between environments or releases: renaming one orphans user data.
 
 ```ts
 // ✅ client state

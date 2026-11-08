@@ -42,16 +42,19 @@ export function generateEncryptionKey(random: RandomSource = secureRandomBytes):
   return toBase64(random(KEY_RANDOM_BYTES));
 }
 
+/** The MMKV key; `isNew` is true when it had to be created because the keychain held none. */
+export type EncryptionKey = { value: string; isNew: boolean };
+
 /** Returns the MMKV encryption key from the keychain, creating and storing it on first launch. */
-export async function getOrCreateEncryptionKey(): Promise<string> {
+export async function getOrCreateEncryptionKey(): Promise<EncryptionKey> {
   const existing = await Keychain.getGenericPassword({ service: KEYCHAIN_SERVICES.mmkvKey });
   if (existing) {
-    return existing.password;
+    return { value: existing.password, isNew: false };
   }
   const key = generateEncryptionKey();
   await Keychain.setGenericPassword('mmkv-encryption-key', key, {
     service: KEYCHAIN_SERVICES.mmkvKey,
     accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
   });
-  return key;
+  return { value: key, isNew: true };
 }

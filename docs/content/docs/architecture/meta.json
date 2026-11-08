@@ -9,6 +9,7 @@
     "boundaries",
     "data-flow",
     "logger",
+    "storage",
     "http",
     "keyboard",
     "error-boundary",
