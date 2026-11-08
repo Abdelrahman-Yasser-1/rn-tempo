@@ -6,3 +6,15 @@ description: What changed in each template version and how to upgrade.
 <Callout title="Coming in WS13" type="info">
   This section is a stub. The content is written in workstream WS13.
 </Callout>
+
+## Check an upgrade with a bundle dry run
+
+After you bump React Native or a native-facing dependency, run `yarn verify:bundle`. It builds a production bundle for iOS and then Android into a temporary folder, prints each bundle size and deletes the output. It stops at the first platform that fails.
+
+```bash
+yarn verify:bundle                       # iOS, then Android
+yarn verify:bundle --platform android    # one platform
+yarn verify:bundle --reset-cache         # pass --reset-cache to Metro
+```
+
+It catches what typecheck and tests miss: a module that Metro cannot resolve or transform. Generated projects run it in CI for pull requests from `renovate/` branches, and the template repository runs it on every pull request. It is not part of `yarn verify` because it is slow. See [Verification commands](/docs/standards/verification).
