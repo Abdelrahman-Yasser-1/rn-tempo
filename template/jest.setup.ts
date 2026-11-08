@@ -172,6 +172,31 @@ jest.mock('react-native-image-picker', () => ({
   launchImageLibrary: jest.fn(),
 }));
 // @tempo-feature:file-picker:end
+// @tempo-feature:push-notifications:start
+// Firebase needs a device and a config file. The default app exists here; tests drive the mocked
+// messaging functions (jest.mocked) and set `getApps` to `[]` for the "not configured" case.
+jest.mock('@react-native-firebase/app', () => ({
+  getApps: jest.fn(() => [{ name: '[DEFAULT]' }]),
+}));
+jest.mock('@react-native-firebase/messaging', () => ({
+  getMessaging: jest.fn(() => ({})),
+  getToken: jest.fn(() => Promise.resolve('fcm-token')),
+  onTokenRefresh: jest.fn(() => jest.fn()),
+  onMessage: jest.fn(() => jest.fn()),
+  onNotificationOpenedApp: jest.fn(() => jest.fn()),
+  getInitialNotification: jest.fn(() => Promise.resolve(null)),
+  setBackgroundMessageHandler: jest.fn(),
+  hasPermission: jest.fn(() => Promise.resolve(-1)),
+  requestPermission: jest.fn(() => Promise.resolve(1)),
+  AuthorizationStatus: {
+    NOT_DETERMINED: -1,
+    DENIED: 0,
+    AUTHORIZED: 1,
+    PROVISIONAL: 2,
+    EPHEMERAL: 3,
+  },
+}));
+// @tempo-feature:push-notifications:end
 
 beforeAll(() => {
   // MSW 3 renamed `onUnhandledRequest` to `onUnhandledFrame`.
