@@ -26,25 +26,25 @@ A React Native app created from RN-TEMPO. Product context, glossary, environment
 
 Run everything from the project root.
 
-| Command                                                    | Purpose                                                              |
-| ---------------------------------------------------------- | -------------------------------------------------------------------- |
-| `yarn install && yarn pods`                                | Install JS deps and iOS pods                                         |
-| `yarn start`                                               | Metro                                                                |
-| `yarn ios:dev` / `yarn android:dev`                        | Run the dev app (also `:staging`, `:prod`)                           |
-| `yarn verify`                                              | Typecheck, lint, format check, ls-lint, i18n check, tests            |
-| `yarn verify:changed`                                      | Same checks scoped to changed files (run before finishing)           |
-| `yarn lint:fix` / `yarn format`                            | Auto-fix lint and formatting                                         |
-| `yarn test` / `yarn jest <path>`                           | Jest                                                                 |
-| `yarn typecheck`                                           | `tsc --noEmit`                                                       |
-| `yarn i18n:check`                                          | Locale keys identical in `en` and `ar`, none missing                 |
-| `yarn lint:deadcode`                                       | knip                                                                 |
-| `yarn spec:check`                                          | Every AC of implemented specs is covered by a test                   |
-| `yarn tempo g <kind> ...`                                  | Generators (when the CLI is installed; see `ai/rules/generators.md`) |
-| `yarn icons:search <term>` / `yarn icons:add <name\|file>` | Find an icon; add your own SVG or a Tabler icon (see Add an icon)    |
-| `yarn icons:prune` (`--restore`)                           | Release builds only: keep just the icons the code uses               |
-| `yarn assets` / `yarn assets:check`                        | Validate `src/assets`, generate (or verify) `src/assets/generated`   |
-| `yarn ai:sync`                                             | Regenerate tool files from `ai/` (after editing `ai/`)               |
-| `yarn ai:start` / `ai:prompt` / `ai:stop` / `ai:report`    | AI session logging                                                   |
+| Command                                                    | Purpose                                                                   |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `yarn install && yarn pods`                                | Install JS deps and iOS pods                                              |
+| `yarn start`                                               | Metro                                                                     |
+| `yarn ios:dev` / `yarn android:dev`                        | Run the dev app (also `:staging`, `:prod`)                                |
+| `yarn verify`                                              | Typecheck, lint, dependency ownership, format check, ls-lint, i18n, tests |
+| `yarn verify:changed`                                      | Same checks scoped to changed files (run before finishing)                |
+| `yarn lint:fix` / `yarn format`                            | Auto-fix lint and formatting                                              |
+| `yarn test` / `yarn jest <path>`                           | Jest                                                                      |
+| `yarn typecheck`                                           | `tsc --noEmit`                                                            |
+| `yarn i18n:check`                                          | Locale keys identical in `en` and `ar`, none missing                      |
+| `yarn lint:deadcode`                                       | knip                                                                      |
+| `yarn spec:check`                                          | Every AC of implemented specs is covered by a test                        |
+| `yarn tempo g <kind> ...`                                  | Generators (when the CLI is installed; see `ai/rules/generators.md`)      |
+| `yarn icons:search <term>` / `yarn icons:add <name\|file>` | Find an icon; add your own SVG or a Tabler icon (see Add an icon)         |
+| `yarn icons:prune` (`--restore`)                           | Release builds only: keep just the icons the code uses                    |
+| `yarn assets` / `yarn assets:check`                        | Validate `src/assets`, generate (or verify) `src/assets/generated`        |
+| `yarn ai:sync`                                             | Regenerate tool files from `ai/` (after editing `ai/`)                    |
+| `yarn ai:start` / `ai:prompt` / `ai:stop` / `ai:report`    | AI session logging                                                        |
 
 ## Folder map
 
@@ -65,7 +65,7 @@ specs/          product.md, tech.md, one folder per feature
 scripts/        ai-log, ai-sync, assets and icons-add, native helpers, verify-changed, spec-check
 ```
 
-Aliases: `@app` `@navigation` `@features` `@shared` `@services` `@theme` `@assets` `@locales` `@config` `@test-utils`, each mapping to `src/<name>`.
+Aliases: `@app` `@navigation` `@features` `@shared` `@services` `@theme` `@assets` `@locales` `@config` `@test-utils`, each mapping to `src/<name>`. They live in `tsconfig.json` `paths` only (Babel, Jest and ESLint read them); import through them, never through `../`. Barrels name their exports (`export { A } from './A'`), never `export *`. A new runtime dependency needs an ownership entry in `eslint.config.mjs` (`yarn lint:deps`).
 
 ## Golden rules
 
