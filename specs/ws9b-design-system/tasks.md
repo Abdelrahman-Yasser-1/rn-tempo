@@ -17,4 +17,4 @@ One PR per letter, in order; each PR is device-toured before the next starts.
 - [x] T9b.L Runtime services & test resilience (integration smoke tests, persist migrations, EnvError, log sinks, storage areas, errors, focus notify, ListLoadingMore, bootstrap graph, link helpers, coverage ratchet, feature READMEs)
 - [x] T9b.M push-notifications module, native version sync, Fastlane env badge
 - [x] T9b.M2 Firebase per environment (firebase-core module, switchable push), provider-neutral crash reporting, Crashlytics module, Fastlane symbol upload, Sentry recipe
-- [ ] T9b.N i18n hardening (removeUnusedKeys, Arabic plurals proven, context convention, Intl formatters, no dynamic keys lint, dev missing-key warnings, typed selector)
+- [x] T9b.N i18n hardening (removeUnusedKeys, Arabic plurals proven, context convention, Intl formatters, no dynamic keys lint, dev missing-key warnings, typed selector)
