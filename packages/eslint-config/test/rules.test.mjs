@@ -359,6 +359,11 @@ describe("eslint-config fixtures", () => {
       "rn-tempo/restricted-syntax",
     ],
     [
+      "a selector-form translation key",
+      "src/shared/utils/selectorKey.ts",
+      "rn-tempo/restricted-syntax",
+    ],
+    [
       "Appearance outside theme and app",
       "src/shared/utils/usesAppearance.ts",
       "rn-tempo/restricted-syntax",
@@ -392,6 +397,15 @@ describe("eslint-config fixtures", () => {
       "src/shared/utils/dynamicKey.ts",
     );
     const reported = texts.filter((text) => /`as const` object/.test(text));
+    expect(reported).toHaveLength(2);
+  });
+
+  it("reports each selector-form translation key and only those", async () => {
+    const texts = await lintMessages(
+      "invalid",
+      "src/shared/utils/selectorKey.ts",
+    );
+    const reported = texts.filter((text) => /selector form/.test(text));
     expect(reported).toHaveLength(2);
   });
 
