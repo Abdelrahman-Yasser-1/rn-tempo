@@ -354,6 +354,11 @@ describe("eslint-config fixtures", () => {
       "rn-tempo/restricted-syntax",
     ],
     [
+      "a dynamic translation key",
+      "src/shared/utils/dynamicKey.ts",
+      "rn-tempo/restricted-syntax",
+    ],
+    [
       "Appearance outside theme and app",
       "src/shared/utils/usesAppearance.ts",
       "rn-tempo/restricted-syntax",
@@ -379,6 +384,15 @@ describe("eslint-config fixtures", () => {
     const texts = await lintMessages("invalid", "src/shared/utils/styles.ts");
     expect(texts.join("\n")).toMatch(/logical style keys/);
     expect(texts.join("\n")).toMatch(/do not mirror/);
+  });
+
+  it("reports each dynamic translation key and only those", async () => {
+    const texts = await lintMessages(
+      "invalid",
+      "src/shared/utils/dynamicKey.ts",
+    );
+    const reported = texts.filter((text) => /`as const` object/.test(text));
+    expect(reported).toHaveLength(2);
   });
 
   it("keeps the enum ban next to the style restrictions", async () => {
