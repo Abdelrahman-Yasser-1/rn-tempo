@@ -1,0 +1,206 @@
+---
+title: Typed selector keys for i18n
+description: What the i18next selector API (t(($) => $.a.b)) is, how it compares with the string keys the template uses, and how to migrate to it if your project needs it.
+---
+
+## Why it's not in the template
+
+The template calls `t('login.submitButton')` with string keys. Those keys are already typed: `CustomTypeOptions` in `src/services/i18n/i18next.d.ts` types them from the English JSON, so a typo or a renamed key is a compile error. `yarn i18n:check` catches stale, missing and conflicting keys.
+
+i18next 25 added an opt-in **selector API**: `t(($) => $.login.submitButton)`. The template tried it in PR N (#32) and reverted it in N2 (#33). For a project of this size it made every call harder to read, and the main problem it solves did not apply. The i18next docs put it this way: "string keys stay first-class and the selector API stays opt-in".
+
+This page is for the project that later has a reason to switch.
+
+## How the selector works
+
+```tsx
+// String key (template default)
+const { t } = useTranslation('auth');
+t('login.submitButton');
+t('list.count', { count, ns: 'items' });
+
+// Selector (opt-in)
+t(($) => $.login.submitButton);
+t(($) => $.list.count, { count, ns: 'items' });
+```
+
+`$` is typed as the JSON of the active namespace, so the key is ordinary property access, not a string that has to match one entry of a long union of key strings. At runtime i18next turns the selector back into the dotted key, so translations, plurals, context and interpolation behave exactly as with string keys.
+
+## Pros and cons
+
+| | String keys `t('a.b')` (template) | Selector `t(($) => $.a.b)` |
+|---|---|---|
+| Type safety (typo, renamed key) | Yes, through `CustomTypeOptions` | Yes |
+| Type-check speed with thousands of keys | Can get slow; can hit "type instantiation is excessively deep" | Stays fast: property access, no giant union |
+| Readability | Short; familiar to every React and i18next developer | Noisier; new to most people |
+| Autocomplete | One flat list of every key | Level by level (`$.login.` → `submitButton`) |
+| Go to the JSON entry | Through the i18n Ally extension | Built into TypeScript (go to definition) |
+| i18n Ally inline previews, grep, most i18n lint plugins | Work | Mostly do not recognise selectors |
+| Keys stored as data (Zod messages, maps) | Plain strings plus `// t('key')` comment hints for the extractor | `keyFromSelector(($) => $.a.b, { ns })`: typed and read by the extractor |
+| Plurals and context | `t('list.count', { count })` | `t(($) => $.list.count, { count })`; needs `enableSelector: true`, not `'optimize'` |
+| Migration cost | None | Every `t()` call changes (one codemod PR) |
+
+**In short:** selectors are worth it when TypeScript performance becomes the bottleneck, or when the team strongly prefers navigation and autocomplete over readability. Otherwise, string keys are the better default.
+
+## When to switch
+
+Consider it if one of these happens:
+
+- `tsc` or editor autocomplete gets noticeably slow, and profiling (`tsc --extendedDiagnostics`, `--generateTrace`) points at the i18next types;
+- `t()` calls fail with "type instantiation is excessively deep and possibly infinite";
+- the locale files grow to thousands of keys across many namespaces.
+
+## Migration
+
+Do it in one PR, on a branch from an up-to-date `main`. String keys stop compiling as soon as selectors are enabled, and the selector form does not compile without it. So steps 1 to 4 must land in **one commit**, or that commit's typecheck is red.
+
+### 1. Enable selectors in the types
+
+In `src/services/i18n/i18next.d.ts`:
+
+```ts
+interface CustomTypeOptions {
+  defaultNS: typeof DEFAULT_NAMESPACE;
+  // `true`, not 'optimize': only `true` types the plural base key (`count`) and
+  // the `context` variants. 'optimize' requires the suffixed keys (`count_one`).
+  enableSelector: true;
+  resources: (typeof resources)['en'];
+}
+```
+
+### 2. Convert the calls with a codemod
+
+Use an AST codemod, never a regular expression on the source. This is the one used in PR N. Save it outside `src`, for example as `scripts/i18n-selector-codemod.cjs`, and run `node scripts/i18n-selector-codemod.cjs src`:
+
+```js
+// Converts t('a.b', opts) to t(($) => $.a.b, opts) and <Trans i18nKey="a.b" />.
+const ts = require('typescript');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const IDENT = /^[A-Za-z_]\w*$/;
+const isTCallee = (c) =>
+  (ts.isIdentifier(c) && c.text === 't') ||
+  (ts.isPropertyAccessExpression(c) && c.name.text === 't' &&
+    ts.isIdentifier(c.expression) && /^(i18n|i18next)$/.test(c.expression.text));
+const selectorFor = (key) =>
+  '($) => $' + key.split('.').map((p) => (IDENT.test(p) ? `.${p}` : `['${p}']`)).join('');
+
+function walk(dir, out = []) {
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) walk(p, out);
+    else if (/\.tsx?$/.test(e.name) && !e.name.endsWith('.d.ts')) out.push(p);
+  }
+  return out;
+}
+
+for (const file of process.argv.slice(2).flatMap((root) => walk(root))) {
+  const src = fs.readFileSync(file, 'utf8');
+  const kind = file.endsWith('x') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
+  const sf = ts.createSourceFile(file, src, ts.ScriptTarget.Latest, true, kind);
+  const edits = [];
+  (function visit(n) {
+    const a = ts.isCallExpression(n) && isTCallee(n.expression) ? n.arguments[0] : undefined;
+    if (a && (ts.isStringLiteral(a) || ts.isNoSubstitutionTemplateLiteral(a))) {
+      if (a.text.includes(':')) console.warn(`${file}: convert 'ns:key' by hand -> ${a.text}`);
+      else edits.push({ start: a.getStart(), end: a.getEnd(), text: selectorFor(a.text) });
+    }
+    if (ts.isJsxAttribute(n) && n.name.text === 'i18nKey' && n.initializer && ts.isStringLiteral(n.initializer)) {
+      const i = n.initializer;
+      edits.push({ start: i.getStart(), end: i.getEnd(), text: `{${selectorFor(i.text)}}` });
+    }
+    ts.forEachChild(n, visit);
+  })(sf);
+  let out = src;
+  for (const e of edits.sort((x, y) => y.start - x.start)) out = out.slice(0, e.start) + e.text + out.slice(e.end);
+  if (edits.length) fs.writeFileSync(file, out);
+}
+```
+
+Convert `'ns:key'` strings by hand to `t(($) => $.key, { ns: 'ns' })`. If your project has its own generator templates under `.tempo/templates/`, run the codemod on them too.
+
+### 3. Keys stored as data
+
+Replace the `// t('key')` comment hints with `keyFromSelector`, which is typed and read by the extractor:
+
+```ts
+import { keyFromSelector } from 'i18next';
+
+const MESSAGES = {
+  emailRequired: keyFromSelector(($) => $.email.required, { ns: 'validation' }),
+  nameTooShort: keyFromSelector(($) => $.name.tooShort, { ns: 'validation' }),
+};
+z.string().min(2, MESSAGES.nameTooShort);
+```
+
+`t()` accepts the result (a `SelectorKey`) directly. A key that reaches a component as plain text, such as `error.message` from a Zod issue in a `Form*` field, needs one sanctioned cast. Put it in a small helper so it is the only one:
+
+```ts
+// src/services/i18n/keys.ts
+import type { SelectorKey } from 'i18next';
+
+/** The one place a key that arrives as plain text becomes a key `t()` accepts. */
+export function toKey(message: string): SelectorKey {
+  return message as SelectorKey;
+}
+```
+
+### 4. The shared `Text` `tx` prop
+
+Type it as a selector for the `common` namespace:
+
+```ts
+import type { SelectorParam, TOptions } from 'i18next';
+
+tx?: SelectorParam;
+txOptions?: Omit<TOptions, 'ns'>;
+```
+
+Call sites become `tx={($) => $.sheet.close}`.
+
+### 5. Extractor
+
+Tell i18next-cli to read `keyFromSelector` like `t()`, in `i18next.config.ts`:
+
+```ts
+extract: {
+  functions: ['t', '*.t', 'keyFromSelector'],
+  // keep removeUnusedKeys, warnOnConflicts, sort and preserveContextVariants as they are
+},
+```
+
+Run `yarn i18n:check`. It must report no file changes, which proves that every key is still found.
+
+### 6. Lint: swap the ban
+
+In `@rn-tempo/eslint-config` (`configs/i18n.mjs`), the template bans the selector form with a `T_CALL("[arguments.0.type='ArrowFunctionExpression']")` entry. Replace it with a ban on string keys, so the two styles never mix:
+
+```js
+{
+  selector: T_CALL("[arguments.0.type='Literal']"),
+  message: "Use the typed selector form `t(($) => $.a.b)`, not a string key.",
+  files: ['src/**'],
+},
+```
+
+Keep the template-literal ban as it is. Update the fixture and the test in `packages/eslint-config/test` to match.
+
+### 7. Generators, AI rules and docs
+
+- Generators: `t('…')` in the screen templates under `packages/cli/templates/**`, or your project's `.tempo/templates/**`.
+- AI rules: `ai/rules/i18n.md` and `ai/rules/a11y.md`, then `yarn ai:sync`.
+- `AGENTS.md`, the [translation keys guide](/docs/guides/add-translation-keys) and the `tkey` snippet in `.vscode/tempo.code-snippets`.
+
+### 8. Verify
+
+```bash
+yarn verify                     # typecheck, lint, i18n:check, tests
+grep -rn "t('" src | grep -v test  # expect no string-key calls left
+```
+
+Check the result on a device in Arabic: plurals (0, 1, 2, 3, 11, 100) and the gendered Home greeting must look the same as before the migration.
+
+## Going back
+
+Turn `enableSelector` off, run the codemod in reverse (`($) => $.a.b` becomes `'a.b'`), restore the comment hints for keys stored as data, and swap the lint ban back. The template's own revert (N2, #33) did this with `git revert` of the migration commits.

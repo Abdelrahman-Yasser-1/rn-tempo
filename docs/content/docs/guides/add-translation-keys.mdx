@@ -24,7 +24,7 @@ Every user-facing string is a key in both `en` and `ar`. Literal text in JSX is 
    <Text>{t('login.submitButton')}</Text>;
    ```
 
-   From another namespace, pass `ns`: `t('actions.close', { ns: 'common' })`. The shared `Text` takes a key in `tx`, for example `tx="sheet.close"` (the `common` namespace). The selector form `t(($) => $.a.b)` is a lint error, so the codebase keeps one style.
+   From another namespace, pass `ns`: `t('actions.close', { ns: 'common' })`. The shared `Text` takes a key in `tx`, for example `tx="sheet.close"` (the `common` namespace). The selector form `t(($) => $.a.b)` is a lint error, so the codebase keeps one style. The [typed selector keys recipe](/docs/recipes/i18n-selector-keys) explains the trade-off and how to migrate if your project needs it.
 
 4. **Plurals.** Pass `count` and add one key per plural form with the i18next suffixes. English needs `_one` and `_other`. Arabic needs all six: `_zero`, `_one`, `_two`, `_few`, `_many` and `_other`. The check below fails when an Arabic form is missing.
 
