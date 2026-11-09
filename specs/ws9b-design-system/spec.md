@@ -73,7 +73,7 @@ This workstream fixes those four things before WS10 (dynamic forms) builds on th
 | K | Tooling, scripts and DX (deep comparison, below) |
 | L | Runtime services and test resilience (deep comparison, below) |
 | M | `push-notifications` optional module, native version sync, Fastlane env badge |
-| N | i18n hardening (stale keys, Arabic plurals, context, Intl formatters, no dynamic keys, dev missing-key warnings, typed selector) |
+| N | i18n hardening (stale keys, Arabic plurals, context, Intl formatters, no dynamic keys, dev missing-key warnings; typed selector reverted in N2) |
 
 ## Deep comparison adoptions (2026-11-02)
 
@@ -170,7 +170,7 @@ Sources: Half-Million and https://mensurdurakovic.com/react-i18next-tips-and-tri
    - In `__DEV__`, set `saveMissing: true` with a `missingKeyHandler` that calls `logger.warn`.
    - In release builds, behaviour is unchanged.
    - `debug` turns on only when `LOG_LEVEL=debug`.
-7. **Typed selector API** `t($ => $.login.title)` (i18next ≥ 25 `enableSelector`). **Approved by the owner (2026-11-03).** It makes keys rename-safe and IDE-navigable, but changes every `t()` call. A codemod plus a lint rule would keep both styles from mixing. Done as the last step of PR N.
+7. **Typed selector API** `t($ => $.login.title)` (i18next ≥ 25 `enableSelector`). **Approved by the owner (2026-11-03).** It makes keys rename-safe and IDE-navigable, but changes every `t()` call. A codemod plus a lint rule would keep both styles from mixing. Done as the last step of PR N. **Reverted by the owner (2026-11-09, PR N2):** the selector form was judged harder to read, so `t('a.b')` string keys stay, still typed through `CustomTypeOptions`. Plurals, context, Intl formatters, the stale-key checks and the missing-key warnings are unaffected. A lint rule now bans the selector form so only one style exists.
 
 Acceptance criteria:
 
@@ -180,7 +180,8 @@ Acceptance criteria:
 - AC-N-4: In-sentence numbers, currency and dates follow the active language.
 - AC-N-5: A `t()` with a dynamic template key is a lint error.
 - AC-N-6: A missing key logs a warning in dev only.
-- AC-N-7: Every `t()` uses the selector form, and the string form is a lint error.
+- ~~AC-N-7: Every `t()` uses the selector form, and the string form is a lint error.~~ Replaced by AC-N-8.
+- AC-N-8: Every `t()` uses a typed string key, and the selector form is a lint error.
 
 Skipped in PR N:
 
