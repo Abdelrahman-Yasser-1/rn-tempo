@@ -95,6 +95,10 @@ export const DEPENDENCY_POLICY = {
     ['src/services/firebase/**'],
     'Firebase setup lives in src/services/firebase; use isFirebaseEnabled from there.',
   ),
+  '@react-native-firebase/crashlytics': owned(
+    ['src/services/crash-reporting/adapters/crashlytics.ts'],
+    'Crash reporting goes through @services/crash-reporting; only its Crashlytics adapter imports the SDK.',
+  ),
   '@react-native-firebase/messaging': owned(
     ['src/services/push/**'],
     'Use @services/push for tokens, permission and notification links.',
