@@ -12,6 +12,10 @@ export type FormBuilderProps<T extends FieldValues> = BaseBuilderProps<T> &
     testID?: string;
   }>;
 
-/** The whole `useForm` API, plus `submit`. */
+/** The whole `useForm` API, plus `submit` and `discardDraft`. */
 export type FormBuilderRef<T extends FieldValues> = UseFormReturn<T> &
-  Readonly<{ submit: () => void }>;
+  Readonly<{
+    submit: () => void;
+    /** Deletes the saved draft (`draft` prop) and stops saving until the next change. */
+    discardDraft: () => void;
+  }>;

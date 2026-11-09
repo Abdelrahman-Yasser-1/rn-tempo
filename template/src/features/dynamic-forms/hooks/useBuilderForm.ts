@@ -5,6 +5,7 @@ import type { DefaultValues, FieldValues } from 'react-hook-form';
 import { DEFAULT_SPACING } from '@features/dynamic-forms/constants';
 import type { BaseBuilderProps, FormChangeEvent, FormField } from '@features/dynamic-forms/types';
 import { buildInitialValues, buildResetValues } from '@features/dynamic-forms/utils/defaults';
+import { loadDraft, mergeValues } from '@features/dynamic-forms/utils/draft';
 import { createFormResolver } from '@features/dynamic-forms/utils/formResolver';
 
 import type { FormBuilderContextValue } from './useFormBuilderContext';
@@ -34,7 +35,12 @@ export function useBuilderForm<T extends FieldValues>({
     getHiddenNames,
     getAsyncErrors: () => asyncErrors,
   });
-  const [initialValues] = useState(() => buildInitialValues(fields, defaultValues));
+  const [restored] = useState(() =>
+    props.draft ? loadDraft(props.draft.key, props.draft.maxAgeMs) : undefined,
+  );
+  const [initialValues] = useState(() =>
+    buildInitialValues(fields, mergeValues<T>(defaultValues, restored?.values)),
+  );
   const internalForm = useForm<T, unknown, T>({
     resolver,
     defaultValues: initialValues as DefaultValues<T>,
@@ -72,5 +78,5 @@ export function useBuilderForm<T extends FieldValues>({
     [resets, asyncErrors, props.spacing],
   );
 
-  return { form, values, initialValues, context };
+  return { form, values, initialValues, restoredStep: restored?.step, context };
 }

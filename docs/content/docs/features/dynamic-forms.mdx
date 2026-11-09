@@ -1,0 +1,16 @@
+---
+title: Dynamic forms
+description: Config-driven forms with typed field configs, steps, repeat sections, drafts, a review step and a safe JSON adapter.
+---
+
+<FeatureBadge name="dynamic-forms" />
+
+## Drafts
+
+A form with `draft: { key }` saves its values to the encrypted app storage (`forms.draft.<key>`) and restores them when it mounts. These rules protect personal data on a shared device:
+
+- **Sign-out clears drafts.** The module listens to the auth store and deletes every saved draft when the signed-in user signs out or changes. Screens do not need to call anything.
+- **A draft belongs to one user.** The id of the user who saved it is stored with it. `loadDraft` refuses and deletes a draft whose owner differs from the current user, including a draft saved while signed out that is restored while signed in, and the reverse.
+- **Drafts expire.** A draft older than `maxAgeMs` (default 7 days, measured from the time it was saved) is ignored and deleted. Set it per form: `draft: { key: 'kyc', maxAgeMs: 24 * 60 * 60 * 1000 }`.
+- **Never saved:** fields marked `sensitive` (OTP and secure text by default), file fields, and anything not declared in the form config.
+- A successful submit clears the draft. `discardDraft(key)` removes one by hand.

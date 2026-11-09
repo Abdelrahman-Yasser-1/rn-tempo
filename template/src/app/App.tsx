@@ -2,6 +2,7 @@ import { DarkTheme, DefaultTheme, type Theme } from '@react-navigation/native';
 import { useEffect, useMemo, type ComponentType } from 'react';
 import { StatusBar } from 'react-native';
 
+import { initDraftCleanup } from '@features/dynamic-forms'; // @tempo-feature:dynamic-forms
 import { linking, startPendingLinkResume } from '@navigation/linking';
 import { navigationRef } from '@navigation/navigationRef';
 import { createRootNavigator } from '@navigation/RootNavigator';
@@ -81,6 +82,7 @@ function AppContent() {
 
   useEffect(() => startNetworkMonitoring(), []);
   useEffect(() => startPendingLinkResume(), []);
+  useEffect(() => initDraftCleanup(), []); // @tempo-feature:dynamic-forms
   // @tempo-feature:push-notifications:start
   // A notification that opened the app is routed once the navigator exists. One macrotask later,
   // so the linking listener is subscribed (same trick as the pending link replay).

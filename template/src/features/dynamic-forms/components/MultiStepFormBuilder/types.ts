@@ -59,6 +59,8 @@ export type MultiStepFormBuilderProps<T extends FieldValues> = BaseBuilderProps<
 export type MultiStepFormBuilderRef<T extends FieldValues> = UseFormReturn<T> &
   Readonly<{
     submit: () => void;
+    /** Deletes the saved draft (`draft` prop) and stops saving until the next step change. */
+    discardDraft: () => void;
     currentStep: number;
     totalSteps: number;
     visibleStepIndex: number;
