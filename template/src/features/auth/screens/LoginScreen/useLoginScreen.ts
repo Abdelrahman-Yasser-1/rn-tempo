@@ -51,10 +51,10 @@ export function useLoginScreen() {
     loginError !== null && INVALID_CREDENTIALS_CODES.has(normalizeError(loginError).code);
   let errorMessage: string | undefined;
   if (isOfflineAttempt) {
-    errorMessage = t(($) => $.network, { ns: 'errors' });
+    errorMessage = t('network', { ns: 'errors' });
   } else if (loginError !== null) {
     errorMessage = isInvalidCredentials
-      ? t(($) => $.login.invalidCredentials)
+      ? t('login.invalidCredentials')
       : t(getErrorMessageKey(loginError), { ns: 'errors' });
   }
 

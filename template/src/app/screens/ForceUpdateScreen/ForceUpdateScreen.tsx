@@ -9,12 +9,12 @@ export function ForceUpdateScreen() {
 
   return (
     <MessageScreen
-      message={t(($) => $.forceUpdate.message)}
+      message={t('forceUpdate.message')}
       testID="force-update-screen"
-      title={t(($) => $.forceUpdate.title)}
+      title={t('forceUpdate.title')}
     >
       <MessageButton
-        label={t(($) => $.forceUpdate.updateButton)}
+        label={t('forceUpdate.updateButton')}
         onPress={() => {
           void openStore();
         }}

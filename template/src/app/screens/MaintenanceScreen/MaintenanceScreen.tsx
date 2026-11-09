@@ -20,12 +20,12 @@ export function MaintenanceScreen({ onRetry = refetchConfig }: Readonly<Props>) 
 
   return (
     <MessageScreen
-      message={data?.maintenance.message ?? t(($) => $.maintenance.message)}
+      message={data?.maintenance.message ?? t('maintenance.message')}
       testID="maintenance-screen"
-      title={t(($) => $.maintenance.title)}
+      title={t('maintenance.title')}
     >
       <MessageButton
-        label={t(($) => $.maintenance.retryButton)}
+        label={t('maintenance.retryButton')}
         onPress={onRetry}
         testID="maintenance.retry-button"
       />

@@ -9,7 +9,7 @@ import { toast } from '@services/toast/toast';
 
 /** Tells the user a link could not be opened. */
 function showOpenFailed(): void {
-  toast.show({ type: 'error', title: i18n.t(($) => $.linking.openFailed, { ns: 'app' }) });
+  toast.show({ type: 'error', title: i18n.t('linking.openFailed', { ns: 'app' }) });
 }
 
 /** The scheme only (`tel`, `mailto`, `https`): a full url can carry a phone number or a message. */

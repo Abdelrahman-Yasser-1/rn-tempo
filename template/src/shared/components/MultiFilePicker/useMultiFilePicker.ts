@@ -33,16 +33,16 @@ export function useMultiFilePicker({
         const isDuplicate = [...value, ...added].some((existing) => existing.uri === file.uri);
         const rejection = isDuplicate ? null : rejectFile(file, { accept, maxSizeMB });
         if (rejection === 'type') {
-          message ??= t(($) => $.filePicker.errorType);
+          message ??= t('filePicker.errorType');
         } else if (rejection === 'size') {
-          message ??= t(($) => $.filePicker.errorSize, { max: maxSizeMB });
+          message ??= t('filePicker.errorSize', { max: maxSizeMB });
         } else if (!isDuplicate) {
           added.push(file);
         }
       }
       const kept = room === undefined ? added : added.slice(0, room);
       if (kept.length < added.length) {
-        message ??= t(($) => $.filePicker.maxFiles, { max: maxFiles });
+        message ??= t('filePicker.maxFiles', { max: maxFiles });
       }
       setValidationText(message);
       if (kept.length > 0) {

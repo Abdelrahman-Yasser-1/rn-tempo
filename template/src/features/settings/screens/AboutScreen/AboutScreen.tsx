@@ -17,28 +17,28 @@ export function AboutScreen() {
 
   return (
     <Screen preset="scroll" contentContainerStyle={styles.content} testID="about-screen">
-      <Header title={t(($) => $.about.title)} onBack={vm.onBack} testID="about.header" />
+      <Header title={t('about.title')} onBack={vm.onBack} testID="about.header" />
       <ListItem
-        title={t(($) => $.about.version)}
+        title={t('about.version')}
         subtitle={APP_VERSION}
         showDivider
         onPress={vm.onVersionPress}
         testID="about.version"
       />
       <ListItem
-        title={t(($) => $.about.environment)}
+        title={t('about.environment')}
         subtitle={ENV.APP_ENV}
         showDivider
         testID="about.environment"
       />
       <ListItem
-        title={t(($) => $.about.reactNative)}
+        title={t('about.reactNative')}
         subtitle={REACT_NATIVE_VERSION}
         showDivider
         testID="about.react-native"
       />
       <ListItem
-        title={t(($) => $.about.os)}
+        title={t('about.os')}
         subtitle={`${Platform.OS} ${String(Platform.Version)}`}
         testID="about.os"
       />

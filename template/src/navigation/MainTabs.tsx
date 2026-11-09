@@ -16,7 +16,7 @@ export function createMainTabs() {
       HomeTab: {
         screen: createHomeStack(),
         options: () => ({
-          tabBarLabel: i18n.t(($) => $.tabs.home, { ns: 'app' }),
+          tabBarLabel: i18n.t('tabs.home', { ns: 'app' }),
           tabBarIcon: ({ focused: isFocused }) => (
             <Icon name="home" color={isFocused ? 'primary' : 'textSecondary'} />
           ),
@@ -25,7 +25,7 @@ export function createMainTabs() {
       ProfileTab: {
         screen: createProfileStack(),
         options: () => ({
-          tabBarLabel: i18n.t(($) => $.tabs.profile, { ns: 'app' }),
+          tabBarLabel: i18n.t('tabs.profile', { ns: 'app' }),
           tabBarIcon: ({ focused: isFocused }) => (
             <Icon name="user" color={isFocused ? 'primary' : 'textSecondary'} />
           ),
@@ -34,7 +34,7 @@ export function createMainTabs() {
       SettingsTab: {
         screen: createSettingsStack(),
         options: () => ({
-          tabBarLabel: i18n.t(($) => $.tabs.settings, { ns: 'app' }),
+          tabBarLabel: i18n.t('tabs.settings', { ns: 'app' }),
           tabBarIcon: ({ focused: isFocused }) => (
             <Icon name="settings" color={isFocused ? 'primary' : 'textSecondary'} />
           ),

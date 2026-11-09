@@ -41,7 +41,7 @@ export function TextArea({
         variant="caption"
         color="textSecondary"
         style={styles.counter}
-        accessibilityLabel={t(($) => $.field.characterCount, { current: length, max: maxLength })}
+        accessibilityLabel={t('field.characterCount', { current: length, max: maxLength })}
       >
         {`${String(length)}/${String(maxLength)}`}
       </Text>

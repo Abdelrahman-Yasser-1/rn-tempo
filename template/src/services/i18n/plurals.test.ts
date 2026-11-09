@@ -28,7 +28,7 @@ describe('plural forms', () => {
   test.each(['en', 'ar'] as const)('AC-N-2: counts 0, 1, 2, 3, 11 and 100 in %s', async (lng) => {
     await initI18nInstance(lng);
 
-    const rendered = COUNTS.map((count) => i18n.t(($) => $.list.count, { ns: 'items', count }));
+    const rendered = COUNTS.map((count) => i18n.t('list.count', { ns: 'items', count }));
 
     expect(rendered).toEqual(EXPECTED[lng]);
   });

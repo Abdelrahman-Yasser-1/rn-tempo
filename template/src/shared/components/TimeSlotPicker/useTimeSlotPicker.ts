@@ -26,9 +26,9 @@ export function useTimeSlotPicker({
   const [isOpen, setIsOpen] = useState(false);
 
   const periodLabels: Record<TimePeriod, string> = {
-    morning: t(($) => $.timeSlot.period.morning),
-    afternoon: t(($) => $.timeSlot.period.afternoon),
-    evening: t(($) => $.timeSlot.period.evening),
+    morning: t('timeSlot.period.morning'),
+    afternoon: t('timeSlot.period.afternoon'),
+    evening: t('timeSlot.period.evening'),
   };
   const slotText = (slot: TimeSlot) => slot.label ?? formatTime(slot.value, locale);
   const groups = PERIODS.map((period) => ({
@@ -38,9 +38,9 @@ export function useTimeSlotPicker({
   })).filter((group) => group.slots.length > 0);
 
   const selected = slots.find((slot) => slot.value === value);
-  let title = sheetTitle ?? label ?? t(($) => $.timeSlot.title);
+  let title = sheetTitle ?? label ?? t('timeSlot.title');
   if (sheetTitle === undefined && date !== undefined) {
-    title = t(($) => $.timeSlot.titleOnDate, { date: fromISODate(date) });
+    title = t('timeSlot.titleOnDate', { date: fromISODate(date) });
   }
 
   let valueText: string | undefined;

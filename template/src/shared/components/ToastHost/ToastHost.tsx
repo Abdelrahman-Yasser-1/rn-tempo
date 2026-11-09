@@ -68,7 +68,7 @@ function ToastCard({ type, text1, text2, onPress, props, hide }: ToastCardProps)
             testID={`toast.${type}.close`}
             icon="close"
             size="sm"
-            accessibilityLabel={t(($) => $.toast.close)}
+            accessibilityLabel={t('toast.close')}
             onPress={() => {
               hide();
             }}

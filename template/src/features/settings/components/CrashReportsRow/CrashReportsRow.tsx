@@ -19,11 +19,11 @@ export function CrashReportsRow() {
 
   return (
     <ListItem
-      title={t(($) => $.crashReports.title)}
-      subtitle={t(($) => $.crashReports.description)}
+      title={t('crashReports.title')}
+      subtitle={t('crashReports.description')}
       left={<Icon name="alert-circle" />}
       trailing={{ type: 'switch', value: vm.isShared, onValueChange: vm.onToggle }}
-      accessibilityLabel={t(($) => $.crashReports.title)}
+      accessibilityLabel={t('crashReports.title')}
       showDivider
       testID="settings.crash-reports"
     />

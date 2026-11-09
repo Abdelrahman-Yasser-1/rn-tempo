@@ -23,9 +23,9 @@ export function useFilePicker({
       }
       const rejection = rejectFile(file, { accept, maxSizeMB });
       if (rejection === 'type') {
-        setValidationText(t(($) => $.filePicker.errorType));
+        setValidationText(t('filePicker.errorType'));
       } else if (rejection === 'size') {
-        setValidationText(t(($) => $.filePicker.errorSize, { max: maxSizeMB }));
+        setValidationText(t('filePicker.errorSize', { max: maxSizeMB }));
       } else {
         setValidationText(undefined);
         onChange(file);

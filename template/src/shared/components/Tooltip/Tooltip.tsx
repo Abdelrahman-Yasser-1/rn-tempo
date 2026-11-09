@@ -55,7 +55,7 @@ export function Tooltip({
       >
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={t(($) => $.tooltip.close)}
+          accessibilityLabel={t('tooltip.close')}
           testID={suffix('backdrop')}
           style={styles.backdrop}
           onPress={onClose}

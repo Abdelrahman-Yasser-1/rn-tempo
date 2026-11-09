@@ -44,7 +44,7 @@ export function MonthYearPicker({
         disabled={isDisabled}
         readOnly={isReadOnly}
         valueText={vm.valueText}
-        placeholder={placeholder ?? t(($) => $.monthYearPicker.placeholder)}
+        placeholder={placeholder ?? t('monthYearPicker.placeholder')}
         icon="calendar"
         open={vm.isOpen}
         testID={testID}
@@ -52,7 +52,7 @@ export function MonthYearPicker({
       />
       <PickerSheet
         visible={vm.isOpen}
-        title={sheetTitle ?? label ?? t(($) => $.monthYearPicker.title)}
+        title={sheetTitle ?? label ?? t('monthYearPicker.title')}
         testID={testID ? `${testID}.sheet` : undefined}
         confirmDisabled={!vm.hasDraft}
         onClose={vm.onClose}

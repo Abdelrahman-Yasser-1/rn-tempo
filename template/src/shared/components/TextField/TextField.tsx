@@ -31,9 +31,7 @@ function PasswordToggle({ isRevealed, isDisabled, onToggle, testID }: PasswordTo
       icon={isRevealed ? 'eye-off' : 'eye'}
       size="sm"
       disabled={isDisabled}
-      accessibilityLabel={
-        isRevealed ? t(($) => $.a11y.hidePassword) : t(($) => $.a11y.showPassword)
-      }
+      accessibilityLabel={t(isRevealed ? 'a11y.hidePassword' : 'a11y.showPassword')}
       accessibilityState={{ checked: isRevealed }}
       onPress={onToggle}
     />

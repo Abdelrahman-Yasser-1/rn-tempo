@@ -11,16 +11,16 @@ export function ForgotPasswordScreen() {
 
   return (
     <AuthLayout
-      headerTitle={t(($) => $.header.forgotPassword)}
+      headerTitle={t('header.forgotPassword')}
       onBack={vm.onBack}
-      title={t(($) => $.forgotPassword.title)}
-      subtitle={t(($) => $.forgotPassword.subtitle)}
+      title={t('forgotPassword.title')}
+      subtitle={t('forgotPassword.subtitle')}
       testID="forgot-password-screen"
     >
       <FormTextField
         control={vm.control}
         name="email"
-        label={t(($) => $.forgotPassword.email)}
+        label={t('forgotPassword.email')}
         keyboardType="email-address"
         autoCapitalize="none"
         autoCorrect={false}
@@ -31,7 +31,7 @@ export function ForgotPasswordScreen() {
       />
       <FormError message={vm.errorMessage} testID="forgot-password.error" />
       <Button
-        title={t(($) => $.forgotPassword.submit)}
+        title={t('forgotPassword.submit')}
         fullWidth
         loading={vm.isPending}
         onPress={vm.onSubmit}

@@ -10,19 +10,15 @@ export function ThemeScreen() {
   const { t } = useTranslation('settings');
   const vm = useThemeScreen();
 
-  const themeNames = {
-    system: t(($) => $.theme.system),
-    light: t(($) => $.theme.light),
-    dark: t(($) => $.theme.dark),
-  };
+  const themeNames = { system: t('theme.system'), light: t('theme.light'), dark: t('theme.dark') };
 
   return (
     <Screen preset="scroll" contentContainerStyle={styles.content} testID="theme-screen">
-      <Header title={t(($) => $.theme.title)} onBack={vm.onBack} testID="theme.header" />
+      <Header title={t('theme.title')} onBack={vm.onBack} testID="theme.header" />
       <RadioGroup
         value={vm.preference}
         onChange={vm.onChange}
-        accessibilityLabel={t(($) => $.theme.title)}
+        accessibilityLabel={t('theme.title')}
         testID="theme.group"
       >
         {THEME_OPTIONS.map((option) => (

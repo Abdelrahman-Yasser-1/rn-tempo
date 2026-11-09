@@ -1,5 +1,4 @@
 import { screen } from '@testing-library/react-native';
-import type { SelectorParam } from 'i18next';
 
 import { renderWithProviders } from '@test-utils/renderWithProviders';
 
@@ -38,10 +37,8 @@ describe('Text', () => {
   });
 
   it('resolves a tx key (the key itself when no translation exists)', async () => {
-    // A selector for a key no locale file has, which the typed `tx` prop rejects by design.
-    const missing = (($: Record<string, string>) =>
-      $.missingKeyForTest) as unknown as SelectorParam;
-    await renderWithProviders(<Text tx={missing} />);
-    expect(screen.getByText('missingKeyForTest')).toBeOnTheScreen();
+    // @ts-expect-error -- deliberately not a real key
+    await renderWithProviders(<Text tx="common.missingKeyForTest" />);
+    expect(screen.getByText('common.missingKeyForTest')).toBeOnTheScreen();
   });
 });

@@ -1,16 +1,13 @@
-import { keyFromSelector } from 'i18next';
 import { z } from 'zod';
 
 import { isoDateSchema } from '@shared/utils/schemas';
 
-// Messages are keys of the `validation` namespace (see `@shared/utils/schemas`).
-const MESSAGES = {
-  titleRequired: keyFromSelector(($) => $.item.titleRequired, { ns: 'validation' }),
-  priceInvalid: keyFromSelector(($) => $.item.priceInvalid, { ns: 'validation' }),
-  descriptionRequired: keyFromSelector(($) => $.item.descriptionRequired, { ns: 'validation' }),
-  categoryRequired: keyFromSelector(($) => $.item.categoryRequired, { ns: 'validation' }),
-  quantityInvalid: keyFromSelector(($) => $.item.quantityInvalid, { ns: 'validation' }),
-};
+// Keys of the `validation` namespace, declared here so the i18n extractor keeps them.
+// t('item.titleRequired', { ns: 'validation', defaultValue: 'Enter a title.' })
+// t('item.priceInvalid', { ns: 'validation', defaultValue: 'Enter a price greater than 0.' })
+// t('item.descriptionRequired', { ns: 'validation', defaultValue: 'Enter a description.' })
+// t('item.categoryRequired', { ns: 'validation', defaultValue: 'Enter a category.' })
+// t('item.quantityInvalid', { ns: 'validation', defaultValue: 'Enter a quantity of at least 1.' })
 
 /** Contract C13 `Item`. */
 export const ItemSchema = z.object({
@@ -36,14 +33,14 @@ export const ItemsPageSchema = z.object({
 export type ItemsPage = z.infer<typeof ItemsPageSchema>;
 
 export const CreateItemSchema = z.object({
-  title: z.string().trim().min(1, MESSAGES.titleRequired),
-  price: z.coerce.number(MESSAGES.priceInvalid).positive(MESSAGES.priceInvalid),
-  description: z.string().trim().min(1, MESSAGES.descriptionRequired),
-  category: z.string().trim().min(1, MESSAGES.categoryRequired),
+  title: z.string().trim().min(1, 'item.titleRequired'),
+  price: z.coerce.number('item.priceInvalid').positive('item.priceInvalid'),
+  description: z.string().trim().min(1, 'item.descriptionRequired'),
+  category: z.string().trim().min(1, 'item.categoryRequired'),
   quantity: z
-    .number(MESSAGES.quantityInvalid)
-    .int(MESSAGES.quantityInvalid)
-    .min(1, MESSAGES.quantityInvalid),
+    .number('item.quantityInvalid')
+    .int('item.quantityInvalid')
+    .min(1, 'item.quantityInvalid'),
   tags: z.array(z.string()),
   /** Day the item is available from (`YYYY-MM-DD`); empty when not set. */
   availableFrom: isoDateSchema.or(z.literal('')).optional(),

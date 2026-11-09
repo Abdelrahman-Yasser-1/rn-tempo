@@ -43,7 +43,7 @@ export function BottomSheet({
         {...props}
         appearsOnIndex={0}
         disappearsOnIndex={-1}
-        accessibilityLabel={t(($) => $.sheet.close)}
+        accessibilityLabel={t('sheet.close')}
       />
     ),
     [t],
@@ -89,7 +89,7 @@ export function BottomSheet({
               testID={testID ? `${testID}.close` : undefined}
               icon="close"
               size="sm"
-              accessibilityLabel={t(($) => $.sheet.close)}
+              accessibilityLabel={t('sheet.close')}
               onPress={onDismissPress}
             />
           </Box>

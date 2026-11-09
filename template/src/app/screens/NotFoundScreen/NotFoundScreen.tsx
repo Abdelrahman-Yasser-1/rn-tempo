@@ -11,12 +11,12 @@ export function NotFoundScreen() {
 
   return (
     <MessageScreen
-      message={t(($) => $.notFound.message)}
+      message={t('notFound.message')}
       testID="not-found-screen"
-      title={t(($) => $.notFound.title)}
+      title={t('notFound.title')}
     >
       <MessageButton
-        label={t(($) => $.notFound.homeButton)}
+        label={t('notFound.homeButton')}
         onPress={goHome}
         testID="not-found.home-button"
       />

@@ -1,6 +1,4 @@
 import axios from 'axios';
-import { keyFromSelector } from 'i18next';
-import type { SelectorKey } from 'i18next';
 
 export type ApiErrorCode =
   | 'NETWORK'
@@ -100,18 +98,25 @@ export function normalizeError(error: unknown): ApiError {
   });
 }
 
-/** Key inside the `errors` namespace, built with `keyFromSelector` so it is typed and extracted. */
-export type ErrorMessageKey = SelectorKey;
+export type ErrorMessageKey =
+  | 'network'
+  | 'timeout'
+  | 'unauthorized'
+  | 'forbidden'
+  | 'notFound'
+  | 'validation'
+  | 'server'
+  | 'unknown';
 
 const MESSAGE_KEYS: Record<ApiErrorCode, ErrorMessageKey> = {
-  NETWORK: keyFromSelector(($) => $.network, { ns: 'errors' }),
-  TIMEOUT: keyFromSelector(($) => $.timeout, { ns: 'errors' }),
-  UNAUTHORIZED: keyFromSelector(($) => $.unauthorized, { ns: 'errors' }),
-  FORBIDDEN: keyFromSelector(($) => $.forbidden, { ns: 'errors' }),
-  NOT_FOUND: keyFromSelector(($) => $.notFound, { ns: 'errors' }),
-  VALIDATION: keyFromSelector(($) => $.validation, { ns: 'errors' }),
-  SERVER: keyFromSelector(($) => $.server, { ns: 'errors' }),
-  UNKNOWN: keyFromSelector(($) => $.unknown, { ns: 'errors' }),
+  NETWORK: 'network',
+  TIMEOUT: 'timeout',
+  UNAUTHORIZED: 'unauthorized',
+  FORBIDDEN: 'forbidden',
+  NOT_FOUND: 'notFound',
+  VALIDATION: 'validation',
+  SERVER: 'server',
+  UNKNOWN: 'unknown',
 };
 
 /** Key inside the `errors` namespace: `t(getErrorMessageKey(error), { ns: 'errors' })`. */
@@ -124,3 +129,13 @@ export function isRetryable(error: unknown): boolean {
   const { code } = normalizeError(error);
   return code === 'NETWORK' || code === 'TIMEOUT' || code === 'SERVER';
 }
+
+// Keys of the `errors` namespace, declared here so the i18n extractor keeps them.
+// t('network', { ns: 'errors', defaultValue: 'No internet connection. Check your network and try again.' })
+// t('timeout', { ns: 'errors', defaultValue: 'The request took too long. Please try again.' })
+// t('unauthorized', { ns: 'errors', defaultValue: 'Your session has expired. Please sign in again.' })
+// t('forbidden', { ns: 'errors', defaultValue: "You don't have permission to do this." })
+// t('notFound', { ns: 'errors', defaultValue: "We couldn't find what you were looking for." })
+// t('validation', { ns: 'errors', defaultValue: 'Some of the information you entered is invalid.' })
+// t('server', { ns: 'errors', defaultValue: 'Something went wrong on our side. Please try again later.' })
+// t('unknown', { ns: 'errors', defaultValue: 'Something went wrong. Please try again.' })
