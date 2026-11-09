@@ -18,13 +18,13 @@ export function WebViewScreen({ route }: WebViewScreenProps) {
   const actions: readonly HeaderAction[] = [
     {
       icon: 'refresh',
-      accessibilityLabel: t(($) => $.webView.reload),
+      accessibilityLabel: t('webView.reload'),
       onPress: vm.onReload,
       testID: 'web-view.reload',
     },
     {
       icon: 'external-link',
-      accessibilityLabel: t(($) => $.webView.openInBrowser),
+      accessibilityLabel: t('webView.openInBrowser'),
       onPress: vm.onOpenInBrowser,
       testID: 'web-view.open-in-browser',
     },
@@ -47,8 +47,8 @@ export function WebViewScreen({ route }: WebViewScreenProps) {
         />
       ) : (
         <ErrorState
-          title={t(($) => $.webView.errorTitle)}
-          message={t(($) => $.webView.unsafe)}
+          title={t('webView.errorTitle')}
+          message={t('webView.unsafe')}
           testID="web-view.unsafe"
         />
       )}

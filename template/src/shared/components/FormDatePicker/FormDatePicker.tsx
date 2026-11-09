@@ -1,8 +1,8 @@
+import type { ParseKeys } from 'i18next';
 import { useController } from 'react-hook-form';
 import type { FieldPath, FieldValues } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
-import { toKey } from '@services/i18n/keys';
 import { DatePicker } from '@shared/components/DatePicker';
 
 import type { FormDatePickerProps } from './types';
@@ -17,7 +17,7 @@ export function FormDatePicker<
     field,
     fieldState: { error },
   } = useController({ name, control });
-  const errorText = error?.message ? t(toKey(error.message)) : undefined;
+  const errorText = error?.message ? t(error.message as ParseKeys<'validation'>) : undefined;
 
   return (
     <DatePicker

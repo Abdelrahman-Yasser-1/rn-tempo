@@ -85,23 +85,23 @@ export function DebugMenuScreen() {
 
   return (
     <Screen contentContainerStyle={styles.content} preset="scroll" testID="debug-menu-screen">
-      <Section title={t(($) => $.debug.env.title)}>
-        <InfoRow label={t(($) => $.debug.env.appEnv)} value={ENV.APP_ENV} />
-        <InfoRow label={t(($) => $.debug.env.version)} value={APP_VERSION} />
+      <Section title={t('debug.env.title')}>
+        <InfoRow label={t('debug.env.appEnv')} value={ENV.APP_ENV} />
+        <InfoRow label={t('debug.env.version')} value={APP_VERSION} />
         <InfoRow
-          label={t(($) => $.debug.env.platform)}
+          label={t('debug.env.platform')}
           value={`${Platform.OS} ${String(Platform.Version)}`}
         />
         <InfoRow
-          label={t(($) => $.debug.env.bundleId)}
+          label={t('debug.env.bundleId')}
           value={`${APP_BUNDLE_ID}${BUNDLE_SUFFIX[ENV.APP_ENV]}`}
         />
-        <InfoRow label={t(($) => $.debug.env.apiBaseUrl)} value={resolveBaseUrl()} />
+        <InfoRow label={t('debug.env.apiBaseUrl')} value={resolveBaseUrl()} />
       </Section>
 
-      <Section title={t(($) => $.debug.apiUrl.title)}>
+      <Section title={t('debug.apiUrl.title')}>
         <TextField
-          accessibilityLabel={t(($) => $.debug.apiUrl.title)}
+          accessibilityLabel={t('debug.apiUrl.title')}
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="url"
@@ -111,47 +111,47 @@ export function DebugMenuScreen() {
           value={vm.apiUrl}
         />
         <Text color="textSecondary" variant="caption">
-          {t(($) => $.debug.apiUrl.hint)}
+          {t('debug.apiUrl.hint')}
         </Text>
         <View style={styles.buttons}>
           <Action
-            label={t(($) => $.debug.apiUrl.save)}
+            label={t('debug.apiUrl.save')}
             onPress={vm.onApiUrlSave}
             testID="debug-menu.api-url-save"
           />
           <Action
             isSecondary
-            label={t(($) => $.debug.apiUrl.clear)}
+            label={t('debug.apiUrl.clear')}
             onPress={vm.onApiUrlClear}
             testID="debug-menu.api-url-clear"
           />
         </View>
       </Section>
 
-      <Section title={t(($) => $.debug.flags.title)}>
+      <Section title={t('debug.flags.title')}>
         {FLAG_KEYS.map((flag) => (
           <FlagRow flag={flag} key={flag} />
         ))}
         <View style={styles.buttons}>
           <Action
             isSecondary
-            label={t(($) => $.debug.flags.reset)}
+            label={t('debug.flags.reset')}
             onPress={vm.onResetFlags}
             testID="debug-menu.flags-reset"
           />
         </View>
       </Section>
 
-      <Section title={t(($) => $.debug.networkLog.title)}>
+      <Section title={t('debug.networkLog.title')}>
         <Text color="textSecondary" variant="caption">
-          {t(($) => $.debug.networkLog.hint)}
+          {t('debug.networkLog.hint')}
         </Text>
         <Text color="textSecondary" variant="caption">
-          {t(($) => $.debug.shake.hint)}
+          {t('debug.shake.hint')}
         </Text>
         <View style={styles.buttons}>
           <Action
-            label={t(($) => $.debug.networkLog.open)}
+            label={t('debug.networkLog.open')}
             onPress={vm.onOpenNetworkLog}
             testID="debug-menu.network-log"
           />
@@ -159,13 +159,13 @@ export function DebugMenuScreen() {
       </Section>
 
       {isCrashReportingConfigured() ? (
-        <Section title={t(($) => $.debug.crash.title)}>
+        <Section title={t('debug.crash.title')}>
           <Text color="textSecondary" variant="caption">
-            {t(($) => $.debug.crash.hint)}
+            {t('debug.crash.hint')}
           </Text>
           <View style={styles.buttons}>
             <Action
-              label={t(($) => $.debug.crash.send)}
+              label={t('debug.crash.send')}
               onPress={vm.onSendTestError}
               testID="debug-menu.send-test-error"
             />
@@ -173,20 +173,20 @@ export function DebugMenuScreen() {
         </Section>
       ) : null}
 
-      <Section title={t(($) => $.debug.data.title)}>
+      <Section title={t('debug.data.title')}>
         <View style={styles.buttons}>
           <Action
-            label={t(($) => $.debug.data.clearStorage)}
+            label={t('debug.data.clearStorage')}
             onPress={vm.onClearStorage}
             testID="debug-menu.clear-storage"
           />
           <Action
-            label={t(($) => $.debug.data.clearQueryCache)}
+            label={t('debug.data.clearQueryCache')}
             onPress={vm.onClearQueryCache}
             testID="debug-menu.clear-query-cache"
           />
           <Action
-            label={t(($) => $.debug.data.clearTokens)}
+            label={t('debug.data.clearTokens')}
             onPress={vm.onClearTokens}
             testID="debug-menu.clear-tokens"
           />
@@ -199,16 +199,16 @@ export function DebugMenuScreen() {
       </Section>
 
       {/* @tempo-feature:storybook:start */}
-      <Section title={t(($) => $.debug.storybook.title)}>
+      <Section title={t('debug.storybook.title')}>
         <Text color="textSecondary" variant="caption">
-          {t(($) => $.debug.storybook.hint)}
+          {t('debug.storybook.hint')}
         </Text>
       </Section>
       {/* @tempo-feature:storybook:end */}
 
-      <Section title={t(($) => $.debug.pushToken.title)}>
+      <Section title={t('debug.pushToken.title')}>
         <Text color="textSecondary" variant="caption">
-          {t(($) => $.debug.pushToken.placeholder)}
+          {t('debug.pushToken.placeholder')}
         </Text>
       </Section>
     </Screen>

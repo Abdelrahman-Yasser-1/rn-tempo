@@ -12,13 +12,13 @@ export function ProfileScreen() {
 
   return (
     <Screen preset="scroll" contentContainerStyle={styles.content} testID="profile-screen">
-      <Header title={t(($) => $.title)} testID="profile.header" />
+      <Header title={t('title')} testID="profile.header" />
       <View style={styles.body}>
         <Avatar
           size="xl"
           source={user?.image ? { uri: user.image } : undefined}
           name={fullName}
-          accessibilityLabel={t(($) => $.avatarLabel)}
+          accessibilityLabel={t('avatarLabel')}
           testID="profile.avatar"
         />
         <View style={styles.details}>
@@ -29,7 +29,7 @@ export function ProfileScreen() {
             {user?.email}
           </Text>
         </View>
-        <Button title={t(($) => $.edit)} fullWidth onPress={onEdit} testID="profile.edit-button" />
+        <Button title={t('edit')} fullWidth onPress={onEdit} testID="profile.edit-button" />
       </View>
     </Screen>
   );

@@ -47,7 +47,7 @@ export function OnboardingScreen() {
             <View
               key={slide.id}
               accessible
-              accessibilityLabel={t(($) => $.onboarding.pageLabel, {
+              accessibilityLabel={t('onboarding.pageLabel', {
                 current: index + 1,
                 total: SLIDES.length,
               })}
@@ -60,12 +60,12 @@ export function OnboardingScreen() {
         <View style={styles.actions}>
           <Button
             variant="ghost"
-            title={t(($) => $.onboarding.skip)}
+            title={t('onboarding.skip')}
             onPress={vm.onSkip}
             testID="onboarding.skip-button"
           />
           <Button
-            title={vm.isLast ? t(($) => $.onboarding.getStarted) : t(($) => $.onboarding.next)}
+            title={vm.isLast ? t('onboarding.getStarted') : t('onboarding.next')}
             onPress={vm.onNext}
             testID="onboarding.next-button"
           />

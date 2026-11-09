@@ -118,7 +118,7 @@ export function MultiSelect({
   // Memoized like BottomSheet's footer: gorhom remounts the footer whenever this function changes,
   // so an inline function would remount the Done button on every render.
   const doneTestID = suffix('done');
-  const doneTitle = t(($) => $.multiSelect.done);
+  const doneTitle = t('multiSelect.done');
   const renderFooter = useCallback(
     (props: BottomSheetFooterProps) => (
       <BottomSheetFooter {...props}>
@@ -152,7 +152,7 @@ export function MultiSelect({
                 leftIcon={isInert ? undefined : 'close'}
                 disabled={isDisabled}
                 accessibilityLabel={
-                  isInert ? option.label : t(($) => $.multiSelect.remove, { label: option.label })
+                  isInert ? option.label : t('multiSelect.remove', { label: option.label })
                 }
                 onPress={
                   isInert
@@ -184,8 +184,8 @@ export function MultiSelect({
               color={vm.hasSelection ? 'textPrimary' : 'textSecondary'}
             >
               {vm.hasSelection
-                ? t(($) => $.multiSelect.selected, { selected: vm.selectedOptions.length })
-                : (placeholder ?? t(($) => $.multiSelect.placeholder))}
+                ? t('multiSelect.selected', { selected: vm.selectedOptions.length })
+                : (placeholder ?? t('multiSelect.placeholder'))}
             </Text>
           )}
           {!isReadOnly && <Icon name="chevron-down" size="md" color="textSecondary" />}
@@ -216,7 +216,7 @@ export function MultiSelect({
             testID={suffix('close')}
             icon="close"
             size="sm"
-            accessibilityLabel={t(($) => $.select.close)}
+            accessibilityLabel={t('select.close')}
             onPress={onClose}
           />
         </Box>
@@ -225,8 +225,8 @@ export function MultiSelect({
             <Icon name="search" size="md" color="textSecondary" />
             <BottomSheetTextInput
               testID={suffix('search')}
-              accessibilityLabel={t(($) => $.select.searchLabel)}
-              placeholder={t(($) => $.select.searchPlaceholder)}
+              accessibilityLabel={t('select.searchLabel')}
+              placeholder={t('select.searchPlaceholder')}
               placeholderTextColor={theme.colors.textSecondary}
               selectionColor={theme.colors.primary}
               maxFontSizeMultiplier={1.5}
@@ -243,7 +243,7 @@ export function MultiSelect({
           {maxSelected === undefined ? (
             <Button
               testID={suffix('selectAll')}
-              title={t(($) => $.multiSelect.selectAll)}
+              title={t('multiSelect.selectAll')}
               variant="ghost"
               size="sm"
               disabled={!vm.canSelectAll}
@@ -251,12 +251,12 @@ export function MultiSelect({
             />
           ) : (
             <Text variant="caption" color="textSecondary">
-              {t(($) => $.multiSelect.limit, { max: maxSelected })}
+              {t('multiSelect.limit', { max: maxSelected })}
             </Text>
           )}
           <Button
             testID={suffix('clear')}
-            title={t(($) => $.multiSelect.clear)}
+            title={t('multiSelect.clear')}
             variant="ghost"
             size="sm"
             disabled={!vm.hasSelection}
@@ -271,8 +271,8 @@ export function MultiSelect({
           ListEmptyComponent={
             <EmptyState
               testID={suffix('empty')}
-              title={t(($) => $.select.empty.title)}
-              message={t(($) => $.select.empty.message)}
+              title={t('select.empty.title')}
+              message={t('select.empty.message')}
             />
           }
           ListFooterComponent={<Box style={styles.footerSpace} />}

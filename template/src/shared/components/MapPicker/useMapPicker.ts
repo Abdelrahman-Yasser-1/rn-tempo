@@ -44,7 +44,7 @@ export function useMapPicker({ value, onChange, defaultCenter, mapRef }: UseMapP
       minimumFractionDigits: COORDINATE_DIGITS,
       maximumFractionDigits: COORDINATE_DIGITS,
     };
-    return t(($) => $.mapPicker.coordinates, {
+    return t('mapPicker.coordinates', {
       latitude: formatNumber(center.latitude, i18n.language, options),
       longitude: formatNumber(center.longitude, i18n.language, options),
     });
@@ -53,10 +53,10 @@ export function useMapPicker({ value, onChange, defaultCenter, mapRef }: UseMapP
   const showDenied = () => {
     toast.show({
       type: 'error',
-      title: t(($) => $.mapPicker.permissionDenied),
+      title: t('mapPicker.permissionDenied'),
       actions: [
         {
-          label: t(($) => $.mapPicker.openSettings),
+          label: t('mapPicker.openSettings'),
           onPress: () => {
             void openSettings();
           },

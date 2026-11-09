@@ -27,7 +27,7 @@ export function WebView({ url, allowedHosts, reloadToken, onPageChange, testID }
           <View
             accessible
             accessibilityRole="progressbar"
-            accessibilityLabel={t(($) => $.webView.loading)}
+            accessibilityLabel={t('webView.loading')}
             accessibilityValue={{ min: 0, max: 100, now: Math.round(vm.progress * 100) }}
             style={styles.fill(vm.progress)}
             testID={suffix('progress')}
@@ -54,8 +54,8 @@ export function WebView({ url, allowedHosts, reloadToken, onPageChange, testID }
       {vm.hasError && (
         <View style={styles.error}>
           <ErrorState
-            title={t(($) => $.webView.errorTitle)}
-            message={t(($) => $.webView.errorMessage)}
+            title={t('webView.errorTitle')}
+            message={t('webView.errorMessage')}
             onRetry={vm.onRetry}
             testID={suffix('error')}
           />

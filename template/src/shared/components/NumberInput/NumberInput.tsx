@@ -80,7 +80,7 @@ export function NumberInput({
           icon="minus"
           variant="outline"
           disabled={isInert || !vm.canDecrement}
-          accessibilityLabel={t(($) => $.numberInput.decrease)}
+          accessibilityLabel={t('numberInput.decrease')}
           onPress={vm.onDecrement}
         />
         <TextInput
@@ -115,7 +115,7 @@ export function NumberInput({
           icon="plus"
           variant="outline"
           disabled={isInert || !vm.canIncrement}
-          accessibilityLabel={t(($) => $.numberInput.increase)}
+          accessibilityLabel={t('numberInput.increase')}
           onPress={vm.onIncrement}
         />
       </Box>

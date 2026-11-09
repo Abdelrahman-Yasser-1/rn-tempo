@@ -46,7 +46,7 @@ export function PaginatedList<TItem, TPage>({
       testID={suffix('list')}
       ListEmptyComponent={
         ListEmptyComponent ?? (
-          <EmptyState title={t(($) => $.paginatedList.emptyTitle)} testID={suffix('empty')} />
+          <EmptyState title={t('paginatedList.emptyTitle')} testID={suffix('empty')} />
         )
       }
       ListFooterComponent={

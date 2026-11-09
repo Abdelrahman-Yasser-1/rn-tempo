@@ -33,10 +33,10 @@ export function useFileSourceSheet({
     if (code === 'permissionDenied') {
       toast.show({
         type: 'error',
-        title: t(($) => $.filePicker.permissionDenied),
+        title: t('filePicker.permissionDenied'),
         actions: [
           {
-            label: t(($) => $.filePicker.openSettings),
+            label: t('filePicker.openSettings'),
             onPress: () => {
               void openSettings();
             },
@@ -45,9 +45,7 @@ export function useFileSourceSheet({
       });
     } else {
       toast.error(
-        code === 'cameraUnavailable'
-          ? t(($) => $.filePicker.cameraUnavailable)
-          : t(($) => $.filePicker.failed),
+        code === 'cameraUnavailable' ? t('filePicker.cameraUnavailable') : t('filePicker.failed'),
       );
     }
   };

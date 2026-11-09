@@ -25,7 +25,7 @@ export function DatePickerSheet({
   return (
     <PickerSheet
       visible={isVisible}
-      title={title ?? t(($) => $.datePicker.title)}
+      title={title ?? t('datePicker.title')}
       testID={testID}
       confirmDisabled={vm.draft === undefined}
       onClose={onClose}

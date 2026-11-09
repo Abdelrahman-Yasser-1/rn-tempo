@@ -3,8 +3,6 @@ import { defineConfig } from 'i18next-cli';
 export default defineConfig({
   locales: ['en', 'ar'],
   extract: {
-    // `keyFromSelector($ => $.a.b, { ns })` builds keys that are stored as data; read it like `t()`.
-    functions: ['t', '*.t', 'keyFromSelector'],
     input: ['src/**/*.{ts,tsx}'],
     ignore: ['src/**/*.test.{ts,tsx}', 'src/**/*.stories.tsx'],
     output: 'src/locales/{{language}}/{{namespace}}.json',

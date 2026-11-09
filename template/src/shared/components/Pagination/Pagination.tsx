@@ -22,7 +22,7 @@ function PageButton({ page, isSelected, testID, onPress }: PageButtonProps) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={t(($) => $.pagination.page, { page })}
+      accessibilityLabel={t('pagination.page', { page })}
       accessibilityState={{ selected: isSelected }}
       testID={testID}
       style={styles.cell}
@@ -49,7 +49,7 @@ export function Pagination({ page, pageCount, onChange, siblings = 1, testID }: 
       <IconButton
         icon="chevron-left"
         variant="ghost"
-        accessibilityLabel={t(($) => $.pagination.previous)}
+        accessibilityLabel={t('pagination.previous')}
         disabled={page <= 1}
         testID={suffix('previous')}
         onPress={() => {
@@ -76,7 +76,7 @@ export function Pagination({ page, pageCount, onChange, siblings = 1, testID }: 
       <IconButton
         icon="chevron-right"
         variant="ghost"
-        accessibilityLabel={t(($) => $.pagination.next)}
+        accessibilityLabel={t('pagination.next')}
         disabled={page >= pageCount}
         testID={suffix('next')}
         onPress={() => {
