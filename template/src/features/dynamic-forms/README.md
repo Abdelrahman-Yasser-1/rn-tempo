@@ -9,10 +9,15 @@ Config-driven forms: describe a form as typed data and the module renders it wit
 Everything `index.ts` exports. `yarn lint:readmes` fails when this list and the barrel differ, so update both together.
 
 - `FormBuilder`: Single-page form rendered from a `fields` config and a Zod schema.
+- `MultiStepFormBuilder`: Wizard with per-step validation, hidden steps, `canGoBack` and a step indicator.
 - `createFormResolver`: The resolver the builders use; pass it to your own `useForm` with an external `form`.
 - `VALIDATION_MESSAGES`: `forms:validation.*` message keys for your own Zod schemas.
 - `FormBuilderProps`: Props of `FormBuilder`.
 - `FormBuilderRef`: The `useForm` API plus `submit`.
+- `MultiStepFormBuilderProps`: Props of `MultiStepFormBuilder`.
+- `MultiStepFormBuilderRef`: The `useForm` API plus step navigation.
+- `NavigationProps`: What `renderNavigation` receives.
+- `StepConfig`: One step: fields, title, `visibleIf`, `canGoBack` and enter and leave hooks.
 - `FormResolverOptions`: Options of `createFormResolver`.
 - `BaseBuilderProps`: Props both builders share.
 - `ReValidationMode`: When react-hook-form re-validates.
