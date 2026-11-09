@@ -2,7 +2,7 @@
 
 # src/services
 
-Infrastructure code with no UI of its own: HTTP, storage, secure storage, security, flags, remote config, logger, i18n, linking, toast, network, files. Each service is a kebab-case folder.
+Infrastructure code with no UI of its own: HTTP, storage, secure storage, security, flags, remote config, logger, i18n, linking, toast, network, files, crash reporting, firebase. Each service is a kebab-case folder.
 
 ## Layout
 
