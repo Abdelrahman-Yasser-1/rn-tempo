@@ -92,8 +92,8 @@ export const DEPENDENCY_POLICY = {
   ),
 
   '@react-native-firebase/app': owned(
-    ['src/services/push/**'],
-    'Push notifications live in src/services/push; do not call Firebase from other code.',
+    ['src/services/firebase/**'],
+    'Firebase setup lives in src/services/firebase; use isFirebaseEnabled from there.',
   ),
   '@react-native-firebase/messaging': owned(
     ['src/services/push/**'],
