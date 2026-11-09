@@ -16,6 +16,7 @@
     "010-app-config-endpoint",
     "011-yarn4",
     "012-no-expo-modules",
-    "013-babel-7"
+    "013-babel-7",
+    "014-firebase-per-environment-and-crash-reporting"
   ]
 }

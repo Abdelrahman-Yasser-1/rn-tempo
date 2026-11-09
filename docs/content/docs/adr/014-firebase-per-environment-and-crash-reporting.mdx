@@ -1,0 +1,34 @@
+---
+title: "ADR-014: Firebase per environment, switchable push, provider-neutral crash reporting"
+description: "One Firebase project per environment, a firebase-core module, push and crash reporting switched by .env, Crashlytics as a module and Sentry as a recipe"
+---
+
+- **Status:** accepted · 2026-11-09
+
+## Context
+ADR-010 kept Firebase out of the template because a build without real config files fails. Push notifications (PR M) then added Firebase as an optional module, and teams also want crash reporting. Three needs follow:
+
+- Each environment (dev, staging, prod) should talk to its own Firebase project, so test messages and test crashes never reach production data.
+- A build of an environment that does not use Firebase must still pass without any Firebase file.
+- Crash reporting differs by team: some use Crashlytics, some Sentry. The app code should not change when the provider does.
+
+## Decision
+- **One Firebase project per environment** is the recommendation. Config files live in `firebase/<env>/google-services.json` and `firebase/<env>/GoogleService-Info.plist`. Dev files may be committed; `firebase/staging/` and `firebase/prod/` are ignored and CI writes them from secrets. Native build steps copy only the building environment's files, and only when that environment has `FIREBASE_ENABLED=true`.
+- **`firebase-core` is an optional module** (`@react-native-firebase/app`, the native wiring, the copy steps). `push-notifications` and `crashlytics` require it, so the CLI adds it automatically.
+- **Switches are `.env` keys**: `FIREBASE_ENABLED`, `PUSH_ENABLED`, `CRASH_REPORTING_ENABLED`, `CRASH_REPORTER`. Defaults: dev off, staging and prod on. Debug builds never report crashes. Nothing collects or registers until the JavaScript decides (`firebase.json` turns the SDK defaults off).
+- **Crash reporting is a provider-neutral interface** (`CrashReporter`) with a registry and a facade in `src/services/crash-reporting`. Crashlytics is an optional module; Sentry is a docs recipe with a complete adapter. Only an adapter imports a crash SDK.
+- **Users can opt out** of crash reports from Settings; the choice is persisted and applies before any report is sent.
+- **Fastlane uploads symbols** (Crashlytics dSYMs on iOS; the Crashlytics Gradle plugin uploads Android mappings on release builds). Firebase Analytics is out of scope.
+
+## Consequences
+- A newcomer can build every environment with no Firebase file, then turn Firebase on one environment at a time.
+- Switching provider means changing one adapter and one registry entry, plus native setup, listed in the switching guide.
+- The Firebase packages stay optional, so projects that never use them carry no dynamic-framework requirement on iOS.
+- Copy steps add native build logic (a Gradle task and an Xcode build phase) that the template owns and `yarn ios:envs` keeps in place.
+- A `.env.<env>` with `FIREBASE_ENABLED=true` but no config file for that environment fails fast at build time instead of at runtime.
+
+## Alternatives
+- **One shared Firebase project with an app per environment:** simpler to create, but analytics, crash data and message audiences mix, and a wrong key can reach production.
+- **Commit every config file:** the files are not secrets, but they bind a repository to specific projects; staging and prod files stay out of git so forks do not point at them.
+- **Crashlytics only:** smallest code, but locks every project to Firebase.
+- **Sentry as a module:** needs a DSN, an auth token and source-map plumbing per project, which a template cannot test without a real account; a recipe keeps it honest.
