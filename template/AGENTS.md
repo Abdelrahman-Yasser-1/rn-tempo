@@ -59,7 +59,7 @@ src/
   navigation/   navigators, linking, types.ts (route names and params), navigationRef.ts
   features/<kebab>/  api/ components/ hooks/ screens/ store/ types/ utils/ constants.ts index.ts
   shared/       components/ hooks/ utils/ constants/ types/   (feature-agnostic)
-  services/<kebab>/  http, storage, secure-storage, security, flags, remote-config, logger, i18n, linking, toast, network
+  services/<kebab>/  http, storage, secure-storage, security, flags, remote-config, logger, i18n, linking, toast, network, crash-reporting, firebase
   theme/        tokens, themes, scaling
   assets/       fonts, images, icons, animations, generated/ (built by `yarn assets`)
   locales/      en/<ns>.json, ar/<ns>.json
