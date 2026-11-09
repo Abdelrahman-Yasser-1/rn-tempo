@@ -1,0 +1,24 @@
+{
+  "$schema": "https://unpkg.com/@rn-tempo/contracts/schemas/feature-manifest.schema.json",
+  "name": "crashlytics",
+  "title": "Crash reporting with Crashlytics",
+  "description": "Firebase Crashlytics behind the provider-neutral CrashReporter: non-fatals, breadcrumbs, per-environment control, Android mapping and iOS dSYM upload. Needs the firebase-core module.",
+  "defaultEnabled": false,
+  "requires": [
+    "firebase-core"
+  ],
+  "conflicts": [],
+  "deleteGlobs": [
+    "src/services/crash-reporting/adapters/**"
+  ],
+  "dependencies": [
+    "@react-native-firebase/crashlytics"
+  ],
+  "devDependencies": [],
+  "envKeys": [],
+  "jsonPatches": [],
+  "postRemove": [
+    "pods"
+  ],
+  "docs": "/docs/features/crashlytics"
+}

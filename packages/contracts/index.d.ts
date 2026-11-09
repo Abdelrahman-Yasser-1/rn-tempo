@@ -14,7 +14,8 @@ export type FeatureName =
   | 'file-picker'
   | 'maps'
   | 'firebase-core'
-  | 'push-notifications';
+  | 'push-notifications'
+  | 'crashlytics';
 
 export declare const FEATURE_NAMES: readonly FeatureName[];
 

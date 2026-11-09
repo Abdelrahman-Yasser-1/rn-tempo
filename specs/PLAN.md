@@ -512,6 +512,7 @@ export const breakpoints = { xs: 0, sm: 360, md: 600, lg: 900, xl: 1200 } as con
 | `file-picker` | off | `FilePicker` / `MultiFilePicker` + `services/files` (documents, camera, photo library) |
 | `maps` | off | `MapPicker` (react-native-maps; Apple Maps on iOS, Google Maps on Android) |
 | `firebase-core` | off | Firebase per environment (`@react-native-firebase/app`): per-env config files, `FIREBASE_ENABLED`; required by `push-notifications` |
+| `crashlytics` | off | Crashlytics crash reporting (`@react-native-firebase/crashlytics`) behind the provider-neutral `CrashReporter`; requires `firebase-core` |
 | `push-notifications` | off | FCM push (`@react-native-firebase/messaging`): token, contextual permission, foreground toast, `data.link` routing, Settings row |
 
 The template repo keeps **every** module present, `dynamic-forms` included. "Default" only sets the CLI prompt's preselection.
