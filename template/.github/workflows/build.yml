@@ -69,6 +69,17 @@ jobs:
         env:
           ENV_FILE: ${{ env.APP_ENV == 'prod' && secrets.ENV_FILE_PROD || secrets.ENV_FILE_STAGING }}
         run: printf '%s\n' "$ENV_FILE" > ".env.${APP_ENV}"
+      # staging and prod Firebase config (firebase/<env>/) is gitignored and written from base64 secrets. dev may ship its own.
+      # Without the secret nothing is written, so this step is harmless when the firebase-core module is removed.
+      - name: Write Firebase config
+        if: env.APP_ENV != 'dev'
+        env:
+          FIREBASE_FILE: ${{ env.APP_ENV == 'prod' && secrets.FIREBASE_ANDROID_PROD || secrets.FIREBASE_ANDROID_STAGING }}
+        run: |
+          if [ -n "$FIREBASE_FILE" ]; then
+            mkdir -p "firebase/${APP_ENV}"
+            printf '%s' "$FIREBASE_FILE" | base64 --decode > "firebase/${APP_ENV}/google-services.json"
+          fi
       - name: Fastlane
         env:
           FIREBASE_APP_ID_DEV_ANDROID: ${{ secrets.FIREBASE_APP_ID_DEV_ANDROID }}
@@ -129,6 +140,17 @@ jobs:
         env:
           ENV_FILE: ${{ env.APP_ENV == 'prod' && secrets.ENV_FILE_PROD || secrets.ENV_FILE_STAGING }}
         run: printf '%s\n' "$ENV_FILE" > ".env.${APP_ENV}"
+      # staging and prod Firebase config (firebase/<env>/) is gitignored and written from base64 secrets. dev may ship its own.
+      # Without the secret nothing is written, so this step is harmless when the firebase-core module is removed.
+      - name: Write Firebase config
+        if: env.APP_ENV != 'dev'
+        env:
+          FIREBASE_FILE: ${{ env.APP_ENV == 'prod' && secrets.FIREBASE_IOS_PROD || secrets.FIREBASE_IOS_STAGING }}
+        run: |
+          if [ -n "$FIREBASE_FILE" ]; then
+            mkdir -p "firebase/${APP_ENV}"
+            printf '%s' "$FIREBASE_FILE" | base64 --decode > "firebase/${APP_ENV}/GoogleService-Info.plist"
+          fi
       - name: Fastlane
         env:
           MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
