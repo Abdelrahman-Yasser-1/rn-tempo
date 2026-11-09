@@ -1,7 +1,12 @@
 import { get, set } from 'react-hook-form';
 import type { FieldValues } from 'react-hook-form';
 
-import type { FormField } from '@features/dynamic-forms/types';
+import type {
+  BoundFormField,
+  FormField,
+  RepeatFieldConfig,
+  RepeatItemField,
+} from '@features/dynamic-forms/types';
 
 import { getValueFields } from './fieldTree';
 
@@ -22,6 +27,7 @@ export function emptyValueFor(type: string): unknown {
       return false;
     case 'multiSelect':
     case 'multiFile':
+    case 'repeat':
       return [];
     default:
       return undefined;
@@ -33,8 +39,25 @@ export function resetValueFor(field: Readonly<{ type: string; defaultValue?: unk
   return field.defaultValue ?? emptyValueFor(field.type);
 }
 
+/** A blank item of a repeat section. */
+export function blankItem(fields: readonly RepeatItemField[]): Record<string, unknown> {
+  return Object.fromEntries(fields.map((field) => [field.name, resetValueFor(field)]));
+}
+
+function initialRepeat<T extends FieldValues>(field: RepeatFieldConfig<T>): unknown[] {
+  return Array.from({ length: field.minItems ?? 0 }, () => blankItem(field.fields));
+}
+
+/** The reset value of a value field: repeat sections reset to `minItems` blank items. */
+function resetValueOfField<T extends FieldValues>(
+  field: BoundFormField<T> | RepeatFieldConfig<T>,
+): unknown {
+  return field.type === 'repeat' ? initialRepeat(field) : resetValueFor(field);
+}
+
 /**
- * The first values of a form: each field's reset value, then the caller's `defaultValues` on top.
+ * The first values of a form: each field's reset value, then the repeat sections padded to
+ * `minItems`, then the caller's `defaultValues` on top.
  */
 export function buildInitialValues<T extends FieldValues>(
   fields: readonly FormField<T>[],
@@ -42,7 +65,7 @@ export function buildInitialValues<T extends FieldValues>(
 ): T {
   const values: Record<string, unknown> = {};
   for (const field of getValueFields(fields)) {
-    set(values, field.name, resetValueFor(field));
+    set(values, field.name, resetValueOfField(field));
   }
   if (defaultValues) {
     for (const [name, value] of Object.entries(defaultValues)) {
@@ -60,7 +83,7 @@ export function buildResetValues<T extends FieldValues>(
 ): Map<string, unknown> {
   const resets = new Map<string, unknown>();
   for (const field of getValueFields(fields)) {
-    resets.set(field.name, resetValueFor(field));
+    resets.set(field.name, resetValueOfField(field));
   }
   return resets;
 }

@@ -1,4 +1,10 @@
 {
+  "repeat": {
+    "add": "إضافة عنصر",
+    "itemHeading": "{{label}} {{index}}",
+    "itemLabel": "عنصر",
+    "remove": "إزالة {{label}} {{index}}"
+  },
   "validation": {
     "email": "أدخل عنوان بريد إلكتروني صالحًا.",
     "invalid": "هذه القيمة غير صالحة.",

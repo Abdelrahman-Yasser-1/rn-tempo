@@ -23,7 +23,13 @@ import {
   Radio,
 } from '@shared/components';
 
-import type { FieldRendererMap, FormOption, FormText } from './types';
+import type {
+  FieldRenderArgs,
+  FieldRendererMap,
+  FieldTypeName,
+  FormOption,
+  FormText,
+} from './types';
 
 type Resolve = (text: FormText | undefined) => string | undefined;
 
@@ -235,3 +241,8 @@ export const fieldRenderers: FieldRendererMap = {
   ),
   // @tempo-feature:maps:end
 };
+
+/** Renders one field of any type through its registered renderer. */
+export function renderField<K extends FieldTypeName>(type: K, args: FieldRenderArgs<K>) {
+  return fieldRenderers[type](args);
+}

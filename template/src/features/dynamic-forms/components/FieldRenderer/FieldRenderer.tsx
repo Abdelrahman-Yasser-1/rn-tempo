@@ -3,6 +3,7 @@ import type { DeepPartial, FieldValues } from 'react-hook-form';
 import { View } from 'react-native';
 
 import { BoundField } from '@features/dynamic-forms/components/BoundField';
+import { RepeatField } from '@features/dynamic-forms/components/RepeatField';
 import { useFormBuilderContext } from '@features/dynamic-forms/hooks/useFormBuilderContext';
 import type { FormField } from '@features/dynamic-forms/types';
 import { getFieldKey } from '@features/dynamic-forms/utils/fieldTree';
@@ -68,6 +69,8 @@ export function FieldRenderer<T extends FieldValues>({
         children
       );
     }
+    case 'repeat':
+      return <RepeatField field={field} isVisible={isVisible} />;
     default:
       return <BoundField field={field} values={values} isVisible={isVisible} />;
   }

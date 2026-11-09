@@ -1,6 +1,12 @@
 import type { FormField } from '@features/dynamic-forms/types';
 
-import { buildInitialValues, buildResetValues, emptyValueFor, resetValueFor } from './defaults';
+import {
+  blankItem,
+  buildInitialValues,
+  buildResetValues,
+  emptyValueFor,
+  resetValueFor,
+} from './defaults';
 
 type Values = {
   name: string;
@@ -50,5 +56,24 @@ describe('defaults', () => {
     expect(resets.get('age')).toBe(18);
     expect(resets.get('address.city')).toBe('Cairo');
     expect(resets.get('name')).toBe('');
+  });
+
+  it('pads a repeat section to minItems with blank items', () => {
+    type Repeated = { people: { name: string; age: number }[] };
+    const repeated: FormField<Repeated>[] = [
+      {
+        type: 'repeat',
+        name: 'people',
+        minItems: 2,
+        fields: [
+          { type: 'text', name: 'name' },
+          { type: 'number', name: 'age', defaultValue: 18 },
+        ],
+      },
+    ];
+    const blank = { name: '', age: 18 };
+    expect(buildInitialValues(repeated, undefined)).toEqual({ people: [blank, blank] });
+    expect(buildResetValues(repeated).get('people')).toEqual([blank, blank]);
+    expect(blankItem([{ type: 'checkbox', name: 'agree' }])).toEqual({ agree: false });
   });
 });

@@ -1,10 +1,6 @@
 import type { FieldValues } from 'react-hook-form';
 
-import { fieldRenderers } from '@features/dynamic-forms/components/FieldRegistry';
-import type {
-  FieldRenderArgs,
-  FieldTypeName,
-} from '@features/dynamic-forms/components/FieldRegistry';
+import { renderField } from '@features/dynamic-forms/components/FieldRegistry';
 import { useFieldBehaviors } from '@features/dynamic-forms/hooks/useFieldBehaviors';
 import { useFormText } from '@features/dynamic-forms/hooks/useFormText';
 import type { BoundFormField } from '@features/dynamic-forms/types';
@@ -15,10 +11,6 @@ type BoundFieldProps<T extends FieldValues> = Readonly<{
   /** False when the field or a parent is hidden: nothing renders, behaviors keep running. */
   isVisible: boolean;
 }>;
-
-function renderField<K extends FieldTypeName>(type: K, args: FieldRenderArgs<K>) {
-  return fieldRenderers[type](args);
-}
 
 /** One value field: runs its behaviors and renders it through the registry. */
 export function BoundField<T extends FieldValues>({

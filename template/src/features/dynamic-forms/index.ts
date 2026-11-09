@@ -25,6 +25,8 @@ export type {
   GroupFieldConfig,
   LocalizedText,
   ReValidationMode,
+  RepeatFieldConfig,
+  RepeatItemField,
   RowFieldConfig,
   StepDirection,
   ValidationMode,

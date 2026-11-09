@@ -1,11 +1,11 @@
 import type { FieldValues } from 'react-hook-form';
 
 import { NON_PERSISTED_TYPES, SENSITIVE_BY_DEFAULT_TYPES } from '@features/dynamic-forms/constants';
-import type { BoundFormField, FormField } from '@features/dynamic-forms/types';
+import type { BoundFormField, FormField, RepeatFieldConfig } from '@features/dynamic-forms/types';
 
 /** A field that holds a value, with the visibility it has once every parent is considered. */
 export type ValueField<T extends FieldValues> = Readonly<{
-  field: BoundFormField<T>;
+  field: BoundFormField<T> | RepeatFieldConfig<T>;
   isVisible: boolean;
 }>;
 
@@ -32,7 +32,7 @@ export function walkFields<T extends FieldValues>(
   });
 }
 
-/** Paths of the fields that are hidden for `values`. */
+/** Paths of the fields that are hidden for `values` (a hidden repeat hides its items too). */
 export function getHiddenNames<T extends FieldValues>(
   fields: readonly FormField<T>[],
   values: T,
@@ -55,7 +55,7 @@ export function getVisibleNames<T extends FieldValues>(
 /** Every value field, ignoring visibility. */
 export function getValueFields<T extends FieldValues>(
   fields: readonly FormField<T>[],
-): BoundFormField<T>[] {
+): (BoundFormField<T> | RepeatFieldConfig<T>)[] {
   return fields.flatMap((field) => {
     switch (field.type) {
       case 'custom':
