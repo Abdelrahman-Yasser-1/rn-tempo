@@ -37,6 +37,11 @@
       "}",
     ],
   },
+  "Translate with a typed selector key": {
+    "prefix": "tsel",
+    "description": "t() with the typed selector form (string keys are a lint error)",
+    "body": ["t(($) => $.${1:section}.${2:key})"],
+  },
   "React Native hook": {
     "prefix": "rnhook",
     "description": "Custom hook (file use<Name>.ts)",
