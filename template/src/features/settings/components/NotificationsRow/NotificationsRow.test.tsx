@@ -4,6 +4,7 @@ import { getToken, hasPermission, requestPermission } from '@react-native-fireba
 import { screen, waitFor } from '@testing-library/react-native';
 import { Platform } from 'react-native';
 
+import { ENV } from '@config/env';
 import * as linking from '@services/linking/linking';
 import { logger } from '@services/logger/logger';
 import { renderWithProviders } from '@test-utils/renderWithProviders';
@@ -23,6 +24,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   Object.defineProperty(Platform, 'OS', { configurable: true, get: () => 'ios' });
   jest.mocked(getApps).mockReturnValue([APP]);
+  jest.replaceProperty(ENV, 'FIREBASE_ENABLED', true);
   jest.mocked(getToken).mockResolvedValue('fcm-token');
   jest.mocked(hasPermission).mockResolvedValue(NOT_DETERMINED);
 });

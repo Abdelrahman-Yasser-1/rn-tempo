@@ -4,6 +4,7 @@ import { getToken, hasPermission, requestPermission } from '@react-native-fireba
 import { act, renderHook } from '@testing-library/react-native';
 import { AppState, PermissionsAndroid, Platform } from 'react-native';
 
+import { ENV } from '@config/env';
 import { logger } from '@services/logger/logger';
 
 import { getPushPermission, requestPushPermission, usePushPermission } from './permission';
@@ -30,6 +31,7 @@ const originalVersion = Platform.Version;
 beforeEach(() => {
   jest.clearAllMocks();
   jest.mocked(getApps).mockReturnValue([APP]);
+  jest.replaceProperty(ENV, 'FIREBASE_ENABLED', true);
   jest.mocked(hasPermission).mockResolvedValue(NOT_DETERMINED);
   jest.mocked(getToken).mockResolvedValue('fcm-token');
   setPushTokenHandler(undefined);
