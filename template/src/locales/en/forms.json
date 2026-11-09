@@ -1,1 +1,15 @@
-{}
+{
+  "validation": {
+    "email": "Enter a valid email address.",
+    "invalid": "This value is not valid.",
+    "pattern": "This value does not match the expected format.",
+    "phone": "Enter a valid phone number with country code.",
+    "required": "This field is required.",
+    "tooBig": "This number is too large.",
+    "tooFewItems": "Add more items.",
+    "tooLong": "This text is too long.",
+    "tooManyItems": "Remove some items.",
+    "tooShort": "This text is too short.",
+    "tooSmall": "This number is too small."
+  }
+}
