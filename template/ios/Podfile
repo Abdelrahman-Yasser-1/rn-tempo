@@ -16,6 +16,11 @@ project 'TempoApp',
 prepare_react_native_project!
 
 linkage = ENV['USE_FRAMEWORKS']
+# @tempo-feature:push-notifications:start
+# React Native Firebase 27 gets the Firebase SDK through Swift Package Manager, which needs dynamic
+# frameworks (static linkage fails at `pod install`). Set USE_FRAMEWORKS=static only after removing the module.
+linkage ||= 'dynamic'
+# @tempo-feature:push-notifications:end
 if linkage != nil
   Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
   use_frameworks! :linkage => linkage.to_sym
@@ -37,6 +42,19 @@ target 'TempoApp' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    # @tempo-feature:push-notifications:start
+    # Dynamic frameworks must link every system framework their code uses. react-native-image-picker
+    # calls UTType functions of MobileCoreServices and UniformTypeIdentifiers but its podspec declares neither,
+    # which a static build hid. Only the file-picker module uses this pod; remove this block with the module.
+    installer.pods_project.targets.each do |pod_target|
+      next unless pod_target.name == 'react-native-image-picker'
+
+      pod_target.build_configurations.each do |build_config|
+        build_config.build_settings['OTHER_LDFLAGS'] = ['$(inherited)', '-framework', 'MobileCoreServices', '-framework', 'UniformTypeIdentifiers']
+      end
+    end
+    # @tempo-feature:push-notifications:end
 
     # Some pods (TrustKit, SDWebImage resource bundles) still declare a deployment target below what
     # current Xcode SDKs support, which fails the build. Raise them to the app's minimum.
