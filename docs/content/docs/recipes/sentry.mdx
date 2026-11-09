@@ -1,0 +1,306 @@
+---
+title: Sentry crash reporting
+description: Add Sentry as a crash reporting provider behind the CrashReporter interface, with source maps, native symbols and per-environment control.
+---
+
+Sentry is **not** a module of the template: it needs a DSN, an auth token and source map plumbing for your own project, which a template cannot test for you. This recipe adds it step by step. The app code does not change; you add one adapter, one registry entry and some native setup.
+
+Versions at the time of writing: `@sentry/react-native` 8.34.0, Sentry Android Gradle plugin 6.26.0 (the version the Sentry manual setup lists). Check [the Sentry React Native docs](https://docs.sentry.io/platforms/react-native/) for newer ones before you start. This recipe was written from those docs and could not be run against a real Sentry project here; verify each step with the checks at the end.
+
+## Before you start
+
+Read [Crash reporting](/docs/features/crash-reporting) for the interface and the switches. Sentry replaces Crashlytics; the two can coexist, but you pick one with `CRASH_REPORTER`. Sentry does not need Firebase, so `firebase-core` is not required.
+
+Decide how to map environments. The simplest setup is **one Sentry project** and the `environment` option (`dev`, `staging`, `prod`), which the adapter sets from `app_env`. You filter issues by environment in the Sentry UI. Separate projects per environment also work; see the properties files below.
+
+## 1. Wizard or manual
+
+The wizard edits Gradle, Xcode and Metro files for you:
+
+<CommandTabs yarn="npx @sentry/wizard@latest -i reactNative" npm="npx @sentry/wizard@latest -i reactNative" />
+
+It also adds `Sentry.init` to your entry file and a `sentry.properties` with an auth token. In this template we **do not** want `Sentry.init` in `index.js` (the adapter does it, after the opt-out is known) and we want the token out of git. So either run the wizard and revert those two changes, or follow the manual steps below. The manual steps are the same changes the wizard makes.
+
+## 2. Install
+
+<CommandTabs yarn="yarn add -E @sentry/react-native@8.34.0" npm="npm install --save-exact @sentry/react-native@8.34.0" />
+
+Then `yarn pods`. Add the ownership entry for the package in `eslint.config.mjs` so only the adapter imports it:
+
+```js
+'@sentry/react-native': owned(
+  ['src/services/crash-reporting/adapters/sentry.ts'],
+  'Crash reporting goes through @services/crash-reporting; only its Sentry adapter imports the SDK.',
+),
+```
+
+(In a generated project this goes in the `DEPENDENCY_POLICY` override of your ESLint config; `yarn lint:deps` tells you where it is missing.)
+
+## 3. The DSN env key
+
+Add `SENTRY_DSN` to the schema in `src/config/parseEnv.ts`:
+
+```ts
+SENTRY_DSN: z.string().default(''),
+```
+
+Add `SENTRY_DSN=` to `.env.example` and `.env.dev` (empty), and the real DSN to your `.env.staging` and `.env.prod`. A DSN is not a secret, but keep it out of the committed dev file anyway. Follow the [Add an env var](/docs/guides/add-env-var) guide so every env file and CI secret stays in step.
+
+## 4. The adapter
+
+Create `src/services/crash-reporting/adapters/sentry.ts`. It is the only file that imports the SDK.
+
+```ts
+import * as Sentry from '@sentry/react-native';
+
+import { ENV } from '@config/env';
+import { logger } from '@services/logger/logger';
+
+import type { CrashAttributes, CrashContext, CrashReporter, CrashReporterProvider } from '../types';
+
+let context: CrashContext | undefined;
+let isStarted = false;
+
+function start(current: CrashContext): void {
+  Sentry.init({
+    dsn: ENV.SENTRY_DSN,
+    environment: current.appEnv,
+    // release and dist are left unset on purpose: the SDK reads the native version and build
+    // ("<bundleId>@<version>+<build>", dist = build number), the same values the Gradle and
+    // Xcode source map uploads use, so stack traces resolve. If you set them, set the same
+    // values in SENTRY_RELEASE and SENTRY_DIST for the native builds.
+    sendDefaultPii: false,
+    attachStacktrace: true,
+  });
+  Sentry.setTag('app_env', current.appEnv);
+  isStarted = true;
+}
+
+/** Sentry through its React Native SDK. This is the only file that imports the SDK. */
+export const sentryReporter: CrashReporter = {
+  // Collection stays off until setEnabled(true): the SDK is not even initialised before.
+  init: (current: CrashContext) => {
+    context = current;
+    return Promise.resolve();
+  },
+  setEnabled: async (isEnabled: boolean) => {
+    if (isEnabled && !isStarted && context !== undefined) {
+      start(context);
+    } else if (!isEnabled && isStarted) {
+      // Sentry's way to switch off at runtime: close the client (flushes first).
+      await Sentry.close();
+      isStarted = false;
+    }
+  },
+  // Sentry is never started while the user is opted out, so it holds no reports from that time.
+  discardPending: () => Promise.resolve(),
+  recordError: (error: Error, extra?: CrashAttributes) => {
+    Sentry.captureException(error, { tags: extra });
+  },
+  log: (message: string) => {
+    Sentry.addBreadcrumb({ message, level: 'info' });
+  },
+  setUser: (id: string | null) => {
+    Sentry.setUser(id === null ? null : { id });
+  },
+  setAttributes: (attributes: CrashAttributes) => {
+    Sentry.setTags({ ...attributes });
+  },
+};
+
+/** Needs a DSN; an environment without one never starts Sentry. */
+export const sentryProvider: CrashReporterProvider = {
+  create: () => sentryReporter,
+  isAvailable: () => {
+    const hasDsn = ENV.SENTRY_DSN !== '';
+    if (!hasDsn) {
+      logger.debug('Sentry: no SENTRY_DSN for this environment, not starting');
+    }
+    return hasDsn;
+  },
+};
+```
+
+Notes on the adapter:
+
+- Sentry's documentation says that to disable Sentry completely, depending on environment, you call `Sentry.init` conditionally; `enabled: false` still leaves instrumentation running. That is why the adapter initialises the SDK only in `setEnabled(true)`. Native crashes of the **previous** run are only sent once Sentry starts, which is when collection is allowed.
+- `Sentry.close()` stops the client when the user opts out. If your Sentry version keeps native crash handling alive after `close()`, additionally check the user's choice in `beforeSend`.
+- `sendDefaultPii: false` is the default; it is written out so a change shows in review.
+
+## 5. Register the provider
+
+In `src/config/crashReporters.ts` add the name:
+
+```ts
+export const CRASH_REPORTER_NAMES = [
+  'none',
+  'crashlytics', // @tempo-feature:crashlytics
+  'sentry',
+] as const;
+```
+
+In `src/services/crash-reporting/registry.ts` add the import and the entry. TypeScript fails until both exist:
+
+```ts
+import { sentryProvider } from './adapters/sentry';
+
+const PROVIDERS: Record<CrashReporterName, CrashReporterProvider> = {
+  none: noopProvider,
+  crashlytics: crashlyticsProvider, // @tempo-feature:crashlytics
+  sentry: sentryProvider,
+};
+```
+
+Add a Jest mock to `jest.setup.ts` so tests never load the native module:
+
+```ts
+jest.mock('@sentry/react-native', () => ({
+  init: jest.fn(),
+  close: jest.fn(() => Promise.resolve()),
+  captureException: jest.fn(),
+  addBreadcrumb: jest.fn(),
+  setUser: jest.fn(),
+  setTags: jest.fn(),
+  setTag: jest.fn(),
+}));
+```
+
+And write `adapters/sentry.test.ts` in the style of `adapters/crashlytics.test.ts`.
+
+## 6. Turn it on per environment
+
+```bash
+# .env.dev
+CRASH_REPORTING_ENABLED=false
+CRASH_REPORTER=none
+# .env.staging and .env.prod
+CRASH_REPORTING_ENABLED=true
+CRASH_REPORTER=sentry
+SENTRY_DSN=https://<key>@o<org>.ingest.sentry.io/<project>
+```
+
+Debug builds never report, and the Settings switch lets users opt out, exactly as with any provider.
+
+## 7. Metro (source maps)
+
+The Sentry Metro plugin adds Debug IDs to the bundle so source maps match. Add it to `metro.config.js` **before** Rozenite wraps the config, and keep it last among your transformer changes:
+
+```js
+const { withSentryConfig } = require('@sentry/react-native/metro');
+// ...
+finalConfig = withSentryConfig(finalConfig);
+
+module.exports = withRozenite(finalConfig, {
+  enabled: process.env.NODE_ENV !== 'production',
+});
+```
+
+## 8. Android
+
+1. Create `android/sentry.properties` (do not commit a token):
+
+   ```properties
+   defaults.url=https://sentry.io/
+   defaults.org=<your-org-slug>
+   defaults.project=<your-project-slug>
+   ```
+
+   Provide the token as the environment variable `SENTRY_AUTH_TOKEN` (CI secret, or your shell). Add `android/sentry.properties` and `ios/sentry.properties` to `.gitignore` if you ever put a token in them. For one project per environment, use `SENTRY_PROPERTIES=path/to/<env>.properties` (the SDK scripts read it) from the build.
+2. Source maps: in `android/app/build.gradle`, before the `android { }` block:
+
+   ```groovy
+   apply from: "../../node_modules/@sentry/react-native/sentry.gradle"
+   ```
+
+3. Native symbols and the Sentry Android Gradle plugin. In `android/build.gradle`, `buildscript.dependencies`:
+
+   ```groovy
+   classpath("io.sentry:sentry-android-gradle-plugin:6.26.0")
+   ```
+
+   In `android/app/build.gradle`:
+
+   ```groovy
+   apply plugin: "io.sentry.android.gradle"
+
+   sentry {
+       uploadNativeSymbols = true
+       includeNativeSources = false
+       autoInstallation {
+           enabled = false // required: the React Native SDK brings its own sentry-android
+       }
+   }
+   ```
+
+   `autoInstallation { enabled = false }` is mandatory. With it on, the plugin can pull another `sentry-android` version and the app crashes at start with "Sentry SDK has detected a mix of versions".
+4. Optional overrides: `SENTRY_RELEASE`, `SENTRY_DIST`, `SENTRY_DISABLE_AUTO_UPLOAD=true` (for local release builds).
+
+Both Gradle integrations run for every flavor. Set `SENTRY_DISABLE_AUTO_UPLOAD=true` for the dev flavor builds if you do not want dev uploads, or upload from CI only.
+
+## 9. iOS
+
+1. **Privacy manifest.** The template already has `ios/TempoApp/PrivacyInfo.xcprivacy`. If Sentry's SDK is linked statically you must add its crash-data and API entries yourself; with the dynamic frameworks that `firebase-core` forces, Apple processes the SDK's own manifest. See [Apple Privacy Manifest](https://docs.sentry.io/platforms/react-native/data-management/apple-privacy-manifest/) for the entries.
+2. Create `ios/sentry.properties` like the Android one (no token).
+3. **Source maps phase.** In Xcode, target `TempoApp`, Build Phases, **Bundle React Native code and images**. Change the script from
+
+   ```bash
+   set -e
+   WITH_ENVIRONMENT="../node_modules/react-native/scripts/xcode/with-environment.sh"
+   REACT_NATIVE_XCODE="../node_modules/react-native/scripts/react-native-xcode.sh"
+   /bin/sh -c "$WITH_ENVIRONMENT $REACT_NATIVE_XCODE"
+   ```
+
+   to
+
+   ```bash
+   set -e
+   WITH_ENVIRONMENT="../node_modules/react-native/scripts/xcode/with-environment.sh"
+   SENTRY_XCODE="../node_modules/@sentry/react-native/scripts/sentry-xcode.sh"
+   /bin/sh -c "$WITH_ENVIRONMENT $SENTRY_XCODE"
+   ```
+
+   (React Native 0.81.1 and newer; the template is on 0.88.)
+4. **Debug files phase.** Add a new Run Script phase **at the end** of the target's phases with:
+
+   ```bash
+   /bin/sh ../node_modules/@sentry/react-native/scripts/sentry-xcode-debug-files.sh
+   ```
+
+5. **Node from nvm or Volta.** Xcode does not load your shell profile, so these scripts may not find `node`. The template's `ios/.xcode.env` sets `NODE_BINARY=$(command -v node)`; for nvm add a line to `ios/.xcode.env.local` (not committed), for example `. "$HOME/.nvm/nvm.sh" --no-use` before it, as the React Native docs describe. If a Sentry script says it cannot find node, this is the cause.
+6. Optional variables in `ios/.xcode.env`: `SENTRY_PROPERTIES`, `SENTRY_DISABLE_AUTO_UPLOAD=true` (skip uploads for local builds), `SENTRY_INCLUDE_NATIVE_SOURCES=true`.
+
+`yarn ios:envs` only manages its own build phases (Copy Firebase config, Upload Crashlytics dSYMs) and leaves yours alone. Never hand-edit `project.pbxproj` for the env settings; the two Sentry phases are ordinary Xcode edits.
+
+## 10. CI
+
+Add the token and organisation as secrets and pass them to the build steps:
+
+| Secret | Used for |
+| --- | --- |
+| `SENTRY_AUTH_TOKEN` | `sentry-cli` in the Gradle and Xcode integrations (scope: project write and release admin) |
+| `SENTRY_ORG`, `SENTRY_PROJECT` | Alternatives to `sentry.properties` |
+| `SENTRY_DSN` | Only if you write `.env.<env>` from separate secrets |
+
+In `.github/workflows/build.yml` put them in the `env:` of the Fastlane steps. Without the token the build still succeeds and source maps are not uploaded; Sentry then shows minified stack traces. Fastlane has no Sentry step: the Gradle and Xcode integrations upload during the build.
+
+## Verify
+
+1. Build a **release** build of staging with `CRASH_REPORTING_ENABLED=true`, `CRASH_REPORTER=sentry` and a DSN.
+2. In the build log, look for sentry-cli upload lines (source maps and debug files). A line saying the auth token is missing means step 10 is not done.
+3. Run it, open Settings and check **Share crash reports** is on.
+4. Send a test error: debug menu, **Send test error** (non-prod builds).
+5. Test a native crash by temporarily calling `Sentry.nativeCrash()` from a button, then reopening the app: Sentry sends the crash on the next start.
+6. In Sentry, check the issue has `environment: staging`, the tag `app_env`, a readable stack (source maps resolved) and the right release.
+7. Toggle the Settings switch off, restart and repeat: nothing arrives.
+
+## Switching back and forth
+
+See [Switching providers](/docs/guides/switch-crash-reporting-provider) for the list of files and keys in each direction.
+
+## Troubleshooting
+
+- **Source maps not resolved (minified stack traces).** The release or Debug ID differs between the upload and the app. Do not set `release` or `dist` in `Sentry.init` unless the native builds use the same `SENTRY_RELEASE` and `SENTRY_DIST`. Confirm the upload happened in the build log, and that you added `withSentryConfig` in Metro (Debug IDs).
+- **Xcode cannot find node (nvm).** Step 9.5.
+- **"Sentry SDK has detected a mix of versions" at start.** `autoInstallation { enabled = false }` is missing.
+- **No events from a debug build.** By design: debug builds never report (`isCrashReportingActive`).
+- **Events in the wrong environment.** `environment` comes from `ENV.APP_ENV` of the build; check which `.env.<env>` the build used (the iOS scheme pre-action copies it to `.env`).
