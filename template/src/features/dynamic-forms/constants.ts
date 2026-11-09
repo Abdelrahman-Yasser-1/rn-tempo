@@ -9,6 +9,9 @@ export const FORMS_NAMESPACE = 'forms';
 /** Debounce before a single-page form writes its draft. */
 export const DEFAULT_DRAFT_DEBOUNCE_MS = 500;
 
+/** A draft older than this is ignored and deleted (7 days). */
+export const DEFAULT_DRAFT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
 /** Version stamped on saved drafts; a different version is ignored, never migrated. */
 export const DRAFT_VERSION = 1;
 

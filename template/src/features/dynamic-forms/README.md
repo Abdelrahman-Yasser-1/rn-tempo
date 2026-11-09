@@ -10,6 +10,9 @@ Everything `index.ts` exports. `yarn lint:readmes` fails when this list and the 
 
 - `FormBuilder`: Single-page form rendered from a `fields` config and a Zod schema.
 - `MultiStepFormBuilder`: Wizard with per-step validation, hidden steps, `canGoBack` and a step indicator.
+- `discardDraft`: Deletes a saved draft by key; call it on sign-out for personal data.
+- `initDraftCleanup`: Registers the sign-out cleanup of drafts; the app calls it once at start.
+- `hasDraft`: True when a readable draft exists for a key.
 - `createFormResolver`: The resolver the builders use; pass it to your own `useForm` with an external `form`.
 - `VALIDATION_MESSAGES`: `forms:validation.*` message keys for your own Zod schemas.
 - `FormBuilderProps`: Props of `FormBuilder`.
@@ -25,6 +28,7 @@ Everything `index.ts` exports. `yarn lint:readmes` fails when this list and the 
 - `FieldTypeName`: Name of a field type.
 - `BoundFormField`: A field bound to a value, one member per field type.
 - `CustomFieldConfig`: Decorative content outside the form state.
+- `DraftConfig`: `draft: { key, debounceMs? }`, opt-in draft persistence.
 - `FieldBehaviors`: `calculatedValue`, `clearOnHidden`, `resetOnChange`, `transform`, `asyncValidate` and friends.
 - `FieldTexts`: Label, placeholder, helper text, sub label and tooltip of a field.
 - `FieldVisibility`: `visibleIf` and `disabledIf`.

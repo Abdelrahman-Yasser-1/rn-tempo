@@ -3,14 +3,17 @@ import { createRef } from 'react';
 import { View } from 'react-native';
 import { z } from 'zod';
 
+import { useAuthStore } from '@features/auth';
+import { discardDraft, hasDraft, loadDraft } from '@features/dynamic-forms/utils/draft';
 import { VALIDATION_MESSAGES } from '@features/dynamic-forms/utils/messages';
 import { Button, Text } from '@shared/components';
+import { createUser } from '@test-utils/factories/user';
 import { renderWithProviders } from '@test-utils/renderWithProviders';
 
 import { MultiStepFormBuilder } from './MultiStepFormBuilder';
 import type { MultiStepFormBuilderRef, NavigationProps, StepConfig } from './types';
 
-type Values = { name: string; skip: boolean; extra: string; email: string };
+type Values = { name: string; skip: boolean; extra: string; email: string; pin?: string };
 
 const required = z.string().min(1, VALIDATION_MESSAGES.required);
 const schema = z.object({
@@ -18,6 +21,7 @@ const schema = z.object({
   skip: z.boolean(),
   extra: required,
   email: required,
+  pin: z.string().optional(),
 });
 
 const label = (en: string) => ({ en, ar: en });
@@ -192,5 +196,45 @@ describe('MultiStepFormBuilder', () => {
       await Promise.resolve();
     });
     expect(await screen.findByText('Indicator 3/3 Contact')).toBeOnTheScreen();
+  });
+
+  describe('draft', () => {
+    beforeEach(() => {
+      useAuthStore.setState({ status: 'signedIn', user: createUser({ id: 7 }) });
+      discardDraft('wizard-test');
+    });
+
+    afterEach(() => {
+      useAuthStore.setState({ status: 'signedOut', user: null });
+    });
+
+    const draft = { key: 'wizard-test' };
+
+    it('AC-6: saves on step change and restores the values and the step after a remount', async () => {
+      const view = await setup({ draft });
+      await view.user.type(screen.getByLabelText('Name'), 'Sam');
+      await view.user.press(screen.getByRole('button', { name: 'Next' }));
+      await screen.findByLabelText('Extra step field');
+      expect(loadDraft('wizard-test')).toMatchObject({ step: 1, values: { name: 'Sam' } });
+      await view.unmount();
+
+      await setup({ draft });
+      expect(await screen.findByLabelText('Extra step field')).toBeOnTheScreen();
+      expect(screen.getByText('Step 2 of 3')).toBeOnTheScreen();
+    });
+
+    it('AC-6: clears the draft when the form is submitted', async () => {
+      const { user, onSubmit } = await setup({ draft });
+      await user.type(screen.getByLabelText('Name'), 'Sam');
+      await user.press(screen.getByRole('button', { name: 'Next' }));
+      await user.press(await screen.findByRole('button', { name: 'Next' }));
+      await user.type(await screen.findByLabelText('Email'), 'a@b.co');
+      expect(hasDraft('wizard-test')).toBe(true);
+      await user.press(screen.getByRole('button', { name: 'Submit' }));
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalledTimes(1);
+      });
+      expect(hasDraft('wizard-test')).toBe(false);
+    });
   });
 });

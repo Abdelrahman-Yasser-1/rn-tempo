@@ -7,6 +7,7 @@ export type {
   NavigationProps,
   StepConfig,
 } from './components/MultiStepFormBuilder';
+export { discardDraft, hasDraft, initDraftCleanup } from './utils/draft';
 export { createFormResolver } from './utils/formResolver';
 export type { FormResolverOptions } from './utils/formResolver';
 export { VALIDATION_MESSAGES } from './utils/messages';
@@ -15,6 +16,7 @@ export type {
   BaseBuilderProps,
   BoundFormField,
   CustomFieldConfig,
+  DraftConfig,
   FieldBehaviors,
   FieldTexts,
   FieldVisibility,

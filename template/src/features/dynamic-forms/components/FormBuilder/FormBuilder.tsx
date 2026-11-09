@@ -6,8 +6,10 @@ import { View } from 'react-native';
 import { FieldRenderer } from '@features/dynamic-forms/components/FieldRenderer';
 import { DEFAULT_SPACING } from '@features/dynamic-forms/constants';
 import { useBuilderForm } from '@features/dynamic-forms/hooks/useBuilderForm';
+import { useDraft } from '@features/dynamic-forms/hooks/useDraft';
 import { FormBuilderContext } from '@features/dynamic-forms/hooks/useFormBuilderContext';
 import { getFieldKey, getHiddenNames } from '@features/dynamic-forms/utils/fieldTree';
+import { submitForm } from '@features/dynamic-forms/utils/submit';
 
 import { styles } from './styles';
 import type { FormBuilderProps, FormBuilderRef } from './types';
@@ -23,11 +25,12 @@ export function FormBuilder<T extends FieldValues>(props: FormBuilderProps<T>) {
     fields,
     getHiddenNames: (current) => getHiddenNames(fields, current),
   });
+  const { wrapSubmit, discard } = useDraft({ draft: props.draft, fields, form });
   const submit = () => {
-    void form.handleSubmit(onSubmit, onSubmitInvalid)();
+    submitForm(form, wrapSubmit(onSubmit), onSubmitInvalid);
   };
 
-  useImperativeHandle(ref, (): FormBuilderRef<T> => ({ ...form, submit }));
+  useImperativeHandle(ref, (): FormBuilderRef<T> => ({ ...form, submit, discardDraft: discard }));
 
   return (
     <FormProvider {...form}>

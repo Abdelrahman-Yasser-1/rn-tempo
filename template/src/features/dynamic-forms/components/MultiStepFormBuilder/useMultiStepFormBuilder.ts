@@ -3,6 +3,7 @@ import { get } from 'react-hook-form';
 import type { FieldErrors, FieldValues, Path } from 'react-hook-form';
 
 import { useBuilderForm } from '@features/dynamic-forms/hooks/useBuilderForm';
+import { useDraft } from '@features/dynamic-forms/hooks/useDraft';
 import { useFormText } from '@features/dynamic-forms/hooks/useFormText';
 import { useLatest } from '@features/dynamic-forms/hooks/useLatest';
 import type { StepDirection } from '@features/dynamic-forms/types';
@@ -12,6 +13,7 @@ import {
   snapToVisibleStep,
   visibleStepIndexes,
 } from '@features/dynamic-forms/utils/steps';
+import { submitForm } from '@features/dynamic-forms/utils/submit';
 
 import type { MultiStepFormBuilderProps, MultiStepFormBuilderRef, NavigationProps } from './types';
 
@@ -21,13 +23,14 @@ export function useMultiStepFormBuilder<T extends FieldValues>(
 ) {
   const { steps, initialStep, onSubmit, onSubmitInvalid, ref } = props;
   const resolve = useFormText();
-  const { form, values, initialValues, context } = useBuilderForm<T>({
+  const allFields = steps.flatMap((step) => step.fields);
+  const { form, values, initialValues, restoredStep, context } = useBuilderForm<T>({
     props,
-    fields: steps.flatMap((step) => step.fields),
+    fields: allFields,
     getHiddenNames: (current) => hiddenNamesOfSteps(steps, current),
   });
   const [requestedStep, setRequestedStep] = useState(() =>
-    snapToVisibleStep(initialStep ?? 0, visibleStepIndexes(steps, initialValues)),
+    snapToVisibleStep(restoredStep ?? initialStep ?? 0, visibleStepIndexes(steps, initialValues)),
   );
   const latestSteps = useLatest(steps);
 
@@ -92,13 +95,21 @@ export function useMultiStepFormBuilder<T extends FieldValues>(
     onSubmitInvalid?.(errors);
   };
 
+  const { wrapSubmit, discard } = useDraft({
+    draft: props.draft,
+    fields: allFields,
+    form,
+    step: currentStep,
+  });
+
   const submit = () => {
-    void form.handleSubmit(onSubmit, onInvalid)();
+    submitForm(form, wrapSubmit(onSubmit), onInvalid);
   };
 
   useImperativeHandle(ref, (): MultiStepFormBuilderRef<T> => ({
     ...form,
     submit,
+    discardDraft: discard,
     currentStep,
     totalSteps: steps.length,
     visibleStepIndex,

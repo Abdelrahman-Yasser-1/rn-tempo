@@ -139,6 +139,15 @@ export type FormField<T extends FieldValues> =
   | RowFieldConfig<T>
   | GroupFieldConfig<T>;
 
+/** Opt-in draft persistence. `key` names the storage entry (`forms.draft.<key>`). */
+export type DraftConfig = Readonly<{
+  key: string;
+  /** Single-page forms only: pause before a change is written. Default 500 ms. */
+  debounceMs?: number;
+  /** A draft saved longer ago than this is ignored and deleted. Default 7 days. */
+  maxAgeMs?: number;
+}>;
+
 export type FormChangeEvent<T extends FieldValues> = Readonly<{
   name?: Path<T>;
   value?: unknown;
@@ -159,5 +168,7 @@ export type BaseBuilderProps<T extends FieldValues> = Readonly<{
   reValidateMode?: ReValidationMode;
   shouldUnregister?: boolean;
   spacing?: SpacingKey;
+  /** Saves the values (never sensitive or file fields) and restores them on mount. */
+  draft?: DraftConfig;
   onChange?: (event: FormChangeEvent<T>) => void;
 }>;

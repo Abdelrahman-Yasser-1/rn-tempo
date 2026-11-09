@@ -2,9 +2,12 @@ import { act, screen, waitFor } from '@testing-library/react-native';
 import { createRef } from 'react';
 import { z } from 'zod';
 
+import { useAuthStore } from '@features/auth';
 import type { FormChangeEvent, FormField } from '@features/dynamic-forms/types';
+import { discardDraft, hasDraft, loadDraft } from '@features/dynamic-forms/utils/draft';
 import { VALIDATION_MESSAGES } from '@features/dynamic-forms/utils/messages';
 import { Button, Text } from '@shared/components';
+import { createUser } from '@test-utils/factories/user';
 import { renderWithProviders } from '@test-utils/renderWithProviders';
 
 import { FormBuilder } from './FormBuilder';
@@ -328,5 +331,113 @@ describe('FormBuilder', () => {
       expect(onSubmit).toHaveBeenCalledTimes(1);
     });
     expect(onSubmit.mock.calls[0]?.[0]).toEqual({ hasPet: true, petName: 'Rex', username: '' });
+  });
+
+  describe('draft', () => {
+    const draftFields: FormField<Values>[] = [
+      { type: 'text', name: 'username', label: label('Username') },
+      {
+        type: 'text',
+        name: 'code',
+        label: label('Secret code'),
+        props: { secureTextEntry: true },
+      },
+    ];
+
+    beforeEach(() => {
+      useAuthStore.setState({ status: 'signedIn', user: createUser({ id: 7 }) });
+      discardDraft('form-test');
+    });
+
+    afterEach(() => {
+      useAuthStore.setState({ status: 'signedOut', user: null });
+    });
+
+    function draftForm(onSubmit: (values: Values) => void) {
+      return (
+        <FormBuilder<Values>
+          fields={draftFields}
+          schema={schema}
+          onSubmit={onSubmit}
+          draft={{ key: 'form-test', debounceMs: 10 }}
+          renderSubmitButton={renderSubmit}
+        />
+      );
+    }
+
+    it('AC-6: restores the values after a remount but never the sensitive field', async () => {
+      const view = await renderWithProviders(draftForm(jest.fn()));
+      await view.user.type(screen.getByLabelText('Username'), 'Sam');
+      await view.user.type(screen.getByLabelText('Secret code'), 'hunter2');
+      await waitFor(() => {
+        expect(loadDraft('form-test')?.values).toEqual({ username: 'Sam' });
+      });
+      await view.unmount();
+
+      await renderWithProviders(draftForm(jest.fn()));
+      expect(screen.getByLabelText('Username').props.value).toBe('Sam');
+      expect(screen.getByLabelText('Secret code').props.value).toBe('');
+    });
+
+    it('AC-6: clears the draft after a successful submit and can discard it', async () => {
+      const onSubmit = jest.fn<undefined, [Values]>();
+      const { user } = await renderWithProviders(draftForm(onSubmit));
+      await user.type(screen.getByLabelText('Username'), 'Sam');
+      await waitFor(() => {
+        expect(hasDraft('form-test')).toBe(true);
+      });
+      await user.press(screen.getByRole('button', { name: 'Send' }));
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalledTimes(1);
+      });
+      expect(hasDraft('form-test')).toBe(false);
+    });
+
+    it('AC-6: keeps the draft when onSubmit fails', async () => {
+      const { user } = await renderWithProviders(
+        draftForm(() => {
+          throw new Error('server down');
+        }),
+      );
+      await user.type(screen.getByLabelText('Username'), 'Sam');
+      await waitFor(() => {
+        expect(hasDraft('form-test')).toBe(true);
+      });
+      await user.press(screen.getByRole('button', { name: 'Send' }));
+      expect(hasDraft('form-test')).toBe(true);
+    });
+
+    it('AC-6: a debounced save after sign-out writes nothing', async () => {
+      const view = await renderWithProviders(draftForm(jest.fn()));
+      await view.user.type(screen.getByLabelText('Username'), 'Sam');
+      useAuthStore.setState({ status: 'signedOut', user: null });
+      discardDraft('form-test');
+      await new Promise((resolve) => {
+        setTimeout(resolve, 60);
+      });
+      await view.unmount();
+      expect(hasDraft('form-test')).toBe(false);
+    });
+
+    it('AC-6: discardDraft on the ref removes the draft', async () => {
+      const ref = createRef<FormBuilderRef<Values>>();
+      const { user } = await renderWithProviders(
+        <FormBuilder<Values>
+          ref={ref}
+          fields={draftFields}
+          schema={schema}
+          onSubmit={jest.fn()}
+          draft={{ key: 'form-test', debounceMs: 10 }}
+        />,
+      );
+      await user.type(screen.getByLabelText('Username'), 'Sam');
+      await waitFor(() => {
+        expect(hasDraft('form-test')).toBe(true);
+      });
+      await act(() => {
+        ref.current?.discardDraft();
+      });
+      expect(hasDraft('form-test')).toBe(false);
+    });
   });
 });
