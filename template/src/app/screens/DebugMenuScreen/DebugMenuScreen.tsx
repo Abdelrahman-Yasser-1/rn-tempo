@@ -4,6 +4,7 @@ import { Platform, View } from 'react-native';
 
 import { APP_BUNDLE_ID, APP_VERSION } from '@config/constants';
 import { ENV } from '@config/env';
+import { isCrashReportingConfigured } from '@services/crash-reporting/crashReporting';
 import type { FlagKey } from '@services/flags/flags';
 import { resolveBaseUrl } from '@services/http/client';
 import { Button, Screen, Switch, Text, TextField } from '@shared/components';
@@ -156,6 +157,21 @@ export function DebugMenuScreen() {
           />
         </View>
       </Section>
+
+      {isCrashReportingConfigured() ? (
+        <Section title={t('debug.crash.title')}>
+          <Text color="textSecondary" variant="caption">
+            {t('debug.crash.hint')}
+          </Text>
+          <View style={styles.buttons}>
+            <Action
+              label={t('debug.crash.send')}
+              onPress={vm.onSendTestError}
+              testID="debug-menu.send-test-error"
+            />
+          </View>
+        </Section>
+      ) : null}
 
       <Section title={t('debug.data.title')}>
         <View style={styles.buttons}>

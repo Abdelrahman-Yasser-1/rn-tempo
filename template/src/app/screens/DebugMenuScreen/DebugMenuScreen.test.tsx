@@ -2,6 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { useAuthStore } from '@features/auth';
+import * as crashReporting from '@services/crash-reporting/crashReporting';
 import { getFlagOverride } from '@services/flags/flagOverrides';
 import { queryClient } from '@services/http/queryClient';
 import { tokenStore } from '@services/secure-storage/tokenStore';
@@ -21,6 +22,33 @@ jest.mock('@react-navigation/native', () => ({
   ...jest.requireActual<object>('@react-navigation/native'),
   useNavigation: jest.fn(),
 }));
+
+describe('DebugMenuScreen crash reporting', () => {
+  const isConfigured = jest.spyOn(crashReporting, 'isCrashReportingConfigured');
+  const record = jest.spyOn(crashReporting, 'recordError').mockImplementation(jest.fn());
+
+  test('has no test error button when this environment does not report crashes', async () => {
+    isConfigured.mockReturnValue(false);
+
+    await renderWithProviders(<DebugMenuScreen />);
+
+    expect(screen.queryByText('Send test error')).not.toBeOnTheScreen();
+  });
+
+  test('sends a test error when this environment reports crashes', async () => {
+    isConfigured.mockReturnValue(true);
+    const { user } = await renderWithProviders(<DebugMenuScreen />);
+
+    await user.press(screen.getByRole('button', { name: 'Send test error' }));
+
+    expect(record).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Test error from the debug menu' }),
+      {
+        source: 'debug-menu',
+      },
+    );
+  });
+});
 
 describe('DebugMenuScreen', () => {
   test('shows environment info', async () => {
