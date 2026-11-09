@@ -18,4 +18,4 @@ One PR per letter, in order; each PR is device-toured before the next starts.
 - [x] T9b.M push-notifications module, native version sync, Fastlane env badge
 - [x] T9b.M2 Firebase per environment (firebase-core module, switchable push), provider-neutral crash reporting, Crashlytics module, Fastlane symbol upload, Sentry recipe
 - [x] T9b.N i18n hardening (removeUnusedKeys, Arabic plurals proven, context convention, Intl formatters, no dynamic keys lint, dev missing-key warnings, typed selector)
-- [ ] T9b.N2 Revert the typed selector API to typed string keys (owner decision 2026-11-09); ban the selector form
+- [x] T9b.N2 Revert the typed selector API to typed string keys (owner decision 2026-11-09); ban the selector form
