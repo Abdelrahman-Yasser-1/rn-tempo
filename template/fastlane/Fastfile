@@ -116,6 +116,44 @@ def tempo_firebase_options(env, platform)
     .merge(tempo_firebase_auth)
 end
 
+# @tempo-feature:crashlytics:start
+# Value of KEY in .env.<env> (the last assignment wins), or nil. Native builds read the same file.
+def tempo_env_value(env, key)
+  file = File.join(ROOT, ".env.#{env}")
+  return nil unless File.exist?(file)
+
+  lines = File.readlines(file, chomp: true).map(&:strip)
+  line = lines.reverse.find { |l| !l.start_with?('#') && l.split('=', 2).first.to_s.strip == key }
+  line&.split('=', 2)&.last.to_s.strip.delete('"\'')
+end
+
+# Uploads the dSYMs of an iOS build to Crashlytics, for environments that have it on (FIREBASE_ENABLED,
+# CRASH_REPORTING_ENABLED and CRASH_REPORTER=crashlytics in .env.<env>). Firebase comes through Swift Package
+# Manager, so upload-symbols is in the build's own derived data (ios_ipa passes derived_data_path). The plist
+# is the environment's own, firebase/<env>/GoogleService-Info.plist. Skips cleanly when the env does not use
+# Crashlytics, the plist is absent or the tool is missing; a failed upload fails the lane (the symbols are
+# the point of the step). Android needs no step: the Crashlytics Gradle plugin uploads the mapping file
+# during release builds.
+def tempo_upload_crashlytics_symbols(env)
+  uses_crashlytics = tempo_env_value(env, 'FIREBASE_ENABLED') == 'true' &&
+                     tempo_env_value(env, 'CRASH_REPORTING_ENABLED') == 'true' &&
+                     tempo_env_value(env, 'CRASH_REPORTER') == 'crashlytics'
+  return UI.message("Crashlytics is off for #{env}, not uploading dSYMs.") unless uses_crashlytics
+
+  plist = File.join(ROOT, 'firebase', env, 'GoogleService-Info.plist')
+  return UI.important("firebase/#{env}/GoogleService-Info.plist is missing, not uploading dSYMs.") unless File.exist?(plist)
+
+  tool = File.join(ROOT, 'build', 'ios', 'DerivedData', 'SourcePackages', 'checkouts', 'firebase-ios-sdk', 'Crashlytics', 'upload-symbols')
+  return UI.important("#{tool} not found, not uploading dSYMs.") unless File.exist?(tool)
+
+  upload_symbols_to_crashlytics(
+    dsym_path: lane_context[Actions::SharedValues::DSYM_OUTPUT_PATH],
+    gsp_path: plist,
+    binary_path: tool
+  )
+end
+# @tempo-feature:crashlytics:end
+
 platform :android do
   desc 'Build a release artifact. env:<dev|staging|prod> type:<apk|aab> (default apk, aab for prod)'
   lane :build do |options|
@@ -244,6 +282,10 @@ platform :ios do
       **(ENV.fetch('APPLE_TEAM_ID', '').empty? ? {} : { team_id: ENV.fetch('APPLE_TEAM_ID') })
     )
 
+    # @tempo-feature:crashlytics:start
+    # The Xcode build phase would upload the dSYMs too; this lane does it after the build instead.
+    ENV['TEMPO_SKIP_DSYM_PHASE'] = '1'
+    # @tempo-feature:crashlytics:end
     tempo_with_icon_label(env) do
       tempo_with_pruned_icons do
         build_app(
@@ -253,12 +295,14 @@ platform :ios do
           export_method: env == 'prod' ? 'app-store' : 'ad-hoc',
           export_options: { provisioningProfiles: { bundle_id => profile } },
           output_directory: File.join(ROOT, 'build', 'ios'),
+          derived_data_path: File.join(ROOT, 'build', 'ios', 'DerivedData'), # @tempo-feature:crashlytics
           output_name: "#{APP_NAME}-#{suffix}.ipa",
           xcargs: "MARKETING_VERSION=#{tempo_version} CURRENT_PROJECT_VERSION=#{tempo_build_number}",
           clean: false
         )
       end
     end
+    tempo_upload_crashlytics_symbols(env) # @tempo-feature:crashlytics
     lane_context.fetch(Actions::SharedValues::IPA_OUTPUT_PATH)
   end
 end
