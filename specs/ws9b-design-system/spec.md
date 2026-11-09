@@ -186,6 +186,36 @@ Skipped in PR N:
 2. Native version sync: release-please bumps `package.json`; Gradle `versionName` and the iOS `MARKETING_VERSION` are derived from it.
 3. Fastlane `set_badge` env badge on non-prod builds, applied to a temporary copy of the icons. This complements the generated badge icons from WS2.
 
+**PR M2 — Firebase per environment and crash reporting:**
+
+Owner decisions (fixed):
+
+1. One Firebase project per environment (dev, staging, prod) is the documented recommendation.
+2. Config files live in `firebase/<env>/google-services.json` and `firebase/<env>/GoogleService-Info.plist` at the template root. Dev files may be committed; `firebase/staging/` and `firebase/prod/` are gitignored and CI writes them from secrets. The template ships no real files, only `firebase/README.md` and the ignore rules.
+3. Defaults: dev has push off and crash reporting off; staging and prod have push on and crash reporting on. Debug builds never report crashes.
+4. Crashlytics ships as an optional module; Sentry is a docs recipe with a complete adapter. App code depends only on a provider-neutral `CrashReporter` interface.
+5. Users can opt out of crash reports (a persisted Settings switch). Collection is off until the app enables it.
+6. CI uploads symbols (Fastlane): Crashlytics dSYMs on iOS and the Crashlytics Gradle plugin's mapping upload on Android release. Firebase Analytics is out of scope.
+
+Scope:
+
+1. `firebase-core` optional module (default off): `@react-native-firebase/app`, `src/services/firebase`, the native Firebase wiring and the per-environment config-file copy steps. `push-notifications` and `crashlytics` require it.
+2. `PUSH_ENABLED` and `FIREBASE_ENABLED` env keys; push does nothing unless both are on and Firebase is configured.
+3. `src/services/crash-reporting`: `CrashReporter` interface, no-op reporter, registry, facade, logger sink, error reporting, opt-out, `CRASH_REPORTER` and `CRASH_REPORTING_ENABLED` env keys, bootstrap step and a Settings switch.
+4. `crashlytics` optional module (requires `firebase-core`): the only code that imports `@react-native-firebase/crashlytics`, plus the Android Gradle plugin and the iOS dSYM build phase.
+5. Fastlane `upload_symbols_to_crashlytics` for iOS builds of environments that have Crashlytics on.
+6. Docs: Firebase per environment, push per environment, crash reporting, Crashlytics, a Sentry recipe, switching providers, troubleshooting; ADR-014.
+
+Acceptance criteria:
+
+- AC-M2-1: Each environment uses only its own Firebase files; no build bundles another environment's config.
+- AC-M2-2: An environment with Firebase off builds and runs with no Firebase initialisation.
+- AC-M2-3: Push is switched on or off per environment through `.env.<env>` only.
+- AC-M2-4: Crash reporting is switched on or off per environment and per user (opt-out), and debug builds never report.
+- AC-M2-5: Every crash report carries the environment (`app_env`).
+- AC-M2-6: App code never imports a crash SDK outside its adapter file.
+- AC-M2-7: The docs let a newcomer set up Firebase per environment, Crashlytics and Sentry, and switch between them.
+
 **Skipped, with reasons:**
 
 | Source | Skipped | Reason |
