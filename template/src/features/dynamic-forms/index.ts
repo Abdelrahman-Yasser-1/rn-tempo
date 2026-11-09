@@ -1,6 +1,11 @@
+export { FormBuilder } from './components/FormBuilder';
+export type { FormBuilderProps, FormBuilderRef } from './components/FormBuilder';
+export { createFormResolver } from './utils/formResolver';
+export type { FormResolverOptions } from './utils/formResolver';
 export { VALIDATION_MESSAGES } from './utils/messages';
 export type { FieldTypeMap, FieldTypeName } from './components/FieldRegistry';
 export type {
+  BaseBuilderProps,
   BoundFormField,
   CustomFieldConfig,
   FieldBehaviors,
@@ -12,6 +17,7 @@ export type {
   FormText,
   GroupFieldConfig,
   LocalizedText,
+  ReValidationMode,
   RowFieldConfig,
   StepDirection,
   ValidationMode,

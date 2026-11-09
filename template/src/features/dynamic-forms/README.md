@@ -8,7 +8,14 @@ Config-driven forms: describe a form as typed data and the module renders it wit
 
 Everything `index.ts` exports. `yarn lint:readmes` fails when this list and the barrel differ, so update both together.
 
+- `FormBuilder`: Single-page form rendered from a `fields` config and a Zod schema.
+- `createFormResolver`: The resolver the builders use; pass it to your own `useForm` with an external `form`.
 - `VALIDATION_MESSAGES`: `forms:validation.*` message keys for your own Zod schemas.
+- `FormBuilderProps`: Props of `FormBuilder`.
+- `FormBuilderRef`: The `useForm` API plus `submit`.
+- `FormResolverOptions`: Options of `createFormResolver`.
+- `BaseBuilderProps`: Props both builders share.
+- `ReValidationMode`: When react-hook-form re-validates.
 - `FieldTypeMap`: Field type to its config; the project edits it with the registry.
 - `FieldTypeName`: Name of a field type.
 - `BoundFormField`: A field bound to a value, one member per field type.
