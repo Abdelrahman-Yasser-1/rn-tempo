@@ -2,21 +2,66 @@ apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 
-// @tempo-feature:push-notifications:start
-// Firebase config files are per project and not in the repository, so builds must work without them.
-// The google-services plugin fails the build when a flavor has no file, hence it is applied only when
-// a google-services.json exists where the plugin looks for it: app/, app/src/<flavor>/, app/src/<buildType>/,
-// app/src/<flavor><BuildType>/ or app/src/<flavor>/<buildType>/. With per-flavor files, add one for every
-// flavor you build. Without any file the app builds and push stays off (nothing initialises Firebase).
-def googleServicesFiles = fileTree(dir: projectDir, include: [
-    "google-services.json", "src/*/google-services.json", "src/*/*/google-services.json"
-])
-if (googleServicesFiles.isEmpty()) {
-    logger.lifecycle("push-notifications: no google-services.json found, building without Firebase (push is off).")
-} else {
-    apply plugin: "com.google.gms.google-services"
+// @tempo-feature:firebase-core:start
+// Firebase, one project per environment. The config files live in firebase/<flavor>/google-services.json
+// (see firebase/README.md). The google-services plugin only reads files inside the app module, so the task
+// syncFirebaseConfig<Flavor> copies the flavor's file to app/src/<flavor>/google-services.json (a gitignored
+// build artifact) before the plugin runs, and only when .env.<flavor> has FIREBASE_ENABLED=true. When it is
+// not true the copy is deleted, so a stale file can never leak into another environment's build.
+// A flavor without a file must not fail the build, hence IGNORE: the app then runs with no Firebase app.
+apply plugin: "com.google.gms.google-services"
+googleServices {
+    missingGoogleServicesStrategy = com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy.IGNORE
 }
-// @tempo-feature:push-notifications:end
+
+// Reads KEY=value lines of .env.<flavor> directly (the last assignment wins, like react-native-config).
+// react-native-config's dotenv.gradle picks the env file from the requested task names, which is not
+// reliable at configuration time (IDE sync, several variants in one build), so it is not used here.
+def readFlavorEnv = { String flavorName, String key ->
+    def envFile = new File(rootProject.projectDir.parentFile, ".env.${flavorName}")
+    String value = null
+    if (envFile.isFile()) {
+        envFile.eachLine { line ->
+            def trimmed = line.trim()
+            def separator = trimmed.indexOf("=")
+            if (!trimmed.startsWith("#") && separator > 0 && trimmed.substring(0, separator).trim() == key) {
+                value = trimmed.substring(separator + 1).trim().replaceAll(/^["']|["']$/, "")
+            }
+        }
+    }
+    return value
+}
+
+afterEvaluate {
+    android.productFlavors.all { flavor ->
+        def flavorName = flavor.name
+        def capitalized = flavorName.capitalize()
+        def source = new File(rootProject.projectDir.parentFile, "firebase/${flavorName}/google-services.json")
+        def target = file("src/${flavorName}/google-services.json")
+        def sync = tasks.register("syncFirebaseConfig${capitalized}") {
+            group = "firebase"
+            description = "Copies firebase/${flavorName}/google-services.json into the ${flavorName} flavor when FIREBASE_ENABLED=true."
+            doLast {
+                if (readFlavorEnv(flavorName, "FIREBASE_ENABLED") != "true") {
+                    target.delete()
+                    logger.lifecycle("firebase-core: ${flavorName}: FIREBASE_ENABLED is not true, building without Firebase.")
+                } else if (!source.isFile()) {
+                    throw new GradleException(
+                        ".env.${flavorName} has FIREBASE_ENABLED=true but ${source} is missing. " +
+                        "Download it from the Firebase console (see firebase/README.md) or set FIREBASE_ENABLED=false.")
+                } else {
+                    target.parentFile.mkdirs()
+                    target.bytes = source.bytes
+                    logger.lifecycle("firebase-core: ${flavorName}: using firebase/${flavorName}/google-services.json.")
+                }
+            }
+        }
+        tasks.matching { it.name.startsWith("process${capitalized}") && it.name.endsWith("GoogleServices") }.configureEach {
+            dependsOn sync
+        }
+    }
+}
+// @tempo-feature:firebase-core:end
 
 // Maps each build variant (lowercase) to its env file. Must be set before the dotenv.gradle `apply from`.
 project.ext.envConfigFiles = [
