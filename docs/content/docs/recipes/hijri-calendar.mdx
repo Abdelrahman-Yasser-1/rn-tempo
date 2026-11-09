@@ -81,7 +81,7 @@ export function HijriCalendar(props: React.ComponentProps<typeof Calendar>) {
 
 ```tsx
 <DatePicker
-  label={t('booking.date')}
+  label={t(($) => $.booking.date)}
   value={value}
   onChange={setValue}
   renderDayLabel={(iso) => formatHijriDay(iso, i18n.language)}
@@ -99,7 +99,7 @@ import { formatDate } from '@shared/utils/format';
 import { fromISODate } from '@shared/utils/calendar';
 
 <DatePicker
-  label={t('booking.date')}
+  label={t(($) => $.booking.date)}
   value={value}
   onChange={setValue}
   formatValue={(iso, locale) =>
