@@ -30,6 +30,7 @@ describe('parseEnv', () => {
       DEVICE_INTEGRITY_ENABLED: false,
       STORYBOOK_ENABLED: false,
       FIREBASE_ENABLED: false,
+      PUSH_ENABLED: false,
       DEEP_LINK_HOST: '',
       APP_CONFIG_PATH: '/app-config',
       LOG_LEVEL: 'info',

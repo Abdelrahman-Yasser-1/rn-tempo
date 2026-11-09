@@ -5,6 +5,7 @@ import {
   hasPermission,
   onTokenRefresh,
   requestPermission,
+  setAutoInitEnabled,
   type Messaging,
 } from '@react-native-firebase/messaging';
 
@@ -43,4 +44,12 @@ export async function readIosPermission(messaging: Messaging): Promise<IosPermis
 /** Shows the iOS permission prompt (once per install; later calls answer without a prompt). */
 export async function askIosPermission(messaging: Messaging): Promise<IosPermission> {
   return toIosPermission(await requestPermission(messaging));
+}
+
+/**
+ * `firebase.json` turns FCM auto-initialisation off, so nothing registers with Firebase until push is
+ * on for this environment. Call it once from `initPush`; the setting is remembered by the SDK.
+ */
+export function enablePushAutoInit(messaging: Messaging): Promise<void> {
+  return setAutoInitEnabled(messaging, true);
 }

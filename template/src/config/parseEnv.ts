@@ -24,6 +24,7 @@ const EnvSchema = z
     DEEP_LINK_HOST: z.string().default(''),
     APP_CONFIG_PATH: z.string().default('/app-config'),
     FIREBASE_ENABLED: bool.default(false),
+    PUSH_ENABLED: bool.default(false),
     LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error', 'silent']).default('info'),
   })
   .superRefine((env, ctx) => {

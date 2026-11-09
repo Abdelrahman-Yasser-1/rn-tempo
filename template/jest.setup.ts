@@ -191,6 +191,7 @@ jest.mock('@react-native-firebase/messaging', () => ({
   setBackgroundMessageHandler: jest.fn(),
   hasPermission: jest.fn(() => Promise.resolve(-1)),
   requestPermission: jest.fn(() => Promise.resolve(1)),
+  setAutoInitEnabled: jest.fn(() => Promise.resolve()),
   AuthorizationStatus: {
     NOT_DETERMINED: -1,
     DENIED: 0,

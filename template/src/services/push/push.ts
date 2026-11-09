@@ -8,7 +8,7 @@ import {
 import { logger } from '@services/logger/logger';
 import { toast } from '@services/toast/toast';
 
-import { fetchFcmToken, watchFcmToken } from './fcm';
+import { enablePushAutoInit, fetchFcmToken, watchFcmToken } from './fcm';
 import { getPushMessaging } from './firebase';
 import { openPushLink, parsePushLink } from './routing';
 
@@ -88,7 +88,8 @@ function showForeground(message: Readonly<RemoteMessage>): void {
 
 /**
  * Starts listening: token refresh, foreground messages and notification presses (a cold start and
- * a warm one). Safe to call twice and a no-op when Firebase is not configured. It never asks for
+ * a warm one) and turns on FCM auto-initialisation. Safe to call twice and a no-op unless push is on
+ * for this environment (`PUSH_ENABLED` and Firebase). It never asks for
  * the permission: use `requestPushPermission` at a meaningful moment.
  */
 export async function initPush(): Promise<void> {
@@ -109,6 +110,11 @@ export async function initPush(): Promise<void> {
     stopOpened();
   };
 
+  try {
+    await enablePushAutoInit(messaging);
+  } catch (error) {
+    logger.warn('Push: could not enable FCM auto initialisation', error);
+  }
   try {
     const initial = await getInitialNotification(messaging);
     if (initial !== null) {
