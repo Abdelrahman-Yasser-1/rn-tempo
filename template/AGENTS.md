@@ -117,7 +117,7 @@ Also: check library APIs with context7 for the **pinned** version, never from me
 - RNTL 14 `render` and `fireEvent` are async: `await` both.
 - The Unistyles jest mock does not resolve variants; assert on props, not on variant styles.
 - The Reanimated jest mock (`__mocks__/react-native-reanimated.ts`) supports shared `.value` and `.set` only.
-- The i18n extractor keeps only literal `t('a.b')` keys; keys built at runtime are removed from the locale files.
+- The i18n extractor keeps only keys it can read: `t(($) => $.a.b)` and `keyFromSelector(($) => $.a.b, { ns })`. Keys built at runtime are removed from the locale files, and string keys are a lint error.
 - `@gorhom/bottom-sheet` modals need `accessible={false}`, or screen readers see one merged node. Never `dismiss()` a modal that was not presented.
 - Android: a custom font family with a non-400 `fontWeight` clips text (Arabic most). Use `'400'`; the family name carries the weight.
 - Static navigation screens get only `route`; use `useNavigation()` and mock the hook in tests, never pass a `navigation` prop.
