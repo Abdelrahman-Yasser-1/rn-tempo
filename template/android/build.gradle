@@ -19,6 +19,10 @@ buildscript {
         // Applied in app/build.gradle; a flavor without google-services.json is ignored there.
         classpath("com.google.gms:google-services:4.5.0")
         // @tempo-feature:firebase-core:end
+        // @tempo-feature:crashlytics:start
+        // Uploads the R8 mapping file of release builds; the version is the one React Native Firebase 27 tests.
+        classpath("com.google.firebase:firebase-crashlytics-gradle:3.0.8")
+        // @tempo-feature:crashlytics:end
     }
 }
 

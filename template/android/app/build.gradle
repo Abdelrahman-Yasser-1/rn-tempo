@@ -62,6 +62,25 @@ afterEvaluate {
     }
 }
 // @tempo-feature:firebase-core:end
+// @tempo-feature:crashlytics:start
+// Crashlytics: the plugin injects the build id the SDK needs and uploads the R8 mapping file of release
+// builds. It is applied for every flavor (a plugin cannot be applied per flavor), but a flavor whose
+// .env.<flavor> has no FIREBASE_ENABLED=true has no google-services.json to upload with, so its mapping
+// upload is switched off. NDK symbol upload stays off (the plugin default); to enable it, add
+// firebaseCrashlytics { nativeSymbolUploadEnabled true } to buildTypes.release and set
+// "crashlytics_ndk_enabled": true in firebase.json (see the Crashlytics docs page).
+apply plugin: "com.google.firebase.crashlytics"
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        def isFirebaseOn = readFlavorEnv(variant.flavorName, "FIREBASE_ENABLED") == "true"
+        def crashlytics = variant.getExtension(com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsVariantExtension)
+        if (crashlytics != null && !isFirebaseOn) {
+            crashlytics.mappingFileUploadEnabled.set(false)
+            crashlytics.nativeSymbolUploadEnabled.set(false)
+        }
+    }
+}
+// @tempo-feature:crashlytics:end
 
 // Maps each build variant (lowercase) to its env file. Must be set before the dotenv.gradle `apply from`.
 project.ext.envConfigFiles = [
