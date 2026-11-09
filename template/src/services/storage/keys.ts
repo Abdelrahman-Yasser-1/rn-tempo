@@ -9,6 +9,8 @@ export const STORAGE_KEYS = {
   installMarker: 'app.install-marker',
   /** Non-prod only: debug-menu API base URL override, applied after a restart. */
   apiBaseUrlOverride: 'app.api-base-url-override',
+  /** User opted out of crash reports (Settings); absent means shared. */
+  crashReportsOptOut: 'app.crash-reports-opt-out',
   /** Prefix for Zustand persisted stores: `zustand.<store-name>`. */
   zustandPrefix: 'zustand.',
   /** Prefix for debug-menu feature flag overrides: `flags.override.<flag>`. */

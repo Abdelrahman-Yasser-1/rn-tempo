@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { CRASH_REPORTER_NAMES } from './crashReporters';
+
 const bool = z.enum(['true', 'false']).transform((v) => v === 'true');
 
 const EnvSchema = z
@@ -25,6 +27,8 @@ const EnvSchema = z
     APP_CONFIG_PATH: z.string().default('/app-config'),
     FIREBASE_ENABLED: bool.default(false),
     PUSH_ENABLED: bool.default(false),
+    CRASH_REPORTING_ENABLED: bool.default(false),
+    CRASH_REPORTER: z.enum(CRASH_REPORTER_NAMES).default('none'),
     LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error', 'silent']).default('info'),
   })
   .superRefine((env, ctx) => {
