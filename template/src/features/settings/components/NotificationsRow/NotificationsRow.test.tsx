@@ -25,6 +25,7 @@ beforeEach(() => {
   Object.defineProperty(Platform, 'OS', { configurable: true, get: () => 'ios' });
   jest.mocked(getApps).mockReturnValue([APP]);
   jest.replaceProperty(ENV, 'FIREBASE_ENABLED', true);
+  jest.replaceProperty(ENV, 'PUSH_ENABLED', true);
   jest.mocked(getToken).mockResolvedValue('fcm-token');
   jest.mocked(hasPermission).mockResolvedValue(NOT_DETERMINED);
 });
@@ -32,6 +33,14 @@ beforeEach(() => {
 const getSwitch = () => screen.getByRole('switch');
 
 describe('NotificationsRow', () => {
+  test('is hidden when push is off for the environment', async () => {
+    jest.replaceProperty(ENV, 'PUSH_ENABLED', false);
+
+    await renderWithProviders(<NotificationsRow />);
+
+    expect(screen.queryByText('Notifications')).not.toBeOnTheScreen();
+  });
+
   test('shows the row off before the user was asked', async () => {
     await renderWithProviders(<NotificationsRow />);
 
