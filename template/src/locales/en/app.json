@@ -6,6 +6,11 @@
       "save": "Save",
       "title": "API base URL override"
     },
+    "crash": {
+      "hint": "Sends a test error to your crash reporting provider. Debug builds never report; use a staging release build.",
+      "send": "Send test error",
+      "title": "Crash reporting"
+    },
     "data": {
       "clearQueryCache": "Clear query cache",
       "clearStorage": "Clear storage",

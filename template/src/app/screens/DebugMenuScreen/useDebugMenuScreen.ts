@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import { useAuthStore } from '@features/auth';
 import type { RootStackParamList } from '@navigation/types';
+import { recordError } from '@services/crash-reporting/crashReporting';
 import { clearFlagOverrides, setFlagOverride } from '@services/flags/flagOverrides';
 import { FLAG_DEFAULTS, type FlagKey } from '@services/flags/flags';
 import { useFeatureFlag } from '@services/flags/useFeatureFlag';
@@ -52,6 +53,12 @@ export function useDebugMenuScreen() {
     markDone();
   };
 
+  const onSendTestError = () => {
+    // A bug-style error, so providers file it as a non-fatal. Dropped in debug builds and when reporting is off.
+    recordError(new Error('Test error from the debug menu'), { source: 'debug-menu' });
+    markDone();
+  };
+
   const onClearStorage = () => {
     storage.clearAll();
     markDone();
@@ -74,6 +81,7 @@ export function useDebugMenuScreen() {
     onApiUrlSave,
     onApiUrlClear,
     onResetFlags: clearFlagOverrides,
+    onSendTestError,
     onClearStorage,
     onClearQueryCache,
     onClearTokens,
