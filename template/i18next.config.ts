@@ -9,6 +9,10 @@ export default defineConfig({
     defaultNS: 'common',
     primaryLanguage: 'en',
     secondaryLanguages: ['ar'],
+    // Stale keys and conflicting defaults fail `extract --ci`; keys sort alphabetically.
+    removeUnusedKeys: true,
+    warnOnConflicts: 'error',
+    sort: true,
   },
   lint: {
     // `lint` has no failOnWarnings switch, so every check that defaults to a warning is an error.
