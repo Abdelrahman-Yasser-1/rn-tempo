@@ -9,7 +9,7 @@ description: Firebase Cloud Messaging with a token handler, a contextual permiss
 
 The `push-notifications` module is push over Firebase Cloud Messaging (FCM), using [`@react-native-firebase/app`](https://rnfirebase.io) and `@react-native-firebase/messaging` 27. On iOS the messages travel through APNs, which FCM talks to for you.
 
-It is **off by default** and **needs your own Firebase project**. The Firebase config files are not in the template, and the app builds and runs without them: push is simply off.
+It is **off by default**, **needs the [`firebase-core`](/docs/features/firebase-core) module** (added automatically) and **your own Firebase projects**, ideally one per environment. The Firebase config files are not in the template, and the app builds and runs without them: push is simply off.
 
 What you get, all in `src/services/push`:
 
@@ -36,7 +36,7 @@ Teams that need local notifications, scheduling, channels per topic or custom la
 
 <CommandTabs yarn="tempo feature remove push-notifications" npm="npx tempo feature remove push-notifications" />
 
-Removal deletes `src/services/push`, the bootstrap step, the Settings row, the translations, the Android channel code and strings, the iOS Firebase calls, the Podfile line and both dependencies, then runs `pod install`.
+Removal deletes `src/services/push`, the bootstrap step, the Settings row, the translations, the Android channel code and strings, the `PUSH_ENABLED` lines and the messaging dependency, then runs `pod install`. `firebase-core` stays, because other modules may use it.
 
 ## Native requirements
 
@@ -46,36 +46,39 @@ React Native Firebase 27 sets some floors that reach the whole app:
 - **Android: `minSdk` 24** (already the template's value). RNFB 27 asks for Kotlin 2.4 or newer for some packages (Firebase Auth); the app builds with the template's Kotlin 2.2 because it uses only `app` and `messaging`. If you add Auth or other Firebase modules, raise `kotlinVersion` in `android/build.gradle`.
 - **New Architecture only.** Already on in this template.
 
+## Push per environment
+
+Push is switched **per environment in `.env.<env>`**, nothing else:
+
+| Key | Meaning |
+| --- | --- |
+| `FIREBASE_ENABLED` | The environment uses Firebase: its config files are copied into the build ([Firebase per environment](/docs/features/firebase-core)). |
+| `PUSH_ENABLED` | The environment uses push. Needs `FIREBASE_ENABLED=true`. |
+
+Push is on only when **both** are `true` and the native Firebase app exists. When it is off, `initPush` and the permission calls do nothing (no listeners, no token, no prompt) and the **Notifications** row in Settings is hidden. `firebase.json` also keeps FCM auto-initialisation off (`messaging_auto_init_enabled: false`), so an environment with push off never registers with FCM; `initPush` turns it on with `setAutoInitEnabled` only when push is on.
+
+| Environment | `FIREBASE_ENABLED` | `PUSH_ENABLED` | Result |
+| --- | --- | --- | --- |
+| dev (default) | `false` | `false` | No Firebase, no push, no row. |
+| dev with its own project | `true` | `true` | Push against the dev project; files in `firebase/dev/`. |
+| staging | `true` | `true` | Push against the staging project. |
+| prod | `true` | `true` | Push against the production project. |
+| prod, push not shipped yet | `true` | `false` | Firebase on (for crash reporting), push off. |
+
+Defaults of the template: dev off, staging and prod on, `PUSH_ENABLED=false` in the committed `.env.dev` and `.env.example`. Set `true` in your `.env.staging` and `.env.prod`.
+
 ## Set up Firebase
 
-1. Create a project in the [Firebase console](https://console.firebase.google.com) (or reuse one).
-2. Add an **Android** app for each flavor you push to (`com.rntempo.app.dev`, `com.rntempo.app.staging`, `com.rntempo.app`; use your own ids after `tempo create`) and an **iOS** app for each environment with the matching bundle ids. Separate apps per environment keep test messages away from production users.
-3. Download `google-services.json` for each Android app and `GoogleService-Info.plist` for each iOS app.
-
-### Android config files
-
-Put the file where the Google Services plugin looks:
-
-- `android/app/google-services.json`, one file that contains every flavor's client, or
-- `android/app/src/<flavor>/google-services.json`, one file per flavor (`dev`, `staging`, `prod`).
-
-`android/app/build.gradle` applies the `com.google.gms.google-services` plugin **only when it finds such a file**, and prints a line when it does not. With per-flavor files, provide one for every flavor you build: the plugin stops the build for a flavor that has none. In CI, write the file from a secret before the build, the same way `.env.<env>` is written.
-
-### iOS config files
-
-`AppDelegate.swift` calls `FirebaseApp.configure()` **only when `GoogleService-Info.plist` is in the app bundle**. To get it there:
-
-1. Add the file to the `TempoApp` target in Xcode (Copy items if needed, tick the target). That works for one Firebase app.
-2. For one plist per environment, keep them outside the target, for example `ios/Firebase/Dev/GoogleService-Info.plist`, and copy the right one into the bundle from a scheme pre-action or a build phase, the same way the scheme pre-action copies `.env.<env>`. For example, add a **Copy Firebase config** build phase that runs `cp "${PROJECT_DIR}/Firebase/${APP_ENV}/GoogleService-Info.plist" "${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/"` (the `APP_ENV` build setting is `dev`, `staging` or `prod`).
-
-Both file names are in `.gitignore`. Google does not treat them as secrets, but they differ per project and environment, so the template keeps them out of git; remove the two lines from `.gitignore` if your team prefers to commit them. They are also not covered by the commit guard that blocks `.env.staging`, `.env.prod` and keystores.
+1. Create one Firebase project per environment and add the Android and iOS apps of that environment. Follow [Firebase per environment](/docs/features/firebase-core#set-it-up); it covers the project, the app ids, where to save the files, `FIREBASE_ENABLED` and CI.
+2. Set `PUSH_ENABLED=true` in the env files of the environments that use push.
+3. Upload the APNs key to **each** Firebase project (next section).
 
 ### APNs key and iOS capabilities
 
-Push on iOS needs an Apple developer account.
+Push on iOS needs an Apple developer account. One APNs key works for every project of your team, but it must be uploaded to **every Firebase project** that sends to iOS: each environment's iOS app lives in its own project.
 
 1. In the Apple developer portal create an **APNs authentication key** (`.p8`), and note the key ID and your team ID.
-2. In the Firebase console, open **Project settings, Cloud Messaging**, and upload the key for each iOS app.
+2. In the Firebase console of **each environment's project**, open **Project settings, Cloud Messaging**, and upload the key for that project's iOS app (development and production).
 3. In Xcode, add the **Push Notifications** capability to the target. This adds `aps-environment` to `ios/TempoApp/TempoApp.entitlements`.
 
 The template's entitlements file does **not** contain `aps-environment`: an unsigned simulator build fails when the entitlement is present, and the file has no team to sign with. Add it together with the capability once you have a team. `UIBackgroundModes` with `remote-notification` is already in `Info.plist`.
@@ -88,7 +91,7 @@ The module registers for remote notifications through React Native Firebase's me
 
 ## Send a test message
 
-1. Run a **dev** build on a device with the config files in place. Allow notifications in Settings, Notifications.
+1. Run a build of an environment with `PUSH_ENABLED=true` on a device with the config files in place. Allow notifications in Settings, Notifications.
 2. Get the token: set a handler in your own code, for example in a bootstrap step or after sign-in:
 
    ```ts
@@ -155,13 +158,14 @@ The module never asks at startup. The first request belongs at a moment the user
 | `data.link` parsing and opening | `src/services/push/routing.ts` |
 | Background handler (registered in `index.js`) | `src/services/push/background.ts` |
 | The only file that calls RNFB token and permission APIs | `src/services/push/fcm.ts` |
+| Whether push is on (`isPushEnabled`) | `src/services/push/firebase.ts` |
 | Bootstrap step, after auth, never fatal | `src/app/bootstrap/initPush.ts` |
 | Settings row | `src/features/settings/components/NotificationsRow` |
 | Android channel and strings | `MainApplication.kt`, `res/values/strings.xml`, `res/values-ar/strings.xml` |
 
 RNFB 27 marks `getToken`, `onTokenRefresh` and `requestPermission` as deprecated in favour of Installation IDs and other libraries. They still work, `fcm.ts` isolates them, and there is one place to change when a future major removes them.
 
-Without a config file `isFirebaseConfigured()` is false, every call returns early with a `debug` log, and the permission request does nothing on iOS.
+When push is off (`PUSH_ENABLED=false`, `FIREBASE_ENABLED=false` or no config file) `isPushEnabled()` is false, every call returns early with a `debug` log, and the permission request answers `'denied'` without asking.
 
 ## Customize
 

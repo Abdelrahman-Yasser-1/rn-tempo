@@ -1,0 +1,126 @@
+---
+title: Firebase per environment
+description: One Firebase project per environment, config files per environment, and a FIREBASE_ENABLED switch, so every build uses only its own files.
+---
+
+<FeatureBadge name="firebase-core" />
+
+## What it is
+
+The `firebase-core` module is the shared base for everything that talks to Firebase: [`@react-native-firebase/app`](https://rnfirebase.io) 27, the native wiring and the per-environment config files. `push-notifications` and `crashlytics` require it, so `tempo feature add push-notifications` pulls it in for you.
+
+The recommendation is **one Firebase project per environment** (dev, staging, prod). Test messages, test crashes and test users then never touch production data, and a wrong key cannot reach production.
+
+It is **off by default**. A build of an environment without Firebase needs no Firebase file, no Gradle plugin step and no `FirebaseApp.configure()`: it builds and runs with Firebase never initialised.
+
+## Enable and remove
+
+<CommandTabs yarn="tempo feature add firebase-core" npm="npx tempo feature add firebase-core" />
+
+<CommandTabs yarn="tempo feature remove firebase-core" npm="npx tempo feature remove firebase-core" />
+
+The CLI refuses to remove it while `push-notifications` or `crashlytics` are enabled: remove those first. Removal deletes `src/services/firebase`, the `firebase/` folder, `firebase.json`, the Gradle and Podfile blocks, the `FIREBASE_ENABLED` lines and the dependency, then runs `pod install`. The **Copy Firebase config** build phase stays in the Xcode project and does nothing without the files.
+
+## Where the files go
+
+```
+firebase/
+  dev/       google-services.json  GoogleService-Info.plist   (may be committed)
+  staging/   google-services.json  GoogleService-Info.plist   (gitignored, CI writes them)
+  prod/      google-services.json  GoogleService-Info.plist   (gitignored, CI writes them)
+```
+
+| What | Committed? | Why |
+| --- | --- | --- |
+| `firebase/dev/*` | May be | Google does not treat the files as secrets, and a fresh clone of a dev-only app runs. |
+| `firebase/staging/`, `firebase/prod/` | No (`.gitignore`) | They bind the repository to real projects. CI writes them from secrets, like `.env.staging` and `.env.prod`. |
+| `android/app/src/<flavor>/google-services.json` | No (`.gitignore`) | A copy made by the build; never edit it. |
+
+The template ships no real files, only `firebase/README.md` and the ignore rules. A custom environment such as `qa` needs its own `firebase/qa/` line in `.gitignore` if its files should stay out of git. The pre-commit guard also refuses staged files under `firebase/staging/` and `firebase/prod/`.
+
+## Set it up
+
+1. In the [Firebase console](https://console.firebase.google.com) create **three projects**, for example `myapp-dev`, `myapp-staging` and `myapp-prod`.
+2. In each project add an **Android app** and an **iOS app** (Project overview, Add app). Use the ids of that environment:
+
+   | Environment | Android package | iOS bundle id |
+   | --- | --- | --- |
+   | dev | `com.rntempo.app.dev` | `com.rntempo.app.dev` |
+   | staging | `com.rntempo.app.staging` | `com.rntempo.app.staging` |
+   | prod | `com.rntempo.app` | `com.rntempo.app` |
+
+   After `tempo create` the base id is your own bundle id; `.tempo.json` lists the ids.
+3. Download `google-services.json` (Android) and `GoogleService-Info.plist` (iOS) of each project and save them to `firebase/<env>/`.
+4. Switch Firebase on for the environment in its env file:
+
+   ```bash
+   # .env.dev
+   FIREBASE_ENABLED=false
+   # .env.staging and .env.prod
+   FIREBASE_ENABLED=true
+   ```
+
+5. Build the environment, for example `yarn android:staging` or `yarn ios:staging`.
+
+## How a build picks its files
+
+Nothing is copied by hand, and a build never sees another environment's files.
+
+**Android.** `android/app/build.gradle` registers a task `syncFirebaseConfig<Flavor>` for each flavor. It runs before the Google Services plugin processes that flavor and:
+
+- copies `firebase/<flavor>/google-services.json` to `android/app/src/<flavor>/google-services.json` when `.env.<flavor>` has `FIREBASE_ENABLED=true`;
+- **deletes** that copy when the flag is not `true`, so a stale file cannot leak into another build;
+- **fails the build**, naming the missing file, when the flag is `true` and the file is absent.
+
+The plugin only reads files inside the app module, which is why the file is copied instead of pointed at. The plugin is applied for every flavor with `missingGoogleServicesStrategy = IGNORE`, so a flavor without a file builds normally. The task reads `KEY=value` lines of `.env.<flavor>` itself; `react-native-config` picks its env file from the requested task names, which is not reliable at configuration time (IDE sync, several variants in one build).
+
+**iOS.** The **Copy Firebase config** build phase of the app target does the same with `firebase/${APP_ENV}/GoogleService-Info.plist` and the app bundle. `yarn ios:envs` adds it (never edit `project.pbxproj` by hand); running the command twice changes nothing. `AppDelegate.swift` calls `FirebaseApp.configure()` only when the plist is in the bundle.
+
+**JavaScript.** `isFirebaseEnabled()` from `@services/firebase/firebase` is `ENV.FIREBASE_ENABLED` **and** a native Firebase app exists. Push and crash reporting check it before they call the SDK.
+
+## `firebase.json`
+
+`firebase.json` at the project root tells the React Native Firebase packages what they may do on their own. The template turns everything off so that nothing collects or registers until the JavaScript decides:
+
+```json
+{
+  "react-native": {
+    "crashlytics_auto_collection_enabled": false,
+    "crashlytics_debug_enabled": false,
+    "crashlytics_ndk_enabled": false,
+    "messaging_auto_init_enabled": false
+  }
+}
+```
+
+The Crashlytics keys only matter with the `crashlytics` module; the messaging key with `push-notifications`. See the [Crashlytics page](/docs/features/crashlytics) and [push per environment](/docs/features/push-notifications#push-per-environment).
+
+## Verify
+
+- **Build output.** Each build prints one line per flavor: `firebase-core: staging: using firebase/staging/google-services.json.` or `firebase-core: dev: FIREBASE_ENABLED is not true, building without Firebase.` On iOS the same lines are in the build log of the **Copy Firebase config** phase.
+- **Android runtime.** `adb logcat | grep -i firebase` shows `FirebaseApp` initialisation lines with the app and project of the build. Without a file you see that the default app could not initialise, and nothing else.
+- **iOS runtime.** The Xcode console shows FirebaseCore configuration lines when the plist is bundled and none when it is not.
+- **In the app.** `isFirebaseEnabled()` is `true` only when both the flag and the file are there.
+- **Right project.** In the Firebase console of the environment, the app that appears (a crash, a test message) belongs to that project.
+
+## CI
+
+Staging and prod files are written from secrets before the build, next to the step that writes `.env.<env>`:
+
+```yaml
+- name: Write Firebase config
+  if: env.APP_ENV != 'dev'
+  env:
+    FIREBASE_FILE: ${{ env.APP_ENV == 'prod' && secrets.FIREBASE_ANDROID_PROD || secrets.FIREBASE_ANDROID_STAGING }}
+  run: |
+    if [ -n "$FIREBASE_FILE" ]; then
+      mkdir -p "firebase/${APP_ENV}"
+      printf '%s' "$FIREBASE_FILE" | base64 --decode > "firebase/${APP_ENV}/google-services.json"
+    fi
+```
+
+The iOS job has the same step with `FIREBASE_IOS_STAGING`, `FIREBASE_IOS_PROD` and `GoogleService-Info.plist`. Create each secret with `base64 -i firebase/staging/google-services.json | pbcopy` (macOS). The generated `.github/workflows/build.yml` already contains both steps (secrets are listed in `fastlane/README.md`). Without a secret nothing is written, which is fine for an environment with `FIREBASE_ENABLED=false`.
+
+## Troubleshooting
+
+See [Firebase troubleshooting](/docs/guides/firebase-troubleshooting).
