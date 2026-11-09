@@ -172,12 +172,15 @@ jest.mock('react-native-image-picker', () => ({
   launchImageLibrary: jest.fn(),
 }));
 // @tempo-feature:file-picker:end
-// @tempo-feature:push-notifications:start
-// Firebase needs a device and a config file. The default app exists here; tests drive the mocked
-// messaging functions (jest.mocked) and set `getApps` to `[]` for the "not configured" case.
+// @tempo-feature:firebase-core:start
+// Firebase needs a device and a config file. The default app exists here; tests set `getApps` to `[]`
+// for the "not configured" case and `ENV.FIREBASE_ENABLED` (jest.replaceProperty) for the env switch.
 jest.mock('@react-native-firebase/app', () => ({
   getApps: jest.fn(() => [{ name: '[DEFAULT]' }]),
 }));
+// @tempo-feature:firebase-core:end
+// @tempo-feature:push-notifications:start
+// Tests drive the mocked messaging functions (jest.mocked).
 jest.mock('@react-native-firebase/messaging', () => ({
   getMessaging: jest.fn(() => ({})),
   getToken: jest.fn(() => Promise.resolve('fcm-token')),

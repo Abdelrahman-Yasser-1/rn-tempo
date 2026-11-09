@@ -1,6 +1,7 @@
 import { getApps } from '@react-native-firebase/app';
 import { setBackgroundMessageHandler, type RemoteMessage } from '@react-native-firebase/messaging';
 
+import { ENV } from '@config/env';
 import { logger } from '@services/logger/logger';
 
 import { registerPushBackgroundHandler } from './background';
@@ -10,6 +11,7 @@ const debug = jest.spyOn(logger, 'debug').mockImplementation(jest.fn());
 beforeEach(() => {
   jest.clearAllMocks();
   jest.mocked(getApps).mockReturnValue([{ name: '[DEFAULT]' }] as never);
+  jest.replaceProperty(ENV, 'FIREBASE_ENABLED', true);
 });
 
 describe('registerPushBackgroundHandler', () => {

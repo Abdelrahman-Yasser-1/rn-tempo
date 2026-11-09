@@ -61,6 +61,7 @@ beforeEach(() => {
   flushPushLinks();
   jest.clearAllMocks();
   jest.mocked(getApps).mockReturnValue([APP]);
+  jest.replaceProperty(ENV, 'FIREBASE_ENABLED', true);
   jest.mocked(getToken).mockResolvedValue(SECRET_TOKEN);
   jest.mocked(getInitialNotification).mockResolvedValue(null);
 });
