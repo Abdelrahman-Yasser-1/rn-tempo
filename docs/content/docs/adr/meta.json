@@ -17,6 +17,7 @@
     "011-yarn4",
     "012-no-expo-modules",
     "013-babel-7",
-    "014-firebase-per-environment-and-crash-reporting"
+    "014-firebase-per-environment-and-crash-reporting",
+    "015-dynamic-forms"
   ]
 }
