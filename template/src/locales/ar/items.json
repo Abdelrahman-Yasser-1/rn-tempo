@@ -30,6 +30,12 @@
     "title": "العنصر"
   },
   "list": {
+    "count_zero": "لا توجد عناصر",
+    "count_one": "عنصر واحد",
+    "count_two": "عنصران",
+    "count_few": "{{count, number}} عناصر",
+    "count_many": "{{count, number}} عنصرًا",
+    "count_other": "{{count, number}} عنصر",
     "create": "إنشاء عنصر",
     "emptyMessage": "جرّب بحثًا مختلفًا.",
     "emptyTitle": "لم يتم العثور على عناصر",

@@ -9,6 +9,7 @@ import {
   ListItem,
   PaginatedList,
   Screen,
+  Text,
   TextField,
 } from '@shared/components';
 import type { HeaderAction } from '@shared/components';
@@ -75,6 +76,11 @@ export function ItemsListScreen() {
           testID="items-list.search-input"
         />
       </View>
+      {vm.total === undefined ? null : (
+        <Text color="textSecondary" style={styles.count} testID="items-list.count">
+          {t('list.count', { count: vm.total })}
+        </Text>
+      )}
       <View style={styles.body}>
         <PaginatedList
           query={vm.itemsQuery}

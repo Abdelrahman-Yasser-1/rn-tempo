@@ -79,6 +79,12 @@ describe('ItemsListScreen', () => {
     expect(requested).toContain(`/products?limit=${String(ITEMS_PAGE_SIZE)}&skip=0`);
   });
 
+  test('AC-N-2: shows the total as a plural count', async () => {
+    await renderItemsList();
+
+    expect(await screen.findByText(/^\d+ items$/)).toBeOnTheScreen();
+  });
+
   test('shows the loading placeholder until the first page arrives', async () => {
     // Hold the first page until the placeholder is asserted; the mock server answers too fast to
     // catch it otherwise. Resolving falls through to the default products handler.

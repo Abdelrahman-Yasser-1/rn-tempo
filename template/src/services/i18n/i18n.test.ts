@@ -3,12 +3,16 @@ import { resources } from './resources';
 
 describe('i18n resources', () => {
   test('en and ar expose the same namespaces and key sets', () => {
-    const keys = (value: object): string[] =>
-      (Object.entries(value) as [string, unknown][]).flatMap(([key, child]) =>
-        typeof child === 'object' && child !== null
-          ? keys(child).map((sub) => `${key}.${sub}`)
-          : [key],
-      );
+    // Plural forms differ per language (`en` has two, `ar` six), so compare the base keys.
+    const keys = (value: object): string[] => [
+      ...new Set(
+        (Object.entries(value) as [string, unknown][]).flatMap(([key, child]) =>
+          typeof child === 'object' && child !== null
+            ? keys(child).map((sub) => `${key}.${sub}`)
+            : [key.replace(/_(?:zero|one|two|few|many|other)$/, '')],
+        ),
+      ),
+    ];
 
     expect(Object.keys(resources.ar)).toEqual(Object.keys(resources.en));
     for (const namespace of Object.keys(resources.en) as (keyof typeof resources.en)[]) {

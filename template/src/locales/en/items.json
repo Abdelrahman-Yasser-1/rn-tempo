@@ -30,6 +30,8 @@
     "title": "Item"
   },
   "list": {
+    "count_one": "{{count, number}} item",
+    "count_other": "{{count, number}} items",
     "create": "Create item",
     "emptyMessage": "Try a different search.",
     "emptyTitle": "No items found",
