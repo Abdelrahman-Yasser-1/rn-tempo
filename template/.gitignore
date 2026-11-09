@@ -87,8 +87,9 @@ projectStructure.cache.json
 .ai/sessions/
 .ai/.current.json
 
-# Firebase config files of the push-notifications module. Google does not treat them as secrets, but
-# they differ per project and environment, so they are not part of the template. Add yours locally or in
-# CI (see docs: features/push-notifications). Remove these lines if your team chooses to commit them.
-google-services.json
-GoogleService-Info.plist
+# Firebase config, one folder per environment (firebase/<env>/). Dev files may be committed; staging and prod
+# files are written by CI from secrets. Add a line for every custom environment, for example firebase/qa/.
+firebase/staging/
+firebase/prod/
+# Copied from firebase/<env>/ by the syncFirebaseConfig<Flavor> Gradle task; a build artifact, never a source.
+android/app/src/*/google-services.json

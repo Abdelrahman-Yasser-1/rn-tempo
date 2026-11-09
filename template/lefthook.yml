@@ -7,7 +7,7 @@ pre-commit:
   piped: true
   jobs:
     - name: env-guard
-      glob: '{.env.staging,.env.prod,*.keystore,*.jks,*.p12,*.mobileprovision}'
+      glob: '{.env.staging,.env.prod,firebase/staging/*,firebase/prod/*,*.keystore,*.jks,*.p12,*.mobileprovision}'
       run: echo 'Refusing to commit secrets {staged_files}' && exit 1
     - name: gitleaks
       run: gitleaks git --staged --redact --no-banner
