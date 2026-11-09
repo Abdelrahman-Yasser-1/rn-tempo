@@ -359,6 +359,11 @@ describe("eslint-config fixtures", () => {
       "rn-tempo/restricted-syntax",
     ],
     [
+      "a string translation key",
+      "src/shared/utils/stringKey.ts",
+      "rn-tempo/restricted-syntax",
+    ],
+    [
       "Appearance outside theme and app",
       "src/shared/utils/usesAppearance.ts",
       "rn-tempo/restricted-syntax",
@@ -393,6 +398,12 @@ describe("eslint-config fixtures", () => {
     );
     const reported = texts.filter((text) => /`as const` object/.test(text));
     expect(reported).toHaveLength(2);
+  });
+
+  it("reports each string translation key and not the selector form", async () => {
+    const texts = await lintMessages("invalid", "src/shared/utils/stringKey.ts");
+    const reported = texts.filter((text) => /Use a typed selector key/.test(text));
+    expect(reported).toHaveLength(3);
   });
 
   it("keeps the enum ban next to the style restrictions", async () => {
