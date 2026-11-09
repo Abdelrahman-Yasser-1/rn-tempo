@@ -45,10 +45,20 @@ describe.skipIf(process.env.TEMPO_E2E !== '1')('tempo feature add (real template
   });
   afterAll(async () => cleanup());
 
+  /**
+   * Modules that other modules require cannot be left out alone: creating without them also drops the
+   * modules that require them (otherwise the CLI adds them back). Those are left out too, and the
+   * comparison project is created without the dependents as well.
+   */
+  const DEPENDENTS: Partial<Record<FeatureName, readonly FeatureName[]>> = {
+    'firebase-core': ['push-notifications', 'crashlytics'],
+  };
+
   it.each(['samples', 'storybook', 'ssl-pinning', 'dynamic-forms', 'webview', 'file-picker', 'maps', 'firebase-core', 'push-notifications', 'crashlytics', 'ai-vendored-skills'] as const)(
     'creating without %s and adding it back matches a project created with it',
     async (feature) => {
-      const created = await createProject(base(feature, FEATURE_NAMES.filter((name) => name !== feature)));
+      const dropped = [feature, ...(DEPENDENTS[feature] ?? [])];
+      const created = await createProject(base(feature, FEATURE_NAMES.filter((name) => !dropped.includes(name))));
       const before = await readAll(created.dir);
       const dry = await addFeature({ projectDir: created.dir, cwd: root, feature, template: TEMPLATE_DIR, dryRun: true });
       expect(dry.dryRun).toBe(true);
@@ -59,8 +69,12 @@ describe.skipIf(process.env.TEMPO_E2E !== '1')('tempo feature add (real template
       await expect(addFeature({ projectDir: created.dir, cwd: root, feature, template: TEMPLATE_DIR })).rejects.toThrow(/already enabled/);
       expect(result.conflicts).toEqual([]);
       const actual = await readAll(created.dir);
-      const differences = [...new Set([...baseline.keys(), ...actual.keys()])]
-        .filter((file) => baseline.get(file) !== actual.get(file))
+      const expected =
+        dropped.length === 1
+          ? baseline
+          : await readAll((await createProject(base(`${feature}-with`, FEATURE_NAMES.filter((name) => !dropped.slice(1).includes(name))))).dir);
+      const differences = [...new Set([...expected.keys(), ...actual.keys()])]
+        .filter((file) => expected.get(file) !== actual.get(file))
         .filter((file) => !ACCEPTED_DIFFERENCES.includes(file));
       expect(differences).toEqual([]);
     },
