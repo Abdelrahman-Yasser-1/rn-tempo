@@ -17,6 +17,7 @@ export const FEATURE_NAMES = Object.freeze([
   'maps',
   'firebase-core',
   'push-notifications',
+  'crashlytics',
 ]);
 
 const SLASH = { start: (n) => `// @tempo-feature:${n}:start`, end: (n) => `// @tempo-feature:${n}:end`, single: (n) => `// @tempo-feature:${n}` };

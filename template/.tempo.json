@@ -46,7 +46,8 @@
     "file-picker",
     "maps",
     "firebase-core",
-    "push-notifications"
+    "push-notifications",
+    "crashlytics"
   ],
   "ai": {
     "tools": [
