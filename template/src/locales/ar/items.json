@@ -25,8 +25,8 @@
   "details": {
     "category": "الفئة: {{category}}",
     "openProduct": "فتح صفحة المنتج",
-    "rating": "التقييم: {{rating}} / 5",
-    "stock": "المتوفر: {{stock}}",
+    "rating": "التقييم: {{rating, number}} / 5",
+    "stock": "المتوفر: {{stock, number}}",
     "title": "العنصر"
   },
   "list": {

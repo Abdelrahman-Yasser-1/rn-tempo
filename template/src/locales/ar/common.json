@@ -176,7 +176,7 @@
     },
     "placeholder": "اختر موعدًا",
     "title": "اختر موعدًا",
-    "titleOnDate": "المواعيد في {{date}}"
+    "titleOnDate": "المواعيد في {{date, datetime(dateStyle: medium; numberingSystem: latn)}}"
   },
   "toast": {
     "close": "إغلاق الإشعار"
