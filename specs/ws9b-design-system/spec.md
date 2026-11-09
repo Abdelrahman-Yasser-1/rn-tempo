@@ -172,6 +172,16 @@ Sources: Half-Million and https://mensurdurakovic.com/react-i18next-tips-and-tri
    - `debug` turns on only when `LOG_LEVEL=debug`.
 7. **Typed selector API** `t($ => $.login.title)` (i18next ≥ 25 `enableSelector`). **Approved by the owner (2026-11-03).** It makes keys rename-safe and IDE-navigable, but changes every `t()` call. A codemod plus a lint rule would keep both styles from mixing. Done as the last step of PR N.
 
+Acceptance criteria:
+
+- AC-N-1: A key removed from code makes `i18n:check` fail.
+- AC-N-2: Arabic plural keys must have all six forms, and the count test passes for 0, 1, 2, 3, 11 and 100 in `en` and `ar`.
+- AC-N-3: A context variant is selected by `context`.
+- AC-N-4: In-sentence numbers, currency and dates follow the active language.
+- AC-N-5: A `t()` with a dynamic template key is a lint error.
+- AC-N-6: A missing key logs a warning in dev only.
+- AC-N-7: Every `t()` uses the selector form, and the string form is a lint error.
+
 Skipped in PR N:
 
 | Skipped | Reason |
