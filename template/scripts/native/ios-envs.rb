@@ -250,6 +250,41 @@ ensure_script_phase(target, 'Copy Firebase config', <<~'SCRIPT')
   echo "firebase-core: ${APP_ENV}: bundled firebase/${APP_ENV}/GoogleService-Info.plist."
 SCRIPT
 
+# Crashlytics dSYM upload (the crashlytics module). Runs for Release configurations only, and only when the
+# built app bundles a GoogleService-Info.plist (so only for environments with FIREBASE_ENABLED=true; the phase
+# above removes the file otherwise). Firebase 13 comes through Swift Package Manager, so upload-symbols lives
+# in the SourcePackages checkout of this build's DerivedData. A failed upload warns and never fails the build.
+# Fastlane sets TEMPO_SKIP_DSYM_PHASE=1 because its lane uploads the dSYMs itself. Without the module there is
+# no upload-symbols binary, and the phase says so and does nothing.
+ensure_script_phase(target, 'Upload Crashlytics dSYMs', <<~'SCRIPT')
+  case "${CONFIGURATION}" in
+    Debug*) echo "crashlytics: ${CONFIGURATION}: debug build, not uploading dSYMs."; exit 0 ;;
+  esac
+  if [ "${TEMPO_SKIP_DSYM_PHASE}" = "1" ]; then
+    echo "crashlytics: dSYMs are uploaded by the build lane, skipping."
+    exit 0
+  fi
+  PLIST="${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist"
+  if [ ! -f "${PLIST}" ]; then
+    echo "crashlytics: ${APP_ENV}: no GoogleService-Info.plist in the app, not uploading dSYMs."
+    exit 0
+  fi
+  UPLOAD="${BUILD_DIR%Build/*}SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/upload-symbols"
+  if [ ! -f "${UPLOAD}" ]; then
+    echo "crashlytics: upload-symbols not found at ${UPLOAD}, not uploading dSYMs."
+    exit 0
+  fi
+  DSYM="${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}"
+  if [ ! -d "${DSYM}" ]; then
+    echo "warning: crashlytics: no dSYM at ${DSYM} (DEBUG_INFORMATION_FORMAT must be dwarf-with-dsym for release builds)."
+    exit 0
+  fi
+  chmod +x "${UPLOAD}"
+  if ! perl -e 'alarm shift; exec @ARGV' 300 "${UPLOAD}" -gsp "${PLIST}" -p ios "${DSYM}"; then
+    echo "warning: crashlytics: dSYM upload failed or timed out; continuing. Upload them later with fastlane or the Firebase console."
+  fi
+SCRIPT
+
 project.save
 
 # 4. Shared schemes. The pre-action copies the env file to `.env`, which react-native-config reads on iOS.
