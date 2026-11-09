@@ -45,6 +45,7 @@
     "webview",
     "file-picker",
     "maps",
+    "firebase-core",
     "push-notifications"
   ],
   "ai": {

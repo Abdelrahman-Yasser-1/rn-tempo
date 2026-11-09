@@ -45,7 +45,7 @@ describe.skipIf(process.env.TEMPO_E2E !== '1')('tempo feature add (real template
   });
   afterAll(async () => cleanup());
 
-  it.each(['samples', 'storybook', 'ssl-pinning', 'dynamic-forms', 'webview', 'file-picker', 'maps', 'push-notifications', 'ai-vendored-skills'] as const)(
+  it.each(['samples', 'storybook', 'ssl-pinning', 'dynamic-forms', 'webview', 'file-picker', 'maps', 'firebase-core', 'push-notifications', 'ai-vendored-skills'] as const)(
     'creating without %s and adding it back matches a project created with it',
     async (feature) => {
       const created = await createProject(base(feature, FEATURE_NAMES.filter((name) => name !== feature)));

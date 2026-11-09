@@ -13,6 +13,7 @@ export type FeatureName =
   | 'webview'
   | 'file-picker'
   | 'maps'
+  | 'firebase-core'
   | 'push-notifications';
 
 export declare const FEATURE_NAMES: readonly FeatureName[];
