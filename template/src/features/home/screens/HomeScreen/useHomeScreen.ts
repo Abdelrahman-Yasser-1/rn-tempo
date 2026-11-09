@@ -21,8 +21,11 @@ export function useHomeScreen() {
   useRefreshOnFocus(refetch);
 
   const firstName = data?.firstName ?? user?.firstName;
+  const gender = data?.gender ?? user?.gender;
+  // Arabic addresses a man and a woman differently; any other value uses the base `greeting` key.
+  const context = gender === 'male' || gender === 'female' ? gender : undefined;
   const greeting =
-    firstName === undefined ? t('greetingFallback') : t('greeting', { name: firstName });
+    firstName === undefined ? t('greetingFallback') : t('greeting', { name: firstName, context });
 
   // @tempo-feature:samples:start
   const onBrowseItems = () => {

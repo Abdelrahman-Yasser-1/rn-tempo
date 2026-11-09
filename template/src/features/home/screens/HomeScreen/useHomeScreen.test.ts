@@ -61,6 +61,34 @@ describe('useHomeScreen', () => {
     expect(result.current.greeting).toBe('Hello');
   });
 
+  describe('AC-N-3: the greeting is selected by the user gender', () => {
+    test.each([
+      ['male', 'مرحبًا بك، Ada'],
+      ['female', 'مرحبًا بكِ، Ada'],
+      ['other', 'مرحبًا، Ada'],
+      ['', 'مرحبًا، Ada'],
+    ])('in Arabic, gender "%s" greets "%s"', async (gender, expected) => {
+      useAuthStore.setState({ status: 'signedIn', user: createUser({ firstName: 'Ada', gender }) });
+
+      const { result } = await renderHookWithProviders(() => useHomeScreen(), {
+        language: 'ar',
+      });
+
+      expect(result.current.greeting).toBe(expected);
+    });
+
+    test('in English, an unknown gender falls back to the base key', async () => {
+      useAuthStore.setState({
+        status: 'signedIn',
+        user: createUser({ firstName: 'Ada', gender: 'g' }),
+      });
+
+      const { result } = await renderHookWithProviders(() => useHomeScreen());
+
+      expect(result.current.greeting).toBe('Hello, Ada');
+    });
+  });
+
   test('refreshes the user when the screen regains focus', async () => {
     await renderHookWithProviders(() => useHomeScreen());
 
