@@ -30,6 +30,15 @@ We draw the label with our own `scripts/native/icons.mjs` (sharp, vector glyphs)
 
 Try it without a build: `node scripts/native/icons.mjs --env dev --label "1.2.3 (45)"`, look at `android/app/src/dev/res/mipmap-xxxhdpi/ic_launcher.png`, then `yarn icons` to restore the plain icons.
 
+## Crashlytics symbols
+
+With the `crashlytics` module, readable crash reports need symbols that match the build:
+
+- **iOS.** After `build_app`, the `ios build`, `beta` and `release` lanes call `upload_symbols_to_crashlytics` for an environment whose `.env.<env>` has `FIREBASE_ENABLED=true`, `CRASH_REPORTING_ENABLED=true` and `CRASH_REPORTER=crashlytics`. It uses that environment's own plist, `firebase/<env>/GoogleService-Info.plist`, and the `upload-symbols` tool from the Swift Package Manager checkout in `build/ios/DerivedData` (the lane builds there, because Firebase 13 comes through SPM). It skips with a message when the environment does not use Crashlytics, the plist is missing, or the tool is not found. The lane sets `TEMPO_SKIP_DSYM_PHASE=1` so the Xcode **Upload Crashlytics dSYMs** build phase does not upload the same dSYMs a second time.
+- **Android.** No lane step. The Crashlytics Gradle plugin uploads the R8 mapping file during `assemble<Env>Release` and `bundle<Env>Release` for flavors whose env file has `FIREBASE_ENABLED=true`.
+
+Nothing here needs a token: `upload-symbols` authenticates with the app id and API key inside the environment's plist, and the Android plugin with its `google-services.json`. Both files must be in `firebase/<env>/` before the lane runs; CI writes them from the Firebase secrets below. `bundle exec ruby -c fastlane/Fastfile` checks the syntax without running a lane.
+
 ## Secrets
 
 Everything is read from environment variables. In GitHub Actions they are repository (or environment) secrets.
@@ -49,6 +58,13 @@ Everything is read from environment variables. In GitHub Actions they are reposi
 | `PLAY_JSON_KEY`                                                                                  | `android release`   | Contents of the Google Play service account JSON                           |
 | `TEMPO_UPLOAD_STORE_PASSWORD`, `TEMPO_UPLOAD_KEY_ALIAS`, `TEMPO_UPLOAD_KEY_PASSWORD`             | prod Android builds | Upload key credentials                                                     |
 | `TEMPO_UPLOAD_STORE_FILE`                                                                        | prod Android builds | Path of the upload keystore. In CI use `TEMPO_UPLOAD_STORE_BASE64` instead |
+
+Firebase config files (the `firebase-core` module). Each secret holds the base64 of the file; the build workflow decodes it to `firebase/<env>/` before the build:
+
+| Secret                                              | Used by        | Notes                                                   |
+| --------------------------------------------------- | -------------- | ------------------------------------------------------- |
+| `FIREBASE_ANDROID_STAGING`, `FIREBASE_ANDROID_PROD` | Android builds | Base64 of that environment's `google-services.json`     |
+| `FIREBASE_IOS_STAGING`, `FIREBASE_IOS_PROD`         | iOS builds     | Base64 of that environment's `GoogleService-Info.plist` |
 
 Additions beyond the original list:
 
