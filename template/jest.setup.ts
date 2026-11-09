@@ -201,6 +201,18 @@ jest.mock('@react-native-firebase/messaging', () => ({
   },
 }));
 // @tempo-feature:push-notifications:end
+// @tempo-feature:crashlytics:start
+// Crashlytics needs a device; tests assert on the mocked calls (jest.mocked).
+jest.mock('@react-native-firebase/crashlytics', () => ({
+  deleteUnsentReports: jest.fn(() => Promise.resolve()),
+  getCrashlytics: jest.fn(() => ({})),
+  log: jest.fn(),
+  recordError: jest.fn(),
+  setAttributes: jest.fn(() => Promise.resolve(null)),
+  setUserId: jest.fn(() => Promise.resolve(null)),
+  setCrashlyticsCollectionEnabled: jest.fn(() => Promise.resolve(null)),
+}));
+// @tempo-feature:crashlytics:end
 
 beforeAll(() => {
   // MSW 3 renamed `onUnhandledRequest` to `onUnhandledFrame`.
