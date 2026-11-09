@@ -190,6 +190,7 @@
 				76FBA1C4875CDC58E9E24045 /* [CP-User] [RNFB] Core Configuration */,
 				2417BF8B8E65F1098396FDB2 /* [RNFB] Embed Firebase SPM Frameworks */,
 				D5EAA2F9583CB6B3026234BA /* [RNFB] Remove duplicate Firebase/Google SPM binary xcframework signature files */,
+				EE0A830AA0DA4AAE7639AABD /* Copy Firebase config */,
 			);
 			buildRules = (
 			);
@@ -380,6 +381,26 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TempoApp/Pods-TempoApp-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		EE0A830AA0DA4AAE7639AABD /* Copy Firebase config */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Firebase config";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e\nENV_FILE=\"${SRCROOT}/../.env.${APP_ENV}\"\nSOURCE=\"${SRCROOT}/../firebase/${APP_ENV}/GoogleService-Info.plist\"\nDEST=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist\"\nrm -f \"${DEST}\"\nENABLED=\"\"\nif [ -f \"${ENV_FILE}\" ]; then\n  ENABLED=$(grep -E '^[[:space:]]*FIREBASE_ENABLED[[:space:]]*=' \"${ENV_FILE}\" | tail -1 | cut -d= -f2- | tr -d \" \\\"'\\r\" || true)\nfi\nif [ \"${ENABLED}\" != \"true\" ]; then\n  echo \"firebase-core: ${APP_ENV}: FIREBASE_ENABLED is not true, building without Firebase.\"\n  exit 0\nfi\nif [ ! -f \"${SOURCE}\" ]; then\n  echo \"error: .env.${APP_ENV} has FIREBASE_ENABLED=true but firebase/${APP_ENV}/GoogleService-Info.plist is missing. See firebase/README.md or set FIREBASE_ENABLED=false.\"\n  exit 1\nfi\ncp \"${SOURCE}\" \"${DEST}\"\necho \"firebase-core: ${APP_ENV}: bundled firebase/${APP_ENV}/GoogleService-Info.plist.\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */

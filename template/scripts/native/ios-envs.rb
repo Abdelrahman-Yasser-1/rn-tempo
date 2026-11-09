@@ -214,6 +214,42 @@ env_names = envs.flat_map { |e| ["Debug-#{e[:suffix]}", "Release-#{e[:suffix]}"]
   list.default_configuration_name = "Release-#{envs.last[:suffix]}"
 end
 
+# 3b. Build phases that need the environment (idempotent: found by name, script rewritten each run).
+def ensure_script_phase(target, name, script)
+  phase = target.shell_script_build_phases.find { |p| p.name == name }
+  phase ||= target.new_shell_script_build_phase(name)
+  phase.shell_script = script
+  phase.shell_path = '/bin/sh'
+  phase.always_out_of_date = '1'
+  phase.show_env_vars_in_log = '0'
+end
+
+# Firebase config: one project per environment. Copies firebase/<env>/GoogleService-Info.plist into the app
+# only when .env.<env> has FIREBASE_ENABLED=true, and removes any copy otherwise, so no build ever bundles
+# another environment's file. Without the firebase-core module there is no such file and nothing is
+# enabled, so the phase does nothing.
+ensure_script_phase(target, 'Copy Firebase config', <<~'SCRIPT')
+  set -e
+  ENV_FILE="${SRCROOT}/../.env.${APP_ENV}"
+  SOURCE="${SRCROOT}/../firebase/${APP_ENV}/GoogleService-Info.plist"
+  DEST="${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist"
+  rm -f "${DEST}"
+  ENABLED=""
+  if [ -f "${ENV_FILE}" ]; then
+    ENABLED=$(grep -E '^[[:space:]]*FIREBASE_ENABLED[[:space:]]*=' "${ENV_FILE}" | tail -1 | cut -d= -f2- | tr -d " \"'\r" || true)
+  fi
+  if [ "${ENABLED}" != "true" ]; then
+    echo "firebase-core: ${APP_ENV}: FIREBASE_ENABLED is not true, building without Firebase."
+    exit 0
+  fi
+  if [ ! -f "${SOURCE}" ]; then
+    echo "error: .env.${APP_ENV} has FIREBASE_ENABLED=true but firebase/${APP_ENV}/GoogleService-Info.plist is missing. See firebase/README.md or set FIREBASE_ENABLED=false."
+    exit 1
+  fi
+  cp "${SOURCE}" "${DEST}"
+  echo "firebase-core: ${APP_ENV}: bundled firebase/${APP_ENV}/GoogleService-Info.plist."
+SCRIPT
+
 project.save
 
 # 4. Shared schemes. The pre-action copies the env file to `.env`, which react-native-config reads on iOS.
