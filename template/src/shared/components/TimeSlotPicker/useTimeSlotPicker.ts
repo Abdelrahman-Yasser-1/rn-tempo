@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { fromISODate, numeralLocale } from '@shared/utils/calendar';
-import { formatDate } from '@shared/utils/format';
+import { fromISODate } from '@shared/utils/calendar';
 import { formatTime, timePeriod } from '@shared/utils/time';
 import type { TimePeriod } from '@shared/utils/time';
 
@@ -41,9 +40,7 @@ export function useTimeSlotPicker({
   const selected = slots.find((slot) => slot.value === value);
   let title = sheetTitle ?? label ?? t('timeSlot.title');
   if (sheetTitle === undefined && date !== undefined) {
-    title = t('timeSlot.titleOnDate', {
-      date: formatDate(fromISODate(date), 'medium', numeralLocale(locale)),
-    });
+    title = t('timeSlot.titleOnDate', { date: fromISODate(date) });
   }
 
   let valueText: string | undefined;

@@ -176,7 +176,7 @@
     },
     "placeholder": "Select a time slot",
     "title": "Select a time slot",
-    "titleOnDate": "Slots for {{date}}"
+    "titleOnDate": "Slots for {{date, datetime(dateStyle: medium; numberingSystem: latn)}}"
   },
   "toast": {
     "close": "Dismiss notification"

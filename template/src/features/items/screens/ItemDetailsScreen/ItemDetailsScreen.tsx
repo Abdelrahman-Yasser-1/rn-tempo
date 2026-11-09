@@ -14,7 +14,7 @@ import {
   Screen,
   Text,
 } from '@shared/components';
-import { formatCurrency, formatNumber } from '@shared/utils';
+import { formatCurrency } from '@shared/utils';
 
 import { styles } from './styles';
 import { useItemDetailsScreen } from './useItemDetailsScreen';
@@ -54,10 +54,10 @@ export function ItemDetailsScreen({ route }: ItemDetailsScreenProps) {
             {t('details.category', { category: data.category })}
           </Text>
           <Text color="textSecondary" testID="item-details.rating">
-            {t('details.rating', { rating: formatNumber(data.rating, vm.language) })}
+            {t('details.rating', { rating: data.rating })}
           </Text>
           <Text color="textSecondary" testID="item-details.stock">
-            {t('details.stock', { stock: formatNumber(data.stock, vm.language) })}
+            {t('details.stock', { stock: data.stock })}
           </Text>
         </View>
         <Text testID="item-details.description">{data.description}</Text>

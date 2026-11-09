@@ -25,8 +25,8 @@
   "details": {
     "category": "Category: {{category}}",
     "openProduct": "Open product page",
-    "rating": "Rating: {{rating}} / 5",
-    "stock": "In stock: {{stock}}",
+    "rating": "Rating: {{rating, number}} / 5",
+    "stock": "In stock: {{stock, number}}",
     "title": "Item"
   },
   "list": {
