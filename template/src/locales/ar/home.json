@@ -2,6 +2,8 @@
   "browseItems": "تصفّح العناصر",
   "browseItemsHint": "استكشف الكتالوج التجريبي.",
   "greeting": "مرحبًا، {{name}}",
+  "greeting_female": "مرحبًا بكِ، {{name}}",
+  "greeting_male": "مرحبًا بك، {{name}}",
   "greetingFallback": "مرحبًا",
   "title": "الرئيسية"
 }

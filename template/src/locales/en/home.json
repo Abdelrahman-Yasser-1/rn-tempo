@@ -2,6 +2,8 @@
   "browseItems": "Browse items",
   "browseItemsHint": "Explore the sample catalog.",
   "greeting": "Hello, {{name}}",
+  "greeting_female": "Hello, {{name}}",
+  "greeting_male": "Hello, {{name}}",
   "greetingFallback": "Hello",
   "title": "Home"
 }

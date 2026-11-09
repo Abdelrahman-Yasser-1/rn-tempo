@@ -13,6 +13,9 @@ export default defineConfig({
     removeUnusedKeys: true,
     warnOnConflicts: 'error',
     sort: true,
+    // A `context` computed at runtime (`greeting_male`, `greeting_female`) cannot be resolved
+    // statically; keep the variants of every key that is called with a `context`.
+    preserveContextVariants: true,
   },
   lint: {
     // `lint` has no failOnWarnings switch, so every check that defaults to a warning is an error.
