@@ -4,7 +4,7 @@ import { AppState, PermissionsAndroid, Platform } from 'react-native';
 import { logger } from '@services/logger/logger';
 
 import { askIosPermission, readIosPermission } from './fcm';
-import { getPushMessaging } from './firebase';
+import { getPushMessaging, isPushEnabled } from './firebase';
 import { syncPushToken } from './push';
 
 /**
@@ -27,6 +27,9 @@ function needsAndroidPrompt(): boolean {
 
 /** The current notification permission, without asking. Never throws. */
 export async function getPushPermission(): Promise<PushPermissionStatus> {
+  if (!isPushEnabled()) {
+    return 'undetermined';
+  }
   try {
     if (Platform.OS === 'android') {
       if (!needsAndroidPrompt()) {
@@ -72,9 +75,12 @@ async function requestIos(): Promise<PushPermissionResult> {
 /**
  * Asks for the notification permission. Call it at a meaningful moment (the user turns on
  * notifications, finishes onboarding), never at startup. Shows the system prompt only when the
- * system still allows it. Never throws.
+ * system still allows it. Does nothing (answers `'denied'`) when push is off for this environment. Never throws.
  */
 export async function requestPushPermission(): Promise<PushPermissionResult> {
+  if (!isPushEnabled()) {
+    return 'denied';
+  }
   try {
     return Platform.OS === 'android' ? await requestAndroid() : await requestIos();
   } catch (error) {

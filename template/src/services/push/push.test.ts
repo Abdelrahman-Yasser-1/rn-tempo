@@ -6,6 +6,7 @@ import {
   onMessage,
   onNotificationOpenedApp,
   onTokenRefresh,
+  setAutoInitEnabled,
   type RemoteMessage,
 } from '@react-native-firebase/messaging';
 import { Linking } from 'react-native';
@@ -62,6 +63,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   jest.mocked(getApps).mockReturnValue([APP]);
   jest.replaceProperty(ENV, 'FIREBASE_ENABLED', true);
+  jest.replaceProperty(ENV, 'PUSH_ENABLED', true);
   jest.mocked(getToken).mockResolvedValue(SECRET_TOKEN);
   jest.mocked(getInitialNotification).mockResolvedValue(null);
 });
@@ -95,6 +97,46 @@ describe('push when Firebase is not configured', () => {
     await expect(initPush()).resolves.toBeUndefined();
 
     expect(onMessage).not.toHaveBeenCalled();
+  });
+});
+
+describe('push switched off for the environment', () => {
+  test('PUSH_ENABLED=false does nothing even with Firebase on and configured', async () => {
+    jest.replaceProperty(ENV, 'PUSH_ENABLED', false);
+    const handler = jest.fn();
+    setPushTokenHandler(handler);
+
+    await initPush();
+    await syncPushToken();
+
+    expect(setAutoInitEnabled).not.toHaveBeenCalled();
+    expect(onMessage).not.toHaveBeenCalled();
+    expect(getToken).not.toHaveBeenCalled();
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  test('FIREBASE_ENABLED=false does nothing even with PUSH_ENABLED=true', async () => {
+    jest.replaceProperty(ENV, 'FIREBASE_ENABLED', false);
+
+    await initPush();
+
+    expect(setAutoInitEnabled).not.toHaveBeenCalled();
+    expect(onMessage).not.toHaveBeenCalled();
+  });
+
+  test('a push that is on enables FCM auto initialisation', async () => {
+    await initPush();
+
+    expect(setAutoInitEnabled).toHaveBeenCalledWith(expect.anything(), true);
+  });
+
+  test('a failing auto initialisation is a warning, not a crash', async () => {
+    jest.mocked(setAutoInitEnabled).mockRejectedValueOnce(new Error('native'));
+
+    await expect(initPush()).resolves.toBeUndefined();
+
+    expect(warn).toHaveBeenCalled();
+    expect(onMessage).toHaveBeenCalled();
   });
 });
 

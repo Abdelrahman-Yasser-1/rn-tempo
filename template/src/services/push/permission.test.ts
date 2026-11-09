@@ -32,6 +32,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   jest.mocked(getApps).mockReturnValue([APP]);
   jest.replaceProperty(ENV, 'FIREBASE_ENABLED', true);
+  jest.replaceProperty(ENV, 'PUSH_ENABLED', true);
   jest.mocked(hasPermission).mockResolvedValue(NOT_DETERMINED);
   jest.mocked(getToken).mockResolvedValue('fcm-token');
   setPushTokenHandler(undefined);
@@ -133,6 +134,22 @@ describe('push permission on Android', () => {
     request.mockResolvedValueOnce(result);
 
     await expect(requestPushPermission()).resolves.toBe(expected);
+  });
+});
+
+describe('push permission when push is off', () => {
+  test('answers without asking anything', async () => {
+    jest.replaceProperty(ENV, 'PUSH_ENABLED', false);
+    setPlatform('ios', '18.0');
+    await expect(getPushPermission()).resolves.toBe('undetermined');
+    await expect(requestPushPermission()).resolves.toBe('denied');
+
+    setPlatform('android', 34);
+    const request = jest.spyOn(PermissionsAndroid, 'request');
+    await expect(requestPushPermission()).resolves.toBe('denied');
+
+    expect(request).not.toHaveBeenCalled();
+    expect(requestPermission).not.toHaveBeenCalled();
   });
 });
 

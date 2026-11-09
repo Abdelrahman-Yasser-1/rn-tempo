@@ -12,6 +12,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   jest.mocked(getApps).mockReturnValue([{ name: '[DEFAULT]' }] as never);
   jest.replaceProperty(ENV, 'FIREBASE_ENABLED', true);
+  jest.replaceProperty(ENV, 'PUSH_ENABLED', true);
 });
 
 describe('registerPushBackgroundHandler', () => {
