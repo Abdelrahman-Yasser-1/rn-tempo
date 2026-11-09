@@ -1,0 +1,26 @@
+{
+  "$schema": "https://unpkg.com/@rn-tempo/contracts/schemas/feature-manifest.schema.json",
+  "name": "firebase-core",
+  "title": "Firebase (one project per environment)",
+  "description": "React Native Firebase app, the native wiring and per-environment config files (firebase/<env>/). Required by push-notifications and crashlytics.",
+  "defaultEnabled": false,
+  "requires": [],
+  "conflicts": [],
+  "deleteGlobs": [
+    "src/services/firebase/**",
+    "firebase/**",
+    "firebase.json"
+  ],
+  "dependencies": [
+    "@react-native-firebase/app"
+  ],
+  "devDependencies": [],
+  "envKeys": [
+    "FIREBASE_ENABLED"
+  ],
+  "jsonPatches": [],
+  "postRemove": [
+    "pods"
+  ],
+  "docs": "/docs/features/firebase-core"
+}

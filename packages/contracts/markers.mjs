@@ -15,6 +15,7 @@ export const FEATURE_NAMES = Object.freeze([
   'webview',
   'file-picker',
   'maps',
+  'firebase-core',
   'push-notifications',
 ]);
 
