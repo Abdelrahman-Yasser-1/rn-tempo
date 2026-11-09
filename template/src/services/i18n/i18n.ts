@@ -1,6 +1,9 @@
 import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
+import { ENV, isTest } from '@config/env';
+
+import { getDevOptions } from './devOptions';
 import { DEFAULT_NAMESPACE, resources } from './resources';
 
 /** The app-wide i18next instance (also handed to `I18nextProvider`). */
@@ -23,5 +26,7 @@ export async function initI18nInstance(language: string): Promise<void> {
     initAsync: false,
     // No Suspense boundary exists above the blocking screens; never suspend on a not-ready instance.
     react: { useSuspense: false },
+    // Development only: missing keys are logged, and `debug` follows LOG_LEVEL=debug.
+    ...getDevOptions({ isDev: __DEV__, logLevel: ENV.LOG_LEVEL, isTest }),
   });
 }

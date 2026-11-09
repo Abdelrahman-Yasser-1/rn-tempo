@@ -10,3 +10,5 @@ export const ENV: Env = parseEnv(Config);
 export const isDev = ENV.APP_ENV === 'dev';
 export const isStaging = ENV.APP_ENV === 'staging';
 export const isProd = ENV.APP_ENV === 'prod';
+/** True under Jest, which sets `NODE_ENV=test`; Metro inlines it in app builds. */
+export const isTest = process.env.NODE_ENV === 'test';
