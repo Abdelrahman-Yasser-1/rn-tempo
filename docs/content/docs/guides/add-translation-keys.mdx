@@ -1,6 +1,6 @@
 ---
 title: Add translation keys
-description: Add strings to a namespace in English and Arabic, use typed selector keys, plurals, context and in-sentence formatting, and run the i18n check.
+description: Add strings to a namespace in English and Arabic, use typed keys, plurals, context and in-sentence formatting, and run the i18n check.
 ---
 
 Every user-facing string is a key in both `en` and `ar`. Literal text in JSX is a lint error (`i18next/no-literal-string`).
@@ -17,14 +17,14 @@ Every user-facing string is a key in both `en` and `ar`. Literal text in JSX is 
 
    Put the Arabic text under the same key in `src/locales/ar/auth.json`. The key sets of `en` and `ar` must be identical, except that plural forms differ per language (see below).
 
-3. **Use it** with a typed selector, so a typo or a renamed key is a type error and your editor can jump to the JSON:
+3. **Use it** with a string key. Keys are typed from the English JSON, so a typo or a renamed key is a type error:
 
    ```tsx
    const { t } = useTranslation('auth');
-   <Text>{t(($) => $.login.submitButton)}</Text>;
+   <Text>{t('login.submitButton')}</Text>;
    ```
 
-   From another namespace, pass `ns`: `t(($) => $.actions.close, { ns: 'common' })`. A string key such as `t('login.submitButton')` is a lint error, so the two styles never mix. The shared `Text` takes a selector in `tx`, for example `tx={($) => $.sheet.close}` (the `common` namespace).
+   From another namespace, pass `ns`: `t('actions.close', { ns: 'common' })`. The shared `Text` takes a key in `tx`, for example `tx="sheet.close"` (the `common` namespace). The selector form `t(($) => $.a.b)` is a lint error, so the codebase keeps one style.
 
 4. **Plurals.** Pass `count` and add one key per plural form with the i18next suffixes. English needs `_one` and `_other`. Arabic needs all six: `_zero`, `_one`, `_two`, `_few`, `_many` and `_other`. The check below fails when an Arabic form is missing.
 
@@ -38,10 +38,10 @@ Every user-facing string is a key in both `en` and `ar`. Literal text in JSX is 
    ```
 
    ```tsx
-   t(($) => $.list.count, { count });
+   t('list.count', { count });
    ```
 
-   The selector names the base key (`count`), not a suffixed one. Arabic counts of 0, 1, 2, 3, 11 and 100 select `zero`, `one`, `two`, `few`, `many` and `other`.
+   Use the base key (`list.count`), never a suffixed one. Arabic counts of 0, 1, 2, 3, 11 and 100 select `zero`, `one`, `two`, `few`, `many` and `other`.
 
 5. **Context (gender and role variants).** Name the variants `<key>_male` and `<key>_female` (or `_admin` and `_user`) and pass the value as `context`:
 
@@ -50,7 +50,7 @@ Every user-facing string is a key in both `en` and `ar`. Literal text in JSX is 
    ```
 
    ```tsx
-   t(($) => $.greeting, { name, context: gender });
+   t('greeting', { name, context: gender });
    ```
 
    Any other context value falls back to the base key. The Home greeting is the working example. The config option `extract.preserveContextVariants` keeps the variants, because the context is computed at runtime.
@@ -66,22 +66,20 @@ Every user-facing string is a key in both `en` and `ar`. Literal text in JSX is 
    ```
 
    ```tsx
-   t(($) => $.stock, { stock: 12345 });
-   t(($) => $.slots, { date: new Date() });
+   t('stock', { stock: 12345 });
+   t('slots', { date: new Date() });
    ```
 
    Values that are not part of a sentence (a price on its own line, a table cell) keep using `formatCurrency`, `formatNumber` and `formatDate` from `@shared/utils`. Register an app-specific formatter with `i18n.services.formatter.add` in `services/i18n` only when no built-in does the job.
 
-7. **Keys stored as data.** Zod messages, error maps and slide lists hold keys in a variable. Build them with `keyFromSelector`, which is typed like `t()` and read by the extractor:
+7. **Keys stored as data.** Zod messages, error maps and slide lists hold keys in a variable, where the extractor cannot see a `t()` call. Declare each one with a comment hint next to it; `extract --ci` reads comment hints, so the key is not removed as unused:
 
    ```ts
-   import { keyFromSelector } from 'i18next';
-
-   const NAME_TOO_SHORT = keyFromSelector(($) => $.name.tooShort, { ns: 'validation' });
-   z.string().min(2, NAME_TOO_SHORT);
+   // t('name.tooShort', { ns: 'validation' })
+   z.string().min(2, 'name.tooShort');
    ```
 
-   Form fields translate `error.message` with `toKey` from `@services/i18n/keys`, the one sanctioned cast from text to key. Never build a key with a template literal (``t(`status.${s}`)``): it is a lint error. Map values to keys with an `as const` object instead.
+   Never build a key with a template literal (``t(`status.${s}`)``): it is a lint error. Map values to keys with an `as const` object typed with `ParseKeys<'ns'>` instead.
 
 8. **Run `yarn i18n:check`.** It runs `i18next-cli lint` (concatenation, punctuation and placeholder checks, all errors) and `i18next-cli extract --ci`. The extract step fails when the locale files are out of step with the code: a key removed from code but still in the JSON, a missing Arabic plural form, a missing translation, or conflicting defaults.
 
