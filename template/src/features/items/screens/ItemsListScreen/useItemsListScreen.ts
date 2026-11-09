@@ -33,6 +33,7 @@ export function useItemsListScreen() {
     canCreate,
     search,
     itemsQuery,
+    total: itemsQuery.data?.pages[0]?.total,
     onSearchChange: setSearch,
     onItemPress,
     onCreate,
