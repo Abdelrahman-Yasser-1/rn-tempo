@@ -61,6 +61,12 @@
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Your photos are used when you choose a picture to attach.</string>
 	<!-- @tempo-feature:file-picker:end -->
+	<!-- @tempo-feature:push-notifications:start -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+	<!-- @tempo-feature:push-notifications:end -->
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>
