@@ -25,7 +25,7 @@ export function ErrorState({
     <View accessibilityRole="alert" testID={testID} style={styles.root}>
       <Icon name={isOffline ? 'wifi-off' : 'alert-circle'} size={48} color="error" />
       <Text testID={testID ? `${testID}.title` : undefined} variant="title" align="center">
-        {title ?? t('errorState.title')}
+        {title ?? t(($) => $.errorState.title)}
       </Text>
       <Text testID={testID ? `${testID}.message` : undefined} color="textSecondary" align="center">
         {message ?? t(getErrorMessageKey(error), { ns: 'errors' })}
@@ -34,7 +34,7 @@ export function ErrorState({
         <View style={styles.action}>
           <Button
             testID={testID ? `${testID}.retry` : undefined}
-            title={retryLabel ?? t('errorState.retry')}
+            title={retryLabel ?? t(($) => $.errorState.retry)}
             icon="refresh"
             onPress={onRetry}
           />

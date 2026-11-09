@@ -114,7 +114,7 @@ export function CountryPicker({
       )}
       <Pressable
         accessibilityRole="combobox"
-        accessibilityLabel={label ?? t('countryPicker.label')}
+        accessibilityLabel={label ?? t(($) => $.countryPicker.label)}
         accessibilityValue={{ text: `${selectedName}, ${selectedDial}` }}
         accessibilityState={{ expanded: vm.isOpen, disabled: isDisabled }}
         hitSlop={HIT_SLOP}
@@ -154,13 +154,13 @@ export function CountryPicker({
       >
         <Box style={selectStyles.sheetHeader}>
           <Text variant="title" accessibilityRole="header">
-            {label ?? t('countryPicker.title')}
+            {label ?? t(($) => $.countryPicker.title)}
           </Text>
           <IconButton
             testID={suffix('close')}
             icon="close"
             size="sm"
-            accessibilityLabel={t('countryPicker.close')}
+            accessibilityLabel={t(($) => $.countryPicker.close)}
             onPress={vm.onClose}
           />
         </Box>
@@ -168,8 +168,8 @@ export function CountryPicker({
           <Icon name="search" size="md" color="textSecondary" />
           <BottomSheetTextInput
             testID={suffix('search')}
-            accessibilityLabel={t('countryPicker.searchLabel')}
-            placeholder={t('countryPicker.searchPlaceholder')}
+            accessibilityLabel={t(($) => $.countryPicker.searchLabel)}
+            placeholder={t(($) => $.countryPicker.searchPlaceholder)}
             placeholderTextColor={theme.colors.textSecondary}
             selectionColor={theme.colors.primary}
             maxFontSizeMultiplier={1.5}
@@ -190,8 +190,8 @@ export function CountryPicker({
           ListEmptyComponent={
             <EmptyState
               testID={suffix('empty')}
-              title={t('select.empty.title')}
-              message={t('select.empty.message')}
+              title={t(($) => $.select.empty.title)}
+              message={t(($) => $.select.empty.message)}
             />
           }
           renderItem={({ item }) => (

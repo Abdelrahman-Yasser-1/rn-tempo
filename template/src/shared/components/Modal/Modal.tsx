@@ -31,7 +31,7 @@ export function Modal({
       <View style={styles.overlay}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={t('modal.close')}
+          accessibilityLabel={t(($) => $.modal.close)}
           accessibilityState={{ disabled: !isDismissable }}
           disabled={!isDismissable}
           testID={testID ? `${testID}.backdrop` : undefined}

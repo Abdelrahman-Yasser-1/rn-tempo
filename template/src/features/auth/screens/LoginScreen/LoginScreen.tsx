@@ -15,27 +15,27 @@ export function LoginScreen() {
 
   return (
     <AuthLayout
-      title={t('login.title')}
-      subtitle={t('login.subtitle')}
+      title={t(($) => $.login.title)}
+      subtitle={t(($) => $.login.subtitle)}
       footer={
         <>
           <View style={styles.links}>
             <Button
               variant="ghost"
-              title={t('login.forgotPassword')}
+              title={t(($) => $.login.forgotPassword)}
               onPress={vm.onForgotPassword}
               testID="login.forgot-password-link"
             />
             <Button
               variant="ghost"
-              title={t('login.createAccount')}
+              title={t(($) => $.login.createAccount)}
               onPress={vm.onRegister}
               testID="login.register-link"
             />
           </View>
           {__DEV__ && ENV.API_MOCKING && (
             <Text variant="caption" color="textSecondary" align="center" testID="login.dev-hint">
-              {t('login.devHint', DEV_HINT_CREDENTIALS)}
+              {t(($) => $.login.devHint, DEV_HINT_CREDENTIALS)}
             </Text>
           )}
         </>
@@ -45,7 +45,7 @@ export function LoginScreen() {
       <FormTextField
         control={vm.control}
         name="username"
-        label={t('login.username')}
+        label={t(($) => $.login.username)}
         autoCapitalize="none"
         autoCorrect={false}
         autoComplete="username"
@@ -55,7 +55,7 @@ export function LoginScreen() {
       <FormTextField
         control={vm.control}
         name="password"
-        label={t('login.password')}
+        label={t(($) => $.login.password)}
         secureTextEntry
         autoComplete="current-password"
         returnKeyType="done"
@@ -64,7 +64,7 @@ export function LoginScreen() {
       />
       <FormError message={vm.errorMessage} testID="login.error" />
       <Button
-        title={t('login.submit')}
+        title={t(($) => $.login.submit)}
         fullWidth
         loading={vm.isPending}
         onPress={vm.onSubmit}

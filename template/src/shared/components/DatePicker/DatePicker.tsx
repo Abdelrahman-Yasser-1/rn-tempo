@@ -42,7 +42,7 @@ export function DatePicker({
         disabled={isDisabled}
         readOnly={isReadOnly}
         valueText={vm.valueText}
-        placeholder={placeholder ?? t('datePicker.placeholder')}
+        placeholder={placeholder ?? t(($) => $.datePicker.placeholder)}
         icon="calendar"
         open={vm.isOpen}
         testID={testID}

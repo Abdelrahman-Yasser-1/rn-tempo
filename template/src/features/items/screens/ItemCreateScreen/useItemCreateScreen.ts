@@ -76,10 +76,10 @@ export function useItemCreateScreen() {
   };
 
   const tagOptions = [
-    { value: 'new', label: t('create.tagOptions.new') },
-    { value: 'sale', label: t('create.tagOptions.sale') },
-    { value: 'popular', label: t('create.tagOptions.popular') },
-    { value: 'eco', label: t('create.tagOptions.eco') },
+    { value: 'new', label: t(($) => $.create.tagOptions.new) },
+    { value: 'sale', label: t(($) => $.create.tagOptions.sale) },
+    { value: 'popular', label: t(($) => $.create.tagOptions.popular) },
+    { value: 'eco', label: t(($) => $.create.tagOptions.eco) },
   ];
 
   return {

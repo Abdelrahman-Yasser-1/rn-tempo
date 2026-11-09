@@ -63,7 +63,7 @@ export function InlineMessage({
           testID={suffix('close')}
           icon="close"
           size="sm"
-          accessibilityLabel={t('inlineMessage.close')}
+          accessibilityLabel={t(($) => $.inlineMessage.close)}
           onPress={onClose}
         />
       )}

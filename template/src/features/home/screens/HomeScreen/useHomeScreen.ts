@@ -25,7 +25,9 @@ export function useHomeScreen() {
   // Arabic addresses a man and a woman differently; any other value uses the base `greeting` key.
   const context = gender === 'male' || gender === 'female' ? gender : undefined;
   const greeting =
-    firstName === undefined ? t('greetingFallback') : t('greeting', { name: firstName, context });
+    firstName === undefined
+      ? t(($) => $.greetingFallback)
+      : t(($) => $.greeting, { name: firstName, context });
 
   // @tempo-feature:samples:start
   const onBrowseItems = () => {

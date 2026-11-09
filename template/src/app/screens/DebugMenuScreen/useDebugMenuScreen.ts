@@ -34,7 +34,7 @@ export function useDebugMenuScreen() {
   const [doneMessage, setDoneMessage] = useState('');
 
   const markDone = (): void => {
-    setDoneMessage(t('debug.done'));
+    setDoneMessage(t(($) => $.debug.done));
   };
 
   const onApiUrlSave = () => {

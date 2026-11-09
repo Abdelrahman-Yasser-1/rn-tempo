@@ -27,7 +27,7 @@ export function OfflineBanner({ message, testID }: OfflineBannerProps) {
     >
       <Icon name="wifi-off" size={16} color="onError" />
       <Text testID={testID ? `${testID}.message` : undefined} variant="label" color="onError">
-        {message ?? t('offline.banner')}
+        {message ?? t(($) => $.offline.banner)}
       </Text>
     </View>
   );

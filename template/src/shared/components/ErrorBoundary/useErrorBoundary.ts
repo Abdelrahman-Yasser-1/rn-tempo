@@ -14,9 +14,9 @@ export function useErrorBoundary({ variant, onReset }: Options) {
   const isScreen = variant === 'screen';
 
   return {
-    title: isScreen ? t('errorBoundary.screenTitle') : undefined,
-    retryLabel: isScreen ? t('errorBoundary.tryAgain') : t('errorBoundary.restart'),
-    goBackLabel: t('errorBoundary.goBack'),
+    title: isScreen ? t(($) => $.errorBoundary.screenTitle) : undefined,
+    retryLabel: isScreen ? t(($) => $.errorBoundary.tryAgain) : t(($) => $.errorBoundary.restart),
+    goBackLabel: t(($) => $.errorBoundary.goBack),
     onRetry: isScreen
       ? onReset
       : () => {

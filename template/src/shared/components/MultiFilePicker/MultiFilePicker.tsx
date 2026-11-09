@@ -38,7 +38,7 @@ export function MultiFilePicker({
   const countText =
     maxFiles === undefined
       ? undefined
-      : t('filePicker.count', { current: value.length, max: maxFiles });
+      : t(($) => $.filePicker.count, { current: value.length, max: maxFiles });
 
   return (
     <Box gap="sm">
@@ -51,7 +51,7 @@ export function MultiFilePicker({
         errorText={errorText ?? vm.validationText}
         disabled={isDisabled || vm.isPicking || vm.isFull}
         readOnly={isReadOnly}
-        placeholder={placeholder ?? t('filePicker.add')}
+        placeholder={placeholder ?? t(($) => $.filePicker.add)}
         icon="paperclip"
         open={vm.isOpen}
         testID={testID}

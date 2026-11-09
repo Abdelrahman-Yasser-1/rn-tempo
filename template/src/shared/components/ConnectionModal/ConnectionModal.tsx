@@ -28,14 +28,14 @@ export function ConnectionModal({ testID, ...props }: ConnectionModalProps) {
       <View style={styles.content}>
         <Icon name="wifi-off" size={48} color="error" />
         <Text variant="title" align="center" accessibilityRole="header">
-          {t('connection.title')}
+          {t(($) => $.connection.title)}
         </Text>
         <Text color="textSecondary" align="center">
-          {t('connection.message')}
+          {t(($) => $.connection.message)}
         </Text>
         <Button
           testID={testID ? `${testID}.retry` : undefined}
-          title={t('connection.retry')}
+          title={t(($) => $.connection.retry)}
           icon="refresh"
           onPress={onRetryPress}
         />

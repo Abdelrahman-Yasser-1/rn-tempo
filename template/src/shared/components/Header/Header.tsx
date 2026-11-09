@@ -36,7 +36,7 @@ export function Header({
             testID={testID ? `${testID}.back` : undefined}
             icon="chevron-left"
             variant={buttonVariant}
-            accessibilityLabel={backLabel ?? t('header.back')}
+            accessibilityLabel={backLabel ?? t(($) => $.header.back)}
             onPress={onBack}
           />
         )}

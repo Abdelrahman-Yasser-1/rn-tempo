@@ -24,15 +24,15 @@ export function FileSourceSheet({
 }: FileSourceSheetProps) {
   const { t } = useTranslation();
   const labels: Record<FileSource, string> = {
-    camera: t('filePicker.camera'),
-    library: t('filePicker.library'),
-    files: t('filePicker.browse'),
+    camera: t(($) => $.filePicker.camera),
+    library: t(($) => $.filePicker.library),
+    files: t(($) => $.filePicker.browse),
   };
 
   return (
     <PickerSheet
       visible={isVisible}
-      title={title ?? t('filePicker.sheetTitle')}
+      title={title ?? t(($) => $.filePicker.sheetTitle)}
       testID={testID}
       onClose={onClose}
     >

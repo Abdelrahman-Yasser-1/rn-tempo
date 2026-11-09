@@ -26,7 +26,7 @@ export function Skeleton({ accessibilityLabel, children, testID }: SkeletonProps
         <View
           accessible
           accessibilityRole="progressbar"
-          accessibilityLabel={accessibilityLabel ?? t('loader.label')}
+          accessibilityLabel={accessibilityLabel ?? t(($) => $.loader.label)}
           accessibilityState={{ busy: true }}
           testID={testID}
           style={styles.root}

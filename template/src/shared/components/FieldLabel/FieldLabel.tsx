@@ -32,7 +32,7 @@ export function FieldLabel({
             testID={suffix('required')}
             variant="label"
             color="error"
-            accessibilityLabel={t('field.required')}
+            accessibilityLabel={t(($) => $.field.required)}
           >
             *
           </Text>
@@ -48,7 +48,9 @@ export function FieldLabel({
             content={tooltip}
             visible={isHintOpen}
             onVisibleChange={onHintVisibleChange}
-            accessibilityLabel={t(isHintOpen ? 'field.hideHint' : 'field.showHint')}
+            accessibilityLabel={
+              isHintOpen ? t(($) => $.field.hideHint) : t(($) => $.field.showHint)
+            }
           >
             <Box p="sm">
               <Icon name="info" size="sm" color="textSecondary" />

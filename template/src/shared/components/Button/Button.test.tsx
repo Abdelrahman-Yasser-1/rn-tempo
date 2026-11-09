@@ -124,7 +124,7 @@ describe('Button', () => {
   });
 
   it('renders a translated label from tx', async () => {
-    await renderWithProviders(<Button tx="sheet.close" />);
+    await renderWithProviders(<Button tx={($) => $.sheet.close} />);
     expect(await screen.findByText('Close')).toBeOnTheScreen();
   });
 });

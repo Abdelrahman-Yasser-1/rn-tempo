@@ -57,7 +57,8 @@ export function useOtpScreen(route: OtpRoute) {
           }
           toast.show({
             type: 'success',
-            title: t(purpose === 'register' ? 'otp.registeredTitle' : 'otp.resetTitle'),
+            title:
+              purpose === 'register' ? t(($) => $.otp.registeredTitle) : t(($) => $.otp.resetTitle),
           });
           navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
         },
@@ -86,7 +87,7 @@ export function useOtpScreen(route: OtpRoute) {
   const requestError = verifyError ?? resendError;
   let errorMessage: string | undefined;
   if (isCodeRejected) {
-    errorMessage = t('otp.invalidCode');
+    errorMessage = t(($) => $.otp.invalidCode);
   } else if (requestError !== null) {
     errorMessage = t(getErrorMessageKey(requestError), { ns: 'errors' });
   }

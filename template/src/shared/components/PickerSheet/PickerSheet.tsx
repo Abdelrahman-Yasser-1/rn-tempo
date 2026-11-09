@@ -49,15 +49,15 @@ export function PickerSheet({
         {...props}
         appearsOnIndex={0}
         disappearsOnIndex={-1}
-        accessibilityLabel={t('sheet.close')}
+        accessibilityLabel={t(($) => $.sheet.close)}
       />
     ),
     [t],
   );
 
   // Memoized with stable deps only: gorhom remounts the footer whenever this function changes.
-  const cancelTitle = t('dialog.cancel');
-  const confirmTitle = t('dialog.confirm');
+  const cancelTitle = t(($) => $.dialog.cancel);
+  const confirmTitle = t(($) => $.dialog.confirm);
   const cancelTestID = testID ? `${testID}.cancel` : undefined;
   const confirmTestID = testID ? `${testID}.confirm` : undefined;
   const renderFooter = useCallback(
@@ -105,7 +105,7 @@ export function PickerSheet({
         testID={testID ? `${testID}.close` : undefined}
         icon="close"
         size="sm"
-        accessibilityLabel={t('sheet.close')}
+        accessibilityLabel={t(($) => $.sheet.close)}
         onPress={onDismissPress}
       />
     </Box>

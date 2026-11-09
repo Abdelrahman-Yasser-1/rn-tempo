@@ -61,7 +61,7 @@ export function MapPicker({
         disabled={isDisabled}
         readOnly={isReadOnly}
         valueText={vm.valueText}
-        placeholder={placeholder ?? t('mapPicker.placeholder')}
+        placeholder={placeholder ?? t(($) => $.mapPicker.placeholder)}
         icon="map-pin"
         open={vm.isOpen}
         testID={testID}
@@ -70,7 +70,7 @@ export function MapPicker({
       {vm.isOpen && (
         <PickerSheet
           visible
-          title={sheetTitle ?? label ?? t('mapPicker.title')}
+          title={sheetTitle ?? label ?? t(($) => $.mapPicker.title)}
           testID={suffix('sheet')}
           onConfirm={vm.onConfirm}
           onClose={vm.onClose}
@@ -89,7 +89,7 @@ export function MapPicker({
                 toolbarEnabled={false}
                 rotateEnabled={false}
                 pitchEnabled={false}
-                accessibilityLabel={t('mapPicker.mapLabel')}
+                accessibilityLabel={t(($) => $.mapPicker.mapLabel)}
                 testID={suffix('map')}
                 onRegionChangeComplete={vm.onRegionChangeComplete}
                 onUserLocationChange={vm.onUserLocationChange}
@@ -104,7 +104,7 @@ export function MapPicker({
                   <IconButton
                     icon="current-location"
                     variant="secondary"
-                    accessibilityLabel={t('mapPicker.useMyLocation')}
+                    accessibilityLabel={t(($) => $.mapPicker.useMyLocation)}
                     loading={vm.isLocating}
                     testID={suffix('my-location')}
                     onPress={() => {

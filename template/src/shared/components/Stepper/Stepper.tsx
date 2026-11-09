@@ -22,11 +22,11 @@ function StepItem({ step, index, status, isFirst, isLast, testID }: StepItemProp
   const { t } = useTranslation();
   styles.useVariants({ status });
   // Literal keys, so the i18n extractor sees every one of them.
-  let statusLabel = t('stepper.upcoming');
+  let statusLabel = t(($) => $.stepper.upcoming);
   if (status === 'done') {
-    statusLabel = t('stepper.done');
+    statusLabel = t(($) => $.stepper.done);
   } else if (status === 'current') {
-    statusLabel = t('stepper.current');
+    statusLabel = t(($) => $.stepper.current);
   }
 
   return (
@@ -72,7 +72,7 @@ export function Stepper({ steps, current, variant = 'numbered', testID }: Steppe
   const position = Math.min(Math.max(current, 0), Math.max(total - 1, 0));
 
   if (variant === 'progress') {
-    const label = t('stepper.progress', { current: position + 1, total });
+    const label = t(($) => $.stepper.progress, { current: position + 1, total });
     return (
       <View
         accessible

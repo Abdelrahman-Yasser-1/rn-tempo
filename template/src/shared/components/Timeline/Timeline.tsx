@@ -18,11 +18,11 @@ function Step({ item, isLast, testID }: StepProps) {
   styles.useVariants({ status: item.status });
   const suffix = (part: string) => (testID ? `${testID}.${part}` : undefined);
   // Literal keys, so the i18n extractor sees every one of them.
-  let statusLabel = t('timeline.upcoming');
+  let statusLabel = t(($) => $.timeline.upcoming);
   if (item.status === 'done') {
-    statusLabel = t('timeline.done');
+    statusLabel = t(($) => $.timeline.done);
   } else if (item.status === 'current') {
-    statusLabel = t('timeline.current');
+    statusLabel = t(($) => $.timeline.current);
   }
   const parts = [item.title, item.description, item.timestamp, statusLabel].filter(
     (part) => part !== undefined && part !== '',

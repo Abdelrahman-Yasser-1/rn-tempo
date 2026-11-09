@@ -31,8 +31,8 @@ export function FilterBar({
           accessibilityRole="button"
           accessibilityLabel={
             hasCount
-              ? t('filterBar.filtersActive', { active: filterCount })
-              : t('filterBar.filters')
+              ? t(($) => $.filterBar.filtersActive, { active: filterCount })
+              : t(($) => $.filterBar.filters)
           }
           testID={suffix('button')}
           style={styles.button}

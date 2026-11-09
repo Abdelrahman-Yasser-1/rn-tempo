@@ -17,7 +17,7 @@ export function ListLoadingMore({ label, testID }: ListLoadingMoreProps) {
     <View
       accessible
       accessibilityRole="progressbar"
-      accessibilityLabel={label ?? t('listLoadingMore.label')}
+      accessibilityLabel={label ?? t(($) => $.listLoadingMore.label)}
       accessibilityState={{ busy: true }}
       testID={testID}
       style={styles.root}

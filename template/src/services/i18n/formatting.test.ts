@@ -59,14 +59,14 @@ describe('formatting inside messages', () => {
   test('AC-N-4: the item details sentences format numbers inside the message', async () => {
     await initI18nInstance('en');
 
-    expect(i18n.t('details.stock', { ns: 'items', stock: 12345 })).toBe('In stock: 12,345');
-    expect(i18n.t('details.rating', { ns: 'items', rating: 4.5 })).toBe('Rating: 4.5 / 5');
+    expect(i18n.t(($) => $.details.stock, { ns: 'items', stock: 12345 })).toBe('In stock: 12,345');
+    expect(i18n.t(($) => $.details.rating, { ns: 'items', rating: 4.5 })).toBe('Rating: 4.5 / 5');
   });
 
   test('AC-N-4: the slot sheet title keeps Latin digits in Arabic', async () => {
     await initI18nInstance('ar');
 
-    const title = i18n.t('timeSlot.titleOnDate', { ns: 'common', date: DAY });
+    const title = i18n.t(($) => $.timeSlot.titleOnDate, { ns: 'common', date: DAY });
 
     expect(title).toMatch(/18\D+11\D+2026/);
   });

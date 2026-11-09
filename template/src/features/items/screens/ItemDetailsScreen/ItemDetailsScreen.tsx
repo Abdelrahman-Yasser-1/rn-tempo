@@ -51,19 +51,19 @@ export function ItemDetailsScreen({ route }: ItemDetailsScreenProps) {
         </Text>
         <View style={styles.facts}>
           <Text color="textSecondary" testID="item-details.category">
-            {t('details.category', { category: data.category })}
+            {t(($) => $.details.category, { category: data.category })}
           </Text>
           <Text color="textSecondary" testID="item-details.rating">
-            {t('details.rating', { rating: data.rating })}
+            {t(($) => $.details.rating, { rating: data.rating })}
           </Text>
           <Text color="textSecondary" testID="item-details.stock">
-            {t('details.stock', { stock: data.stock })}
+            {t(($) => $.details.stock, { stock: data.stock })}
           </Text>
         </View>
         <Text testID="item-details.description">{data.description}</Text>
         {/* @tempo-feature:webview:start */}
         <Button
-          title={t('details.openProduct')}
+          title={t(($) => $.details.openProduct)}
           variant="outline"
           icon="external-link"
           fullWidth
@@ -77,7 +77,7 @@ export function ItemDetailsScreen({ route }: ItemDetailsScreenProps) {
 
   return (
     <Screen preset="scroll" contentContainerStyle={styles.content} testID="item-details-screen">
-      <Header title={t('details.title')} onBack={vm.onBack} testID="item-details.header" />
+      <Header title={t(($) => $.details.title)} onBack={vm.onBack} testID="item-details.header" />
       {body}
     </Screen>
   );

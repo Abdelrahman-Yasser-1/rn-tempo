@@ -46,7 +46,7 @@ export function OtpInput({
             isInvalid={isInvalid}
             isAutoFocus={isAutoFocus && index === 0}
             testID={testID ? `${testID}.${String(index)}` : undefined}
-            label={t('otp.digit', { index: index + 1, total: length })}
+            label={t(($) => $.otp.digit, { index: index + 1, total: length })}
             inputRef={(node) => {
               setCellRef(index, node);
             }}

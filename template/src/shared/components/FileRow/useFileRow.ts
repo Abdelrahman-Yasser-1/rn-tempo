@@ -11,14 +11,12 @@ export function useFileRow({ file }: Pick<FileRowProps, 'file'>) {
   const { value, unit } = splitFileSize(file.size);
   const amount = formatNumber(value, i18n.language);
 
-  // The i18n extractor reads only literal keys, so the four unit keys are listed here:
-  // t('filePicker.units.b') t('filePicker.units.kb') t('filePicker.units.mb') t('filePicker.units.gb')
   const sizeText = {
-    B: t('filePicker.units.b', { size: amount }),
-    KB: t('filePicker.units.kb', { size: amount }),
-    MB: t('filePicker.units.mb', { size: amount }),
-    GB: t('filePicker.units.gb', { size: amount }),
+    B: t(($) => $.filePicker.units.b, { size: amount }),
+    KB: t(($) => $.filePicker.units.kb, { size: amount }),
+    MB: t(($) => $.filePicker.units.mb, { size: amount }),
+    GB: t(($) => $.filePicker.units.gb, { size: amount }),
   }[unit];
 
-  return { sizeText, removeLabel: t('filePicker.remove', { name: file.name }) };
+  return { sizeText, removeLabel: t(($) => $.filePicker.remove, { name: file.name }) };
 }
