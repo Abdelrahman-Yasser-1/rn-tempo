@@ -15,10 +15,10 @@ buildscript {
         classpath("com.android.tools.build:gradle")
         classpath("com.facebook.react:react-native-gradle-plugin")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin")
-        // @tempo-feature:push-notifications:start
-        // Only applied when a google-services.json exists (see app/build.gradle).
+        // @tempo-feature:firebase-core:start
+        // Applied in app/build.gradle; a flavor without google-services.json is ignored there.
         classpath("com.google.gms:google-services:4.5.0")
-        // @tempo-feature:push-notifications:end
+        // @tempo-feature:firebase-core:end
     }
 }
 
