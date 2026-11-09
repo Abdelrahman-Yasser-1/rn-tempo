@@ -20,9 +20,7 @@ declare module 'react-native-config' {
   export default Config;
 }
 declare module 'react-i18next' {
-  export function useTranslation(): {
-    t: (selector: (source: { home: { title: string } }) => string) => string;
-  };
+  export function useTranslation(): { t: (key: string) => string };
 }
 declare module 'axios' {
   const axios: { get: (url: string) => Promise<unknown> };
