@@ -141,7 +141,7 @@ describe('scaffold generators', () => {
         'src/navigation/types.ts',
       ]);
       expect(JSON.parse(await read('src/locales/en/items.json')).screens.detail.title).toBe('Detail');
-      expect(await read('src/features/items/screens/DetailScreen/useDetailScreen.ts')).toContain('t(($) => $.screens.detail.title)');
+      expect(await read('src/features/items/screens/DetailScreen/useDetailScreen.ts')).toContain("t('screens.detail.title')");
     });
 
     it('throws FEATURE_NOT_FOUND when the feature does not exist', async () => {
