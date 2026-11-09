@@ -15,19 +15,24 @@ type Props = {
 export function SecurityErrorScreen({ reasons = [] }: Readonly<Props>) {
   const { t } = useTranslation('app');
   const reasonMessages: Record<SecurityReason, string> = {
-    ssl: t('security.reason.ssl'),
-    jailbroken: t('security.reason.jailbroken'),
-    debugMode: t('security.reason.debugMode'),
-    hookDetected: t('security.reason.hookDetected'),
+    ssl: t(($) => $.security.reason.ssl),
+    jailbroken: t(($) => $.security.reason.jailbroken),
+    debugMode: t(($) => $.security.reason.debugMode),
+    hookDetected: t(($) => $.security.reason.hookDetected),
   };
   const details = reasons.map((reason) => reasonMessages[reason]).join('\n');
-  const message = details === '' ? t('security.message') : `${t('security.message')}\n\n${details}`;
+  const message =
+    details === '' ? t(($) => $.security.message) : `${t(($) => $.security.message)}\n\n${details}`;
 
   return (
-    <MessageScreen message={message} testID="security-error-screen" title={t('security.title')}>
+    <MessageScreen
+      message={message}
+      testID="security-error-screen"
+      title={t(($) => $.security.title)}
+    >
       {Platform.OS === 'android' && (
         <MessageButton
-          label={t('security.closeButton')}
+          label={t(($) => $.security.closeButton)}
           onPress={() => {
             BackHandler.exitApp();
           }}

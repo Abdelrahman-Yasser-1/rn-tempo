@@ -50,7 +50,7 @@ export function Loader({
     <View
       accessible
       accessibilityRole="progressbar"
-      accessibilityLabel={label ?? t('loader.label')}
+      accessibilityLabel={label ?? t(($) => $.loader.label)}
       accessibilityState={{ busy: true }}
       accessibilityViewIsModal={isOverlay}
       onStartShouldSetResponder={isOverlay ? blockTouches : undefined}

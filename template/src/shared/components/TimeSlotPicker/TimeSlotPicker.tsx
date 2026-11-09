@@ -48,7 +48,7 @@ export function TimeSlotPicker({
         disabled={isDisabled}
         readOnly={isReadOnly}
         valueText={vm.valueText}
-        placeholder={placeholder ?? t('timeSlot.placeholder')}
+        placeholder={placeholder ?? t(($) => $.timeSlot.placeholder)}
         icon="clock"
         open={vm.isOpen}
         testID={testID}
@@ -86,8 +86,8 @@ export function TimeSlotPicker({
         ) : (
           <EmptyState
             testID={suffix('empty')}
-            title={t('timeSlot.empty.title')}
-            message={t('timeSlot.empty.message')}
+            title={t(($) => $.timeSlot.empty.title)}
+            message={t(($) => $.timeSlot.empty.message)}
           />
         )}
       </PickerSheet>

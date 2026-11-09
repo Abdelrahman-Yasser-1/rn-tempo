@@ -1,8 +1,8 @@
-import type { ParseKeys } from 'i18next';
 import { useController } from 'react-hook-form';
 import type { FieldPath, FieldValues } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
+import { toKey } from '@services/i18n/keys';
 import { Box } from '@shared/components/Box';
 import { Checkbox } from '@shared/components/Checkbox';
 import { FieldMessage } from '@shared/components/FieldMessage';
@@ -20,7 +20,7 @@ export function FormCheckbox<
     field,
     fieldState: { error },
   } = useController({ name, control });
-  const errorText = error?.message ? t(error.message as ParseKeys<'validation'>) : undefined;
+  const errorText = error?.message ? t(toKey(error.message)) : undefined;
   const isInvalid = errorText !== undefined;
   const message = errorText ?? helperText;
   const messageKind = isInvalid ? 'error' : 'helper';

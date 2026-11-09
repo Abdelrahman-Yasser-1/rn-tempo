@@ -62,7 +62,7 @@ export function StepperLayout({
         <View style={styles.action}>
           <Button
             variant="outline"
-            title={t('stepperLayout.back')}
+            title={t(($) => $.stepperLayout.back)}
             fullWidth
             disabled={isBusy}
             onPress={back}
@@ -72,7 +72,7 @@ export function StepperLayout({
       )}
       <View style={styles.action}>
         <Button
-          title={isLast ? t('stepperLayout.submit') : t('stepperLayout.next')}
+          title={isLast ? t(($) => $.stepperLayout.submit) : t(($) => $.stepperLayout.next)}
           fullWidth
           loading={isBusy}
           disabled={!canGoNext}

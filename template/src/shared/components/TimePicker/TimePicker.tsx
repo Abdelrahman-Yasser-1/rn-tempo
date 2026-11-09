@@ -42,7 +42,7 @@ export function TimePicker({
         disabled={isDisabled}
         readOnly={isReadOnly}
         valueText={vm.valueText}
-        placeholder={placeholder ?? t('timePicker.placeholder')}
+        placeholder={placeholder ?? t(($) => $.timePicker.placeholder)}
         icon="clock"
         open={vm.isOpen}
         testID={testID}

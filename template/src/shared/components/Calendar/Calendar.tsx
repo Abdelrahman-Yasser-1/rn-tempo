@@ -80,14 +80,14 @@ export function Calendar(props: CalendarProps) {
           testID={suffix('prev')}
           icon="chevron-left"
           size="sm"
-          accessibilityLabel={t('calendar.previousMonth')}
+          accessibilityLabel={t(($) => $.calendar.previousMonth)}
           disabled={vm.isPickingMonth || !vm.canGoPrevious}
           onPress={vm.onPrevious}
         />
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={vm.title}
-          accessibilityHint={t('calendar.chooseMonthYear')}
+          accessibilityHint={t(($) => $.calendar.chooseMonthYear)}
           accessibilityState={{ expanded: vm.isPickingMonth }}
           testID={suffix('title')}
           style={styles.title}
@@ -100,7 +100,7 @@ export function Calendar(props: CalendarProps) {
           testID={suffix('next')}
           icon="chevron-right"
           size="sm"
-          accessibilityLabel={t('calendar.nextMonth')}
+          accessibilityLabel={t(($) => $.calendar.nextMonth)}
           disabled={vm.isPickingMonth || !vm.canGoNext}
           onPress={vm.onNext}
         />

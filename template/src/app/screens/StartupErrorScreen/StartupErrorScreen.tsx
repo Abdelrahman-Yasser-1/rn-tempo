@@ -12,12 +12,12 @@ export function StartupErrorScreen({ onRetry }: Readonly<Props>) {
 
   return (
     <MessageScreen
-      message={t('startupError.message')}
+      message={t(($) => $.startupError.message)}
       testID="startup-error-screen"
-      title={t('startupError.title')}
+      title={t(($) => $.startupError.title)}
     >
       <MessageButton
-        label={t('startupError.retryButton')}
+        label={t(($) => $.startupError.retryButton)}
         onPress={onRetry}
         testID="startup-error.retry-button"
       />

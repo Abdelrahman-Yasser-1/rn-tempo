@@ -11,14 +11,18 @@ export function SettingsScreen() {
   const { t } = useTranslation('settings');
   const vm = useSettingsScreen();
 
-  const languageNames = { en: t('language.english'), ar: t('language.arabic') };
-  const themeNames = { system: t('theme.system'), light: t('theme.light'), dark: t('theme.dark') };
+  const languageNames = { en: t(($) => $.language.english), ar: t(($) => $.language.arabic) };
+  const themeNames = {
+    system: t(($) => $.theme.system),
+    light: t(($) => $.theme.light),
+    dark: t(($) => $.theme.dark),
+  };
 
   return (
     <Screen preset="scroll" contentContainerStyle={styles.content} testID="settings-screen">
-      <Header title={t('title')} testID="settings.header" />
+      <Header title={t(($) => $.title)} testID="settings.header" />
       <ListItem
-        title={t('language.title')}
+        title={t(($) => $.language.title)}
         subtitle={languageNames[vm.language]}
         left={<Icon name="globe" />}
         showChevron
@@ -28,7 +32,7 @@ export function SettingsScreen() {
         testID="settings.language"
       />
       <ListItem
-        title={t('theme.title')}
+        title={t(($) => $.theme.title)}
         subtitle={themeNames[vm.preference]}
         left={<Icon name="moon" />}
         showChevron
@@ -42,7 +46,7 @@ export function SettingsScreen() {
       {/* @tempo-feature:push-notifications:end */}
       <CrashReportsRow />
       <ListItem
-        title={t('about.title')}
+        title={t(($) => $.about.title)}
         left={<Icon name="info" />}
         showChevron
         showDivider
@@ -51,7 +55,7 @@ export function SettingsScreen() {
         testID="settings.about"
       />
       <ListItem
-        title={t('logout.title')}
+        title={t(($) => $.logout.title)}
         left={<Icon name="logout" color="error" />}
         accessibilityRole="button"
         onPress={vm.onLogoutPress}
@@ -59,9 +63,9 @@ export function SettingsScreen() {
       />
       <Dialog
         visible={vm.isLogoutVisible}
-        title={t('logout.dialogTitle')}
-        message={t('logout.dialogMessage')}
-        confirmLabel={t('logout.confirm')}
+        title={t(($) => $.logout.dialogTitle)}
+        message={t(($) => $.logout.dialogMessage)}
+        confirmLabel={t(($) => $.logout.confirm)}
         destructive
         onConfirm={vm.onLogoutConfirm}
         onCancel={vm.onLogoutCancel}

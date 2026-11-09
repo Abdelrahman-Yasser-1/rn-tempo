@@ -75,8 +75,8 @@ function SelectSearch({ value, onChangeText, testID }: SelectSearchProps) {
       <Icon name="search" size="md" color="textSecondary" />
       <BottomSheetTextInput
         testID={testID}
-        accessibilityLabel={t('select.searchLabel')}
-        placeholder={t('select.searchPlaceholder')}
+        accessibilityLabel={t(($) => $.select.searchLabel)}
+        placeholder={t(($) => $.select.searchPlaceholder)}
         placeholderTextColor={theme.colors.textSecondary}
         selectionColor={theme.colors.primary}
         maxFontSizeMultiplier={1.5}
@@ -156,7 +156,7 @@ export function Select({
           numberOfLines={1}
           color={selected ? 'textPrimary' : 'textSecondary'}
         >
-          {selected?.label ?? placeholder ?? t('select.placeholder')}
+          {selected?.label ?? placeholder ?? t(($) => $.select.placeholder)}
         </Text>
         {!isReadOnly && <Icon name="chevron-down" size="md" color="textSecondary" />}
       </Pressable>
@@ -188,7 +188,7 @@ export function Select({
             testID={testID ? `${testID}.close` : undefined}
             icon="close"
             size="sm"
-            accessibilityLabel={t('select.close')}
+            accessibilityLabel={t(($) => $.select.close)}
             onPress={vm.onClose}
           />
         </Box>
@@ -207,8 +207,8 @@ export function Select({
           ListEmptyComponent={
             <EmptyState
               testID={testID ? `${testID}.empty` : undefined}
-              title={t('select.empty.title')}
-              message={t('select.empty.message')}
+              title={t(($) => $.select.empty.title)}
+              message={t(($) => $.select.empty.message)}
             />
           }
           renderItem={({ item }) => (

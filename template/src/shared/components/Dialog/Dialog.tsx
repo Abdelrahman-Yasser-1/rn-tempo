@@ -39,14 +39,14 @@ export function Dialog({
       <View style={styles.actions}>
         <Button
           testID={testID ? `${testID}.cancel` : undefined}
-          title={cancelLabel ?? t('dialog.cancel')}
+          title={cancelLabel ?? t(($) => $.dialog.cancel)}
           variant="ghost"
           disabled={isLoading}
           onPress={onCancel}
         />
         <Button
           testID={testID ? `${testID}.confirm` : undefined}
-          title={confirmLabel ?? t('dialog.confirm')}
+          title={confirmLabel ?? t(($) => $.dialog.confirm)}
           variant={isDestructive ? 'danger' : 'primary'}
           loading={isLoading}
           onPress={onConfirm}

@@ -1,4 +1,4 @@
-import type { ParseKeys, TOptions } from 'i18next';
+import type { SelectorParam, TOptions } from 'i18next';
 import type { ReactNode } from 'react';
 import type { TextProps as RNTextProps } from 'react-native';
 
@@ -14,9 +14,9 @@ export type TextProps = Readonly<
     /** Color token key; defaults to `textPrimary`. */
     color?: keyof ColorTokens;
     align?: TextAlign;
-    /** i18n key, resolved with `txOptions`. Takes precedence over `children`. */
-    tx?: ParseKeys;
-    txOptions?: TOptions;
+    /** Selector for a `common` key, e.g. `($) => $.sheet.close`, resolved with `txOptions`. Takes precedence over `children`. */
+    tx?: SelectorParam;
+    txOptions?: Omit<TOptions, 'ns'>;
     children?: ReactNode;
   }
 >;

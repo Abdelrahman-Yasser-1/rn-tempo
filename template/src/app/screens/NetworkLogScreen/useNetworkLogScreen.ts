@@ -38,5 +38,5 @@ export function useNetworkLogScreen() {
     [navigation],
   );
 
-  return { title: t('debug.networkLog.title'), viewerTheme, onBack };
+  return { title: t(($) => $.debug.networkLog.title), viewerTheme, onBack };
 }

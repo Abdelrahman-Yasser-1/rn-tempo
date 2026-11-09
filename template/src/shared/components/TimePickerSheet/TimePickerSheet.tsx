@@ -28,7 +28,7 @@ export function TimePickerSheet({
   return (
     <PickerSheet
       visible={isVisible}
-      title={title ?? t('timePicker.title')}
+      title={title ?? t(($) => $.timePicker.title)}
       testID={testID}
       onClose={onClose}
       onConfirm={vm.onConfirmDraft}

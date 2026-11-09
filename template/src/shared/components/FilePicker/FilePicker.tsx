@@ -47,8 +47,8 @@ export function FilePicker({
         errorText={errorText ?? vm.validationText}
         disabled={isDisabled || vm.isPicking}
         readOnly={isReadOnly}
-        valueText={file === undefined ? undefined : t('filePicker.replace')}
-        placeholder={placeholder ?? t('filePicker.placeholder')}
+        valueText={file === undefined ? undefined : t(($) => $.filePicker.replace)}
+        placeholder={placeholder ?? t(($) => $.filePicker.placeholder)}
         icon="paperclip"
         open={vm.isOpen}
         testID={testID}

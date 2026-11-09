@@ -1,18 +1,21 @@
+import { keyFromSelector } from 'i18next';
 import { z } from 'zod';
 
 import { UserSchema } from '@features/auth/types';
 import { emailSchema, nameSchema, passwordSchema } from '@shared/utils';
 
-// Keys of the `validation` namespace, declared here so the i18n extractor keeps them.
-// t('username.required', { ns: 'validation', defaultValue: 'Enter your username.' })
-// t('password.required', { ns: 'validation', defaultValue: 'Enter your password.' })
-// t('password.mismatch', { ns: 'validation', defaultValue: 'Passwords do not match.' })
+// Messages are keys of the `validation` namespace (see `@shared/utils/schemas`).
+const MESSAGES = {
+  usernameRequired: keyFromSelector(($) => $.username.required, { ns: 'validation' }),
+  passwordRequired: keyFromSelector(($) => $.password.required, { ns: 'validation' }),
+  passwordMismatch: keyFromSelector(($) => $.password.mismatch, { ns: 'validation' }),
+};
 
-const usernameSchema = z.string().trim().min(1, 'username.required');
+const usernameSchema = z.string().trim().min(1, MESSAGES.usernameRequired);
 
 export const LoginRequestSchema = z.object({
   username: usernameSchema,
-  password: z.string().min(1, 'password.required'),
+  password: z.string().min(1, MESSAGES.passwordRequired),
 });
 
 export const LoginResponseSchema = UserSchema.extend({
@@ -31,7 +34,7 @@ export const RegisterRequestSchema = z
   })
   .refine((value) => value.password === value.confirmPassword, {
     path: ['confirmPassword'],
-    message: 'password.mismatch',
+    message: MESSAGES.passwordMismatch,
   });
 
 /** dummyjson echoes the created user with a new id; only the id is relied upon. */

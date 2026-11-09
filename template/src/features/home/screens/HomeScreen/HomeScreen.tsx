@@ -12,7 +12,7 @@ export function HomeScreen() {
 
   return (
     <Screen preset="scroll" contentContainerStyle={styles.content} testID="home-screen">
-      <Header title={t('title')} testID="home.header" />
+      <Header title={t(($) => $.title)} testID="home.header" />
       <OfflineBanner testID="home.offline-banner" />
       <View style={styles.body}>
         <Text variant="h1" accessibilityRole="header" testID="home.greeting">
@@ -22,12 +22,12 @@ export function HomeScreen() {
         <Card
           variant="outlined"
           accessibilityRole="button"
-          accessibilityLabel={t('browseItems')}
+          accessibilityLabel={t(($) => $.browseItems)}
           onPress={vm.onBrowseItems}
           testID="home.browse-items"
         >
-          <Text variant="title">{t('browseItems')}</Text>
-          <Text color="textSecondary">{t('browseItemsHint')}</Text>
+          <Text variant="title">{t(($) => $.browseItems)}</Text>
+          <Text color="textSecondary">{t(($) => $.browseItemsHint)}</Text>
         </Card>
         {/* @tempo-feature:samples:end */}
       </View>

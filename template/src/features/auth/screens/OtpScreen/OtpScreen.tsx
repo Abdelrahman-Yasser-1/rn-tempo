@@ -19,10 +19,10 @@ export function OtpScreen({ route }: OtpScreenProps) {
 
   return (
     <AuthLayout
-      headerTitle={t('header.otp')}
+      headerTitle={t(($) => $.header.otp)}
       onBack={vm.onBack}
-      title={t('otp.title')}
-      subtitle={t('otp.subtitle', { target: vm.maskedTarget })}
+      title={t(($) => $.otp.title)}
+      subtitle={t(($) => $.otp.subtitle, { target: vm.maskedTarget })}
       testID="otp-screen"
     >
       <OtpInput
@@ -39,8 +39,8 @@ export function OtpScreen({ route }: OtpScreenProps) {
         variant="ghost"
         title={
           vm.isCooldownRunning
-            ? t('otp.resendIn', { seconds: vm.cooldownRemaining })
-            : t('otp.resend')
+            ? t(($) => $.otp.resendIn, { seconds: vm.cooldownRemaining })
+            : t(($) => $.otp.resend)
         }
         disabled={vm.isCooldownRunning}
         loading={vm.isResending}

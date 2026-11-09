@@ -51,7 +51,7 @@ export function ItemsListScreen() {
 
   const createAction: HeaderAction = {
     icon: 'plus',
-    accessibilityLabel: t('list.create'),
+    accessibilityLabel: t(($) => $.list.create),
     onPress: vm.onCreate,
     testID: 'items-list.create-button',
   };
@@ -59,7 +59,7 @@ export function ItemsListScreen() {
   return (
     <Screen preset="fixed" testID="items-list-screen">
       <Header
-        title={t('list.title')}
+        title={t(($) => $.list.title)}
         onBack={vm.onBack}
         actions={vm.canCreate ? [createAction] : undefined}
         testID="items-list.header"
@@ -68,8 +68,8 @@ export function ItemsListScreen() {
         <TextField
           value={vm.search}
           onChangeText={vm.onSearchChange}
-          placeholder={t('list.searchPlaceholder')}
-          accessibilityLabel={t('list.searchLabel')}
+          placeholder={t(($) => $.list.searchPlaceholder)}
+          accessibilityLabel={t(($) => $.list.searchLabel)}
           autoCapitalize="none"
           autoCorrect={false}
           returnKeyType="search"
@@ -78,7 +78,7 @@ export function ItemsListScreen() {
       </View>
       {vm.total === undefined ? null : (
         <Text color="textSecondary" style={styles.count} testID="items-list.count">
-          {t('list.count', { count: vm.total })}
+          {t(($) => $.list.count, { count: vm.total })}
         </Text>
       )}
       <View style={styles.body}>
@@ -89,8 +89,8 @@ export function ItemsListScreen() {
           keyExtractor={getItemKey}
           ListEmptyComponent={
             <EmptyState
-              title={t('list.emptyTitle')}
-              message={t('list.emptyMessage')}
+              title={t(($) => $.list.emptyTitle)}
+              message={t(($) => $.list.emptyMessage)}
               testID="items-list.empty"
             />
           }

@@ -17,12 +17,12 @@ export function EditProfileScreen() {
       contentContainerStyle={styles.content}
       testID="edit-profile-screen"
     >
-      <Header title={t('editTitle')} onBack={vm.onBack} testID="edit-profile.header" />
+      <Header title={t(($) => $.editTitle)} onBack={vm.onBack} testID="edit-profile.header" />
       <View style={styles.body}>
         <FormTextField
           control={vm.control}
           name="firstName"
-          label={t('firstName')}
+          label={t(($) => $.firstName)}
           autoComplete="given-name"
           returnKeyType="next"
           testID="edit-profile.first-name-input"
@@ -30,7 +30,7 @@ export function EditProfileScreen() {
         <FormTextField
           control={vm.control}
           name="lastName"
-          label={t('lastName')}
+          label={t(($) => $.lastName)}
           autoComplete="family-name"
           returnKeyType="next"
           testID="edit-profile.last-name-input"
@@ -38,7 +38,7 @@ export function EditProfileScreen() {
         <FormTextField
           control={vm.control}
           name="email"
-          label={t('email')}
+          label={t(($) => $.email)}
           keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
@@ -48,7 +48,7 @@ export function EditProfileScreen() {
           testID="edit-profile.email-input"
         />
         <Button
-          title={t('save')}
+          title={t(($) => $.save)}
           fullWidth
           loading={vm.isPending}
           onPress={vm.onSubmit}

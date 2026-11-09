@@ -14,7 +14,7 @@ export function useCreateItemMutation() {
   return useMutation({
     mutationFn: createItem,
     onSuccess: async () => {
-      toast.show({ type: 'success', title: t('create.success') });
+      toast.show({ type: 'success', title: t(($) => $.create.success) });
       await queryClient.invalidateQueries({ queryKey: itemKeys.lists() });
     },
     onError: (error) => {

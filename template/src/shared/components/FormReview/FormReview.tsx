@@ -33,13 +33,15 @@ export function FormReview({ sections, onEdit, layout = 'horizontal', testID }: 
               </Text>
               {onEdit !== undefined && (
                 <Link
-                  accessibilityLabel={t('formReview.editSection', { section: section.title })}
+                  accessibilityLabel={t(($) => $.formReview.editSection, {
+                    section: section.title,
+                  })}
                   testID={sectionTestID ? `${sectionTestID}.edit` : undefined}
                   onPress={() => {
                     onEdit(section.key);
                   }}
                 >
-                  {t('formReview.edit')}
+                  {t(($) => $.formReview.edit)}
                 </Link>
               )}
             </View>

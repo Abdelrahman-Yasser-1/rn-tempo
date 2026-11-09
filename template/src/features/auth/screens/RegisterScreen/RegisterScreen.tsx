@@ -11,16 +11,16 @@ export function RegisterScreen() {
 
   return (
     <AuthLayout
-      headerTitle={t('header.register')}
+      headerTitle={t(($) => $.header.register)}
       onBack={vm.onBack}
-      title={t('register.title')}
-      subtitle={t('register.subtitle')}
+      title={t(($) => $.register.title)}
+      subtitle={t(($) => $.register.subtitle)}
       testID="register-screen"
     >
       <FormTextField
         control={vm.control}
         name="firstName"
-        label={t('register.firstName')}
+        label={t(($) => $.register.firstName)}
         autoComplete="given-name"
         returnKeyType="next"
         testID="register.first-name-input"
@@ -28,7 +28,7 @@ export function RegisterScreen() {
       <FormTextField
         control={vm.control}
         name="lastName"
-        label={t('register.lastName')}
+        label={t(($) => $.register.lastName)}
         autoComplete="family-name"
         returnKeyType="next"
         testID="register.last-name-input"
@@ -36,7 +36,7 @@ export function RegisterScreen() {
       <FormTextField
         control={vm.control}
         name="username"
-        label={t('register.username')}
+        label={t(($) => $.register.username)}
         autoCapitalize="none"
         autoCorrect={false}
         autoComplete="username-new"
@@ -46,7 +46,7 @@ export function RegisterScreen() {
       <FormTextField
         control={vm.control}
         name="email"
-        label={t('register.email')}
+        label={t(($) => $.register.email)}
         keyboardType="email-address"
         autoCapitalize="none"
         autoCorrect={false}
@@ -57,7 +57,7 @@ export function RegisterScreen() {
       <FormTextField
         control={vm.control}
         name="password"
-        label={t('register.password')}
+        label={t(($) => $.register.password)}
         secureTextEntry
         autoComplete="new-password"
         returnKeyType="next"
@@ -66,7 +66,7 @@ export function RegisterScreen() {
       <FormTextField
         control={vm.control}
         name="confirmPassword"
-        label={t('register.confirmPassword')}
+        label={t(($) => $.register.confirmPassword)}
         secureTextEntry
         autoComplete="new-password"
         returnKeyType="done"
@@ -75,7 +75,7 @@ export function RegisterScreen() {
       />
       <FormError message={vm.errorMessage} testID="register.error" />
       <Button
-        title={t('register.submit')}
+        title={t(($) => $.register.submit)}
         fullWidth
         loading={vm.isPending}
         onPress={vm.onSubmit}
