@@ -2358,6 +2358,30 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - RNFBCrashlytics (27.1.0):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-bridging
+    - React-Core
+    - React-Core-prebuilt
+    - React-cxxstableapi
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - RNFBApp
+    - Yoga
   - RNFBMessaging (27.1.0):
     - hermes-engine
     - RCTRequired
@@ -2878,6 +2902,7 @@ DEPENDENCIES:
   - "RNDateTimePicker (from `../node_modules/@react-native-community/datetimepicker`)"
   - "RNFastImage (from `../node_modules/@d11/react-native-fast-image`)"
   - "RNFBApp (from `../node_modules/@react-native-firebase/app`)"
+  - "RNFBCrashlytics (from `../node_modules/@react-native-firebase/crashlytics`)"
   - "RNFBMessaging (from `../node_modules/@react-native-firebase/messaging`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNKeychain (from `../node_modules/react-native-keychain`)
@@ -3113,6 +3138,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@d11/react-native-fast-image"
   RNFBApp:
     :path: "../node_modules/@react-native-firebase/app"
+  RNFBCrashlytics:
+    :path: "../node_modules/@react-native-firebase/crashlytics"
   RNFBMessaging:
     :path: "../node_modules/@react-native-firebase/messaging"
   RNGestureHandler:
@@ -3246,6 +3273,7 @@ SPEC CHECKSUMS:
   RNDateTimePicker: e73470b2dd1725e6092fd9f255eb5508ff616ad5
   RNFastImage: 25f87dde869e11156daeef98b4cee2371023407e
   RNFBApp: 3af4345aa6ee7495bc826962d3db896a0fe5f4ad
+  RNFBCrashlytics: c4bb4c65f80db40673352841715f38fb832d4512
   RNFBMessaging: 10ccf6dbd663afcffcc2e2cd5396da5201df87ab
   RNGestureHandler: abdc2d49ac3970908acd127980b429d377927ee1
   RNKeychain: c151043ce48ce98b038cff539b916f5e2fb7456a
@@ -3263,6 +3291,6 @@ SPEC CHECKSUMS:
   Unistyles: 10d7129d2de2cae63e9054b413437ed6ce292c9e
   Yoga: d1c536142c5ff8ec8cd856ab2a7c227a1d875c8e
 
-PODFILE CHECKSUM: 7d4d23dc1ba40bef670172fff8c4313ee17b7f87
+PODFILE CHECKSUM: 655489ac7ba27176e17003edc06cd99151113907
 
 COCOAPODS: 1.15.2
