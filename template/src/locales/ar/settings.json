@@ -6,6 +6,10 @@
     "title": "حول التطبيق",
     "version": "الإصدار"
   },
+  "crashReports": {
+    "description": "أرسل تقارير أعطال مجهولة لتسريع إصلاح المشكلات.",
+    "title": "مشاركة تقارير الأعطال"
+  },
   "language": {
     "arabic": "العربية",
     "english": "English",

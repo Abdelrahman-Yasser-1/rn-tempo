@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
+import { CrashReportsRow } from '@features/settings/components/CrashReportsRow';
 import { NotificationsRow } from '@features/settings/components/NotificationsRow'; // @tempo-feature:push-notifications
 import { Dialog, Header, Icon, ListItem, Screen } from '@shared/components';
 
@@ -39,6 +40,7 @@ export function SettingsScreen() {
       {/* @tempo-feature:push-notifications:start */}
       <NotificationsRow />
       {/* @tempo-feature:push-notifications:end */}
+      <CrashReportsRow />
       <ListItem
         title={t('about.title')}
         left={<Icon name="info" />}

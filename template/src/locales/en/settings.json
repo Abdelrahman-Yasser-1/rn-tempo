@@ -6,6 +6,10 @@
     "title": "About",
     "version": "Version"
   },
+  "crashReports": {
+    "description": "Send anonymous crash reports so problems get fixed faster.",
+    "title": "Share crash reports"
+  },
   "language": {
     "arabic": "العربية",
     "english": "English",
