@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type {
+  ArrayPath,
   DeepPartial,
   FieldErrors,
   FieldValues,
@@ -81,6 +82,31 @@ export type BoundFormField<T extends FieldValues> = {
     FieldTypeMap[K];
 }[FieldTypeName];
 
+/** A field inside a repeat item: bound to `<repeat>.<index>.<name>`, with no cross-field behaviors. */
+export type RepeatItemField = {
+  [K in FieldTypeName]: Readonly<{ type: K; name: string; defaultValue?: unknown }> &
+    FieldTexts &
+    FieldCommon &
+    FieldTypeMap[K];
+}[FieldTypeName];
+
+/** A list of items that each hold the same `fields`, added and removed by the user (`useFieldArray`). */
+export type RepeatFieldConfig<T extends FieldValues> = Readonly<{
+  type: 'repeat';
+  name: ArrayPath<T>;
+  fields: readonly RepeatItemField[];
+  /** The list starts with this many items and cannot go below it. Default 0. */
+  minItems?: number;
+  /** The add button is disabled at this many items. Default: no limit. */
+  maxItems?: number;
+  /** Heading of each item, followed by its number. */
+  itemLabel?: FormText;
+  addLabel?: FormText;
+  testID?: string;
+}> &
+  FieldTexts &
+  FieldVisibility<T>;
+
 /** Decorative or informational content outside the form state. */
 export type CustomFieldConfig<T extends FieldValues> = Readonly<{
   type: 'custom';
@@ -107,7 +133,11 @@ export type GroupFieldConfig<T extends FieldValues> = Readonly<{
   FieldVisibility<T>;
 
 export type FormField<T extends FieldValues> =
-  BoundFormField<T> | CustomFieldConfig<T> | RowFieldConfig<T> | GroupFieldConfig<T>;
+  | BoundFormField<T>
+  | RepeatFieldConfig<T>
+  | CustomFieldConfig<T>
+  | RowFieldConfig<T>
+  | GroupFieldConfig<T>;
 
 export type FormChangeEvent<T extends FieldValues> = Readonly<{
   name?: Path<T>;

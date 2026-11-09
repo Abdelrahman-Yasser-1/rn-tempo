@@ -1,4 +1,4 @@
-export { fieldRenderers } from './FieldRegistry';
+export { fieldRenderers, renderField } from './FieldRegistry';
 export type {
   FieldRenderArgs,
   FieldRendererMap,

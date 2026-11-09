@@ -34,6 +34,8 @@ Everything `index.ts` exports. `yarn lint:readmes` fails when this list and the 
 - `FormText`: A `forms` key, `ns:key` or an `{ en, ar }` object.
 - `GroupFieldConfig`: Children stacked in a container.
 - `LocalizedText`: An `{ en, ar }` text object.
+- `RepeatFieldConfig`: A list of items the user adds and removes, between `minItems` and `maxItems`.
+- `RepeatItemField`: A field inside a repeat item.
 - `RowFieldConfig`: Children side by side.
 - `StepDirection`: `next` or `back`.
 - `ValidationMode`: When react-hook-form validates.

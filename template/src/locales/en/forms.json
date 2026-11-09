@@ -1,4 +1,10 @@
 {
+  "repeat": {
+    "add": "Add item",
+    "itemHeading": "{{label}} {{index}}",
+    "itemLabel": "Item",
+    "remove": "Remove {{label}} {{index}}"
+  },
   "validation": {
     "email": "Enter a valid email address.",
     "invalid": "This value is not valid.",
