@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
+import { isPushEnabled } from '@services/push/firebase';
 import { Icon, ListItem } from '@shared/components';
 
 import { useNotificationsRow } from './useNotificationsRow';
@@ -11,10 +12,14 @@ const SUBTITLE_KEYS = {
   blocked: 'notifications.blocked',
 } as const;
 
-/** Settings row with a switch for push notifications. */
+/** Settings row with a switch for push notifications. Hidden when push is off for this environment. */
 export function NotificationsRow() {
   const { t } = useTranslation('settings');
   const vm = useNotificationsRow();
+
+  if (!isPushEnabled()) {
+    return null;
+  }
 
   return (
     <ListItem

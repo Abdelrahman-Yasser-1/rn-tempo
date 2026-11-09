@@ -1,5 +1,6 @@
 import { screen, waitFor } from '@testing-library/react-native';
 
+import { ENV } from '@config/env'; // @tempo-feature:push-notifications
 import { useAuthStore } from '@features/auth';
 import { createUser } from '@test-utils/factories/user';
 import { renderWithProviders } from '@test-utils/renderWithProviders';
@@ -50,10 +51,20 @@ describe('SettingsScreen', () => {
   });
 
   // @tempo-feature:push-notifications:start
-  test('shows the Notifications row between Theme and About', async () => {
+  test('shows the Notifications row between Theme and About when push is on', async () => {
+    jest.replaceProperty(ENV, 'FIREBASE_ENABLED', true);
+    jest.replaceProperty(ENV, 'PUSH_ENABLED', true);
     await renderSettings();
 
     expect(await screen.findByText('Notifications')).toBeOnTheScreen();
+  });
+
+  test('hides the Notifications row when push is off for the environment', async () => {
+    jest.replaceProperty(ENV, 'PUSH_ENABLED', false);
+    await renderSettings();
+
+    expect(await screen.findByText('About')).toBeOnTheScreen();
+    expect(screen.queryByText('Notifications')).not.toBeOnTheScreen();
   });
   // @tempo-feature:push-notifications:end
 
