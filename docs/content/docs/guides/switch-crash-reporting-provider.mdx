@@ -1,0 +1,56 @@
+---
+title: Switch crash reporting provider
+description: The files and env keys to change when you move from Crashlytics to Sentry, or back, and how to turn reporting off.
+---
+
+The app calls one facade, so a switch never touches a screen. What changes is one adapter, one registry entry, one env value and the native setup of the two providers. Do the steps in order and finish with the check list.
+
+## Crashlytics to Sentry
+
+1. **Add Sentry** by following the [Sentry recipe](/docs/recipes/sentry): SDK, `SENTRY_DSN`, `adapters/sentry.ts`, the `sentry` name in `src/config/crashReporters.ts`, the registry entry, Metro, Android and iOS steps, CI secrets.
+2. **Point the environments at it.** In `.env.staging` and `.env.prod` set `CRASH_REPORTER=sentry` and `SENTRY_DSN=...`. Dev stays `CRASH_REPORTING_ENABLED=false`, `CRASH_REPORTER=none`.
+3. **Remove Crashlytics** (optional but tidy):
+
+   <CommandTabs yarn="tempo feature remove crashlytics" npm="npx tempo feature remove crashlytics" />
+
+   The command removes: `src/services/crash-reporting/adapters/crashlytics.ts` (and its test), the `crashlytics` registry entry and provider name (the marker lines), the Jest mock, `firebase-crashlytics-gradle` in `android/build.gradle`, the plugin and `androidComponents` block in `android/app/build.gradle`, the Fastlane dSYM step, `@react-native-firebase/crashlytics`, then runs `pod install`.
+4. **Keep or remove Firebase.** `firebase-core` stays: push may use it. If nothing else needs it, remove it after `push-notifications`.
+5. **Leave the Xcode phase.** The **Upload Crashlytics dSYMs** build phase stays and does nothing without a bundled plist or the Firebase tool. Remove it by hand in Xcode, and its block in `scripts/native/ios-envs.rb`, if you want a clean project.
+
+## Sentry to Crashlytics
+
+1. **Add the module:**
+
+   <CommandTabs yarn="tempo feature add crashlytics" npm="npx tempo feature add crashlytics" />
+
+   It adds `firebase-core` if needed, the adapter, the registry entry and name, the Gradle plugin, the Fastlane step and the dependency, then runs `pod install`. Set up the Firebase files first ([Firebase per environment](/docs/features/firebase-core)).
+2. **Point the environments at it.** In `.env.staging` and `.env.prod` set `FIREBASE_ENABLED=true` and `CRASH_REPORTER=crashlytics`.
+3. **Remove Sentry by hand** (it is a recipe, so the CLI does not know it):
+   - `yarn remove @sentry/react-native`
+   - delete `src/services/crash-reporting/adapters/sentry.ts` (and its test) and the `sentry` entry in `src/config/crashReporters.ts` and `registry.ts`
+   - delete `SENTRY_DSN` from `parseEnv.ts`, `.env.*` and CI secrets
+   - the Sentry Jest mock in `jest.setup.ts`
+   - `withSentryConfig` in `metro.config.js`
+   - Android: `apply from: ".../sentry.gradle"`, the `io.sentry.android.gradle` plugin and `sentry { }` block, the classpath line, `android/sentry.properties`
+   - iOS: restore the **Bundle React Native code and images** script to the `react-native-xcode.sh` version, delete the debug files phase, `ios/sentry.properties`
+   - `ownedImports` entry for `@sentry/react-native` in your ESLint config
+   - CI: `SENTRY_AUTH_TOKEN` and friends
+4. Run `yarn pods`.
+
+## Turning crash reporting off
+
+Set `CRASH_REPORTING_ENABLED=false` (or `CRASH_REPORTER=none`) in the env files. Nothing else is needed: the provider is never started, the Settings switch and the debug menu button disappear.
+
+## What stays the same in every direction
+
+- All app code and tests that use `@services/crash-reporting/crashReporting`.
+- The opt-out key `app.crash-reports-opt-out`: a user's choice survives a switch.
+- The `app_env` tag.
+
+## Check list after a switch
+
+- [ ] `yarn verify` passes (types, ownership of the SDK import, env keys in step).
+- [ ] `yarn lint:env` passes: every env file has the keys of `.env.example`.
+- [ ] A release build of staging reports a test error to the **new** provider ([Crashlytics](/docs/features/crashlytics#verify), [Sentry](/docs/recipes/sentry#verify)).
+- [ ] Nothing arrives after turning the Settings switch off.
+- [ ] The old provider no longer receives reports, and its CI upload secrets are removed.

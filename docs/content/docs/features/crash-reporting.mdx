@@ -1,0 +1,96 @@
+---
+title: Crash reporting
+description: A provider-neutral CrashReporter interface with per-environment and per-user switches. Crashlytics is a module, Sentry is a recipe.
+---
+
+## What it is
+
+Crash reporting is always part of the template, but it ships **no SDK**. The app depends on one interface, `CrashReporter`; a provider adapter implements it. Today there are two providers:
+
+- **None** (`CRASH_REPORTER=none`, the default): every call does nothing.
+- **Crashlytics**: the optional [`crashlytics`](/docs/features/crashlytics) module.
+- **Sentry**: a [recipe](/docs/recipes/sentry) with a complete adapter you paste in.
+
+Switching provider changes one adapter file and one registry entry; no screen changes. See [Switching providers](/docs/guides/switch-crash-reporting-provider).
+
+## Architecture
+
+All of it is in `src/services/crash-reporting/`:
+
+| File | Role |
+| --- | --- |
+| `types.ts` | `CrashReporter` (`init`, `setEnabled`, `discardPending`, `recordError`, `log`, `setUser`, `setAttributes`), `CrashContext`, `CrashReporterProvider`. |
+| `noop.ts` | The reporter of `CRASH_REPORTER=none`. |
+| `registry.ts` | Provider name to `{ create, isAvailable }`. |
+| `crashReporting.ts` | The **facade** the app calls: `initCrashReporting`, `recordError`, `logBreadcrumb`, `setCrashUser`, `setCrashAttributes`, opt-out helpers. It decides whether collection is on. |
+| `logSink.ts` | A logger sink that turns warnings and bugs into breadcrumbs and reports. |
+| `globalErrorHandler.ts` | A global JavaScript error handler in front of the provider's, which passes on only a redacted copy of an uncaught error. |
+| `adapters/<name>.ts` | The only files that import a provider SDK (`DEPENDENCY_POLICY` enforces it). |
+
+`src/config/crashReporters.ts` holds the provider names that `CRASH_REPORTER` accepts. The registry is typed by those names, so adding a name fails to compile until its provider is registered.
+
+## When does it report?
+
+Collection is **off until the app turns it on**, and it is on only when all of these hold:
+
+| Condition | Where it comes from |
+| --- | --- |
+| `CRASH_REPORTING_ENABLED=true` | `.env.<env>` |
+| `CRASH_REPORTER` is not `none` | `.env.<env>` |
+| The provider can run here (for example Firebase is on for Crashlytics) | the provider's `isAvailable` |
+| A release build (`!__DEV__`) | **Debug builds never report**, whatever the env says |
+| The user has not opted out | Settings, "Share crash reports" |
+
+| Environment | `CRASH_REPORTING_ENABLED` | `CRASH_REPORTER` |
+| --- | --- | --- |
+| dev | `false` | `none` |
+| staging | `true` | `crashlytics` (or `sentry`) |
+| prod | `true` | `crashlytics` (or `sentry`) |
+
+These are the recommended values; the committed `.env.dev` and `.env.example` hold the dev ones, and you set staging and prod in your own env files.
+
+`initCrashReporting()` runs as the bootstrap step `crash-reporting`: early, after storage (it reads the opt-out), and never fatal. It first switches the provider's collection **off**, because SDKs such as Crashlytics remember that switch across launches; a build that must not report (debug, not configured, user opted out) also deletes reports kept on the device. Only a configured release build with no opt-out starts the provider and turns collection back on. If the provider fails to start, collection stays off. With `CRASH_REPORTER=none`, or a provider that cannot run (Firebase off), no SDK is touched.
+
+## How reports are tagged
+
+- Every report carries **`app_env`** (`dev`, `staging` or `prod`). The facade sets it at start and adds it to every `recordError`; a caller cannot override it.
+- The provider also gets the version and bundle id at start (`CrashContext`). The native build number is not readable from JavaScript without a native module, so the template leaves it out; the SDKs record the native build themselves. If your app already knows it, add `buildNumber` to the context built in `initCrashReporting`.
+- Providers have their own environment field. Sentry uses `environment`; Crashlytics has no such field, so filter by the `app_env` key. Better still, with one Firebase project per environment the project is the environment.
+
+## What feeds it
+
+- **Handled bugs.** `logError(message, error)` logs at `error` when the error is not operational (`isOperational !== true`). The log sink records it as a non-fatal report. `ErrorBoundary` already calls `logError`, so render errors are reported.
+- **Expected failures.** Offline, timeouts and 4xx/5xx (`ApiError.isOperational`) log at `warn`, and warnings become **breadcrumbs** (`warn: <message>`), not reports.
+- **Direct calls.** `recordError(error, context)`, `logBreadcrumb(message)`, `setCrashAttributes({...})`.
+- **Unhandled crashes.** The provider installs its own native and JavaScript handlers and records them. The facade reports nothing itself, so nothing is reported twice, but once the provider has started it puts a handler in front of the provider's JavaScript one that hands on a **redacted copy** of the error (the same redaction as the logger). With Crashlytics see the handler chaining note on its page.
+
+## Privacy
+
+- Log sinks receive **already redacted** entries; the crash sink uses only the message and the error, never other arguments.
+- Uncaught JavaScript errors reach the provider's handler only as redacted copies; a thrown non-Error value keeps only its redacted text (strings) or its type.
+- Nothing about the user is sent unless the app calls `setCrashUser(id)`. Pass an opaque id, never an email or a name.
+- Attributes are flat strings. Do not put personal data in them.
+- Users can opt out in **Settings, Share crash reports** (shown only where reporting is configured). The choice is stored under `app.crash-reports-opt-out`, read before collection starts and applied at once when toggled. Opting out also deletes reports captured on the device and not sent yet, so nothing from that time is uploaded if the user opts back in. Collection stays off for an opted-out user on every start.
+- Tell your users in your privacy policy that crash reports are collected, and what the provider receives (device model, OS version, app version, stack traces, the user id if you set one).
+
+## Use it in your code
+
+```ts
+import { logBreadcrumb, recordError, setCrashUser } from '@services/crash-reporting/crashReporting';
+
+setCrashUser(user.id); // after sign-in
+setCrashUser(null); // after sign-out
+
+try {
+  await syncOrders();
+} catch (error) {
+  if (error instanceof Error) {
+    recordError(error, { feature: 'orders' });
+  }
+}
+logBreadcrumb('checkout opened');
+```
+
+## Test it
+
+The facade is a plain module, so tests mock `./registry` and assert on a fake reporter (see `crashReporting.test.ts`). `resetCrashReporting()` puts it back to the not-started state.

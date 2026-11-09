@@ -1,0 +1,63 @@
+---
+title: Firebase troubleshooting
+description: Fixes for missing config files, wrong-environment files, Crashlytics build ids and symbols, Sentry source maps, nvm in Xcode and push tokens.
+---
+
+Start with the build log: every build prints one `firebase-core:` line per environment saying which file it used or why it used none.
+
+## "File google-services.json is missing" or a build that fails naming `firebase/<env>/...`
+
+- The message "`.env.<flavor>` has FIREBASE_ENABLED=true but ... is missing" comes from the template's Gradle task: the environment says Firebase is on but `firebase/<env>/google-services.json` is not there. Download the file for that environment's Android app, or set `FIREBASE_ENABLED=false`. See [Firebase per environment](/docs/features/firebase-core).
+- A **flavor without a file** and `FIREBASE_ENABLED=false` builds without error. If you still see the Google Services plugin complain, the plugin was applied from somewhere else; look for a stray `android/app/google-services.json`, which every flavor would pick up.
+- The iOS equivalent is the **Copy Firebase config** build phase: `error: .env.<env> has FIREBASE_ENABLED=true but firebase/<env>/GoogleService-Info.plist is missing`.
+
+## The wrong environment's file is in the build
+
+- Delete `android/app/src/<flavor>/google-services.json` and rebuild: the sync task recreates it from `firebase/<flavor>/` or removes it.
+- Check that the package name inside the JSON (`client_info.android_client_info.package_name`) and the bundle id inside the plist match the flavor (`com.rntempo.app.staging`). A file downloaded for another app fails with "No matching client found for package name".
+- On iOS, the phase deletes any previous copy first. If the app still shows the other project, clean the build folder (Product, Clean Build Folder) and check which scheme you ran (`TempoApp-Staging`).
+- Check the `.env.<env>` the build used: the iOS scheme pre-action copies it to `.env`.
+
+## Crashlytics: "The Crashlytics build ID is missing"
+
+The app crashes at start with this message when the Crashlytics Gradle plugin is not applied. Make sure `android/build.gradle` has the `firebase-crashlytics-gradle` classpath and `android/app/build.gradle` has `apply plugin: "com.google.firebase.crashlytics"` (both are in the `crashlytics` module's marker regions). Rebuild with `cd android && ./gradlew clean` and run again.
+
+## Crashlytics: no reports show up
+
+- Debug builds never report. Test with a **release** build of staging or prod.
+- Crashlytics sends on the **next launch**; restart the app after a crash.
+- Check the switches: `FIREBASE_ENABLED=true`, `CRASH_REPORTING_ENABLED=true`, `CRASH_REPORTER=crashlytics`, and the Settings switch on.
+- Check the console of the **right project**: with one project per environment, a staging build reports to the staging project.
+- The first report can take minutes; the console keeps showing the set-up page until it arrives.
+
+## Crashlytics: iOS reports are not symbolicated (missing dSYMs)
+
+- The Release configuration needs `DEBUG_INFORMATION_FORMAT = dwarf-with-dsym`.
+- Look at the **Upload Crashlytics dSYMs** phase output: it says why it skipped (Debug build, no plist bundled, `upload-symbols` not found, no dSYM).
+- Upload manually: find the dSYM in the archive (`.xcarchive/dSYMs`) and run `upload-symbols` from `DerivedData/<project>/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/` with `-gsp firebase/<env>/GoogleService-Info.plist -p ios <path>.dSYM`, or drag the dSYM into the Crashlytics console.
+- With Fastlane, the lane uploads after `build_app`; check that it found `firebase/<env>/GoogleService-Info.plist`.
+
+## Android reports are obfuscated
+
+Release builds use R8. The plugin uploads the mapping during the release build; the flavor needs `FIREBASE_ENABLED=true` in its env file. Look for the `uploadCrashlyticsMappingFile` task in the build output.
+
+## iOS: Firebase SPM embed or signature errors
+
+React Native Firebase 27 gets the Firebase SDK through Swift Package Manager and **dynamic frameworks**. If the build fails on duplicate signatures or embedding, run `yarn pods` again, clean the build folder, and keep `USE_FRAMEWORKS` unset (the Podfile sets `dynamic`). The RNFB build phases `Embed Firebase SPM Frameworks` and `Remove duplicate Firebase/Google SPM binary xcframework signature files` must stay in the target.
+
+## Sentry: source maps not resolved, or Xcode cannot find node
+
+See the troubleshooting section of the [Sentry recipe](/docs/recipes/sentry#troubleshooting).
+
+## Reports arrive in the wrong environment
+
+- Look at the `app_env` key of the report (Crashlytics custom key, Sentry tag). It comes from `ENV.APP_ENV` of the build.
+- With Crashlytics, the **Firebase project** is the real environment boundary; if staging builds report to the prod project, the staging build contains the prod `google-services.json` (see above).
+- With Sentry, check the `environment` field and the DSN of the build's `.env.<env>`.
+
+## Push token is not generated
+
+- `PUSH_ENABLED=true` **and** `FIREBASE_ENABLED=true` in the env file of the build, and the config file present. Anything else leaves push off ([push per environment](/docs/features/push-notifications#push-per-environment)).
+- FCM auto-initialisation is off in `firebase.json`; `initPush` turns it on at startup. If `initPush` never runs (a blocked startup, a removed bootstrap step) no token appears.
+- Notifications permission: on iOS the token needs the permission and a physical device (the Apple-silicon simulator does not register); on Android 13 and later allow notifications in Settings, Notifications.
+- iOS also needs the APNs key uploaded to **that environment's** Firebase project.

@@ -8,6 +8,8 @@
     "add-translation-keys",
     "add-icon",
     "open-external-links",
-    "device-test-matrix"
+    "device-test-matrix",
+    "switch-crash-reporting-provider",
+    "firebase-troubleshooting"
   ]
 }

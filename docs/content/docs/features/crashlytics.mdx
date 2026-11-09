@@ -1,0 +1,135 @@
+---
+title: Crashlytics
+description: Firebase Crashlytics behind the CrashReporter interface, with per-environment control, an opt-out, and mapping and dSYM upload in CI.
+---
+
+<FeatureBadge name="crashlytics" />
+
+## What it is
+
+The `crashlytics` module adds [`@react-native-firebase/crashlytics`](https://rnfirebase.io/crashlytics/usage) 27 as a provider of the [crash reporting service](/docs/features/crash-reporting). Only `src/services/crash-reporting/adapters/crashlytics.ts` imports the SDK; the rest of the app calls the facade.
+
+It requires [`firebase-core`](/docs/features/firebase-core), so the CLI adds that too. It is **off by default**.
+
+## Enable and remove
+
+<CommandTabs yarn="tempo feature add crashlytics" npm="npx tempo feature add crashlytics" />
+
+<CommandTabs yarn="tempo feature remove crashlytics" npm="npx tempo feature remove crashlytics" />
+
+Removal deletes the adapter, the registry entry, the `crashlytics` provider name, the Gradle plugin lines, the Fastlane upload and the dependency, then runs `pod install`. Set `CRASH_REPORTER=none` in your env files afterwards: the schema no longer accepts `crashlytics`.
+
+## Set it up
+
+1. Set up [Firebase per environment](/docs/features/firebase-core) first: one project and one pair of config files per environment, `FIREBASE_ENABLED=true` where Crashlytics should run.
+2. In the Firebase console of each project open **Crashlytics** (under Run, or Quality) and enable it.
+3. Set the env files:
+
+   ```bash
+   # .env.dev: Crashlytics off
+   FIREBASE_ENABLED=false
+   CRASH_REPORTING_ENABLED=false
+   CRASH_REPORTER=none
+
+   # .env.staging and .env.prod
+   FIREBASE_ENABLED=true
+   CRASH_REPORTING_ENABLED=true
+   CRASH_REPORTER=crashlytics
+   ```
+
+4. Build a **release** build of staging, with `yarn android:staging:release` or `yarn ios:staging:release`. Debug builds never report.
+
+## Per-environment control
+
+| Switch | Effect |
+| --- | --- |
+| `FIREBASE_ENABLED=false` | No config file, no Firebase app, Crashlytics unavailable. Nothing runs. |
+| `CRASH_REPORTING_ENABLED=false` | The facade never starts the provider. |
+| `CRASH_REPORTER=none` | Same, with the no-op provider. |
+| Debug build | Collection stays off, whatever the env says. |
+| User opted out (Settings) | Collection is switched off at once and stays off. |
+
+## How it works
+
+`firebase.json` keeps the SDK quiet on its own:
+
+```json
+{
+  "react-native": {
+    "crashlytics_auto_collection_enabled": false,
+    "crashlytics_debug_enabled": false,
+    "crashlytics_ndk_enabled": false
+  }
+}
+```
+
+- `crashlytics_auto_collection_enabled: false`: nothing is sent until the app calls `setCrashlyticsCollectionEnabled(true)`. The facade does that at startup only when collection is allowed, and again whenever the user changes the opt-out.
+- `crashlytics_debug_enabled: false`: Crashlytics stays off in debug builds. The facade also refuses to enable it there. To test the integration in a debug build, set this to `true` **and** temporarily allow it in `isCrashReportingActive` (remove both afterwards).
+- `crashlytics_ndk_enabled: false`: see Native crashes below.
+
+The adapter uses the modular API (`getCrashlytics`, `setCrashlyticsCollectionEnabled`, `deleteUnsentReports`, `recordError`, `log`, `setUserId`, `setAttributes`). Crashlytics has no per-report attributes, so `recordError(error, context)` sets the context as custom keys first; they stay on later reports until overwritten. Every report carries the key `app_env`.
+
+### JavaScript handler chaining
+
+React Native Firebase Crashlytics installs a global handler that records unhandled JavaScript exceptions, then **chains** to the previous handler (red box in development, a native crash in release). In release that can produce two reports for one crash: the JavaScript one with a stack, and a native one without. The facade adds no report of its own, so these are the only two. It does put a handler in front of RNFB's, so RNFB records a redacted copy of the error (see Privacy on the crash reporting page).
+
+Setting `"crashlytics_javascript_exception_handler_chaining_enabled": false` in `firebase.json` stops the duplicate, as RNFB recommends once the integration works. The template keeps the default (`true`) because with chaining off a fatal JavaScript error no longer ends the process, also in builds where reporting is off or the user opted out. Decide for your app.
+
+## Symbols
+
+Readable stack traces need symbols that match the build.
+
+### Android mapping file
+
+The Crashlytics Gradle plugin (`com.google.firebase:firebase-crashlytics-gradle` 3.0.8, the version RNFB 27 is tested with) is applied next to the Google Services plugin. On **release builds** (R8 on) it injects a mapping id and uploads the mapping file when you build, with no extra step. It uses the project of the flavor's `google-services.json`. A flavor with `FIREBASE_ENABLED` not `true` has the upload switched off, because it has no project to upload to.
+
+### iOS dSYMs
+
+Release builds create dSYM files. Two paths upload them:
+
+- The **Upload Crashlytics dSYMs** build phase (added by `yarn ios:envs`) runs the Firebase `upload-symbols` tool from the Swift Package Manager checkout in DerivedData. It skips Debug configurations and builds that bundle no `GoogleService-Info.plist`, and a failed upload only warns.
+- The Fastlane lanes upload with `upload_symbols_to_crashlytics` after `build_app` (see `fastlane/README.md`) and tell the build phase to skip.
+
+Check the Release build setting `DEBUG_INFORMATION_FORMAT = dwarf-with-dsym` if no dSYM is produced. Bitcode is gone, so the dSYM from your own build is the right one. A missing dSYM shows as an unsymbolicated report in the console; upload it later with `upload-symbols` or drag it into the Crashlytics console.
+
+### Native crashes (NDK), optional
+
+Android native crashes (for example from the Yoga layout engine) need NDK reporting plus native symbols. It is **off** in the template (`crashlytics_ndk_enabled: false`) because it adds build time and the native symbols need uploading. To turn it on:
+
+1. Set `"crashlytics_ndk_enabled": true` in `firebase.json`.
+2. In `android/app/build.gradle`, add to the release build type, as RNFB documents:
+
+   ```groovy
+   buildTypes {
+       release {
+           firebaseCrashlytics {
+               nativeSymbolUploadEnabled true
+               unstrippedNativeLibsDir 'build/intermediates/merged_native_libs/release/out/lib'
+           }
+       }
+   }
+   ```
+
+   The module's per-flavor block switches native upload off again for flavors without Firebase.
+
+## Verify
+
+1. Build a release build of an environment with the switches above and install it.
+2. Open **Settings**: the **Share crash reports** switch is shown (it is hidden where reporting is not configured). Leave it on.
+3. Force a report. In a **non-prod** build open the debug menu (shake the device, or the deep link `tempo-staging://debug`) and press **Send test error**. That records a non-fatal.
+4. For a real crash, temporarily add a button that calls `crash(getCrashlytics())` from `@react-native-firebase/crashlytics`, or throw an error from an event handler; remove it afterwards.
+5. **Restart the app.** Crashlytics uploads reports on the next launch. The first report can take a few minutes to appear in the console; the console shows the "set up" page until it arrives.
+6. In the Firebase console of the environment's project, open Crashlytics, Issues. Open a report and check the key `app_env`, the app version and a symbolicated stack.
+7. Turn the Settings switch off, restart, send another test error: nothing arrives.
+
+## Opt-out
+
+The Settings switch calls `setCrashlyticsCollectionEnabled(false)` and stores the choice (`app.crash-reports-opt-out`). Opted-out users send nothing from the next report on. Reports that Crashlytics already saved on the device before the switch was turned off may still be sent on the next launch. If your policy needs them gone, call `deleteUnsentReports(getCrashlytics())` from the adapter when the user opts out.
+
+## Privacy
+
+Crashlytics receives the device model, OS version, app version, stack traces, your breadcrumbs, the custom keys and the user id if the app sets one. Keep ids opaque, and read Firebase's [data collection documentation](https://firebase.google.com/support/privacy) for your privacy policy. See [Crash reporting](/docs/features/crash-reporting#privacy).
+
+## Troubleshooting
+
+See [Firebase troubleshooting](/docs/guides/firebase-troubleshooting).
