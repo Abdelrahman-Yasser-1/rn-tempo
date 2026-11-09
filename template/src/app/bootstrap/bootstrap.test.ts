@@ -12,6 +12,7 @@ function createSteps(overrides: Partial<BootstrapSteps> = {}) {
     });
   const steps: BootstrapSteps = {
     initStorage: track('initStorage', Promise.resolve()),
+    initCrashReporting: track('initCrashReporting', Promise.resolve()),
     initTheme: track('initTheme', undefined),
     initI18n: track('initI18n', Promise.resolve()),
     initFallbackI18n: track('initFallbackI18n', Promise.resolve()),
@@ -34,6 +35,7 @@ describe('bootstrap step graph', () => {
 
     expect(ordered.map((step) => step.id)).toEqual([
       'storage',
+      'crash-reporting',
       'theme',
       'i18n',
       'security',
@@ -52,6 +54,7 @@ describe('bootstrap step graph', () => {
 
     expect(policies).toEqual({
       storage: 'fatal',
+      'crash-reporting': 'continue',
       theme: 'continue',
       i18n: 'fatal',
       security: 'block-security',
@@ -70,6 +73,7 @@ describe('runBootstrap', () => {
 
     expect(calls).toEqual([
       'initStorage',
+      'initCrashReporting',
       'initTheme',
       'initI18n',
       'initSecurity',
@@ -111,6 +115,15 @@ describe('runBootstrap', () => {
     });
 
     await expect(runBootstrap(steps)).resolves.toEqual({ status: 'ready' });
+  });
+
+  test('a crash reporting failure is non-fatal and later steps still run', async () => {
+    const { steps, calls } = createSteps({
+      initCrashReporting: jest.fn(() => Promise.reject(new Error('sdk'))),
+    });
+
+    await expect(runBootstrap(steps)).resolves.toEqual({ status: 'ready' });
+    expect(calls).toContain('initAuth');
   });
 
   test('AC-8: an i18n failure blocks with startupError', async () => {

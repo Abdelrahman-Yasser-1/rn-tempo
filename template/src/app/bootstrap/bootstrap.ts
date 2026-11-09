@@ -1,3 +1,4 @@
+import { initCrashReporting } from '@services/crash-reporting/crashReporting';
 import { initI18nInstance } from '@services/i18n/i18n';
 import { logger } from '@services/logger/logger';
 import type { AppConfig } from '@services/remote-config/appConfig';
@@ -26,6 +27,8 @@ type BlockResult = { blockReason: BlockReason; securityReasons?: SecurityReason[
 /** The units of work, injectable so the ordering and failure branches can be tested. */
 export type BootstrapSteps = {
   initStorage: () => Promise<void>;
+  /** Starts crash reporting when this environment has it on; needs storage for the user's opt-out. */
+  initCrashReporting: () => Promise<void>;
   initTheme: () => void;
   initI18n: () => Promise<void>;
   /** Best-effort `en` init so blocking screens can show text when the normal path failed early. */
@@ -41,6 +44,7 @@ export type BootstrapSteps = {
 
 export const defaultSteps: BootstrapSteps = {
   initStorage,
+  initCrashReporting,
   initTheme,
   initI18n,
   initFallbackI18n: () => initI18nInstance('en'),
@@ -64,7 +68,7 @@ async function blockedWithStartupError(steps: BootstrapSteps): Promise<BlockResu
 
 /**
  * The startup steps with their dependencies. Declaration order breaks ties, so the sequential
- * order is storage, theme, i18n, security, auth, remote config.
+ * order is storage, crash reporting, theme, i18n, security, auth, remote config.
  */
 export function createBootstrapSteps(steps: BootstrapSteps): BootstrapStep<BlockResult>[] {
   return [
@@ -76,6 +80,16 @@ export function createBootstrapSteps(steps: BootstrapSteps): BootstrapStep<Block
       failureMessage: 'Storage initialisation failed',
       run: async () => {
         await steps.initStorage();
+      },
+    },
+    // Early, so startup failures after it are reported. Needs storage for the opt-out. Never fatal.
+    {
+      id: 'crash-reporting',
+      dependsOn: ['storage'],
+      onError: 'continue',
+      failureMessage: 'Crash reporting could not start, continuing without it',
+      run: async () => {
+        await steps.initCrashReporting();
       },
     },
     {
