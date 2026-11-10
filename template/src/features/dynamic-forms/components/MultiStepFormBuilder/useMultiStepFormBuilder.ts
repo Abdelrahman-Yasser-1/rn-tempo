@@ -21,7 +21,7 @@ import type { MultiStepFormBuilderProps, MultiStepFormBuilderRef, NavigationProp
 export function useMultiStepFormBuilder<T extends FieldValues>(
   props: MultiStepFormBuilderProps<T>,
 ) {
-  const { steps, initialStep, onSubmit, onSubmitInvalid, ref } = props;
+  const { steps, initialStep, review: hasReview, onSubmit, onSubmitInvalid, ref } = props;
   const resolve = useFormText();
   const allFields = steps.flatMap((step) => step.fields);
   const { form, values, initialValues, restoredStep, context } = useBuilderForm<T>({
@@ -29,12 +29,17 @@ export function useMultiStepFormBuilder<T extends FieldValues>(
     fields: allFields,
     getHiddenNames: (current) => hiddenNamesOfSteps(steps, current),
   });
+  // The review step comes after the last configured one, at index `steps.length`.
+  const reviewIndexes = hasReview === true ? [steps.length] : [];
   const [requestedStep, setRequestedStep] = useState(() =>
-    snapToVisibleStep(restoredStep ?? initialStep ?? 0, visibleStepIndexes(steps, initialValues)),
+    snapToVisibleStep(restoredStep ?? initialStep ?? 0, [
+      ...visibleStepIndexes(steps, initialValues),
+      ...reviewIndexes,
+    ]),
   );
   const latestSteps = useLatest(steps);
 
-  const visible = visibleStepIndexes(steps, values);
+  const visible = [...visibleStepIndexes(steps, values), ...reviewIndexes];
   // A step that became hidden is replaced by the next visible one, with no state to sync.
   const currentStep = visible.includes(requestedStep)
     ? requestedStep
@@ -44,6 +49,8 @@ export function useMultiStepFormBuilder<T extends FieldValues>(
   const isFirstStep = visibleStepIndex === 0;
   const isLastStep = visibleStepIndex === totalVisibleSteps - 1;
   const canGoBack = steps[currentStep]?.canGoBack !== false;
+  const isReviewStep = hasReview === true && currentStep === steps.length;
+  const totalSteps = steps.length + reviewIndexes.length;
 
   // The first step is "entered" once, on mount; later moves call the hooks in `moveTo`.
   const firstStepRef = useRef(currentStep);
@@ -79,7 +86,7 @@ export function useMultiStepFormBuilder<T extends FieldValues>(
   };
 
   const goToStep = (step: number) => {
-    if (step !== currentStep && step >= 0 && step < steps.length) {
+    if (step !== currentStep && visible.includes(step)) {
       moveTo(step, step > currentStep ? 'next' : 'back');
     }
   };
@@ -111,7 +118,7 @@ export function useMultiStepFormBuilder<T extends FieldValues>(
     submit,
     discardDraft: discard,
     currentStep,
-    totalSteps: steps.length,
+    totalSteps,
     visibleStepIndex,
     totalVisibleSteps,
     canGoBack,
@@ -120,10 +127,11 @@ export function useMultiStepFormBuilder<T extends FieldValues>(
     prevStep: onBack,
   }));
 
-  const title = resolve(steps[currentStep]?.title);
+  // t('review.title', { ns: 'forms', defaultValue: 'Review your answers' })
+  const title = isReviewStep ? resolve('review.title') : resolve(steps[currentStep]?.title);
   const navigation: NavigationProps = {
     currentStep,
-    totalSteps: steps.length,
+    totalSteps,
     visibleStepIndex,
     totalVisibleSteps,
     title,
@@ -135,8 +143,9 @@ export function useMultiStepFormBuilder<T extends FieldValues>(
     isFirstStep,
     isLastStep,
     canGoBack,
+    isReviewStep,
     isSubmitting: form.formState.isSubmitting,
   };
 
-  return { form, values, context, currentStep, navigation, title };
+  return { form, values, context, currentStep, isReviewStep, goToStep, navigation, title };
 }

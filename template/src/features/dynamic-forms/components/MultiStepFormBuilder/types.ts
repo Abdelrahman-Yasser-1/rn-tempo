@@ -37,6 +37,8 @@ export type NavigationProps = Readonly<{
   isLastStep: boolean;
   /** False on a step with `canGoBack: false`; check it with `isFirstStep`. */
   canGoBack: boolean;
+  /** True on the read-only summary step added by `review`. */
+  isReviewStep: boolean;
   /** True while an async `onSubmit` runs. */
   isSubmitting: boolean;
 }>;
@@ -46,6 +48,8 @@ export type MultiStepFormBuilderProps<T extends FieldValues> = BaseBuilderProps<
     steps: readonly StepConfig<T>[];
     /** Step index to start on; a hidden step snaps to the next visible one. */
     initialStep?: number;
+    /** Adds a last, read-only summary step with an Edit action per step. */
+    review?: boolean;
     renderStepIndicator?: (
       visibleStepIndex: number,
       totalVisibleSteps: number,
@@ -62,6 +66,7 @@ export type MultiStepFormBuilderRef<T extends FieldValues> = UseFormReturn<T> &
     /** Deletes the saved draft (`draft` prop) and stops saving until the next step change. */
     discardDraft: () => void;
     currentStep: number;
+    /** Steps including the review step when `review` is on. */
     totalSteps: number;
     visibleStepIndex: number;
     totalVisibleSteps: number;

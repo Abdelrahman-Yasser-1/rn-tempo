@@ -237,4 +237,79 @@ describe('MultiStepFormBuilder', () => {
       expect(hasDraft('wizard-test')).toBe(false);
     });
   });
+
+  describe('review', () => {
+    const reviewSteps: StepConfig<Values>[] = [
+      {
+        title: label('About you'),
+        fields: [
+          { type: 'text', name: 'name', label: label('Name') },
+          { type: 'checkbox', name: 'skip', label: label('Skip extra') },
+          { type: 'text', name: 'extra', label: label('Extra'), visibleIf: (v) => !v.skip },
+        ],
+      },
+      {
+        title: label('Contact'),
+        fields: [
+          { type: 'text', name: 'email', label: label('Email') },
+          { type: 'text', name: 'pin', label: label('PIN'), props: { secureTextEntry: true } },
+        ],
+      },
+    ];
+
+    async function toReview() {
+      const view = await setup({
+        steps: reviewSteps,
+        review: true,
+        defaultValues: { extra: 'extra value', pin: '' },
+      });
+      await view.user.type(screen.getByLabelText('Name'), 'Sam');
+      await view.user.press(screen.getByRole('button', { name: 'Next' }));
+      await view.user.type(await screen.findByLabelText('Email'), 'a@b.co');
+      await view.user.type(screen.getByLabelText('PIN'), '4321');
+      await view.user.press(screen.getByRole('button', { name: 'Next' }));
+      return view;
+    }
+
+    it('AC-7: adds a last step that lists visible, non-sensitive values', async () => {
+      await toReview();
+      expect(await screen.findByText('Step 3 of 3')).toBeOnTheScreen();
+      expect(screen.getByText('Sam')).toBeOnTheScreen();
+      expect(screen.getByText('a@b.co')).toBeOnTheScreen();
+      expect(screen.getByText('extra value')).toBeOnTheScreen();
+      expect(screen.queryByText('4321')).not.toBeOnTheScreen();
+      expect(screen.queryByText('PIN')).not.toBeOnTheScreen();
+      expect(screen.getByRole('button', { name: 'Submit' })).toBeOnTheScreen();
+    });
+
+    it('AC-7: leaves out a field hidden by its rule', async () => {
+      const view = await setup({
+        steps: reviewSteps,
+        review: true,
+        defaultValues: { extra: 'extra value', pin: '' },
+      });
+      await view.user.type(screen.getByLabelText('Name'), 'Sam');
+      await view.user.press(screen.getByRole('checkbox', { name: 'Skip extra' }));
+      await view.user.press(screen.getByRole('button', { name: 'Next' }));
+      await view.user.type(await screen.findByLabelText('Email'), 'a@b.co');
+      await view.user.press(screen.getByRole('button', { name: 'Next' }));
+      expect(await screen.findByText('a@b.co')).toBeOnTheScreen();
+      expect(screen.queryByText('extra value')).not.toBeOnTheScreen();
+    });
+
+    it('AC-7: Edit jumps to the step and Next comes back to the review', async () => {
+      const { user } = await toReview();
+      await user.press(await screen.findByRole('link', { name: 'Edit About you' }));
+      expect(await screen.findByLabelText('Name')).toBeOnTheScreen();
+      expect(screen.getByText('Step 1 of 3')).toBeOnTheScreen();
+    });
+
+    it('AC-7: submits from the review step', async () => {
+      const { user, onSubmit } = await toReview();
+      await user.press(await screen.findByRole('button', { name: 'Submit' }));
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalledTimes(1);
+      });
+    });
+  });
 });
