@@ -81,6 +81,7 @@ function FlagRow({ flag }: Readonly<{ flag: FlagKey }>) {
 /** Non-prod only. Environment info, API URL override, flag overrides and data reset tools. */
 export function DebugMenuScreen() {
   const { t } = useTranslation('app');
+  const { t: tForms } = useTranslation('forms'); // @tempo-feature:dynamic-forms
   const vm = useDebugMenuScreen();
 
   return (
@@ -197,6 +198,26 @@ export function DebugMenuScreen() {
           </Text>
         )}
       </Section>
+
+      {/* @tempo-feature:dynamic-forms:start */}
+      <Section title={tForms('debug.title')}>
+        <Text color="textSecondary" variant="caption">
+          {tForms('debug.hint')}
+        </Text>
+        <View style={styles.buttons}>
+          <Action
+            label={tForms('debug.openCode')}
+            onPress={vm.onOpenCodeForm}
+            testID="debug-menu.dynamic-form-code"
+          />
+          <Action
+            label={tForms('debug.openJson')}
+            onPress={vm.onOpenJsonForm}
+            testID="debug-menu.dynamic-form-json"
+          />
+        </View>
+      </Section>
+      {/* @tempo-feature:dynamic-forms:end */}
 
       {/* @tempo-feature:storybook:start */}
       <Section title={t('debug.storybook.title')}>

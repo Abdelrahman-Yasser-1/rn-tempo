@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "id": "demo-json",
+  "draft": true,
+  "review": true,
+  "steps": [
+    {
+      "id": "contact",
+      "title": { "en": "Contact", "ar": "التواصل" },
+      "fields": [
+        {
+          "type": "text",
+          "name": "fullName",
+          "label": { "en": "Full name", "ar": "الاسم الكامل" },
+          "rules": [{ "rule": "required" }, { "rule": "minLength", "value": 2 }]
+        },
+        {
+          "type": "text",
+          "name": "email",
+          "label": { "en": "Email", "ar": "البريد الإلكتروني" },
+          "props": { "keyboardType": "email-address", "autoCapitalize": "none" },
+          "rules": [{ "rule": "required" }, { "rule": "email" }]
+        },
+        {
+          "type": "radioGroup",
+          "name": "contactBy",
+          "label": { "en": "Contact me by", "ar": "تواصلوا معي عبر" },
+          "options": [
+            { "value": "email", "label": { "en": "Email", "ar": "البريد" } },
+            { "value": "phone", "label": { "en": "Phone", "ar": "الهاتف" } }
+          ],
+          "defaultValue": "email",
+          "rules": [{ "rule": "required" }]
+        },
+        {
+          "type": "text",
+          "name": "phoneDigits",
+          "label": { "en": "Phone number (digits only)", "ar": "رقم الهاتف (أرقام فقط)" },
+          "visibleIf": { "field": "contactBy", "equals": "phone" },
+          "clearOnHidden": true,
+          "props": { "keyboardType": "numeric" },
+          "rules": [{ "rule": "required" }, { "rule": "pattern", "name": "digits" }]
+        }
+      ]
+    },
+    {
+      "id": "team",
+      "title": { "en": "Team", "ar": "الفريق" },
+      "fields": [
+        {
+          "type": "repeat",
+          "name": "members",
+          "label": { "en": "Team members", "ar": "أعضاء الفريق" },
+          "itemLabel": { "en": "Member", "ar": "عضو" },
+          "addLabel": { "en": "Add member", "ar": "إضافة عضو" },
+          "rules": [
+            { "rule": "minItems", "value": 1 },
+            { "rule": "maxItems", "value": 3 }
+          ],
+          "fields": [
+            {
+              "type": "text",
+              "name": "name",
+              "label": { "en": "Name", "ar": "الاسم" },
+              "rules": [{ "rule": "required" }]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "consent",
+      "title": { "en": "Consent", "ar": "الموافقة" },
+      "visibleIf": { "field": "contactBy", "isNotEmpty": true },
+      "fields": [
+        {
+          "type": "textArea",
+          "name": "notes",
+          "label": { "en": "Notes", "ar": "ملاحظات" },
+          "props": { "maxLength": 200 },
+          "rules": [{ "rule": "maxLength", "value": 200 }]
+        },
+        {
+          "type": "checkbox",
+          "name": "agree",
+          "label": { "en": "I agree to be contacted", "ar": "أوافق على التواصل معي" },
+          "rules": [{ "rule": "required" }]
+        }
+      ]
+    }
+  ]
+}

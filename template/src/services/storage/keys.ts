@@ -15,6 +15,12 @@ export const STORAGE_KEYS = {
   zustandPrefix: 'zustand.',
   /** Prefix for debug-menu feature flag overrides: `flags.override.<flag>`. */
   flagOverridePrefix: 'flags.override.',
+  // @tempo-feature:dynamic-forms:start
+  /** Prefix of saved form drafts: `forms.draft.<key>` (never sensitive or file fields). */
+  formsDraftPrefix: 'forms.draft.',
+  /** Names of the saved drafts, so sign-out can delete them all. */
+  formsDraftIndex: 'forms.draft-index',
+  // @tempo-feature:dynamic-forms:end
 } as const;
 
 /**

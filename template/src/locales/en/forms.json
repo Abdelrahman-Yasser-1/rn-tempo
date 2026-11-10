@@ -1,1 +1,86 @@
-{}
+{
+  "debug": {
+    "hint": "Two demo flows: one from a typed code config, one from bundled JSON.",
+    "openCode": "Open the code config demo",
+    "openJson": "Open the JSON demo",
+    "title": "Dynamic forms"
+  },
+  "demo": {
+    "code": {
+      "addDependant": "Add dependant",
+      "cities": {
+        "cairo": "Cairo",
+        "giza": "Giza",
+        "jeddah": "Jeddah",
+        "riyadh": "Riyadh"
+      },
+      "city": "City",
+      "companyName": "Company name",
+      "countries": {
+        "eg": "Egypt",
+        "sa": "Saudi Arabia"
+      },
+      "country": "Country",
+      "dependantItem": "Dependant",
+      "dependantName": "Name",
+      "dependants": "Dependants",
+      "email": "Email",
+      "fullName": "Full name",
+      "hasCompany": "I work for a company",
+      "password": "Password",
+      "price": "Unit price",
+      "quantity": "Quantity",
+      "steps": {
+        "about": "About you",
+        "family": "Family",
+        "order": "Order",
+        "work": "Work"
+      },
+      "total": "Total (calculated)",
+      "username": "Username (try \"taken\")"
+    }
+  },
+  "flow": {
+    "back": "Back",
+    "header": "Form",
+    "next": "Next",
+    "stepOf": "Step {{current}} of {{total}}",
+    "submit": "Submit",
+    "submitted": "Form submitted",
+    "unknown": "This form does not exist."
+  },
+  "repeat": {
+    "add": "Add item",
+    "itemHeading": "{{label}} {{index}}",
+    "itemLabel": "Item",
+    "remove": "Remove {{label}} {{index}}"
+  },
+  "review": {
+    "empty": "Not provided",
+    "no": "No",
+    "nothing": "There is nothing to review.",
+    "stepFallback": "Step {{index}}",
+    "title": "Review your answers",
+    "yes": "Yes"
+  },
+  "validation": {
+    "alphanumeric": "Use letters and numbers only.",
+    "digits": "Use digits only.",
+    "email": "Enter a valid email address.",
+    "iban": "Enter a valid IBAN.",
+    "invalid": "This value is not valid.",
+    "letters": "Use letters only.",
+    "noSpaces": "Do not use spaces.",
+    "pattern": "This value does not match the expected format.",
+    "phone": "Enter a valid phone number with country code.",
+    "postalCode": "Enter a valid postal code.",
+    "required": "This field is required.",
+    "tooBig": "This number is too large.",
+    "tooFewItems": "Add more items.",
+    "tooLong": "This text is too long.",
+    "tooManyItems": "Remove some items.",
+    "tooShort": "This text is too short.",
+    "tooSmall": "This number is too small.",
+    "usernameTaken": "This username is taken."
+  }
+}

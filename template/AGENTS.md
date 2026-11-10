@@ -142,6 +142,7 @@ One topic per file in `ai/rules/`; the examples there are the source of truth.
 | `api.md`          | `request()`, Zod, key factories, mutations                             |
 | `i18n.md`         | Namespaces, keys, RTL, lint                                            |
 | `a11y.md`         | Roles, labels, states, targets                                         |
+| `forms.md`        | FormBuilder when `dynamic-forms` is on, hand-written forms otherwise   |
 | `testing.md`      | RNTL, MSW, `renderWithProviders`, AC IDs                               |
 | `security.md`     | Env, secrets, tokens, pinning                                          |
 | `commits.md`      | Conventional Commits, scopes, AI trailers                              |
