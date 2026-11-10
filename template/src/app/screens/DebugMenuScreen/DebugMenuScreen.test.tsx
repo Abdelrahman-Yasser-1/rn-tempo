@@ -140,4 +140,18 @@ describe('DebugMenuScreen', () => {
 
     expect(navigate).toHaveBeenCalledWith('NetworkLog');
   });
+
+  // @tempo-feature:dynamic-forms:start
+  test('opens the two dynamic form demos', async () => {
+    const navigate = jest.fn();
+    jest.mocked(useNavigation).mockReturnValue({ navigate });
+    const { user } = await renderWithProviders(<DebugMenuScreen />);
+
+    await user.press(screen.getByRole('button', { name: 'Open the code config demo' }));
+    await user.press(screen.getByRole('button', { name: 'Open the JSON demo' }));
+
+    expect(navigate).toHaveBeenNthCalledWith(1, 'DynamicFormFlow', { flowId: 'demo-code' });
+    expect(navigate).toHaveBeenNthCalledWith(2, 'DynamicFormFlow', { flowId: 'demo-json' });
+  });
+  // @tempo-feature:dynamic-forms:end
 });

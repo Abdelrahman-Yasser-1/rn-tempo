@@ -42,6 +42,7 @@ export type RootStackParamList = {
   Maintenance: undefined;
   NotFound: undefined;
   WebView: { url: string; title?: string }; // @tempo-feature:webview
+  DynamicFormFlow: { flowId: string }; // @tempo-feature:dynamic-forms
   // Non-prod only.
   DebugMenu: undefined;
   NetworkLog: undefined;

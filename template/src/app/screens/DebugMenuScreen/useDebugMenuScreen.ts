@@ -88,5 +88,13 @@ export function useDebugMenuScreen() {
     onOpenNetworkLog: () => {
       navigation.navigate('NetworkLog');
     },
+    // @tempo-feature:dynamic-forms:start
+    onOpenCodeForm: () => {
+      navigation.navigate('DynamicFormFlow', { flowId: 'demo-code' });
+    },
+    onOpenJsonForm: () => {
+      navigation.navigate('DynamicFormFlow', { flowId: 'demo-json' });
+    },
+    // @tempo-feature:dynamic-forms:end
   };
 }
