@@ -77,6 +77,7 @@ Also: check library APIs with context7 for the **pinned** version, never from me
 - [architecture](../ai/rules/architecture.md): Folder skeleton, path aliases, barrels and the import-boundary matrix enforced by ESLint.
 - [assets](../ai/rules/assets.md): Icons and images. Sources in src/assets, generated components, every Tabler icon in src, adding icons, pruning at release, RTL mirroring.
 - [commits](../ai/rules/commits.md): Conventional Commits with required scope, commit size, and the AI session trailers.
+- [forms](../ai/rules/forms.md): Build forms with the dynamic-forms FormBuilder when that module is on; hand-written react-hook-form forms otherwise.
 - [generators](../ai/rules/generators.md): Create files with yarn tempo g generators, not by hand, so structure and tests stay valid.
 - [i18n](../ai/rules/i18n.md): Every UI string goes through i18next in en and ar; keys are nested camelCase per namespace.
 - [naming](../ai/rules/naming.md): File, folder, identifier and boolean naming rules enforced by ls-lint and ESLint.
