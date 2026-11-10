@@ -14,3 +14,13 @@ A form with `draft: { key }` saves its values to the encrypted app storage (`for
 - **Drafts expire.** A draft older than `maxAgeMs` (default 7 days, measured from the time it was saved) is ignored and deleted. Set it per form: `draft: { key: 'kyc', maxAgeMs: 24 * 60 * 60 * 1000 }`.
 - **Never saved:** fields marked `sensitive` (OTP and secure text by default), file fields, and anything not declared in the form config.
 - A successful submit clears the draft. `discardDraft(key)` removes one by hand.
+
+## Security rules for server JSON
+
+A document from the network is untrusted input. `fromJson` validates it with a strict schema before anything else:
+
+- Unknown keys, unknown field types and unknown rule names are rejected. There is no place in the format for code: no `eval`, no `Function`, no expression strings. `visibleIf` and `disabledIf` are declarative conditions (`equals`, `notEquals`, `in`, `notIn`, `gt`, `lt`, `isEmpty`, `isNotEmpty`, combined with `all`, `any`, `not`).
+- **No regex source.** The `pattern` rule is `{ "rule": "pattern", "name": "digits" }`: a name from the allow-list in `utils/patterns.ts` (`digits`, `letters`, `alphanumeric`, `noSpaces`, `postalCode`, `iban`). An unknown name, or a raw string such as `"pattern": "^(a+)+$"`, fails validation. Add your own pattern to the list in code; each one must be linear (single character classes, no quantified groups) and is tested against a 10,000-character adversarial input.
+- Sizes are capped (fields, steps, options, text length, document size), and field names are plain identifiers.
+- Labels are keys of the `forms` namespace (or `ns:key`), or an `{ "en": "...", "ar": "..." }` object.
+- Values are never logged.
