@@ -4,6 +4,7 @@ import { View } from 'react-native';
 
 import { FieldRenderer } from '@features/dynamic-forms/components/FieldRenderer';
 import { styles } from '@features/dynamic-forms/components/FormBuilder/styles';
+import { ReviewStep } from '@features/dynamic-forms/components/ReviewStep';
 import { DEFAULT_SPACING } from '@features/dynamic-forms/constants';
 import { FormBuilderContext } from '@features/dynamic-forms/hooks/useFormBuilderContext';
 import { getFieldKey } from '@features/dynamic-forms/utils/fieldTree';
@@ -25,9 +26,13 @@ export function MultiStepFormBuilder<T extends FieldValues>(props: MultiStepForm
       <FormBuilderContext value={vm.context}>
         {renderStepIndicator?.(navigation.visibleStepIndex, navigation.totalVisibleSteps, vm.title)}
         <View style={styles.container(props.spacing ?? DEFAULT_SPACING)} testID={testID}>
-          {(steps[vm.currentStep]?.fields ?? []).map((field, index) => (
-            <FieldRenderer key={getFieldKey(field, index)} field={field} values={vm.values} />
-          ))}
+          {vm.isReviewStep ? (
+            <ReviewStep steps={steps} values={vm.values} onEdit={vm.goToStep} />
+          ) : (
+            (steps[vm.currentStep]?.fields ?? []).map((field, index) => (
+              <FieldRenderer key={getFieldKey(field, index)} field={field} values={vm.values} />
+            ))
+          )}
         </View>
         {renderNavigation?.(navigation)}
       </FormBuilderContext>

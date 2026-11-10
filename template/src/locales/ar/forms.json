@@ -5,6 +5,14 @@
     "itemLabel": "عنصر",
     "remove": "إزالة {{label}} {{index}}"
   },
+  "review": {
+    "empty": "غير مُدخل",
+    "no": "لا",
+    "nothing": "لا يوجد ما يُراجَع.",
+    "stepFallback": "الخطوة {{index}}",
+    "title": "",
+    "yes": "نعم"
+  },
   "validation": {
     "email": "أدخل عنوان بريد إلكتروني صالحًا.",
     "invalid": "هذه القيمة غير صالحة.",

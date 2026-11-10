@@ -5,6 +5,14 @@
     "itemLabel": "Item",
     "remove": "Remove {{label}} {{index}}"
   },
+  "review": {
+    "empty": "Not provided",
+    "no": "No",
+    "nothing": "There is nothing to review.",
+    "stepFallback": "Step {{index}}",
+    "title": "Review your answers",
+    "yes": "Yes"
+  },
   "validation": {
     "email": "Enter a valid email address.",
     "invalid": "This value is not valid.",
