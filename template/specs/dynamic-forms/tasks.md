@@ -9,4 +9,4 @@ Spec: [`spec.md`](spec.md) · Design: [`design.md`](design.md)
 - [x] T5 (AC-7) Review step — commit: feat(forms): add the review step
 - [x] T6 (AC-8) JSON adapter — commit: feat(forms): add the JSON adapter
 - [x] T7 (AC-9) Route, screen, demo flows, Debug menu — commit: feat(forms): add the flow screen and demos
-- [ ] T8 (AC-10) Module plumbing — commit: chore(forms): wire the module for the CLI
+- [x] T8 (AC-10) Module plumbing — commit: chore(forms): wire the module for the CLI

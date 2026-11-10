@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: implemented
 owner: implementer, reviewed by the integrator
 created: 2026-10-24
 plan: ../PLAN.md

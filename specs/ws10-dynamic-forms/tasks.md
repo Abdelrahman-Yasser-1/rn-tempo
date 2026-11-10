@@ -10,5 +10,5 @@ Format: `- [ ] T<task id> <summary>`. Tick a box in the same commit that complet
 - [x] T10.6 Review step (AC-7)
 - [x] T10.7 JSON adapter: format schema, conditions, `buildZodSchema`, `fromJson`, safety checks (AC-8)
 - [x] T10.8 Route, `DynamicFormFlowScreen`, demo flows, Debug menu entry, locales (AC-9)
-- [ ] T10.9 Module plumbing: manifest, markers, README, CLI round trip (AC-10)
-- [ ] T10.10 Docs page and ADR index, `ai/rules/forms.md` and `yarn ai:sync`
+- [x] T10.9 Module plumbing: manifest, markers, README, CLI round trip (AC-10)
+- [x] T10.10 Docs page and ADR index, `ai/rules/forms.md` and `yarn ai:sync`
