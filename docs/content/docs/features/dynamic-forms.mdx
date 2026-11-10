@@ -5,6 +5,89 @@ description: Config-driven forms with typed field configs, steps, repeat section
 
 <FeatureBadge name="dynamic-forms" />
 
+## What it is
+
+The `dynamic-forms` module turns a description of a form into a screen. The description is typed data (a `fields` array and a Zod schema), and the module renders it with the `Form*` inputs you already have, validates it, and adds the things long forms need: visibility rules, calculated values, async validation, steps, repeat sections, drafts and a review. The same engine runs forms described by JSON from a server. It is off by default in the CLI prompt. Everything lives in `src/features/dynamic-forms`; other code imports `@features/dynamic-forms` only.
+
+## Quick start
+
+```tsx
+import { z } from 'zod';
+import { FormBuilder, VALIDATION_MESSAGES } from '@features/dynamic-forms';
+import type { FormField } from '@features/dynamic-forms';
+
+type Values = { email: string; hasPet: boolean; petName: string };
+
+const schema = z.object({
+  email: z.string(VALIDATION_MESSAGES.required).min(1, VALIDATION_MESSAGES.required),
+  hasPet: z.boolean(),
+  petName: z.string(VALIDATION_MESSAGES.required).min(1, VALIDATION_MESSAGES.required),
+});
+
+const fields: FormField<Values>[] = [
+  { type: 'text', name: 'email', label: 'profile.email', required: true },
+  { type: 'switch', name: 'hasPet', label: 'profile.hasPet' },
+  // Hidden until hasPet is on; hidden fields are not validated.
+  { type: 'text', name: 'petName', label: 'profile.petName', visibleIf: (v) => v.hasPet, clearOnHidden: true },
+];
+
+<FormBuilder<Values> fields={fields} schema={schema} onSubmit={save}
+  renderSubmitButton={(onPress) => <Button title="Save" onPress={onPress} />} />;
+```
+
+`onSubmit` receives the Zod output, typed as `Values`. Labels are keys of the `forms` namespace (or `ns:key`), or `{ en, ar }` objects. Hidden fields are left out of the values.
+
+## Field types
+
+Each type maps to an existing `Form*` component. A field is `{ type, name, label?, placeholder?, helperText?, subLabel?, tooltip?, required?, sensitive?, props? }`; `props` is the component's own props minus the ones the builder controls.
+
+| Type | Component | Value |
+| --- | --- | --- |
+| `text`, `textArea` | `FormTextField`, `FormTextArea` | `string` |
+| `number` | `FormNumberInput` | `number` |
+| `select`, `radioGroup` | `FormSelect`, `FormRadioGroup` (need `options`) | `string` |
+| `multiSelect` | `FormMultiSelect` (needs `options`) | `string[]` |
+| `checkbox`, `switch` | `FormCheckbox`, `FormSwitch` | `boolean` |
+| `slider` | `FormSlider` (`props.min`, `props.max`) | `number` |
+| `date`, `time`, `monthYear` | `FormDatePicker`, `FormTimePicker`, `FormMonthYearPicker` | ISO `string`, `HH:mm`, `YYYY-MM` |
+| `timeSlot` | `FormTimeSlot` (`props.slots`) | `string` |
+| `otp`, `phone` | `FormOtpInput`, `FormPhoneInput` | `string` |
+| `file`, `multiFile` | `FormFilePicker`, `FormMultiFilePicker` (module `file-picker`) | file(s) |
+| `map` | `FormMapPicker` (module `maps`) | location |
+
+## Behaviors
+
+| Property | Effect |
+| --- | --- |
+| `visibleIf(values)` / `disabledIf(values)` | Show or disable the field (also on rows, groups, repeats and steps). |
+| `calculatedValue(values)` | Derives the value; the field becomes read-only. |
+| `defaultValue` | Initial value, and the value `clearOnHidden` and `resetOnChange` reset to. Default: the type's empty value. |
+| `clearOnHidden` | Reset the field when `visibleIf` turns false. |
+| `resetOnChange: ['other']` | Reset the listed fields when this one changes. |
+| `onValueChange(value, values)` | Side effect on change (not on mount). |
+| `transform(value)` | Rewrite the value before it is stored (trim, uppercase). Must be idempotent. |
+| `asyncValidate(value, values)` + `asyncValidateDebounceMs` | Resolve a message key for an error. Debounced; a newer value cancels the pending call and ignores a late answer. The error blocks submit until the value changes. |
+| `validateOnChange` | Validate this field on every change. |
+
+Hidden fields are not validated: the resolver drops their errors and leaves their values out of the result, for a hand-written schema and for a JSON one alike. With an external `form`, pass `createFormResolver({ schema, getHiddenNames })` to your own `useForm`.
+
+## Layouts
+
+`{ type: 'row', fields, flex?, spacing? }` puts bound fields side by side, `{ type: 'group', fields, spacing? }` stacks fields (and rows and groups) in a container, and `{ type: 'custom', render(values) }` renders any node outside the form state. Spacing is a theme token (`'md'`, `'lg'`, ...). A hidden layout hides its children but they keep their behaviors, so `clearOnHidden` still runs.
+
+## Multi-step forms
+
+`MultiStepFormBuilder` takes `steps: StepConfig[]` (`fields`, `title`, `visibleIf`, `canGoBack`, `onStepEnter(values, direction)`, `onStepLeave(values, direction)`) and one schema for the whole form.
+
+- **Next** validates the visible fields of the step. **Back** and `initialStep` skip hidden steps. A step with `canGoBack: false` has no way back.
+- An invalid final submit shows the first step that holds an error.
+- Render the controls with `renderStepIndicator(visibleIndex, total, title)` and `renderNavigation(props)`, or drive it through the ref (`goToStep`, `nextStep`, `prevStep`, `submit`, plus the whole `useForm` API).
+- `FormFlow` is a ready-made version with a step header, Back and Next buttons and the review.
+
+## Repeat sections
+
+`{ type: 'repeat', name: 'people', fields: [...], minItems?, maxItems?, itemLabel?, addLabel? }` renders a list with Add and numbered Remove buttons (`useFieldArray`). The list starts with `minItems` items; Add is disabled at `maxItems` and Remove at `minItems`. Each item is validated by your schema at `people.<index>.<field>`, and the list-level error (a `min(1)` on the array) shows under the list. Items cannot contain behaviors or nested repeats.
+
 ## Drafts
 
 A form with `draft: { key }` saves its values to the encrypted app storage (`forms.draft.<key>`) and restores them when it mounts. These rules protect personal data on a shared device:
@@ -14,6 +97,45 @@ A form with `draft: { key }` saves its values to the encrypted app storage (`for
 - **Drafts expire.** A draft older than `maxAgeMs` (default 7 days, measured from the time it was saved) is ignored and deleted. Set it per form: `draft: { key: 'kyc', maxAgeMs: 24 * 60 * 60 * 1000 }`.
 - **Never saved:** fields marked `sensitive` (OTP and secure text by default), file fields, and anything not declared in the form config.
 - A successful submit clears the draft. `discardDraft(key)` removes one by hand.
+
+
+## Review step
+
+`review: true` on a `MultiStepFormBuilder` adds a last, read-only step built from the field config with `FormReview`: one card per visible step, labels and formatted values (option labels, localized dates, yes or no), and an Edit link per step that jumps back with `goToStep`. Hidden and `sensitive` fields are left out.
+
+## JSON format
+
+`fromJson(document)` validates a document and returns `{ success: true, form }` or `{ success: false, issues }`. A document is a single page (`{ version: 1, id, fields }`) or a flow (`{ version: 1, id, steps, review?, draft? }`; `draft: true` uses the key `json.<id>`). Fields use the same `type`, `name`, texts, `options`, `defaultValue`, `sensitive`, `clearOnHidden` and `resetOnChange` as in code; `props` is limited to a short list per type (for example `keyboardType` for `text`, `min` and `max` for `slider`).
+
+```json
+{
+  "version": 1,
+  "id": "signup",
+  "steps": [
+    {
+      "id": "contact",
+      "title": { "en": "Contact", "ar": "التواصل" },
+      "fields": [
+        { "type": "text", "name": "email", "label": "signup.email",
+          "rules": [{ "rule": "required" }, { "rule": "email" }] },
+        { "type": "radioGroup", "name": "contactBy", "label": "signup.contactBy",
+          "options": [{ "value": "email", "label": "signup.byEmail" },
+                      { "value": "phone", "label": "signup.byPhone" }] },
+        { "type": "text", "name": "phoneDigits", "label": "signup.phone",
+          "visibleIf": { "field": "contactBy", "equals": "phone" }, "clearOnHidden": true,
+          "rules": [{ "rule": "required" }, { "rule": "pattern", "name": "digits" }] }
+      ]
+    }
+  ]
+}
+```
+
+- **Conditions** (`visibleIf`, `disabledIf`, step `visibleIf`): `{ field, equals | notEquals | in | notIn | gt | lt | isEmpty | isNotEmpty }`, combined with `{ all: [...] }`, `{ any: [...] }` and `{ not: ... }`.
+- **Rules** (each takes an optional `message` key): `required`, `minLength`, `maxLength`, `min`, `max`, `email`, `phone`, `pattern` (`name` from the allow-list), `minItems`, `maxItems`. A rule must fit the field type. Messages default to `forms:validation.*` keys. An empty optional value skips every rule except `minItems` and `maxItems`.
+- **Layouts:** `row` and `group`. **Repeat:** `type: "repeat"` with `fields`, and `minItems` and `maxItems` as rules.
+- **Types:** every type in the table above except `file`, `multiFile` and `map`. A `timeSlot` takes `options` as its slots; slot labels are the times.
+- **Code only, not in the format:** `calculatedValue`, `asyncValidate`, `transform`, `onValueChange`, `custom` renders and any function. Put a field that needs one in a code config, or add the behavior to the app and name it from the document through a new, reviewed rule.
+- Hidden fields are skipped by validation the same way as for a code schema: `buildZodSchema` validates every field and the builder drops the errors of hidden ones.
 
 ## Security rules for server JSON
 
@@ -26,3 +148,24 @@ A document from the network is untrusted input. `fromJson` validates it with a s
 - A form has at most 100 fields and 20 steps, and field names are plain identifiers.
 - Labels are keys of the `forms` namespace (or `ns:key`), or an `{ "en": "...", "ar": "..." }` object.
 - Values are never logged.
+
+## Add a field type
+
+1. Add an entry to `FieldTypeMap` in `components/FieldRegistry/types.ts`: the type name and its config (`props` from the component's props type, `options` if it needs them).
+2. Add a renderer under the same name in `components/FieldRegistry/FieldRegistry.tsx` that returns the `Form*` component. TypeScript reports the missing renderer until you do.
+3. If the value is personal, decide whether it needs `sensitive` by default (`SENSITIVE_BY_DEFAULT_TYPES` in `constants.ts`) or must never be drafted (`NON_PERSISTED_TYPES`).
+4. To allow it in JSON, add it to `JSON_FIELD_TYPES` and its allowed `props` in `utils/jsonSchema.ts`.
+
+## Add a pattern, flow or message
+
+- A new `pattern` name: add it to `PATTERNS` in `utils/patterns.ts` (linear, anchored, single character classes) with a message key.
+- A new flow: `defineFlow({ id, steps, schema, review, draft })` or `fromJson(document)`, then list it in `utils/flows.ts` and open it with `navigate('DynamicFormFlow', { flowId })`. The Debug menu (non-prod builds) opens the two demos.
+
+## Enable and remove
+
+<CommandTabs yarn="tempo feature add dynamic-forms" npm="npx tempo feature add dynamic-forms" />
+
+<CommandTabs yarn="tempo feature remove dynamic-forms" npm="npx tempo feature remove dynamic-forms" />
+
+Removing it deletes `src/features/dynamic-forms`, the `forms` locale files and the spec, and strips the marked lines: the route and its screen, the Debug menu entries, the draft cleanup in `App.tsx`, the storage keys and the `forms` namespace. The app still passes `yarn verify`. The rule `ai/rules/forms.md` tells agents to hand-write forms when the module is off.
+
