@@ -10,6 +10,17 @@ Everything `index.ts` exports. `yarn lint:readmes` fails when this list and the 
 
 - `FormBuilder`: Single-page form rendered from a `fields` config and a Zod schema.
 - `MultiStepFormBuilder`: Wizard with per-step validation, hidden steps, `canGoBack` and a step indicator.
+- `fromJson`: Validates a server document and turns it into the typed config and a Zod schema.
+- `parseFormJson`: Validates a server document only; the issues never contain values.
+- `buildZodSchema`: Builds the Zod schema from the rules of a document.
+- `evaluateCondition`: Evaluates a declarative condition against the values.
+- `BuiltForm`: What `fromJson` returns for a form or a flow.
+- `FromJsonResult`: Success with the form, or the issues.
+- `FlowJson`: Multi-step server document.
+- `FormSchemaJson`: Single-page server document.
+- `ParseResult`: Result of `parseFormJson`.
+- `Condition`: A declarative condition: a comparison, or `all`, `any`, `not`.
+- `PatternName`: A name of the pattern allow-list.
 - `discardDraft`: Deletes a saved draft by key; call it on sign-out for personal data.
 - `initDraftCleanup`: Registers the sign-out cleanup of drafts; the app calls it once at start.
 - `hasDraft`: True when a readable draft exists for a key.

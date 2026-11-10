@@ -7,6 +7,14 @@ export type {
   NavigationProps,
   StepConfig,
 } from './components/MultiStepFormBuilder';
+export { buildZodSchema } from './utils/buildZodSchema';
+export { evaluateCondition } from './utils/conditions';
+export type { Condition } from './utils/conditions';
+export { fromJson } from './utils/fromJson';
+export type { BuiltForm, FromJsonResult } from './utils/fromJson';
+export { parseFormJson } from './utils/jsonDocument';
+export type { FlowJson, FormSchemaJson, ParseResult } from './utils/jsonDocument';
+export type { PatternName } from './utils/patterns';
 export { discardDraft, hasDraft, initDraftCleanup } from './utils/draft';
 export { createFormResolver } from './utils/formResolver';
 export type { FormResolverOptions } from './utils/formResolver';

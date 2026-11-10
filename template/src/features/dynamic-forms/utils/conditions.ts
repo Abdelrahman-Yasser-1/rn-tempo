@@ -44,14 +44,25 @@ const leaf = z.union([
   z.strictObject({ field: name, isNotEmpty: z.literal(true) }),
 ]);
 
-export const conditionSchema: z.ZodType<Condition> = z.lazy(() =>
-  z.union([
+/**
+ * The schema of a condition that may nest `all` / `any` / `not` `CONDITION_MAX_DEPTH - depth`
+ * more times. Built eagerly, level by level, so the schema is finite and parsing a deep input
+ * fails at the first level that does not allow another combinator (no unbounded recursion).
+ */
+function conditionAt(depth: number): z.ZodType<Condition> {
+  if (depth >= CONDITION_MAX_DEPTH) {
+    return leaf;
+  }
+  const child = conditionAt(depth + 1);
+  return z.union([
     leaf,
-    z.strictObject({ all: z.array(conditionSchema).min(1).max(MAX_CHILDREN) }),
-    z.strictObject({ any: z.array(conditionSchema).min(1).max(MAX_CHILDREN) }),
-    z.strictObject({ not: conditionSchema }),
-  ]),
-);
+    z.strictObject({ all: z.array(child).min(1).max(MAX_CHILDREN) }),
+    z.strictObject({ any: z.array(child).min(1).max(MAX_CHILDREN) }),
+    z.strictObject({ not: child }),
+  ]);
+}
+
+export const conditionSchema: z.ZodType<Condition> = conditionAt(0);
 
 /** Nesting depth of a condition (a leaf is 0). */
 export function conditionDepth(condition: Condition): number {
@@ -122,5 +133,7 @@ export function evaluateCondition(condition: Condition, values: FieldValues): bo
   if ('any' in condition) {
     return condition.any.some((child) => evaluateCondition(child, values));
   }
-  return 'not' in condition ? !evaluateCondition(condition.not, values) : evaluateLeaf(condition, get(values, condition.field));
+  return 'not' in condition
+    ? !evaluateCondition(condition.not, values)
+    : evaluateLeaf(condition, get(values, condition.field));
 }
