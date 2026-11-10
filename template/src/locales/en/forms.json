@@ -14,10 +14,16 @@
     "yes": "Yes"
   },
   "validation": {
+    "alphanumeric": "Use letters and numbers only.",
+    "digits": "Use digits only.",
     "email": "Enter a valid email address.",
+    "iban": "Enter a valid IBAN.",
     "invalid": "This value is not valid.",
+    "letters": "Use letters only.",
+    "noSpaces": "Do not use spaces.",
     "pattern": "This value does not match the expected format.",
     "phone": "Enter a valid phone number with country code.",
+    "postalCode": "Enter a valid postal code.",
     "required": "This field is required.",
     "tooBig": "This number is too large.",
     "tooFewItems": "Add more items.",
