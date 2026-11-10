@@ -3,9 +3,6 @@ import type { SpacingKey } from '@theme/index';
 /** Gap between fields when a builder gets no `spacing`. */
 export const DEFAULT_SPACING: SpacingKey = 'lg';
 
-/** Namespace of the module's own strings (labels, buttons, validation messages). */
-export const FORMS_NAMESPACE = 'forms';
-
 /** Debounce before a single-page form writes its draft. */
 export const DEFAULT_DRAFT_DEBOUNCE_MS = 500;
 

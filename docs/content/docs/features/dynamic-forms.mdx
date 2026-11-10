@@ -21,6 +21,8 @@ A document from the network is untrusted input. `fromJson` validates it with a s
 
 - Unknown keys, unknown field types and unknown rule names are rejected. There is no place in the format for code: no `eval`, no `Function`, no expression strings. `visibleIf` and `disabledIf` are declarative conditions (`equals`, `notEquals`, `in`, `notIn`, `gt`, `lt`, `isEmpty`, `isNotEmpty`, combined with `all`, `any`, `not`).
 - **No regex source.** The `pattern` rule is `{ "rule": "pattern", "name": "digits" }`: a name from the allow-list in `utils/patterns.ts` (`digits`, `letters`, `alphanumeric`, `noSpaces`, `postalCode`, `iban`). An unknown name, or a raw string such as `"pattern": "^(a+)+$"`, fails validation. Add your own pattern to the list in code; each one must be linear (single character classes, no quantified groups) and is tested against a 10,000-character adversarial input.
-- Sizes are capped (fields, steps, options, text length, document size), and field names are plain identifiers.
+- **Limits, checked before parsing.** A bounded, iterative walk (no recursion) refuses a document before any schema runs when it is nested deeper than 24 levels, holds more than 5,000 values, has an array or an object with more than 200 entries, a string or key longer than 2,000 characters, or anything that is not plain JSON. The limits are in `JSON_LIMITS`. Conditions can nest `all`, `any` and `not` four levels deep; the condition schema is built level by level, so it cannot recurse without bound.
+- Any unexpected exception while reading a document becomes a failed result. The screen shows an error state; the document is never logged.
+- A form has at most 100 fields and 20 steps, and field names are plain identifiers.
 - Labels are keys of the `forms` namespace (or `ns:key`), or an `{ "en": "...", "ar": "..." }` object.
 - Values are never logged.
