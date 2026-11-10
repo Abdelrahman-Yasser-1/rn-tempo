@@ -85,6 +85,7 @@ const Navigation = createRootNavigator({
   DebugMenu: () => <Fixed label="DebugMenu" />,
   NetworkLog: () => <Fixed label="NetworkLog" />,
   WebView: () => <Fixed label="WebView" />, // @tempo-feature:webview
+  DynamicFormFlow: () => <Fixed label="DynamicFormFlow" />, // @tempo-feature:dynamic-forms
 });
 
 const initialUrl = jest.spyOn(Linking, 'getInitialURL');

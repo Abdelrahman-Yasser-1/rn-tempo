@@ -35,6 +35,10 @@ export type AppScreens = {
   /** In-app browser for `https` pages; open it with `navigate('WebView', { url, title })`. */
   WebView: ComponentType<{ route: { params: RootStackParamList['WebView'] } }>;
   // @tempo-feature:webview:end
+  // @tempo-feature:dynamic-forms:start
+  /** A config-driven form flow; open it with `navigate('DynamicFormFlow', { flowId })`. */
+  DynamicFormFlow: ComponentType<{ route: { params: RootStackParamList['DynamicFormFlow'] } }>;
+  // @tempo-feature:dynamic-forms:end
 };
 
 /** Builds the root navigator: auth/main groups gated by session, plus status and debug screens. */
@@ -76,6 +80,10 @@ export function createRootNavigator(screens: Readonly<AppScreens>) {
       // No deep link on purpose: a link that opens any URL would be an open redirect.
       WebView: screens.WebView,
       // @tempo-feature:webview:end
+      // @tempo-feature:dynamic-forms:start
+      // No deep link on purpose: a link must not open any form with any id.
+      DynamicFormFlow: screens.DynamicFormFlow,
+      // @tempo-feature:dynamic-forms:end
     },
   });
 

@@ -8,6 +8,10 @@ Config-driven forms: describe a form as typed data and the module renders it wit
 
 Everything `index.ts` exports. `yarn lint:readmes` fails when this list and the barrel differ, so update both together.
 
+- `DynamicFormFlowScreen`: Screen of the `DynamicFormFlow` route; opens a flow by id.
+- `FormFlow`: A flow with step header, Back and Next buttons, review and draft.
+- `FormFlowProps`: Props of `FormFlow`.
+- `defineFlow`: Wraps a typed code flow so the flow screen can list it.
 - `FormBuilder`: Single-page form rendered from a `fields` config and a Zod schema.
 - `MultiStepFormBuilder`: Wizard with per-step validation, hidden steps, `canGoBack` and a step indicator.
 - `fromJson`: Validates a server document and turns it into the typed config and a Zod schema.
@@ -57,7 +61,7 @@ Everything `index.ts` exports. `yarn lint:readmes` fails when this list and the 
 
 ## Screens and routes
 
-None yet.
+`DynamicFormFlow` with the param `flowId`, in the root stack (no deep link). Flows are listed in `utils/flows.ts`: `demo-code` (a typed code config) and `demo-json` (bundled JSON). The non-prod Debug menu opens both.
 
 ## Data
 

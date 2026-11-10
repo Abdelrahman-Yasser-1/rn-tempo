@@ -1,4 +1,54 @@
 {
+  "debug": {
+    "hint": "Two demo flows: one from a typed code config, one from bundled JSON.",
+    "openCode": "Open the code config demo",
+    "openJson": "Open the JSON demo",
+    "title": "Dynamic forms"
+  },
+  "demo": {
+    "code": {
+      "addDependant": "Add dependant",
+      "cities": {
+        "cairo": "Cairo",
+        "giza": "Giza",
+        "jeddah": "Jeddah",
+        "riyadh": "Riyadh"
+      },
+      "city": "City",
+      "companyName": "Company name",
+      "countries": {
+        "eg": "Egypt",
+        "sa": "Saudi Arabia"
+      },
+      "country": "Country",
+      "dependantItem": "Dependant",
+      "dependantName": "Name",
+      "dependants": "Dependants",
+      "email": "Email",
+      "fullName": "Full name",
+      "hasCompany": "I work for a company",
+      "password": "Password",
+      "price": "Unit price",
+      "quantity": "Quantity",
+      "steps": {
+        "about": "About you",
+        "family": "Family",
+        "order": "Order",
+        "work": "Work"
+      },
+      "total": "Total (calculated)",
+      "username": "Username (try \"taken\")"
+    }
+  },
+  "flow": {
+    "back": "Back",
+    "header": "Form",
+    "next": "Next",
+    "stepOf": "Step {{current}} of {{total}}",
+    "submit": "Submit",
+    "submitted": "Form submitted",
+    "unknown": "This form does not exist."
+  },
   "repeat": {
     "add": "Add item",
     "itemHeading": "{{label}} {{index}}",
@@ -30,6 +80,7 @@
     "tooLong": "This text is too long.",
     "tooManyItems": "Remove some items.",
     "tooShort": "This text is too short.",
-    "tooSmall": "This number is too small."
+    "tooSmall": "This number is too small.",
+    "usernameTaken": "This username is taken."
   }
 }

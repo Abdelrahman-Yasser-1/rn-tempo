@@ -1,4 +1,54 @@
 {
+  "debug": {
+    "hint": "نموذجان تجريبيان: واحد من إعداد مكتوب بالكود، وآخر من JSON مضمّن.",
+    "openCode": "فتح نموذج الكود",
+    "openJson": "فتح نموذج JSON",
+    "title": "النماذج الديناميكية"
+  },
+  "demo": {
+    "code": {
+      "addDependant": "إضافة معال",
+      "cities": {
+        "cairo": "القاهرة",
+        "giza": "الجيزة",
+        "jeddah": "جدة",
+        "riyadh": "الرياض"
+      },
+      "city": "المدينة",
+      "companyName": "اسم الشركة",
+      "countries": {
+        "eg": "مصر",
+        "sa": "السعودية"
+      },
+      "country": "الدولة",
+      "dependantItem": "معال",
+      "dependantName": "الاسم",
+      "dependants": "المعالون",
+      "email": "البريد الإلكتروني",
+      "fullName": "الاسم الكامل",
+      "hasCompany": "أعمل في شركة",
+      "password": "كلمة المرور",
+      "price": "سعر الوحدة",
+      "quantity": "الكمية",
+      "steps": {
+        "about": "عنك",
+        "family": "العائلة",
+        "order": "الطلب",
+        "work": "العمل"
+      },
+      "total": "الإجمالي (محسوب)",
+      "username": "اسم المستخدم (جرّب taken)"
+    }
+  },
+  "flow": {
+    "back": "رجوع",
+    "header": "نموذج",
+    "next": "التالي",
+    "stepOf": "الخطوة {{current}} من {{total}}",
+    "submit": "إرسال",
+    "submitted": "تم إرسال النموذج",
+    "unknown": "هذا النموذج غير موجود."
+  },
   "repeat": {
     "add": "إضافة عنصر",
     "itemHeading": "{{label}} {{index}}",
@@ -30,6 +80,7 @@
     "tooLong": "هذا النص طويل جدًا.",
     "tooManyItems": "احذف بعض العناصر.",
     "tooShort": "هذا النص قصير جدًا.",
-    "tooSmall": "هذا الرقم صغير جدًا."
+    "tooSmall": "هذا الرقم صغير جدًا.",
+    "usernameTaken": "اسم المستخدم مأخوذ."
   }
 }
