@@ -30,6 +30,12 @@
       "reset": "Reset overrides",
       "title": "Feature flags"
     },
+    "forms": {
+      "hint": "Two demo flows: one from a typed code config, one from bundled JSON.",
+      "openCode": "Open the code config demo",
+      "openJson": "Open the JSON demo",
+      "title": "Dynamic forms"
+    },
     "networkLog": {
       "hint": "Requests made by this app. Sign-in, token and profile requests are hidden. Everything else is shown as sent, Authorization header included, so this is for dev and staging builds only.",
       "open": "Open network log",
@@ -51,6 +57,42 @@
     "message": "This version of the app is no longer supported. Please update to continue.",
     "title": "Update required",
     "updateButton": "Update"
+  },
+  "formsDemo": {
+    "code": {
+      "addDependant": "Add dependant",
+      "cities": {
+        "cairo": "Cairo",
+        "giza": "Giza",
+        "jeddah": "Jeddah",
+        "riyadh": "Riyadh"
+      },
+      "city": "City",
+      "companyName": "Company name",
+      "countries": {
+        "eg": "Egypt",
+        "sa": "Saudi Arabia"
+      },
+      "country": "Country",
+      "dependantItem": "Dependant",
+      "dependantName": "Name",
+      "dependants": "Dependants",
+      "email": "Email",
+      "fullName": "Full name",
+      "hasCompany": "I work for a company",
+      "password": "Password",
+      "price": "Unit price",
+      "quantity": "Quantity",
+      "steps": {
+        "about": "About you",
+        "family": "Family",
+        "order": "Order",
+        "work": "Work"
+      },
+      "total": "Total (calculated)",
+      "username": "Username (try \"taken\")",
+      "usernameTaken": "This username is taken."
+    }
   },
   "linking": {
     "openFailed": "We couldn't open that link."

@@ -6,6 +6,25 @@
     "invalid": "Enter a valid email address.",
     "required": "Enter your email address."
   },
+  "formBuilder": {
+    "alphanumeric": "Use letters and numbers only.",
+    "digits": "Use digits only.",
+    "email": "Enter a valid email address.",
+    "iban": "Enter a valid IBAN.",
+    "invalid": "This value is not valid.",
+    "letters": "Use letters only.",
+    "noSpaces": "Do not use spaces.",
+    "pattern": "This value does not match the expected format.",
+    "phone": "Enter a valid phone number with country code.",
+    "postalCode": "Enter a valid postal code.",
+    "required": "This field is required.",
+    "tooBig": "This number is too large.",
+    "tooFewItems": "Add more items.",
+    "tooLong": "This text is too long.",
+    "tooManyItems": "Remove some items.",
+    "tooShort": "This text is too short.",
+    "tooSmall": "This number is too small."
+  },
   "item": {
     "categoryRequired": "Enter a category.",
     "descriptionRequired": "Enter a description.",

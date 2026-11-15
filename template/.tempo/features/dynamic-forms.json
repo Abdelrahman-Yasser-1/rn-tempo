@@ -7,14 +7,56 @@
   "requires": [],
   "conflicts": [],
   "deleteGlobs": [
-    "src/features/dynamic-forms/**",
-    "src/locales/*/forms.json",
+    "src/shared/components/DynamicForm/**",
+    "src/app/bootstrap/initFormDrafts.ts",
+    "src/app/bootstrap/initFormDrafts.test.ts",
     "specs/dynamic-forms/**"
   ],
   "dependencies": [],
   "devDependencies": [],
   "envKeys": [],
-  "jsonPatches": [],
+  "jsonPatches": [
+    {
+      "file": "src/locales/en/common.json",
+      "op": "remove",
+      "path": "/formBuilder"
+    },
+    {
+      "file": "src/locales/ar/common.json",
+      "op": "remove",
+      "path": "/formBuilder"
+    },
+    {
+      "file": "src/locales/en/validation.json",
+      "op": "remove",
+      "path": "/formBuilder"
+    },
+    {
+      "file": "src/locales/ar/validation.json",
+      "op": "remove",
+      "path": "/formBuilder"
+    },
+    {
+      "file": "src/locales/en/app.json",
+      "op": "remove",
+      "path": "/debug/forms"
+    },
+    {
+      "file": "src/locales/ar/app.json",
+      "op": "remove",
+      "path": "/debug/forms"
+    },
+    {
+      "file": "src/locales/en/app.json",
+      "op": "remove",
+      "path": "/formsDemo"
+    },
+    {
+      "file": "src/locales/ar/app.json",
+      "op": "remove",
+      "path": "/formsDemo"
+    }
+  ],
   "postRemove": [],
   "docs": "/docs/features/dynamic-forms"
 }

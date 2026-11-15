@@ -72,6 +72,31 @@
     "filters": "التصفية",
     "filtersActive": "التصفية، {{active}} نشطة"
   },
+  "formBuilder": {
+    "flow": {
+      "back": "رجوع",
+      "header": "نموذج",
+      "next": "التالي",
+      "stepOf": "الخطوة {{current}} من {{total}}",
+      "submit": "إرسال",
+      "submitted": "تم إرسال النموذج",
+      "unknown": "هذا النموذج غير موجود."
+    },
+    "repeat": {
+      "add": "إضافة عنصر",
+      "itemHeading": "{{label}} {{index}}",
+      "itemLabel": "عنصر",
+      "remove": "إزالة {{label}} {{index}}"
+    },
+    "review": {
+      "empty": "غير مُدخل",
+      "no": "لا",
+      "nothing": "لا يوجد ما يُراجَع.",
+      "stepFallback": "الخطوة {{index}}",
+      "title": "",
+      "yes": "نعم"
+    }
+  },
   "formReview": {
     "edit": "تعديل",
     "editSection": "تعديل {{section}}"
