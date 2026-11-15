@@ -11,6 +11,7 @@ Shared [ESLint](https://eslint.org) flat config for RN-TEMPO projects.
 - Size guards on `src`: `max-lines` 300, `max-params` 4, `max-depth` 4, `arrow-body-style`, `@stylistic/jsx-self-closing-comp`
 - Disable directives: description required, no unlimited disables, paired enables, unused disables are errors; `@eslint-react/no-array-index-key` is an error
 - `structure: true`: import boundaries (`eslint-plugin-boundaries`) and the folder skeleton of contract C5 (`eslint-plugin-project-structure`)
+  - A shared component folder may be a **component module** (one capability behind one `index.ts`). Besides the component files it may hold `components/<Pascal>/` (component folders: component, test, story and `index.ts`), `hooks/` (`use<Name>.ts` and its mandatory `use<Name>.test.ts`), `utils/` (camelCase files and tests), `screens/<Name>Screen/` (the screen folder rules), service-like `<camelCase>/` folders (camelCase or kebab-case `.ts` files and tests), and the files `types.ts`, `constants.ts` and `README.md`. Any other folder is an error. The fixtures `valid/.../Wizard` and `invalid/.../BadModule` cover it.
 
 ## Usage
 

@@ -112,6 +112,16 @@ describe("eslint-config fixtures", () => {
       "project-structure/folder-structure",
     ],
     [
+      "a component module hook without a test",
+      "src/shared/components/BadModule/hooks/useThing.ts",
+      "project-structure/folder-structure",
+    ],
+    [
+      "an unknown folder inside a component module",
+      "src/shared/components/BadModule/Stuff/thing.ts",
+      "project-structure/folder-structure",
+    ],
+    [
       "an unknown folder",
       "src/misc/thing.ts",
       "project-structure/folder-structure",
