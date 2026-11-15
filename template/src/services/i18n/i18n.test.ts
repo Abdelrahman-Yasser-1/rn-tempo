@@ -29,7 +29,6 @@ describe('i18n resources', () => {
         'auth',
         'common',
         'errors',
-        'forms', // @tempo-feature:dynamic-forms
         'home',
         'items', // @tempo-feature:samples
         'profile',

@@ -2,14 +2,15 @@ import { DarkTheme, DefaultTheme, type Theme } from '@react-navigation/native';
 import { useEffect, useMemo, type ComponentType } from 'react';
 import { StatusBar } from 'react-native';
 
-import { DynamicFormFlowScreen, initDraftCleanup } from '@features/dynamic-forms'; // @tempo-feature:dynamic-forms
 import { linking, startPendingLinkResume } from '@navigation/linking';
 import { navigationRef } from '@navigation/navigationRef';
 import { createRootNavigator } from '@navigation/RootNavigator';
 import { startNetworkMonitoring } from '@services/network/network';
 import { flushPushLinks } from '@services/push/routing'; // @tempo-feature:push-notifications
+import { DynamicFormFlowScreen } from '@shared/components/DynamicForm'; // @tempo-feature:dynamic-forms
 import { useAppTheme } from '@theme/index';
 
+import { initFormDrafts } from './bootstrap/initFormDrafts'; // @tempo-feature:dynamic-forms
 import { useSecurityStore } from './bootstrap/securityStore';
 import { useBootstrap, type BootstrapState } from './bootstrap/useBootstrap';
 import { AppProviders } from './providers/AppProviders';
@@ -83,7 +84,7 @@ function AppContent() {
 
   useEffect(() => startNetworkMonitoring(), []);
   useEffect(() => startPendingLinkResume(), []);
-  useEffect(() => initDraftCleanup(), []); // @tempo-feature:dynamic-forms
+  useEffect(() => initFormDrafts(), []); // @tempo-feature:dynamic-forms
   // @tempo-feature:push-notifications:start
   // A notification that opened the app is routed once the navigator exists. One macrotask later,
   // so the linking listener is subscribed (same trick as the pending link replay).
