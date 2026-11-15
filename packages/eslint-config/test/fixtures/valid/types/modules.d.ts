@@ -38,5 +38,6 @@ declare function describe(name: string, run: () => void): void;
 declare function it(name: string, run: () => void): void;
 declare function expect(value: unknown): {
   toBeTruthy: () => void;
+  toBe: (item: unknown) => void;
   toContain: (item: string) => void;
 };

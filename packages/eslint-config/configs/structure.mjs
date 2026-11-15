@@ -48,7 +48,8 @@ const featureChildren = [
   file('index.ts'),
 ];
 
-const sharedComponent = folder('{PascalCase}', [
+/** The files of one component folder (also used by the components of a component module). */
+const componentFiles = [
   file('{FolderName}.tsx', ['{NodeName}.test.tsx', '{NodeName}.stories.tsx', 'index.ts']),
   file('{FolderName}.test.tsx'),
   file('{FolderName}.stories.tsx'),
@@ -59,7 +60,36 @@ const sharedComponent = folder('{PascalCase}', [
   file('styles.ts'),
   file('types.ts'),
   file('index.ts'),
+];
+
+/** A service-like folder inside a component module: flat camelCase or kebab-case files and tests. */
+const moduleServiceFolder = folder('{camelCase}', [
+  file('{camelCase}.ts'),
+  file('{camelCase}.test.ts'),
+  file(`${KEBAB}.ts`),
+  file(`${KEBAB}.test.ts`),
 ]);
+
+/**
+ * A component module: a shared component folder that groups one capability (components, hooks,
+ * utils, screens and service-like folders) behind its `index.ts`. Every inner folder keeps its
+ * naming rules, and a hook or a component still needs its test (and story).
+ */
+const moduleFolders = [
+  folder('components', [folder('{PascalCase}', componentFiles)]),
+  folder('hooks', [
+    file('use{PascalCase}.ts', ['{nodeName}.test.ts']),
+    file('use{PascalCase}.test.ts'),
+  ]),
+  folder('utils', camelFiles),
+  folder('screens', [screenFolders]),
+  moduleServiceFolder,
+  file('types.ts'),
+  file('constants.ts'),
+  file('README.md'),
+];
+
+const sharedComponent = folder('{PascalCase}', [...componentFiles, ...moduleFolders]);
 
 /** Free-form tree for generated or asset content: any file, any nested folder. */
 const FREE_TREE = { children: [{ name: '*' }, { name: '*', ruleId: 'free_tree' }] };
