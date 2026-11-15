@@ -10,3 +10,4 @@ Spec: [`spec.md`](spec.md) · Design: [`design.md`](design.md)
 - [x] T6 (AC-8) JSON adapter — commit: feat(forms): add the JSON adapter
 - [x] T7 (AC-9) Route, screen, demo flows, Debug menu — commit: feat(forms): add the flow screen and demos
 - [x] T8 (AC-10) Module plumbing — commit: chore(forms): wire the module for the CLI
+- [x] T9 (AC-10) Gather the module into one component folder, `src/shared/components/DynamicForm`, behind one `index.ts`, with the wiring in `dynamic-forms` markers, and merge the `forms` locale into `common`, `validation` and `app` — commit: build(eslint-config): allow component modules in shared components; refactor(forms): gather dynamic forms into one component folder; refactor(i18n): merge the forms namespace into common validation and app

@@ -2,6 +2,14 @@
 
 Spec: [`spec.md`](spec.md) · ADR-015 in the template docs.
 
+## Placement
+
+One component module, `src/shared/components/DynamicForm` (`shared-ui`): `components/` (`FormBuilder`, `MultiStepFormBuilder`, `FormFlow`, `FieldRenderer`, `BoundField`, `RepeatField`, `ReviewStep`, `FieldRegistry`), `hooks/`, `utils/` (the pure logic), `drafts/`, `flows/` (registry and demo flows), `screens/DynamicFormFlowScreen/`, `types.ts`, `constants.ts` and `index.ts`. Outside code imports `@shared/components/DynamicForm` only.
+
+- `drafts` takes the auth state through `initDraftCleanup(source)`; `app/bootstrap/initFormDrafts.ts` passes the auth store, so the module imports no feature.
+- The folder cannot import navigation, so the screen takes its route params from `DynamicFormFlowParams`.
+- `types.ts` is the pure model: `FieldTypeShape` types `props` as `unknown`, and `components/FieldRegistry` instantiates the same config types with the typed `Form*` props.
+
 ## Screens and navigation
 
 `DynamicFormFlow: { flowId: string }` in the root stack, registered in the `dynamic-forms` markers. Two demo flows (`demo-code`, `demo-json`) open from the non-prod Debug menu.
@@ -20,7 +28,7 @@ A Zod schema (code) or one built from declarative rules (JSON). A resolver wrapp
 
 ## i18n
 
-Namespace `forms`. Labels are keys (`key` or `ns:key`) or `{ en, ar }` objects. Validation messages are `forms:validation.*` keys, translated by the existing `Form*` components.
+No namespace of its own. Labels are `ns:key` strings or `{ en, ar }` objects. Builder labels are in `common:formBuilder.*`, validation messages in `validation:formBuilder.*` (translated by the existing `Form*` components), and the demo flow and Debug menu strings in `app:formsDemo.*` and `app:debug.forms.*`.
 
 ## a11y
 
