@@ -27,7 +27,11 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
+  "peerDependencies": {
+    "zod": "4.6.7"
+  },
   "dependencies": {
+    "@faker-js/faker": "10.6.0",
     "@rn-tempo/api-contract": "workspace:*"
   },
   "devDependencies": {
@@ -36,6 +40,7 @@
     "tsdown": "0.23.2",
     "typescript": "6.0.3",
     "vite": "8.3.5",
-    "vitest": "5.0.5"
+    "vitest": "5.0.5",
+    "zod": "4.6.7"
   }
 }
