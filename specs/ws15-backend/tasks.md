@@ -44,6 +44,24 @@ Format: `- [ ] T<id> (AC…) <summary>`, followed by its commit and its docs pag
 - [ ] **T15.C3** (AC-D-6) Device run over HTTPS on the iOS simulator and the Android emulator, with screenshots in the PR.
   - Docs: `backend/local-https`.
 
+## Phase X: dev API desktop app (`ws15/x-desktop`)
+Spec: "Tier 1b" in `spec.md`. Starts after Phase C merges.
+- [x] **T15.X0** Spec and plan amendment 57.
+  - Commit: `docs(specs): add the dev api desktop app`.
+- [ ] **T15.X1** (AC-DA-1, AC-DA-3, AC-DA-4) dev-api control additions: `/__tempo/info`, the `/__tempo/events` SSE log, `/__tempo/ca.pem`, `tempo-api dev ios|android`, and the standalone build.
+  - Commit: `feat(dev-api): add desktop control endpoints`.
+- [ ] **T15.X2** (AC-DA-5) The JSON workspace config loader, `import openapi` and `export code`.
+  - Commit: `feat(dev-api): add json workspaces with openapi import and code export`.
+- [ ] **T15.X3** (AC-DA-6) The debug menu's API source switch.
+  - Commit: `feat(app): switch the api source from the debug menu`.
+- [ ] **T15.X4** (AC-DA-1, AC-DA-7) Desktop app shell: Tauri 2 + React/Vite, the process manager, projects and recents, overview, tray.
+  - Commits: `build(deps): add tauri and the desktop ui stack`, `feat(desktop): add the dev api desktop shell`.
+- [ ] **T15.X5** (AC-DA-2 to AC-DA-5) Endpoints, Requests, Data, Certificates and Logs screens, and the workspace editor.
+  - Commits: one per screen, `feat(desktop): add <screen>`.
+- [ ] **T15.X6** macOS build in CI (unsigned artifacts), tests (vitest + RTL for the UI, `cargo test` for the process manager), and a manual run with screenshots.
+  - Commit: `ci(desktop): build the desktop app`.
+  - Docs: `backend/desktop-app`.
+
 ## Phase D: backend API foundation (`ws15/d-api`)
 - [ ] **T15.D1** (AC-B-8) `backend/api` skeleton.
   - env for dev, staging and prod; `pino` with redaction; helmet, CORS and limits; problem+json; `/api/v1/health`.

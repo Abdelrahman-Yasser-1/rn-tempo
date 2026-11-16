@@ -56,6 +56,8 @@ The template talks to dummyjson, which is read-mostly and keeps nothing, or to h
 packages/
 ├── api-contract/   # @rn-tempo/api-contract: defineEndpoint/resource types + the C13 schemas
 └── dev-api/        # @rn-tempo/dev-api: server, data generator, CLI (`tempo-api`), generators
+apps/               # things people run or install, never imported or published to npm
+└── dev-api-desktop/ # Tempo Dev API desktop app (Tauri 2 + React), shipped as GitHub release artifacts
 backend/
 ├── api/            # @rn-tempo/api: Express 5 + Prisma + PostgreSQL
 ├── portal/         # @rn-tempo/portal: React + Vite + TanStack Query + React Router
@@ -116,6 +118,68 @@ export const products = resource('products', ItemSchema, { seed: 50, searchBy: [
 - Each domain is one commit. The domain's existing tests must pass unchanged, which proves the behavior did not change.
 - Test-only overrides stay possible with `server.use(...)`.
 - Dev mock mode (`API_MOCKING=true`) uses the same generated handlers.
+
+## Tier 1b: Tempo Dev API desktop app (owner, 2026-11-17)
+Daily use of the CLI (certs, trust, `.env.dev` edits, rebuilds, scenario commands) is too many steps. A desktop app wraps the **dev/mock API only**. It does not manage other project setup (envs, icons, CI), which stays in the `tempo` CLI.
+
+### Decisions
+- **Tauri 2** shell, with a React 19 + Vite + TanStack Query UI (the portal's stack). Lives in `apps/dev-api-desktop` (root `workspaces` gains `apps/*`; changesets ignore it). It is private (not on npm) and ships as GitHub release artifacts. macOS (arm64 and x64) comes first. Windows and Linux builds are best effort, and simulator trust is macOS-only.
+- **The app holds no API logic.** It runs the `tempo-api` CLI and talks to the running server through its control API (`/__tempo/*`). Everything the app does is also possible from the CLI, and stays tested in Node.
+- **Which dev-api runs:**
+  - A project's own `node_modules/@rn-tempo/dev-api` when present. The app shows its version and warns when it is older than the app supports.
+  - Otherwise, a bundled **standalone build** (`dist/standalone/tempo-api.mjs`, every dependency inlined).
+- **Node:** Node ≥ 22 from the user's login shell (`$SHELL -lc 'command -v node'`), because macOS GUI apps do not get the shell `PATH`. A clear message appears when it is missing. No Node is bundled.
+- **Projects:**
+  - **Code projects:** any folder with `api/tempo-api.config.ts`, template-made or not. Endpoints are edited in code. The app runs, inspects and controls them.
+  - **Standalone workspaces:** for a project without a config. The endpoint set is stored as JSON (`tempo-api.json`: method, path, status, response JSON Schema plus example, scenarios, auth) in the app data folder, or in a chosen folder.
+    - Created by hand in the app, or imported from an OpenAPI 3.x file.
+    - "Export to code" writes `api/tempo-api.config.ts` plus `api/endpoints/*.ts` into a project, so a workspace can graduate to code.
+    - dev-api gains a JSON config loader for this.
+- **Several projects can run at once**, each on its own port. The app keeps a recent-projects list.
+
+### Screens
+- **Projects sidebar** with status dots. A **menu bar (tray) item** lists the running servers with start/stop.
+- **Overview:**
+  - start/stop, HTTPS/HTTP, port
+  - URLs for this Mac, the LAN, the Android emulator (`10.0.2.2`) and the iOS simulator
+  - a QR code with the LAN URL
+  - links to Swagger, OpenAPI and the Postman files
+- **Endpoints:** a searchable list grouped by tag. Each endpoint has:
+  - a live scenario picker
+  - a "Try it" panel that sends a request and shows the response
+  - in standalone workspaces, an editor
+- **Requests:** a live log streamed from the server, redacted as the server log is, with filters (method, status, path) and request/response detail.
+- **Data:** the stored `resource()` records, read-only, plus Reset.
+- **Certificates:**
+  - cert status (exists, expiry, covers the current LAN IP), with Create / Recreate
+  - "Trust on this Mac (asks for your password)"
+  - "Trust on iOS simulator" (lists the booted simulators)
+  - "Push to Android emulator" with the install steps
+  - a QR code to download the CA on a phone
+- **Logs:** server stdout, with the server's redaction.
+
+### dev-api additions (Node, tested)
+- `GET /__tempo/info`: version, scheme, port, URLs, cert status, project name.
+- `GET /__tempo/events`: a server-sent events stream of the request log, from a ring buffer of the last 500 entries, redacted. It requires the control token.
+- `GET /__tempo/ca.pem`: the **public** root CA only, so a phone can download it. Never the key.
+- `tempo-api dev ios|android`: creates certs when missing, trusts them on the booted simulator (or pushes them to the emulator), then runs `up`.
+- The JSON config loader, `tempo-api import openapi <file>` and `tempo-api export code`.
+- The standalone build target.
+
+### App-side switch (template)
+- The debug menu (non-prod only) gains **API source**:
+  - **Env default:** today's behavior.
+  - **In-app mocks.**
+  - **Local dev API:** the per-platform default URL (iOS simulator `https://localhost:8443`, Android emulator `https://10.0.2.2:8443`), editable for a phone (LAN URL).
+- It is stored in MMKV `app.api-source`, applies after an app restart (like the existing base-URL override), and needs no `.env` edit or rebuild.
+- `client.ts` reads it in `__DEV__` only. Release bundles behave exactly as before (bundle check).
+
+### Security
+- The app opens no port of its own. It talks only to `127.0.0.1` servers, with the project's control token.
+- Tauri capabilities are least privilege. The shell plugin is scoped to `node`, `mkcert`, `xcrun simctl` and `adb`, with fixed argument patterns.
+- A strict CSP. No telemetry and no remote content.
+- It never disables TLS verification. It trusts the project CA explicitly, as the CLI does.
+- Builds are unsigned until the release phase (I). The docs explain the Gatekeeper "Open" step. Signing and notarization are added in Phase I.
 
 ## Tier 2: full backend and portal
 
@@ -240,6 +304,13 @@ export const products = resource('products', ItemSchema, { seed: 50, searchBy: [
 - **AC-D-7** `yarn api openapi`, `collections` and `msw` are deterministic, and `yarn api:check` fails on a stale file.
 - **AC-D-8** After the migration, `src/test-utils/msw/handlers` holds no hand-written copy of a C13 endpoint, and all template tests pass unchanged.
 - **AC-D-9** `tempo g endpoint items.favorite` creates a definition, an API call and a query that pass `yarn verify`.
+- **AC-DA-1** The desktop app opens the template folder (and any folder with `api/tempo-api.config.ts`), starts its dev API over HTTPS, and shows the Mac, LAN, emulator and simulator URLs plus a LAN QR code. Stop works, and quitting the app stops every server it started.
+- **AC-DA-2** Choosing a scenario for an endpoint in the app changes the next response, and choosing "default" restores it, with no CLI command.
+- **AC-DA-3** Requests from the iOS simulator app appear in the Requests view within a second, with tokens and passwords redacted.
+- **AC-DA-4** From the Certificates screen, one action each creates the cert, trusts it on the booted iOS simulator, and pushes it to the Android emulator. Nothing changes this Mac's trust store unless the user picks "Trust on this Mac".
+- **AC-DA-5** A standalone workspace made in the app (or imported from an OpenAPI file) serves its endpoints. "Export to code" produces a config that `tempo-api check` and `typecheck` accept in a fresh template copy.
+- **AC-DA-6** With **API source → Local dev API** in the debug menu and an app restart, the template dev build talks to the dev API with `.env.dev` untouched. A release bundle contains no new code paths (bundle check).
+- **AC-DA-7** Without Node ≥ 22, the app says so and links the install docs; it does not crash.
 
 ### Backend (AC-B-*)
 - **AC-B-1** `docker compose --profile dev up` starts the API, portal, Postgres and Caddy. The health route (`GET /api/v1/health` on host `api.tempo.test`, port 8443) answers 200 with a trusted cert.
