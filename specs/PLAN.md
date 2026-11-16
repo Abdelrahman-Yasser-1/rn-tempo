@@ -2367,3 +2367,9 @@ Recorded by the integrator during WS0. Where this list and the plan disagree, **
     - **WS11** therefore also covers the WS15/WS16 screens and the dev API.
     - **WS12** `tempo upgrade` covers the new packages.
     - **WS14** releases everything together.
+57. **WS15 Phase X: Tempo Dev API desktop app (owner, 2026-11-17).**
+    - A Tauri 2 + React desktop app for the dev/mock API only, in `apps/dev-api-desktop` (a new `apps/` folder for runnable apps; `packages/` stays for publishable libraries and tools).
+    - It runs `tempo-api` from a project, or from a bundled standalone build, and talks to the control API.
+    - It works with any folder that has `api/tempo-api.config.ts`, and with standalone JSON workspaces (OpenAPI import, export to code).
+    - It runs after Phase C and before Phase D. Spec: "Tier 1b" in `specs/ws15-backend/spec.md`.
+    - §C15 gains the MMKV key `app.api-source` (non-prod only), set from the debug menu: env default, in-app mocks, or local dev API.
