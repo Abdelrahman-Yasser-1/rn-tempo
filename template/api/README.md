@@ -27,7 +27,7 @@ yarn api:check         # fails when api/generated is out of date (part of yarn v
 yarn tempo g endpoint <feature>.<name>   # scaffold an endpoint, its API call and hook
 ```
 
-`yarn api` runs the `@rn-tempo/dev-api` command from `node_modules`. In the rn-tempo repository, build the package once first: `yarn workspace @rn-tempo/dev-api build`.
+`yarn api` runs the `@rn-tempo/dev-api` command from `node_modules`. `yarn tempo` does the same for the `create-tempo-app` CLI. In the rn-tempo repository, build both once at the repository root first: `yarn build:tools`.
 
 ## Rules
 

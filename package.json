@@ -14,6 +14,7 @@
   "scripts": {
     "preinstall": "node scripts/check-node.mjs",
     "prepare": "lefthook install",
+    "build:tools": "yarn workspace @rn-tempo/dev-api build && yarn workspace create-tempo-app build",
     "lint": "yarn workspaces foreach -A --exclude rn-tempo run lint",
     "test": "yarn workspaces foreach -A --exclude rn-tempo run test",
     "typecheck": "yarn workspaces foreach -A --exclude rn-tempo run typecheck",
