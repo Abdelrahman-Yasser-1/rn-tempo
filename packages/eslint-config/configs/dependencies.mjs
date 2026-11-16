@@ -168,7 +168,10 @@ export const DEPENDENCY_POLICY = {
     ['src/test-utils/**'],
     'Testing Library belongs in test files and src/test-utils.',
   ),
-  msw: owned(['src/test-utils/**'], 'MSW belongs in test files and src/test-utils/msw.'),
+  msw: owned(
+    ['src/test-utils/**', 'api/generated/**'],
+    'MSW belongs in test files, src/test-utils/msw and the generated api/generated/msw-handlers.ts.',
+  ),
   'test-renderer': owned(
     ['src/test-utils/**'],
     'test-renderer belongs in test files and src/test-utils.',
