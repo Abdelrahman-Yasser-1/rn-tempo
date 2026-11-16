@@ -22,6 +22,8 @@ export async function rewriteWorkspaceLinks(
     if (!block) continue;
     for (const [name, spec] of Object.entries(block)) {
       if (!/^(link|portal):/.test(spec)) continue;
+      // The CLI's own link (the template's `yarn tempo` inside the repo) is pinned by addCliDevDependency.
+      if (name === CLI_PACKAGE) continue;
       const version = versions[name];
       if (version === undefined) {
         throw new CliError(`No published version is embedded for ${name} (${spec})`, { code: 'UNKNOWN_WORKSPACE_PACKAGE' });

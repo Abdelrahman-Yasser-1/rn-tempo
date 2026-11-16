@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { WORKSPACE_VERSIONS } from '../src/generated/versions.ts';
 import { defaultTemplateSource, fetchTemplate, isRemoteSource } from '../src/lib/fetch-template.ts';
 import { pathExists } from '../src/lib/fs-utils.ts';
-import { rewriteWorkspaceLinks } from '../src/lib/workspace-links.ts';
+import { addCliDevDependency, rewriteWorkspaceLinks } from '../src/lib/workspace-links.ts';
 import { makeTempDir, TEMPLATE_DIR } from './helpers.ts';
 
 const packagesDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -39,6 +39,14 @@ describe('rewriteWorkspaceLinks', () => {
     expect(await rewriteWorkspaceLinks(dir, { '@rn-tempo/tsconfig': '1.2.3' })).toEqual(['@rn-tempo/tsconfig']);
     const pkg = JSON.parse(await readFile(path.join(dir, 'package.json'), 'utf8')) as { devDependencies: Record<string, string> };
     expect(pkg.devDependencies).toEqual({ '@rn-tempo/tsconfig': '1.2.3', zod: '4.6.7' });
+  });
+
+  it('leaves the link to the CLI itself for addCliDevDependency to pin', async () => {
+    await writeFile(path.join(dir, 'package.json'), JSON.stringify({ devDependencies: { 'create-tempo-app': 'link:../packages/cli' } }));
+    expect(await rewriteWorkspaceLinks(dir, {})).toEqual([]);
+    expect(await addCliDevDependency(dir, '1.0.0')).toBe(true);
+    const pkg = JSON.parse(await readFile(path.join(dir, 'package.json'), 'utf8')) as { devDependencies: Record<string, string> };
+    expect(pkg.devDependencies).toEqual({ 'create-tempo-app': '1.0.0' });
   });
 
   it('fails for a linked package with no embedded version', async () => {
