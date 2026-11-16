@@ -1242,6 +1242,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@faker-js/faker@npm:10.6.0":
+  version: 10.6.0
+  resolution: "@faker-js/faker@npm:10.6.0"
+  checksum: 10c0/ee285d597249a019f3a11b6705d1908616ea9e880207ca4f89e6205dbf7e98abd1129f025f5da19484f5e88f556b0629a4363745ff0bbaf1984ebf54cffde6e3
+  languageName: node
+  linkType: hard
+
 "@floating-ui/core@npm:^1.8.0":
   version: 1.8.0
   resolution: "@floating-ui/core@npm:1.8.0"
@@ -2600,6 +2607,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@rn-tempo/dev-api@workspace:packages/dev-api"
   dependencies:
+    "@faker-js/faker": "npm:10.6.0"
     "@rn-tempo/api-contract": "workspace:*"
     "@rn-tempo/tsconfig": "workspace:*"
     "@types/node": "npm:24.19.2"
@@ -2607,6 +2615,9 @@ __metadata:
     typescript: "npm:6.0.3"
     vite: "npm:8.3.5"
     vitest: "npm:5.0.5"
+    zod: "npm:4.6.7"
+  peerDependencies:
+    zod: 4.6.7
   bin:
     tempo-api: dist/tempo-api.mjs
   languageName: unknown
