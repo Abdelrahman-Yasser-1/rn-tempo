@@ -12,7 +12,9 @@
       "@assets/*": ["./src/assets/*"],
       "@locales/*": ["./src/locales/*"],
       "@config/*": ["./src/config/*"],
-      "@test-utils/*": ["./src/test-utils/*"]
+      "@test-utils/*": ["./src/test-utils/*"],
+      // The endpoint definitions and generated mocks of `yarn api`; the one alias outside `src/`.
+      "@api/*": ["./api/*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx", ".rnstorybook/**/*.ts", ".rnstorybook/**/*.tsx"],
