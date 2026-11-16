@@ -1,20 +1,21 @@
+import { createRuntime, type Runtime } from '@rn-tempo/dev-api/runtime';
 import type { AxiosAdapter, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import axios, { AxiosError } from 'axios';
 
 // Dev-only: this file is loaded through a guarded `require` in client.ts, so release bundles never
-// contain it, nor the route table it pulls in.
+// contain it, nor the endpoint definitions and dev API runtime it pulls in.
 /* eslint-disable boundaries/dependencies -- dev-only mock adapter, stripped from release */
-import {
-  matchRoute,
-  routes as defaultRoutes,
-  type MockMethod,
-  type MockRequest,
-} from '@test-utils/msw/routes';
+import config from '@api/tempo-api.config';
+import { matchRoute } from '@test-utils/msw/routes/match';
+import type {
+  MockMethod,
+  MockRequest,
+  MockResponse,
+  MockRoute,
+} from '@test-utils/msw/routes/types';
 /* eslint-enable boundaries/dependencies -- end of the block disabled above */
 
 export const DEV_MOCK_LATENCY_MS = 300;
-
-type MockRoutes = typeof defaultRoutes;
 
 const METHODS: readonly MockMethod[] = ['get', 'post', 'put', 'patch', 'delete'];
 
@@ -75,53 +76,90 @@ export type DevMockAdapterOptions = {
   fallback?: AxiosAdapter;
   /** Artificial delay so loading states are visible. */
   latencyMs?: number;
-  routes?: MockRoutes;
+  /** Answers from this route table instead of the app's endpoints (for tests of the adapter). */
+  routes?: readonly MockRoute[];
 };
 
+let appRuntime: Runtime | undefined;
+
+/** The runtime of the app's endpoint definitions, built on first use and kept for the session. */
+function defaultRuntime(): Runtime {
+  appRuntime ??= createRuntime(config);
+  return appRuntime;
+}
+
 /**
- * Axios adapter that answers requests from the shared mock route table (the same one the Jest MSW
- * handlers are generated from) and lets everything else reach the network.
+ * Axios adapter that answers requests from the app's endpoint definitions (`api/`), through the
+ * same runtime as the dev server and the Jest handlers, and lets everything else reach the network.
  */
 export function createDevMockAdapter({
   fallback,
   latencyMs = DEV_MOCK_LATENCY_MS,
-  routes = defaultRoutes,
+  routes,
 }: Readonly<DevMockAdapterOptions> = {}): AxiosAdapter {
   const realAdapter = fallback ?? axios.getAdapter(['xhr', 'fetch', 'http']);
 
-  return async (config) => {
-    const method = (config.method ?? 'get').toLowerCase();
-    const match = isMockMethod(method) ? matchRoute(routes, method, pathOf(config)) : null;
-    if (!match) {
-      return realAdapter(config);
+  return async (axiosConfig) => {
+    const method = (axiosConfig.method ?? 'get').toLowerCase();
+    const path = pathOf(axiosConfig);
+    const answer = routes
+      ? answerFromRoutes(routes, method, path)
+      : answerFromRuntime(defaultRuntime(), method, path);
+
+    if (!answer) {
+      return realAdapter(axiosConfig);
     }
 
     await sleep(latencyMs);
-    const request: MockRequest = {
-      params: match.params,
-      query: queryOf(config),
-      body: bodyOf(config.data),
-      headers: headersOf(config),
+    const request = {
+      query: queryOf(axiosConfig),
+      body: bodyOf(axiosConfig.data),
+      headers: headersOf(axiosConfig),
     };
-    const { status, body } = await match.route.resolve(request);
+    const { status, body } = await answer(request);
     const response: AxiosResponse = {
       data: body,
       status,
       statusText: String(status),
       headers: {},
-      config,
+      config: axiosConfig,
       request: {},
     };
-    const isValid = config.validateStatus?.(status) ?? (status >= 200 && status < 300);
+    const isValid = axiosConfig.validateStatus?.(status) ?? (status >= 200 && status < 300);
     if (isValid) {
       return response;
     }
     throw new AxiosError(
       `Request failed with status code ${String(status)}`,
       status >= 500 ? AxiosError.ERR_BAD_RESPONSE : AxiosError.ERR_BAD_REQUEST,
-      config,
+      axiosConfig,
       response.request,
       response,
     );
+  };
+}
+
+type Handler = (request: Omit<MockRequest, 'params'>) => Promise<MockResponse>;
+
+/** A handler for a request that a route table matches, or `undefined` to let it reach the network. */
+function answerFromRoutes(
+  routes: readonly MockRoute[],
+  method: string,
+  path: string,
+): Handler | undefined {
+  const match = isMockMethod(method) ? matchRoute(routes, method, path) : null;
+  return !match
+    ? undefined
+    : async (request) => match.route.resolve({ ...request, params: match.params });
+}
+
+/** A handler for a request that an endpoint of the runtime matches, or `undefined`. */
+function answerFromRuntime(runtime: Runtime, method: string, path: string): Handler | undefined {
+  if (!runtime.matches(method, path)) {
+    return undefined;
+  }
+  return async (request) => {
+    const { status, body } = await runtime.resolve({ method, path, ...request });
+    return { status, body };
   };
 }
