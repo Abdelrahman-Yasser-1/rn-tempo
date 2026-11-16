@@ -10,7 +10,7 @@ const runtime = createRuntime(config);
  * The endpoints of `api/tempo-api.config.ts` as plain routes, in match order. Each route answers
  * through the dev API runtime, the same pipeline as the dev server and the Jest handlers.
  */
-export const definitionRoutes: MockRoute[] = runtime.endpoints.map((endpoint) => ({
+export const routes: MockRoute[] = runtime.endpoints.map((endpoint) => ({
   method: endpoint.method.toLowerCase() as MockMethod,
   path: endpoint.path,
   resolve: async (request) => {

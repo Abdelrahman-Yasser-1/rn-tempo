@@ -338,3 +338,18 @@ ESLint has an `api` element in the boundaries config: files under `api/` may imp
 ### Optional modules
 
 Endpoints of the items sample belong to the `samples` module. They sit inside `// @tempo-feature:samples:start` and `:end` markers in `api/tempo-api.config.ts`, and `api/endpoints/products.ts` is in the manifest's `deleteGlobs`. After removing the module, run `yarn api generate` to refresh `api/generated`.
+
+### Jest and the in-app mock mode
+
+The hand-written mock routes are gone. Both consumers answer from `api/`:
+
+| Consumer | Where | How |
+| --- | --- | --- |
+| Jest | `src/test-utils/msw/handlers` | Re-exports `handlers` from `api/generated/msw-handlers.ts`. Override one answer with `server.use(...)` as before. |
+| Dev mock mode (`API_MOCKING=true`) | `src/services/http/devMockAdapter.ts` | An axios adapter that asks the runtime whether an endpoint matches. A match is answered after the artificial latency, and every other request reaches the network. |
+
+`src/test-utils/msw/routes` keeps what is not an endpoint: the path matcher (`matchPath` is the runtime's), the `MockRoute` shape for adapter tests that pass their own table, and `routes`, the endpoints as plain routes derived from `api/`. The constants tests use (`MOCK_ACCESS_TOKEN`, `mockUser`, `mockAppConfig`) are re-exported from `api/endpoints`.
+
+The `@api/*` alias points to the root `api/` folder. It is the one alias outside `src/`, used by `src/test-utils` and the mock adapter.
+
+The adapter and the runtime are loaded through a guarded `require` that Metro removes from release bundles. A release bundle contains no `faker`, `express`, `@rn-tempo/dev-api`, `createRuntime` or fixed mock token, and it has the same size as before the migration (checked with `react-native bundle --dev false`). Inside the rn-tempo repository, `metro.config.js` also watches the linked packages, so the dev bundle can resolve them.

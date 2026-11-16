@@ -27,7 +27,7 @@ Format: `- [ ] T<id> (AC…) <summary>`, followed by its commit and its docs pag
   - Commit: `feat(dev-api): generate openapi collections and msw handlers`.
 - [x] **T15.B2** C13 definitions in `template/api/endpoints/`, the `yarn api` scripts, and `.tempo-api/` in `.gitignore`.
   - Commit: `feat(template): define the app api with dev-api`.
-- [ ] **T15.B3** (AC-D-8) Move the MSW handlers to the generated ones, one domain per commit, with tests unchanged.
+- [x] **T15.B3** (AC-D-8) Move the MSW handlers to the generated ones, one domain per commit, with tests unchanged.
   - Commits: `refactor(test): generate <domain> msw handlers`.
 - [ ] **T15.B4** (AC-D-9) The `tempo g endpoint` generator, with templates and a snapshot test.
   - Commit: `feat(cli): add endpoint generator`.
