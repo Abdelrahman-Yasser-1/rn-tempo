@@ -1,5 +1,5 @@
 import {
-  ApiError,
+  isApiError,
   problem,
   PROBLEM_CONTENT_TYPE,
   mountedPath,
@@ -175,7 +175,7 @@ export function createRuntime(config: ApiConfig, options: RuntimeOptions = {}): 
         throw new Error('it has no data function, and this host cannot generate data. Add `data` to the endpoint.');
       }
     } catch (error) {
-      if (error instanceof ApiError) return problemResponse(error.toProblem(), {}, endpoint.id);
+      if (isApiError(error)) return problemResponse(error.toProblem(), {}, endpoint.id);
       options.onError?.({ endpoint: endpoint.id, err: errorMessage(error) }, 'data failed');
       return problemResponse(
         problem(500, { title: 'Endpoint data failed', detail: `${endpoint.id}: ${errorMessage(error)}` }),
