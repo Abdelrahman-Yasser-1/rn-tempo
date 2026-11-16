@@ -93,3 +93,6 @@ firebase/staging/
 firebase/prod/
 # Copied from firebase/<env>/ by the syncFirebaseConfig<Flavor> Gradle task; a build artifact, never a source.
 android/app/src/*/google-services.json
+
+# dev API state (`yarn api up`): pid, log, stored data and the control token
+.tempo-api/

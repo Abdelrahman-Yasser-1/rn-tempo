@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { emailSchema, nameSchema } from '@shared/utils';
+import { emailSchema, nameSchema } from '@shared/utils/schemas';
 
 export const UpdateProfileSchema = z.object({
   firstName: nameSchema,

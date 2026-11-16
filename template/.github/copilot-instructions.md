@@ -73,7 +73,7 @@ Also: check library APIs with context7 for the **pinned** version, never from me
 ## Rules
 
 - [a11y](../ai/rules/a11y.md): Accessibility requirements for components and screens, backed by react-native-a11y lint rules.
-- [api](../ai/rules/api.md): Typed, Zod-validated requests through @services/http, query key factories, mutations that invalidate.
+- [api](../ai/rules/api.md): Typed, Zod-validated requests through @services/http, query key factories, mutations that invalidate, and the mock API defined once in api/.
 - [architecture](../ai/rules/architecture.md): Folder skeleton, path aliases, barrels and the import-boundary matrix enforced by ESLint.
 - [assets](../ai/rules/assets.md): Icons and images. Sources in src/assets, generated components, every Tabler icon in src, adding icons, pruning at release, RTL mirroring.
 - [commits](../ai/rules/commits.md): Conventional Commits with required scope, commit size, and the AI session trailers.

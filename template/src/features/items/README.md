@@ -19,7 +19,7 @@ Routes of the Home stack: `ItemsList`, `ItemDetails` (param `itemId`) and `ItemC
 
 ## Data
 
-Requests in `api/items.api.ts`: `GET /products` and `/products/search` (paged by `skip`), `GET /products/:id`, `POST /products/add`. Hooks in `api/queries.ts` (`useItemsInfiniteQuery`, `useItemQuery`, both accept `notifyOnChangeProps` so a covered screen does not re-render) and `api/mutations.ts` (`useCreateItemMutation`). Keys come from `itemKeys` in `api/keys.ts`.
+Requests in `api/items.api.ts`: `GET /products` and `/products/search` (paged by `skip`), `GET /products/:id`, `POST /products/add`. Hooks in `api/queries.ts` (`useItemsInfiniteQuery`, `useItemQuery`, both accept `notifyOnChangeProps` so a covered screen does not re-render) and `api/mutations.ts` (`useCreateItemMutation`). Keys come from `itemKeys` in `api/keys.ts`. `api/schemas.ts` is a plain Zod module (no React Native import) that the mock endpoint definitions in the root `api/endpoints/products.ts` import; keep it that way, because `yarn api` loads it in Node.
 
 ## Spec
 
