@@ -2363,3 +2363,7 @@ Recorded by the integrator during WS0. Where this list and the plan disagree, **
     - Languages grow to 5: en, ar, es, de, fr.
     - The optional module `cms` (off by default) provides a provider-agnostic `CmsClient`. Its default `tempo` adapter reads the WS15 content API; a Sanity adapter is included, and recipes cover Strapi and Contentful.
     - On approval, the integrator amends §C11 languages, §C15 MMKV keys (`app.palette`, `app.font-scale`, `app.icon`) and §C7.1 modules (`cms`, `app-icons`).
+56. **Workstream order (owner, 2026-11-16).** The remaining workstreams run in this order: **WS15 → WS16 → WS12 → WS11 → WS13 → WS14**. The backend and the settings work come before CLI advanced, Maestro E2E, the docs pass and the release.
+    - **WS11** therefore also covers the WS15/WS16 screens and the dev API.
+    - **WS12** `tempo upgrade` covers the new packages.
+    - **WS14** releases everything together.
