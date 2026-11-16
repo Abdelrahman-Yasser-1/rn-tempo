@@ -44,3 +44,6 @@ projectStructure.cache.json
 
 # dev-api runtime data (pid, logs, mock db, control token)
 .tempo-api/
+
+# local HTTPS certificates and keys (mkcert); never commit them
+docker/certs/

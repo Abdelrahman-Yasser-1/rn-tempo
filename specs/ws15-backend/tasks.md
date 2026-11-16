@@ -34,7 +34,7 @@ Format: `- [ ] T<id> (AC…) <summary>`, followed by its commit and its docs pag
   - Docs: `backend/dev-api` (endpoints, scenarios, generators) and `guides/add-an-endpoint`.
 
 ## Phase C: local HTTPS (`ws15/c-https`)
-- [ ] **T15.C1** `yarn backend:certs` with mkcert, used by both dev-api and Caddy.
+- [x] **T15.C1** `yarn backend:certs` with mkcert, used by both dev-api and Caddy.
   - Commit: `feat(dev-api): serve over local https`.
 - [ ] **T15.C2** (AC-D-6) Native trust of the local CA in dev builds.
   - A dev-only Android `network_security_config`.

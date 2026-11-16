@@ -9,8 +9,12 @@ import { createLogger } from '../server/logger.ts';
 import { listen } from '../server/listen.ts';
 import { CONTROL_HEADER } from '../runtime/scenarios.ts';
 import { loadConfig } from './config.ts';
+import { certs as certsCommand } from './certs.ts';
 import { ensureControlToken, ensureDataDir, readControlToken, resolvePaths, DEFAULT_CONFIG, type Paths } from './paths.ts';
-import { fetchHealth, isAlive, lanAddress, readPid, removePid, sleep, writePid } from './process.ts';
+import { fetchHealth, isAlive, lanAddress, localRequest, readPid, removePid, sleep, writePid, type Scheme } from './process.ts';
+import { certCoversIp, chooseScheme, NO_CERT_NOTICE, readTls, targetFor } from './tls.ts';
+
+export { certsCommand as certs };
 
 const commonArgs = {
   config: { type: 'string', description: `Config file (default ${DEFAULT_CONFIG})` },
@@ -21,6 +25,7 @@ const serverArgs = {
   ...commonArgs,
   port: { type: 'string', description: 'Port (default: the config port)' },
   host: { type: 'string', description: 'Address to listen on (default 0.0.0.0, so a phone can reach it)', default: '0.0.0.0' },
+  http: { type: 'boolean', description: 'Serve plain HTTP even when a certificate exists' },
 } as const;
 
 /** Prints to stderr and fails the command, without a stack trace. */
@@ -38,13 +43,13 @@ function parsePort(value: string | undefined): number | undefined {
 
 const say = (line = ''): void => void process.stdout.write(`${line}\n`);
 
-function urls(host: string, port: number): { local: string; lan: string | undefined } {
+function urls(host: string, port: number, scheme: Scheme): { local: string; lan: string | undefined } {
   const lan = host === '127.0.0.1' || host === 'localhost' ? undefined : lanAddress();
-  return { local: `http://localhost:${port}`, lan: lan === undefined ? undefined : `http://${lan}:${port}` };
+  return { local: `${scheme}://localhost:${port}`, lan: lan === undefined ? undefined : `${scheme}://${lan}:${port}` };
 }
 
-async function printUrls(host: string, port: number, withQr = false): Promise<void> {
-  const { local, lan } = urls(host, port);
+async function printUrls(host: string, port: number, scheme: Scheme, withQr = false): Promise<void> {
+  const { local, lan } = urls(host, port, scheme);
   say(`  Local:  ${local}`);
   if (lan === undefined) return;
   say(`  LAN:    ${lan}`);
@@ -70,15 +75,16 @@ export const start = defineCommand({
     const logger = createLogger({ level: process.env.TEMPO_API_LOG_LEVEL ?? 'info' });
     const server = createServer(config, { dataDir: paths.dataDir, fixturesDir: paths.fixturesDir, logger, controlToken: token });
     const port = parsePort(args.port) ?? config.port;
+    const scheme = chooseScheme(paths, args.http === true);
     let http;
     try {
-      http = await listen(server, { port, host: args.host });
+      http = await listen(server, { port, host: args.host, ...(scheme === 'https' ? { tls: readTls(paths) } : {}) });
     } catch (error) {
       logger.error({ err: error instanceof Error ? error.message : String(error), port }, 'could not listen');
       process.exit(1);
     }
     logger.warn('Dev API: a mock server with public test credentials. Never use it in production.');
-    logger.info({ port, host: args.host, endpoints: server.endpoints.length }, 'dev api listening');
+    logger.info({ port, host: args.host, scheme, endpoints: server.endpoints.length }, 'dev api listening');
     const stop = (): void => void http.close(() => process.exit(0));
     process.on('SIGTERM', stop);
     process.on('SIGINT', stop);
@@ -93,10 +99,10 @@ export const up = defineCommand({
     const paths = resolvePaths(args.cwd, args.config);
     const existing = readPid(paths.pidFile);
     if (existing !== undefined) {
-      const health = isAlive(existing.pid) ? await fetchHealth(existing.port) : undefined;
+      const health = isAlive(existing.pid) ? await fetchHealth(targetFor(paths, existing)) : undefined;
       if (health?.pid === existing.pid) {
         say(`The dev API is already running (pid ${existing.pid}).`);
-        await printUrls(existing.host, existing.port, true);
+        await printUrls(existing.host, existing.port, existing.scheme, true);
         return;
       }
       removePid(paths.pidFile); // stale: the process is gone or the port belongs to something else
@@ -112,13 +118,14 @@ export const up = defineCommand({
     const port = parsePort(args.port) ?? configPort;
     ensureDataDir(paths);
     ensureControlToken(paths);
+    const scheme = chooseScheme(paths, args.http === true);
 
     const log = openSync(paths.logFile, 'a', 0o600);
     const script = process.argv[1];
     if (script === undefined) return fail('Cannot find the tempo-api script to start.');
     const child = spawn(
       process.execPath,
-      [...process.execArgv, script, 'start', '--cwd', paths.cwd, '--config', paths.config, '--port', String(port), '--host', args.host],
+      [...process.execArgv, script, 'start', '--cwd', paths.cwd, '--config', paths.config, '--port', String(port), '--host', args.host, ...(scheme === 'http' ? ['--http'] : [])],
       { detached: true, stdio: ['ignore', log, log], cwd: paths.cwd },
     );
     child.unref();
@@ -130,11 +137,13 @@ export const up = defineCommand({
 
     // Only a health answer from OUR child counts; another dev API on the port must not pass.
     for (let waited = 0; waited < 15_000; waited += 100) {
-      const health = await fetchHealth(port, 500);
+      const health = await fetchHealth(targetFor(paths, { port, scheme }), 500);
       if (health?.pid === pid) {
-        writePid(paths.pidFile, { pid, port, host: args.host });
+        writePid(paths.pidFile, { pid, port, host: args.host, scheme });
         say('The dev API is running.');
-        await printUrls(args.host, port, true);
+        await printUrls(args.host, port, scheme, true);
+        if (scheme === 'http' && args.http !== true) say(`  ${NO_CERT_NOTICE}`);
+        warnStaleCert(paths, args.host, scheme);
         say(`  Logs:   tempo-api logs -f   (${paths.logFile})`);
         return;
       }
@@ -146,6 +155,15 @@ export const up = defineCommand({
     return fail(`The dev API did not start on port ${port}.${tail === '' ? '' : `\nLast log lines:\n${tail}`}`);
   },
 });
+
+/** Tells the user when the certificate was made before the LAN address changed (one command fixes it). */
+function warnStaleCert(paths: Paths, host: string, scheme: Scheme): void {
+  if (scheme !== 'https' || host === '127.0.0.1' || host === 'localhost') return;
+  const lan = lanAddress();
+  if (lan !== undefined && !certCoversIp(readTls(paths).cert, lan)) {
+    say(`  The certificate does not cover your LAN address ${lan}. Run \`yarn api certs\`, then \`yarn api up\` again.`);
+  }
+}
 
 /** Stops the server that this folder's pid file names, after checking it really is the dev API. */
 export const down = defineCommand({
@@ -160,7 +178,7 @@ export const down = defineCommand({
       return say('The dev API was not running (removed a stale pid file).');
     }
     // A recycled pid or a reused port must never get a SIGTERM from us.
-    const health = await fetchHealth(record.port);
+    const health = await fetchHealth(targetFor(paths, record));
     if (health?.pid !== record.pid) {
       removePid(paths.pidFile);
       return say(`Pid ${record.pid} is not the dev API, so it was left alone. Removed the stale pid file.`);
@@ -179,13 +197,13 @@ export const status = defineCommand({
   async run({ args }) {
     const paths = resolvePaths(args.cwd, args.config);
     const record = readPid(paths.pidFile);
-    const health = record !== undefined && isAlive(record.pid) ? await fetchHealth(record.port) : undefined;
+    const health = record !== undefined && isAlive(record.pid) ? await fetchHealth(targetFor(paths, record)) : undefined;
     if (record === undefined || health?.pid !== record.pid) {
       say(record === undefined ? 'The dev API is not running.' : 'The dev API is not running (stale pid file; run `down` to clean it).');
       return;
     }
     say(`The dev API is running (pid ${record.pid}, started ${health.startedAt}).`);
-    await printUrls(record.host, record.port);
+    await printUrls(record.host, record.port, record.scheme);
     const active = Object.entries(health.scenarios);
     if (active.length > 0) {
       say('  Scenarios:');
@@ -246,16 +264,17 @@ export const logs = defineCommand({
 async function control(paths: Paths, path: string, body: unknown): Promise<{ status: number; body: Record<string, unknown> }> {
   const record = readPid(paths.pidFile);
   const token = readControlToken(paths);
-  const health = record !== undefined && isAlive(record.pid) ? await fetchHealth(record.port) : undefined;
-  if (record === undefined || token === undefined || health?.pid !== record.pid) {
-    return fail('The dev API is not running. Start it with `up`.');
+  const target = record === undefined ? undefined : targetFor(paths, record);
+  const health = record !== undefined && target !== undefined && isAlive(record.pid) ? await fetchHealth(target) : undefined;
+  if (record === undefined || target === undefined || token === undefined || health?.pid !== record.pid) {
+    return fail('The dev API is not running. Start it with `up`. (Over HTTPS the CLI also needs `.tempo-api/certs/rootCA.pem`, which `certs` writes.)');
   }
-  const res = await fetch(`http://127.0.0.1:${record.port}/__tempo/${path}`, {
+  const res = await localRequest(target, `/__tempo/${path}`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', [CONTROL_HEADER]: token },
     body: JSON.stringify(body),
   });
-  return { status: res.status, body: (await res.json()) as Record<string, unknown> };
+  return { status: res.status, body: JSON.parse(res.text) as Record<string, unknown> };
 }
 
 export const reset = defineCommand({

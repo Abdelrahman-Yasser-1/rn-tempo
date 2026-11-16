@@ -36,11 +36,25 @@ tempo-api status | down | logs [-f] | reset
 tempo-api scenario set <endpointId> <name>
 tempo-api scenario clear [endpointId]
 tempo-api start                                # foreground, for Docker and debugging
+tempo-api certs [--out dir] [--host name]...   # local HTTPS certificate (needs mkcert)
 ```
+
+`up` and `start` serve HTTPS when `.tempo-api/certs/cert.pem` and `key.pem` exist, and plain HTTP otherwise (with a one-line hint). `--http` forces HTTP.
 
 All commands take `--config <file>` (default `api/tempo-api.config.ts`) and `--cwd <dir>`. State lives in `.tempo-api/`: `server.pid`, `server.log`, `db.json` and `control-token` (owner-only; the CLI sends it to the internal control routes). `down` only stops the process named in its own pid file, and only after the recorded port answers `/__tempo/health` with that same pid.
 
 The config is TypeScript, loaded with [jiti](https://github.com/unjs/jiti) with `tsconfigPaths`, so it can import app code through aliases such as `@features/*`.
+
+## Local HTTPS
+
+`tempo-api certs` wraps [mkcert](https://github.com/FiloSottile/mkcert) (`brew install mkcert`; nothing is downloaded for you).
+
+- It creates the local CA in mkcert's `CAROOT` the first time (`mkcert -CAROOT` prints where), and writes `cert.pem`, `key.pem` and a copy of the public `rootCA.pem` to `--out` (default `.tempo-api/certs`).
+- The certificate covers `localhost`, `127.0.0.1`, `::1`, `10.0.2.2` (the Android emulator's host), `dev-api.tempo.test`, `api.tempo.test`, `portal.tempo.test`, your current LAN IP and every `--host` (repeat the flag or use a comma list).
+- It does **not** change any trust store. `--install` runs `mkcert -install`, which adds the CA to this computer's trust stores so a browser trusts Swagger; it asks for the system password and is off by default.
+- When your LAN IP changes, `up` says the certificate does not cover it. Run `certs` again.
+- The CLI's own calls (`status`, `down`, `scenario`, `reset`) go to `127.0.0.1` and trust only the generated `rootCA.pem`. Certificate checks are never switched off. The pid record keeps the scheme.
+- `yarn backend:certs` in the monorepo writes the same certificate to `docker/certs` (gitignored) for Caddy, so a phone trusts one CA for everything.
 
 `up` listens on `0.0.0.0` by default so a phone on the same Wi-Fi can use the QR code. Pass `--host 127.0.0.1` to keep it on this machine.
 

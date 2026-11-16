@@ -12,6 +12,8 @@ export interface Paths {
   pidFile: string;
   logFile: string;
   tokenFile: string;
+  /** `cert.pem`, `key.pem` and a copy of the public `rootCA.pem` (written by `tempo-api certs`). */
+  certsDir: string;
   fixturesDir: string;
 }
 
@@ -26,6 +28,7 @@ export function resolvePaths(cwd: string | undefined, config: string | undefined
     pidFile: join(dataDir, 'server.pid'),
     logFile: join(dataDir, 'server.log'),
     tokenFile: join(dataDir, 'control-token'),
+    certsDir: join(dataDir, 'certs'),
     fixturesDir: join(dirname(configPath), 'fixtures'),
   };
 }

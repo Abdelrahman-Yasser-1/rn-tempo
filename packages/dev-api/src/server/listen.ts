@@ -7,7 +7,7 @@ export interface ListenOptions {
   port: number;
   /** `127.0.0.1` keeps the server on this machine; `0.0.0.0` exposes it on the LAN. */
   host?: string;
-  /** Certificate and key. When set the listener speaks HTTPS (added in a later phase). */
+  /** Certificate and key. When set the listener speaks HTTPS. */
   tls?: TlsOptions;
 }
 
