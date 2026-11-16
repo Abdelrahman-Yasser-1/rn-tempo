@@ -1,0 +1,81 @@
+---
+title: Add an endpoint
+description: Define an API endpoint once, then get its mock server, docs, Jest handlers, request function and hook from it.
+---
+
+An endpoint is defined once, in `api/endpoints/<feature>.ts`, with `@rn-tempo/api-contract`. The dev server, the OpenAPI and Postman files, the Jest handlers and the in-app mock mode all read that one definition. You also write the app side: a Zod schema, a request function and a hook.
+
+The generator does all of it:
+
+```sh
+yarn tempo g endpoint items.getItem --path /items/:id
+yarn api generate
+yarn verify
+```
+
+## What the generator writes
+
+For `items.getItem` (feature `items`, name `getItem`), with `--method GET` as the default:
+
+| File | Change |
+| --- | --- |
+| `api/endpoints/items.ts` | A `defineEndpoint` with the route, a Zod `params` schema for `:id`, the response schema and fixed `data`. Created, or appended to when the file exists. |
+| `api/tempo-api.config.ts` | `getItem` imported and added to `endpoints`. |
+| `src/features/items/api/schemas.ts` | `GetItemResponseSchema` and its type: a stub with `id`. A body method also gets `<Name>RequestSchema`. |
+| `src/features/items/api/items.api.ts` | `getItem(id)`: `request(...)` with the response schema. |
+| `src/features/items/api/keys.ts` | A `getItem(id)` key under the feature's key factory. |
+| `src/features/items/api/queries.ts` | `useGetItemQuery(id)`, for a `GET`. Other methods get `useXMutation()` in `mutations.ts`, which invalidates the feature's keys. |
+
+The feature must exist (`tempo g feature items`), and so must `api/tempo-api.config.ts`. Existing files are extended, never overwritten. A name that already exists is an error. `--dry-run` shows what would change. When the project has Prettier installed, the generated code is formatted with it.
+
+| Option | Meaning |
+| --- | --- |
+| `--method` | `GET` (default), `POST`, `PUT`, `PATCH` or `DELETE`. |
+| `--path` | The route, with `:params`. The default is `/<feature>/<name-in-kebab-case>`. |
+| `--resource` | List, get, create, update and delete of one record type, from `resource(...)`. It writes five request functions, list and detail keys and five hooks. The name is the record type, for example `items.products`, and the default path is `/products`. |
+
+## The three steps after generating
+
+1. **Replace the stubs.** The response schema holds only `id`. Describe the real fields in `schemas.ts`. The app parses responses with the same schema the mock is checked against, so a wrong mock fails loudly.
+2. **Replace the fixed `data`.** The generated `data: () => ({ id: 1 })` returns a value the stub schema accepts. Return realistic fixed values. Keep a `data` function on every endpoint that Jest or the dev mock mode answers: the app has no data generator, and faker must stay out of the bundle. An endpoint with no `data` is answered with generated data only by the dev server (`yarn api up`).
+3. **Regenerate and check.**
+   - `yarn api generate` rewrites `api/generated` (OpenAPI, Postman, MSW handlers).
+   - `yarn api:check` fails when that output is stale. It runs in `yarn verify` and in the pre-commit hook.
+
+## Writing one by hand
+
+Copy the pattern of `api/endpoints/products.ts`:
+
+```ts
+// api/endpoints/items.ts
+import { ApiError, defineEndpoint } from '@rn-tempo/api-contract';
+import { z } from 'zod';
+
+import { ItemSchema } from '@features/items/api/schemas';
+
+export const getItem = defineEndpoint({
+  method: 'GET',
+  path: '/items/:id',
+  summary: 'Get one item',
+  tags: ['items'],
+  params: z.object({ id: z.string() }),
+  response: ItemSchema,
+  data: ({ params }) => {
+    const item = ITEMS.find((candidate) => candidate.id === Number(params.id));
+    if (!item) throw new ApiError(404, `Item '${params.id}' not found`);
+    return item;
+  },
+  scenarios: { slow: { delayMs: 2000 } },
+});
+```
+
+Then add `getItem` to `endpoints` in `api/tempo-api.config.ts`, and write the request function, key and hook as the `items` feature does (`src/features/items/api`).
+
+## Rules to remember
+
+- **Import plain schema modules.** The config is loaded by Node, so import from `@features/<name>/api/schemas`, `@features/<name>/types` or `@shared/utils/schemas`, never from a feature barrel (`@features/items`). ESLint reports it, and `yarn api:check` fails when React Native code is pulled in.
+- **Throw `ApiError`** for an error answer. The response is problem+json with a `message` field.
+- **Optional modules.** Wrap the endpoints of an optional module in its `@tempo-feature` markers, in the endpoint file and in the config, and add the file to the module's `deleteGlobs`.
+- **Scenarios** (`scenarios: { name: { status, body, delayMs } }`) are documented in the OpenAPI file and selected with the `x-tempo-scenario` header or `yarn api scenario set`.
+
+See [Dev API](/docs/backend/dev-api) for the definition format, the runtime and the generators.

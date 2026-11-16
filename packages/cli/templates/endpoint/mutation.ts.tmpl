@@ -1,0 +1,12 @@
+
+/** `{{method}} {{path}}`; refreshes the cached {{feature}} data when it succeeds. */
+export function use{{Name}}Mutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: {{name}},
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: {{keys}}.all });
+    },
+  });
+}

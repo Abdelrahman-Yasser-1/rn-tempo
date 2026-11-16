@@ -1,0 +1,25 @@
+
+/** `GET {{path}}`: one page of {{name}} records. */
+export function list{{Name}}({ skip = 0, limit = 20 }: Readonly<{ skip?: number; limit?: number }> = {}) {
+  return request({ method: 'GET', url: '{{path}}', params: { skip, limit } }, {{Name}}PageSchema);
+}
+
+/** `GET {{path}}/:id` */
+export function get{{Name}}(id: string) {
+  return request({ method: 'GET', url: `{{path}}/${id}` }, {{Name}}Schema);
+}
+
+/** `POST {{path}}/add` */
+export function create{{Name}}(body: Readonly<{{Name}}Input>) {
+  return request({ method: 'POST', url: '{{path}}/add', data: body }, {{Name}}Schema);
+}
+
+/** `PATCH {{path}}/:id` */
+export function update{{Name}}({ id, body }: Readonly<{ id: string; body: Partial<{{Name}}Input> }>) {
+  return request({ method: 'PATCH', url: `{{path}}/${id}`, data: body }, {{Name}}Schema);
+}
+
+/** `DELETE {{path}}/:id`: answers the removed record. */
+export function delete{{Name}}(id: string) {
+  return request({ method: 'DELETE', url: `{{path}}/${id}` }, {{Name}}Schema);
+}
