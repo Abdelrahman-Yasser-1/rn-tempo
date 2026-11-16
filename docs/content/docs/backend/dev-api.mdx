@@ -95,3 +95,22 @@ A request that fails validation gets a 400 `application/problem+json` response i
   "errors": [{ "path": "body.email", "message": "Invalid email address" }]
 }
 ```
+
+## Data
+
+Without a `data` function, the server generates the response from the Zod `response` schema.
+
+- **Deterministic.** The same `seed` (from `defineConfig`), endpoint id and params always return the same body, so screenshots and tests are stable. Change `seed` to get a different set.
+- **Realistic.** Field names pick realistic values: `email`, `phone`, `firstName`, `lastName`, `username`, `image`, `thumbnail`, `avatar`, `title`, `description`, `price`, `rating`, `stock`, `category`, `createdAt` and `updatedAt`. Values always satisfy the schema, so a `price` of `z.number().max(10)` stays under 10.
+- **Constraints.** Min and max, string formats (`email`, `url`, `uuid`, `datetime` and more), simple regexes, enums, literals, unions, optional, nullable, default, records, tuples, dates and recursive schemas are all supported. Recursive schemas stop at a depth cap.
+- **Overrides.** `.meta({ example: 'Fixed title' })` sets one field. `.describe('... example: SAVE10')` works too.
+
+### Fixed data
+
+Fixed data wins over generation, in this order:
+
+1. The endpoint's `data` function.
+2. `fixtures/<endpointId>.json`, next to the config file. Write the `:` of the id as `_` on Windows, for example `get.products._id.json`.
+3. Generation.
+
+A resource's first items follow the same idea: `seed: 50` generates 50 items (numeric ids count from 1), and `seed: [...]` lists them.
