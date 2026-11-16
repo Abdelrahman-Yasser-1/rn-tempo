@@ -13,6 +13,7 @@ import { certNames, createCerts, DEFAULT_NAMES, MKCERT_HINT, mkcertArgs, splitHo
 import { resolvePaths } from '../src/cli/paths.ts';
 import { readPid, writePid } from '../src/cli/process.ts';
 import { certCoversIp, chooseScheme, targetFor } from '../src/cli/tls.ts';
+import { ANDROID_CA_PATH, adbPushArgs, simctlArgs, trustAndroid, trustIos } from '../src/cli/trust.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const ok = (stdout = ''): RunResult => ({ status: 0, stdout, stderr: '' });
@@ -76,6 +77,40 @@ describe('certs command (injected runner)', () => {
   it('merges repeated and comma-separated --host values without duplicates', () => {
     expect(splitHosts(['certs', '--host', 'a.test,b.test', '--host=c.test', '--out', 'x'])).toEqual(['a.test', 'b.test', 'c.test']);
     expect(certNames(['localhost', 'z.test'], '10.0.0.5').filter((n) => n === 'localhost')).toHaveLength(1);
+  });
+});
+
+describe('trust commands (injected runner)', () => {
+  it('builds the simctl and adb arguments', () => {
+    expect(simctlArgs('/ca/rootCA.pem', 'booted')).toEqual(['simctl', 'keychain', 'booted', 'add-root-cert', '/ca/rootCA.pem']);
+    expect(adbPushArgs('/ca/rootCA.pem', undefined)).toEqual(['push', '/ca/rootCA.pem', ANDROID_CA_PATH]);
+    expect(adbPushArgs('/ca/rootCA.pem', 'emulator-5554')).toEqual(['-s', 'emulator-5554', 'push', '/ca/rootCA.pem', ANDROID_CA_PATH]);
+  });
+
+  it('trust ios runs simctl for the booted simulator or a given udid', () => {
+    const a = fakeRunner('/ca');
+    trustIos(a.run, () => undefined);
+    expect(a.calls[1]).toEqual(['xcrun', 'simctl', 'keychain', 'booted', 'add-root-cert', '/ca/rootCA.pem']);
+    const b = fakeRunner('/ca');
+    trustIos(b.run, () => undefined, 'UDID-1');
+    expect(b.calls[1]).toEqual(['xcrun', 'simctl', 'keychain', 'UDID-1', 'add-root-cert', '/ca/rootCA.pem']);
+  });
+
+  it('trust ios reports a simctl failure', () => {
+    const { run } = fakeRunner('/ca', { xcrun: { status: 1, stdout: '', stderr: 'No devices are booted.' } });
+    expect(() => trustIos(run, () => undefined)).toThrow(/No devices are booted/);
+  });
+
+  it('trust android only prints steps, and pushes only with --push', () => {
+    const lines: string[] = [];
+    const plain = fakeRunner('/ca');
+    trustAndroid(plain.run, (line = '') => lines.push(line), false);
+    expect(plain.calls.some((call) => call[0] === 'adb')).toBe(false);
+    expect(lines.join('\n')).toContain('Install a certificate');
+
+    const pushed = fakeRunner('/ca');
+    trustAndroid(pushed.run, () => undefined, true, 'abc');
+    expect(pushed.calls.filter((call) => call[0] === 'adb')).toEqual([['adb', '-s', 'abc', 'push', '/ca/rootCA.pem', ANDROID_CA_PATH]]);
   });
 });
 

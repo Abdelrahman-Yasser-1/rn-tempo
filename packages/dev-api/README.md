@@ -37,6 +37,7 @@ tempo-api scenario set <endpointId> <name>
 tempo-api scenario clear [endpointId]
 tempo-api start                                # foreground, for Docker and debugging
 tempo-api certs [--out dir] [--host name]...   # local HTTPS certificate (needs mkcert)
+tempo-api trust ios | android                  # trust the local CA on a simulator or emulator
 ```
 
 `up` and `start` serve HTTPS when `.tempo-api/certs/cert.pem` and `key.pem` exist, and plain HTTP otherwise (with a one-line hint). `--http` forces HTTP.
@@ -55,6 +56,8 @@ The config is TypeScript, loaded with [jiti](https://github.com/unjs/jiti) with 
 - When your LAN IP changes, `up` says the certificate does not cover it. Run `certs` again.
 - The CLI's own calls (`status`, `down`, `scenario`, `reset`) go to `127.0.0.1` and trust only the generated `rootCA.pem`. Certificate checks are never switched off. The pid record keeps the scheme.
 - `yarn backend:certs` in the monorepo writes the same certificate to `docker/certs` (gitignored) for Caddy, so a phone trusts one CA for everything.
+
+`tempo-api trust ios [--device <udid>]` adds the CA to a simulator with `xcrun simctl keychain`; `tempo-api trust android [--push] [--serial <id>]` prints the Android steps and can run the `adb push`. The CA's private key never leaves your machine. See the docs page Backend, Local HTTPS.
 
 `up` listens on `0.0.0.0` by default so a phone on the same Wi-Fi can use the QR code. Pass `--host 127.0.0.1` to keep it on this machine.
 
