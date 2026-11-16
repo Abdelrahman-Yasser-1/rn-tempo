@@ -61,9 +61,9 @@ jobs:
         working-directory: .
         run: yarn install --immutable
       # `yarn api:check` (part of verify) runs the built tempo-api CLI of the linked dev-api package.
-      - name: Build the dev API CLI
+      - name: Build the tempo-api and tempo CLIs
         working-directory: .
-        run: yarn workspace @rn-tempo/dev-api build
+        run: yarn build:tools
       - run: yarn install --immutable
       - run: yarn verify
       - run: yarn test:ai-log
