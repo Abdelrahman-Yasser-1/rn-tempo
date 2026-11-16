@@ -27,10 +27,11 @@ export function toHandler(route: MockRoute): RequestHandler {
 }
 
 /** Domains already answered by the handlers generated from `api/`; the rest still use `routes`. */
-const generated = createHandlers({ filter: (endpoint) => endpoint.path.startsWith('/auth/') });
+const MIGRATED = /^\/(?:auth\/|products)/;
+const generated = createHandlers({ filter: (endpoint) => MIGRATED.test(endpoint.path) });
 
 /** Default MSW handlers for Jest. */
 export const handlers: RequestHandler[] = [
   ...generated,
-  ...routes.filter((route) => !route.path.startsWith('/auth/')).map(toHandler),
+  ...routes.filter((route) => !MIGRATED.test(route.path)).map(toHandler),
 ];

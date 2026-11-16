@@ -1,8 +1,5 @@
 import { appConfigRoutes } from './appConfig';
 import { definitionRoutes } from './fromDefinitions';
-// @tempo-feature:samples:start
-import { productRoutes } from './products';
-// @tempo-feature:samples:end
 import type { MockRoute } from './types';
 import { userRoutes } from './users';
 
@@ -18,11 +15,8 @@ export type { MockMethod, MockRequest, MockResponse, MockRoute } from './types';
 
 /** The mock API: every endpoint, once, in match order. */
 export const routes: MockRoute[] = [
-  // Defined in api/endpoints: auth, forgot password and OTP.
-  ...definitionRoutes.filter((route) => route.path.startsWith('/auth/')),
+  // Defined in api/endpoints: auth, forgot password, OTP and products.
+  ...definitionRoutes.filter((route) => /^\/(?:auth\/|products)/.test(route.path)),
   ...userRoutes,
-  // @tempo-feature:samples:start
-  ...productRoutes,
-  // @tempo-feature:samples:end
   ...appConfigRoutes,
 ];
