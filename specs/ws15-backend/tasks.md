@@ -100,10 +100,22 @@ Format: `- [ ] T<id> (AC…) <summary>`, followed by its commit and its docs pag
   - Commits: `feat(portal): add content editor`, `feat(portal): add content types editor`.
   - Docs: `backend/cms`.
 
+## Phase H2: Strapi option (`ws15/h2-strapi`)
+- [ ] **T15.H4** (AC-B-13) Strapi 5 service in Compose, behind a profile or option, with a seed of content types and locales.
+  - Commit: `feat(docker): add optional strapi service`.
+- [ ] **T15.H5** (AC-B-13) Content pass-through in the API (`CMS_SOURCE=builtin|strapi`):
+  - map Strapi responses to the content shape
+  - cache them
+  - run a contract test against both sources
+  - Commit: `feat(api): serve content from strapi when selected`.
+- [ ] **T15.H6** Portal hides its Content section and links to the Strapi admin when Strapi is selected.
+  - Commit: `feat(portal): link to strapi when it is the cms`.
+  - Docs: `backend/cms-strapi` (setup, what Community lacks, how to switch back).
+
 ## Phase I: CLI (`ws15/i-cli`)
-- [ ] **T15.I1** `create-tempo-app` always adds `@rn-tempo/dev-api` and `api/`.
+- [ ] **T15.I1** `create-tempo-app` always adds `@rn-tempo/dev-api` and `api/`. It also gets the option `--cms builtin|strapi`, which applies with `--with-backend` and records `cms` in `.tempo.json`.
   - `--with-backend` copies `backend/` and wires its scripts, and `.tempo.json` gets `backend`.
   - Commit: `feat(cli): add dev api and backend options`.
-- [ ] **T15.I2** (AC-B-12) CLI e2e case for `--with-backend`.
+- [ ] **T15.I2** (AC-B-12, AC-B-13) CLI e2e cases for `--with-backend` and `--with-backend --cms strapi`.
   - Commit: `test(cli): create a project with the backend`.
   - Docs: `cli/create` and `getting-started/backend`.

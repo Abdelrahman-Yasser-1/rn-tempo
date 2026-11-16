@@ -47,7 +47,7 @@ The template talks to dummyjson, which is read-mostly and keeps nothing, or to h
    - It is served as static files, so there is no Node server in production.
    - The API is the only place access is enforced.
 9. **CMS lives inside the portal**, as its Content section, under the same roles and audit log.
-   - Strapi is not used.
+   - **Strapi is an option** (owner, 2026-11-16): `--cms strapi` runs Strapi as an extra service instead of the portal's Content section. The portal's Content section stays the default.
    - External CMSs still work through `CmsClient` adapters in WS16: Sanity in the app; Strapi and Contentful as recipes.
 10. **MSW handlers are generated from the endpoint definitions.** The template's hand-written handlers migrate one domain at a time, and the existing tests stay unchanged as the proof (Phase B).
 
@@ -181,6 +181,22 @@ export const products = resource('products', ItemSchema, { seed: 50, searchBy: [
   - Cache headers and ETag.
 - **App side:** reads content through the `tempo` adapter of `CmsClient` (WS16).
 
+### Strapi option (`--cms strapi`)
+- **What it adds:**
+  - a `strapi` service in Compose: Strapi 5, pinned, with its own database on the same Postgres server
+  - seed content types matching the built-in ones (`announcement`, `help-article`), with i18n for the 5 languages
+- **The app never calls Strapi directly.** The API's `/api/v1/content/*` turns into a pass-through to Strapi's REST API, with responses mapped to the same content shape and cached. So the app's `tempo` CMS adapter, the generated OpenAPI and the dev-api fixtures do not change.
+- **Strapi keeps its own admin and its own logins.** The portal links to that admin and hides its own Content section.
+- **What the Community edition lacks** compared with the built-in CMS:
+  - no audit log
+  - no built-in admin 2FA
+  - no content history or rollback
+  - no review workflows
+  - no SSO (a paid add-on)
+
+  The docs page states this plainly, and it lists the matching paid tiers as checked at implementation time.
+- **Secrets:** Strapi's app keys and JWT secrets come from `.env.*` (never committed). The API token that the pass-through uses is read-only.
+
 ### Local HTTPS
 - `yarn backend:certs` uses mkcert to create a local CA and a certificate for `api.tempo.test`, `portal.tempo.test`, `dev-api.tempo.test`, `localhost` and the LAN IP.
 - Caddy terminates TLS in Docker. The dev-api uses the certificates directly.
@@ -241,6 +257,11 @@ export const products = resource('products', ItemSchema, { seed: 50, searchBy: [
   - A rollback restores the previous version.
 - **AC-B-11** An editor cannot open users, config, flags or roles in the portal, and the API answers 403 to direct calls.
 - **AC-B-12** `create-tempo-app Demo --with-backend --yes` creates a project whose backend starts with `docker compose --profile dev up`, and whose app passes `yarn verify`.
+
+- **AC-B-13** With `--cms strapi`:
+  - `docker compose --profile dev up` also starts Strapi.
+  - An `announcement` published in the Strapi admin comes back from `GET /api/v1/content/announcement?locale=ar` in the same shape as the built-in CMS returns.
+  - The app's "What's new" shows it with no app change.
 
 ## Out of scope
 - Production hosting, managed databases, and secrets management beyond the recipe.
