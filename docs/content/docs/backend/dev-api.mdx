@@ -299,3 +299,42 @@ The collection is built straight from the OpenAPI document by a small generator 
 `api/generated/msw-handlers.ts` is a few lines. It imports the config and calls `toMswHandlers(config, { http, HttpResponse })`. Handlers are not written out one by one, so there is nothing to drift. The file is generated, instead of asked for, so its import path to the config is right and `api:check` notices a hand edit.
 
 `toMswHandlers` takes `http` and `HttpResponse` from your own `msw` install. That way there is one copy of `msw` (a second copy would give mismatched types) and `@rn-tempo/dev-api` does not import it. Handler paths start with `*`, so any host matches and an API base URL override keeps working. Use `server.use(...)` in a test to override one endpoint.
+
+## In the template
+
+Every generated app ships with `api/`, the one place where the C13 endpoints are defined:
+
+```text
+api/
+  tempo-api.config.ts   lists the endpoints
+  endpoints/            auth, authExtra, users, products, appConfig
+  generated/            openapi.json, postman.*.json, msw-handlers.ts (never edit)
+  README.md
+```
+
+| Script | Does |
+| --- | --- |
+| `yarn api <command>` | Runs `tempo-api`: `up`, `down`, `status`, `logs`, `reset`, `scenario`, `generate`, `check`. |
+| `yarn api:check` | Fails when `api/generated` is out of date. It is part of `yarn verify` and of the pre-commit hook. |
+
+`@rn-tempo/api-contract` and `@rn-tempo/dev-api` are `devDependencies`. The scripts run the binary from `node_modules`, which works for a published package and for the `link:` dependency used inside the rn-tempo repository (build `@rn-tempo/dev-api` first there). `.tempo-api/` (pid, log, stored data, control token) is gitignored.
+
+### The C13 endpoints are fixed on purpose
+
+The endpoints that the app and its tests rely on have a `data` function with exact values: `Product N` with price `5 + N`, one demo user, the tokens `mock-access-token` and `mock-refresh-token`, the code `123456` for OTP. They never use generated data. That keeps the behavior identical in all three places and keeps faker out of the app bundle. A new endpoint can use generated data on the dev server, but anything that runs in Jest or in the app needs a `data` function.
+
+### Plain schema imports
+
+The config is loaded by Node (`jiti`, with the `tsconfig` paths), not React Native. Definitions must import schemas from plain modules:
+
+| Use | Do not use |
+| --- | --- |
+| `@features/items/api/schemas` | `@features/items` (the barrel exports screens) |
+| `@features/auth/api/schemas`, `@features/auth/types` | `@features/auth` |
+| `@shared/utils/schemas` | `@shared/utils` (exports haptics and platform helpers) |
+
+ESLint has an `api` element in the boundaries config: files under `api/` may import only these plain modules, `@shared`, `@services` and `@config`, and `msw` only in `api/generated`. `yarn api:check` fails if an import still reaches React Native.
+
+### Optional modules
+
+Endpoints of the items sample belong to the `samples` module. They sit inside `// @tempo-feature:samples:start` and `:end` markers in `api/tempo-api.config.ts`, and `api/endpoints/products.ts` is in the manifest's `deleteGlobs`. After removing the module, run `yarn api generate` to refresh `api/generated`.

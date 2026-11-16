@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const PACKAGES = ['commitlint-config', 'contracts', 'eslint-config', 'prettier-config', 'tsconfig'];
+const PACKAGES = ['api-contract', 'commitlint-config', 'contracts', 'dev-api', 'eslint-config', 'prettier-config', 'tsconfig'];
 
 const entries = PACKAGES.map((dir) => {
   const pkg = JSON.parse(readFileSync(path.join(root, dir, 'package.json'), 'utf8'));

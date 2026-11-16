@@ -9,6 +9,7 @@
   "deleteGlobs": [
     "src/features/items/**",
     "src/locales/*/items.json",
+    "api/endpoints/products.ts",
     "src/test-utils/msw/routes/products.ts",
     "src/test-utils/factories/item.ts",
     "src/navigation/ItemsNavigation.test.tsx",

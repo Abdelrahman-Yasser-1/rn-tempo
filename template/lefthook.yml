@@ -24,6 +24,9 @@ pre-commit:
     - name: assets-check
       glob: '{src/assets/**,scripts/assets.mjs}'
       run: yarn assets:check
+    - name: api-check
+      glob: '{api/**,src/features/*/api/schemas.ts,src/features/*/types/*.ts,src/services/remote-config/appConfig.ts}'
+      run: yarn api:check
     - name: typecheck
       glob: '*.{ts,tsx}'
       run: yarn tsc --noEmit
