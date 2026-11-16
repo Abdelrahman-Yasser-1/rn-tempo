@@ -4,6 +4,7 @@
   "icon": "server",
   "pages": [
     "index",
-    "dev-api"
+    "dev-api",
+    "local-https"
   ]
 }
