@@ -28,7 +28,10 @@ function escapeSet(char: string): string[] | undefined {
 
 class Parser {
   private index = 0;
-  constructor(private readonly source: string) {}
+  private readonly source: string;
+  constructor(source: string) {
+    this.source = source;
+  }
 
   parse(): Node {
     const node = this.alternation();

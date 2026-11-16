@@ -16,7 +16,7 @@ Format: `- [ ] T<id> (AC…) <summary>`, followed by its commit and its docs pag
 - [x] **T15.A4** (AC-D-4, AC-D-5) Server.
   - Express, scenarios, `resource` CRUD stored in `.tempo-api/db.json`, and the mock auth helper.
   - Commit: `feat(dev-api): add mock server`.
-- [ ] **T15.A5** (AC-D-1) `tempo-api` CLI with up, down, status, logs, reset and scenario.
+- [x] **T15.A5** (AC-D-1) `tempo-api` CLI with up, down, status, logs, reset and scenario.
   - Runs in the background with a pid file and prints a QR code.
   - Commit: `feat(dev-api): add up and down commands`.
   - Docs: `backend/dev-api`.
