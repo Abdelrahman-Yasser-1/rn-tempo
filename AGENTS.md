@@ -46,6 +46,8 @@ Guide for every contributor, human or AI agent, working on **this repo** (the te
 - Never edit another session's log.
 
 ## PRs
-- Branch `ws<N>/<task-id>-<slug>` from `main`, one worktree per parallel agent.
+- One branch per phase: `ws<N>/<phase>-<slug>`, from an up-to-date `main`, one PR per phase (plan amendment 52).
+- Push every commit right after making it (`git push`, never force). Only the integrator force-pushes, with `--force-with-lease`, after a fold.
+- Document each task as you finish it: the docs page, ADR or recipe, the `ai/rules` change and the spec checkbox ship in the same PR. Never leave docs for a later phase (amendment 53).
 - Use the PR template. Reviewers apply Part E checklists and request `--fixup` commits.
 - Merge with **rebase merge** only.
