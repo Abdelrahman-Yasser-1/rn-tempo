@@ -38,6 +38,10 @@ jobs:
           node-version-file: .nvmrc
       - run: corepack enable
       - run: yarn install --immutable
+      # The endpoint generator test type-checks and lints a copy of the template with its dependencies.
+      - name: Install the template
+        working-directory: template
+        run: yarn install --immutable
       - run: yarn workspace create-tempo-app test:e2e
 
   template-js:

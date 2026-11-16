@@ -1,0 +1,10 @@
+
+/** One page of {{name}} records. */
+export function use{{Name}}ListQuery() {
+  return useQuery({ queryKey: {{keys}}.{{name}}List(), queryFn: () => list{{Name}}() });
+}
+
+/** One {{name}} record by id. */
+export function use{{Name}}Query(id: string) {
+  return useQuery({ queryKey: {{keys}}.{{name}}Detail(id), queryFn: () => get{{Name}}(id) });
+}

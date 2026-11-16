@@ -29,7 +29,7 @@ Format: `- [ ] T<id> (AC…) <summary>`, followed by its commit and its docs pag
   - Commit: `feat(template): define the app api with dev-api`.
 - [x] **T15.B3** (AC-D-8) Move the MSW handlers to the generated ones, one domain per commit, with tests unchanged.
   - Commits: `refactor(test): generate <domain> msw handlers`.
-- [ ] **T15.B4** (AC-D-9) The `tempo g endpoint` generator, with templates and a snapshot test.
+- [x] **T15.B4** (AC-D-9) The `tempo g endpoint` generator, with templates and a snapshot test.
   - Commit: `feat(cli): add endpoint generator`.
   - Docs: `backend/dev-api` (endpoints, scenarios, generators) and `guides/add-an-endpoint`.
 

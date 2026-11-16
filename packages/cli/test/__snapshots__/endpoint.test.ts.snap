@@ -1,0 +1,359 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`tempo g endpoint > --resource: five request functions, list and detail keys, five hooks and listed seed items 1`] = `
+{
+  "api/endpoints/orders.ts": "import { resource } from '@rn-tempo/api-contract';
+
+import { InvoicesSchema } from '@features/orders/api/schemas';
+
+/** \`/invoices\`: list, get, create, update and delete, stored by the dev server. */
+export const invoices = resource('invoices', InvoicesSchema, {
+  path: '/invoices',
+  // Listed items, because the app (Jest and the dev mock mode) has no data generator.
+  seed: [
+    { id: 1, title: 'Invoices 1' },
+    { id: 2, title: 'Invoices 2' },
+    { id: 3, title: 'Invoices 3' },
+  ],
+});
+",
+  "api/tempo-api.config.ts": "import { defineConfig } from '@rn-tempo/api-contract';
+
+import { login } from './endpoints/auth';
+import { invoices } from './endpoints/orders';
+
+export default defineConfig({
+  auth: false,
+  endpoints: [
+    login,
+    // @tempo-feature:samples:start
+    listProducts,
+    // @tempo-feature:samples:end
+    invoices,
+  ],
+});
+",
+  "src/features/orders/api/keys.ts": "/** Query keys of the orders feature. Keep them here so invalidation stays predictable. */
+export const ordersKeys = {
+  all: ['orders'] as const,
+  list: () => [...ordersKeys.all, 'list'] as const,
+  detail: (id: number) => [...ordersKeys.all, 'detail', id] as const,
+  invoicesList: () => [...ordersKeys.all, 'invoices', 'list'] as const,
+  invoicesDetail: (id: string) => [...ordersKeys.all, 'invoices', 'detail', id] as const,
+};
+",
+  "src/features/orders/api/mutations.ts": "import { useMutation, useQueryClient } from '@tanstack/react-query';
+
+import { ordersKeys } from './keys';
+import { createInvoices, updateInvoices, deleteInvoices } from './orders.api';
+
+/** Creates one invoices record and refreshes the cached orders data. */
+export function useCreateInvoicesMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createInvoices,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ordersKeys.all });
+    },
+  });
+}
+
+/** Changes one invoices record and refreshes the cached orders data. */
+export function useUpdateInvoicesMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updateInvoices,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ordersKeys.all });
+    },
+  });
+}
+
+/** Deletes one invoices record and refreshes the cached orders data. */
+export function useDeleteInvoicesMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteInvoices,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ordersKeys.all });
+    },
+  });
+}
+",
+  "src/features/orders/api/orders.api.ts": "import { request } from '@services/http/request';
+
+import { InvoicesSchema, InvoicesPageSchema, type InvoicesInput } from './schemas';
+
+/** \`GET /invoices\`: one page of invoices records. */
+export function listInvoices({ skip = 0, limit = 20 }: Readonly<{ skip?: number; limit?: number }> = {}) {
+  return request({ method: 'GET', url: '/invoices', params: { skip, limit } }, InvoicesPageSchema);
+}
+
+/** \`GET /invoices/:id\` */
+export function getInvoices(id: string) {
+  return request({ method: 'GET', url: \`/invoices/\${id}\` }, InvoicesSchema);
+}
+
+/** \`POST /invoices/add\` */
+export function createInvoices(body: Readonly<InvoicesInput>) {
+  return request({ method: 'POST', url: '/invoices/add', data: body }, InvoicesSchema);
+}
+
+/** \`PATCH /invoices/:id\` */
+export function updateInvoices({ id, body }: Readonly<{ id: string; body: Partial<InvoicesInput> }>) {
+  return request({ method: 'PATCH', url: \`/invoices/\${id}\`, data: body }, InvoicesSchema);
+}
+
+/** \`DELETE /invoices/:id\`: answers the removed record. */
+export function deleteInvoices(id: string) {
+  return request({ method: 'DELETE', url: \`/invoices/\${id}\` }, InvoicesSchema);
+}
+",
+  "src/features/orders/api/queries.ts": "import { useQuery } from '@tanstack/react-query';
+
+import { ORDERS_STALE_TIME_MS } from '@features/orders/constants';
+import type { OrdersItem } from '@features/orders/types';
+
+import { ordersKeys } from './keys';
+import { listInvoices, getInvoices } from './orders.api';
+
+/** Example fetcher: replace the body with a request through @services/http once the endpoint exists. */
+function fetchOrdersList(): Promise<readonly OrdersItem[]> {
+  return Promise.resolve([]);
+}
+
+/** Loads the list of orders items. */
+export function useOrdersListQuery() {
+  return useQuery({
+    queryKey: ordersKeys.list(),
+    queryFn: fetchOrdersList,
+    staleTime: ORDERS_STALE_TIME_MS,
+  });
+}
+
+/** One page of invoices records. */
+export function useInvoicesListQuery() {
+  return useQuery({ queryKey: ordersKeys.invoicesList(), queryFn: () => listInvoices() });
+}
+
+/** One invoices record by id. */
+export function useInvoicesQuery(id: string) {
+  return useQuery({ queryKey: ordersKeys.invoicesDetail(id), queryFn: () => getInvoices(id) });
+}
+",
+  "src/features/orders/api/schemas.ts": "import { z } from 'zod';
+
+/** One invoices record. Replace the stub with the real fields. */
+export const InvoicesSchema = z.object({ id: z.number(), title: z.string() });
+export type Invoices = z.infer<typeof InvoicesSchema>;
+
+/** What a client sends to create or change one invoices record: the record without its id. */
+export const InvoicesInputSchema = InvoicesSchema.omit({ id: true });
+export type InvoicesInput = z.infer<typeof InvoicesInputSchema>;
+
+/** A page of invoices records, as \`GET /invoices?limit=&skip=\` answers. */
+export const InvoicesPageSchema = z.object({
+  invoices: z.array(InvoicesSchema),
+  total: z.number(),
+  skip: z.number(),
+  limit: z.number(),
+});
+export type InvoicesPage = z.infer<typeof InvoicesPageSchema>;
+",
+}
+`;
+
+exports[`tempo g endpoint > GET with a path param: definition, schema, request, key, query hook and registration 1`] = `
+{
+  "api/endpoints/orders.ts": "import { defineEndpoint } from '@rn-tempo/api-contract';
+import { z } from 'zod';
+
+import { GetOrderResponseSchema } from '@features/orders/api/schemas';
+
+/** \`GET /orders/:id\` */
+export const getOrder = defineEndpoint({
+  method: 'GET',
+  path: '/orders/:id',
+  summary: 'Get order',
+  tags: ['orders'],
+  params: z.object({ id: z.string() }),
+  response: GetOrderResponseSchema,
+  // Fixed data keeps Jest and the in-app mock deterministic and faker out of the app bundle.
+  // Remove \`data\` only for an endpoint that the dev server alone should answer with generated data.
+  data: () => ({ id: 1 }),
+});
+",
+  "api/tempo-api.config.ts": "import { defineConfig } from '@rn-tempo/api-contract';
+
+import { login } from './endpoints/auth';
+import { getOrder } from './endpoints/orders';
+
+export default defineConfig({
+  auth: false,
+  endpoints: [
+    login,
+    // @tempo-feature:samples:start
+    listProducts,
+    // @tempo-feature:samples:end
+    getOrder,
+  ],
+});
+",
+  "src/features/orders/api/keys.ts": "/** Query keys of the orders feature. Keep them here so invalidation stays predictable. */
+export const ordersKeys = {
+  all: ['orders'] as const,
+  list: () => [...ordersKeys.all, 'list'] as const,
+  detail: (id: number) => [...ordersKeys.all, 'detail', id] as const,
+  getOrder: (id: string) => [...ordersKeys.all, 'getOrder', id] as const,
+};
+",
+  "src/features/orders/api/orders.api.ts": "import { request } from '@services/http/request';
+
+import { GetOrderResponseSchema } from './schemas';
+
+/** \`GET /orders/:id\` */
+export function getOrder(id: string) {
+  return request({ method: 'GET', url: \`/orders/\${id}\` }, GetOrderResponseSchema);
+}
+",
+  "src/features/orders/api/queries.ts": "import { useQuery } from '@tanstack/react-query';
+
+import { ORDERS_STALE_TIME_MS } from '@features/orders/constants';
+import type { OrdersItem } from '@features/orders/types';
+
+import { ordersKeys } from './keys';
+import { getOrder } from './orders.api';
+
+/** Example fetcher: replace the body with a request through @services/http once the endpoint exists. */
+function fetchOrdersList(): Promise<readonly OrdersItem[]> {
+  return Promise.resolve([]);
+}
+
+/** Loads the list of orders items. */
+export function useOrdersListQuery() {
+  return useQuery({
+    queryKey: ordersKeys.list(),
+    queryFn: fetchOrdersList,
+    staleTime: ORDERS_STALE_TIME_MS,
+  });
+}
+
+/** \`GET /orders/:id\` */
+export function useGetOrderQuery(id: string) {
+  return useQuery({ queryKey: ordersKeys.getOrder(id), queryFn: () => getOrder(id) });
+}
+",
+  "src/features/orders/api/schemas.ts": "import { z } from 'zod';
+
+/** Response of \`GET /orders/:id\`. Replace the stub with the real fields; the app parses with this schema. */
+export const GetOrderResponseSchema = z.object({ id: z.number() });
+export type GetOrderResponse = z.infer<typeof GetOrderResponseSchema>;
+",
+}
+`;
+
+exports[`tempo g endpoint > POST with a body: request schema and a mutation that invalidates the feature keys 1`] = `
+{
+  "api/endpoints/orders.ts": "import { defineEndpoint } from '@rn-tempo/api-contract';
+
+import { CreateOrderResponseSchema, CreateOrderRequestSchema } from '@features/orders/api/schemas';
+
+/** \`POST /orders\` */
+export const createOrder = defineEndpoint({
+  method: 'POST',
+  path: '/orders',
+  summary: 'Create order',
+  tags: ['orders'],
+  body: CreateOrderRequestSchema,
+  response: CreateOrderResponseSchema,
+  // Fixed data keeps Jest and the in-app mock deterministic and faker out of the app bundle.
+  // Remove \`data\` only for an endpoint that the dev server alone should answer with generated data.
+  data: () => ({ id: 1 }),
+});
+",
+  "api/tempo-api.config.ts": "import { defineConfig } from '@rn-tempo/api-contract';
+
+import { login } from './endpoints/auth';
+import { createOrder } from './endpoints/orders';
+
+export default defineConfig({
+  auth: false,
+  endpoints: [
+    login,
+    // @tempo-feature:samples:start
+    listProducts,
+    // @tempo-feature:samples:end
+    createOrder,
+  ],
+});
+",
+  "src/features/orders/api/keys.ts": "/** Query keys of the orders feature. Keep them here so invalidation stays predictable. */
+export const ordersKeys = {
+  all: ['orders'] as const,
+  list: () => [...ordersKeys.all, 'list'] as const,
+  detail: (id: number) => [...ordersKeys.all, 'detail', id] as const,
+  createOrder: () => [...ordersKeys.all, 'createOrder'] as const,
+};
+",
+  "src/features/orders/api/mutations.ts": "import { useMutation, useQueryClient } from '@tanstack/react-query';
+
+import { ordersKeys } from './keys';
+import { createOrder } from './orders.api';
+
+/** \`POST /orders\`; refreshes the cached orders data when it succeeds. */
+export function useCreateOrderMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createOrder,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ordersKeys.all });
+    },
+  });
+}
+",
+  "src/features/orders/api/orders.api.ts": "import { request } from '@services/http/request';
+
+import { CreateOrderResponseSchema, type CreateOrderRequest } from './schemas';
+
+/** \`POST /orders\` */
+export function createOrder(body: Readonly<CreateOrderRequest>) {
+  return request({ method: 'POST', url: '/orders', data: body }, CreateOrderResponseSchema);
+}
+",
+  "src/features/orders/api/queries.ts": "import { useQuery } from '@tanstack/react-query';
+
+import { ORDERS_STALE_TIME_MS } from '@features/orders/constants';
+import type { OrdersItem } from '@features/orders/types';
+
+import { ordersKeys } from './keys';
+
+/** Example fetcher: replace the body with a request through @services/http once the endpoint exists. */
+function fetchOrdersList(): Promise<readonly OrdersItem[]> {
+  return Promise.resolve([]);
+}
+
+/** Loads the list of orders items. */
+export function useOrdersListQuery() {
+  return useQuery({
+    queryKey: ordersKeys.list(),
+    queryFn: fetchOrdersList,
+    staleTime: ORDERS_STALE_TIME_MS,
+  });
+}
+",
+  "src/features/orders/api/schemas.ts": "import { z } from 'zod';
+
+/** Response of \`POST /orders\`. Replace the stub with the real fields; the app parses with this schema. */
+export const CreateOrderResponseSchema = z.object({ id: z.number() });
+export type CreateOrderResponse = z.infer<typeof CreateOrderResponseSchema>;
+
+/** Body of \`POST /orders\`. Replace the stub with the real fields. */
+export const CreateOrderRequestSchema = z.object({ title: z.string() });
+export type CreateOrderRequest = z.infer<typeof CreateOrderRequestSchema>;
+",
+}
+`;

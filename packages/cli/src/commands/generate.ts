@@ -1,6 +1,7 @@
 import { defineCommand } from 'citty';
 
 import { CliError } from '../lib/errors.ts';
+import { generateEndpoint } from '../lib/endpoint.ts';
 import { commonArgs, resolveCommon, runGuarded, type Reporter } from '../lib/output.ts';
 import {
   generateComponent,
@@ -104,7 +105,32 @@ const query = generator('query', 'Generate a TanStack Query hook inside a featur
   generateQuery(name, requireFeature(args.feature, 'query'), optionsFor(cwd, args)),
 );
 
+const endpoint = defineCommand({
+  meta: { name: 'endpoint', description: 'Generate an API endpoint: definition, schemas, request function, query key and hook' },
+  args: {
+    ...commonArgs,
+    'dry-run': writeArgs['dry-run'],
+    target: { type: 'positional', description: '<feature>.<name>, for example items.getItem', required: true },
+    method: { type: 'string', description: 'GET (default), POST, PUT, PATCH or DELETE' },
+    path: { type: 'string', description: 'Route with :params, for example /items/:id' },
+    resource: { type: 'boolean', description: 'Define list, get, create, update and delete for one record type' },
+  },
+  async run({ args }) {
+    const common = resolveCommon(args);
+    await runGuarded(common.json, async (reporter) => {
+      const result = await generateEndpoint(args.target, {
+        projectDir: common.cwd,
+        dryRun: args['dry-run'],
+        method: args.method,
+        path: args.path,
+        resource: args.resource,
+      });
+      report(reporter, common.json, 'endpoint', Boolean(args['dry-run']), result);
+    });
+  },
+});
+
 export default defineCommand({
-  meta: { name: 'generate', description: 'Generate features, screens, components, hooks, stores and queries' },
-  subCommands: { feature, screen, component, hook, store, query },
+  meta: { name: 'generate', description: 'Generate features, screens, components, hooks, stores, queries and endpoints' },
+  subCommands: { feature, screen, component, hook, store, query, endpoint },
 });

@@ -316,6 +316,7 @@ api/
 | --- | --- |
 | `yarn api <command>` | Runs `tempo-api`: `up`, `down`, `status`, `logs`, `reset`, `scenario`, `generate`, `check`. |
 | `yarn api:check` | Fails when `api/generated` is out of date. It is part of `yarn verify` and of the pre-commit hook. |
+| `yarn tempo g endpoint <feature>.<name>` | Adds an endpoint: its definition, registration, schemas, request function, query key and hook. See [Add an endpoint](/docs/guides/add-an-endpoint). |
 
 `@rn-tempo/api-contract` and `@rn-tempo/dev-api` are `devDependencies`. The scripts run the binary from `node_modules`, which works for a published package and for the `link:` dependency used inside the rn-tempo repository (build `@rn-tempo/dev-api` first there). `.tempo-api/` (pid, log, stored data, control token) is gitignored.
 

@@ -1,0 +1,12 @@
+
+/** `{{method}} {{path}}` */
+export const {{name}} = defineEndpoint({
+  method: '{{method}}',
+  path: '{{path}}',
+  summary: '{{summary}}',
+  tags: ['{{feature}}'],{{paramsLine}}{{bodyLine}}
+  response: {{Name}}ResponseSchema,
+  // Fixed data keeps Jest and the in-app mock deterministic and faker out of the app bundle.
+  // Remove `data` only for an endpoint that the dev server alone should answer with generated data.
+  data: () => ({ id: 1 }),
+});

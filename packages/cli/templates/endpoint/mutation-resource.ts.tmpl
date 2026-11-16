@@ -1,0 +1,36 @@
+
+/** Creates one {{name}} record and refreshes the cached {{feature}} data. */
+export function useCreate{{Name}}Mutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: create{{Name}},
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: {{keys}}.all });
+    },
+  });
+}
+
+/** Changes one {{name}} record and refreshes the cached {{feature}} data. */
+export function useUpdate{{Name}}Mutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: update{{Name}},
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: {{keys}}.all });
+    },
+  });
+}
+
+/** Deletes one {{name}} record and refreshes the cached {{feature}} data. */
+export function useDelete{{Name}}Mutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: delete{{Name}},
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: {{keys}}.all });
+    },
+  });
+}

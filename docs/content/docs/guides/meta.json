@@ -7,6 +7,7 @@
     "add-env-var",
     "add-translation-keys",
     "add-icon",
+    "add-an-endpoint",
     "open-external-links",
     "device-test-matrix",
     "switch-crash-reporting-provider",

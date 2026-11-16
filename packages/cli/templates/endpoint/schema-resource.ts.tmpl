@@ -1,0 +1,17 @@
+
+/** One {{name}} record. Replace the stub with the real fields. */
+export const {{Name}}Schema = z.object({ id: z.number(), title: z.string() });
+export type {{Name}} = z.infer<typeof {{Name}}Schema>;
+
+/** What a client sends to create or change one {{name}} record: the record without its id. */
+export const {{Name}}InputSchema = {{Name}}Schema.omit({ id: true });
+export type {{Name}}Input = z.infer<typeof {{Name}}InputSchema>;
+
+/** A page of {{name}} records, as `GET {{path}}?limit=&skip=` answers. */
+export const {{Name}}PageSchema = z.object({
+  {{name}}: z.array({{Name}}Schema),
+  total: z.number(),
+  skip: z.number(),
+  limit: z.number(),
+});
+export type {{Name}}Page = z.infer<typeof {{Name}}PageSchema>;
