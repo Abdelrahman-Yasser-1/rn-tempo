@@ -10,7 +10,7 @@ Format: `- [ ] T<id> (AC…) <summary>`, followed by its commit and its docs pag
   - Commits: `chore(repo): add api contract and dev api packages`, `feat(commitlint-config): add backend scopes`.
 - [x] **T15.A2** (AC-D-3) `defineEndpoint` and `resource` types, plus request validation.
   - Commit: `feat(api-contract): add endpoint definition format`.
-- [ ] **T15.A3** (AC-D-2) Seeded random data from Zod schemas.
+- [x] **T15.A3** (AC-D-2) Seeded random data from Zod schemas.
   - Includes the field-name heuristics, `meta` examples, fixed `data` and fixture files.
   - Commit: `feat(dev-api): generate data from schemas`.
 - [ ] **T15.A4** (AC-D-4, AC-D-5) Server.
