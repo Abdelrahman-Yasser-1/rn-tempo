@@ -119,8 +119,8 @@ A resource's first items follow the same idea: `seed: 50` generates 50 items (nu
 
 The server (`createServer(config, { dataDir })`, built on Express 5) runs every request through the same steps:
 
-1. **Validate** params, query and body. A failure is a 400 problem+json that names each field.
-2. **Check auth.** An endpoint with `auth: 'bearer'` returns 401 without a valid token.
+1. **Check auth.** An endpoint with `auth: 'bearer'` returns 401 without a valid token, before anything else is looked at.
+2. **Validate** params, query and body. A failure is a 400 problem+json that names each field.
 3. **Pick a scenario.** The `x-tempo-scenario` header wins over the scenario set with `tempo-api scenario set`.
 4. **Compute data** (`data`, fixture file, then generation).
 5. **Check the response** against the `response` schema. If it does not match, the server answers 500 problem+json that says which field is wrong. It never sends invalid data. A 500 here means your `data` function or fixture is wrong, not the app.
@@ -189,6 +189,8 @@ The server listens over plain HTTP in this phase. The listener accepts TLS optio
 | `scenario set <endpointId> <name>` | Makes one endpoint answer with a scenario until cleared. |
 | `scenario clear [endpointId]` | Clears one scenario, or all of them. |
 | `start` | Runs in the foreground. Use it in Docker or when debugging. |
+| `openapi`, `collections`, `msw`, `generate` | Write the generated files. See [Generators](#generators). |
+| `check` | Fails when a generated file is out of date. |
 
 Every command takes `--config <file>` (default `api/tempo-api.config.ts`) and `--cwd <dir>`.
 
@@ -228,3 +230,72 @@ Every endpoint has a stable id, `<method>.<path>` in lowercase, with `/` written
 <Callout title="LAN access" type="warn">
   `up` listens on all network interfaces by default so a phone can open the QR code URL. Anyone on the same network can reach the server and use its public test login. Use `--host 127.0.0.1` on a network you do not trust.
 </Callout>
+
+## The runtime entry
+
+The request steps above live in one function, `createRuntime(config, options)`, exported from `@rn-tempo/dev-api/runtime`. The Express server, the MSW handlers for Jest and the in-app mock adapter all call it, so the three cannot drift apart.
+
+```ts
+import { createRuntime } from '@rn-tempo/dev-api/runtime';
+
+const runtime = createRuntime(config);
+const { status, body } = await runtime.resolve({
+  method: 'GET',
+  path: '/products',
+  query: { limit: '2' },
+  headers: { authorization: 'Bearer ...' },
+});
+```
+
+| Member | Does |
+| --- | --- |
+| `resolve(request)` | Runs auth, validation, scenario, data and the response check. It never throws: every failure is a problem+json response. |
+| `matches(method, path)` | Tells whether an endpoint answers. The in-app adapter uses it to let other requests reach the network. |
+| `endpoints` | The endpoints in match order (static segments before `:param` ones). |
+| `store` | The in-memory store behind `db.collection(...)` and the mock tokens. |
+
+The entry imports only `@rn-tempo/api-contract` and `zod`. It has no Express, no `pino` and no `node:` module, and a test checks that. The server adds what needs Node: it saves the store to `db.json` and passes `fallbackData`, which reads fixture files and generates data.
+
+<Callout title="No faker in the app" type="warn">
+  Generating data needs `@faker-js/faker`, which belongs in Node only. In Jest and in the app, every endpoint must have a `data` function (the C13 endpoints do), because the runtime has no generator there. An endpoint without `data` answers a 500 that says so. A resource whose `seed` is a count needs the server; list its items to use it without one.
+</Callout>
+
+## Generators
+
+All outputs come from the endpoint definitions, so nothing is written by hand twice. Files go to `generated/` next to the config (`api/generated/`).
+
+| Command | File | Contents |
+| --- | --- | --- |
+| `tempo-api openapi` | `openapi.json` | OpenAPI 3.1. |
+| `tempo-api collections` | `postman.collection.json`, `postman.environment.json` | A Postman collection (v2.1) and an environment. |
+| `tempo-api msw` | `msw-handlers.ts` | The MSW handlers for Jest. |
+| `tempo-api generate` | all four | |
+| `tempo-api check` | none | Regenerates into a temporary folder and exits 1 when any file differs or is missing. |
+
+### OpenAPI
+
+Schemas come from `z.toJSONSchema`. OpenAPI 3.1 uses JSON Schema 2020-12, which is Zod's default target, so no conversion is needed. Request parts use `io: 'input'` (what a client sends, before coercion and defaults) and responses use `io: 'output'`. Anything JSON Schema cannot hold, such as `z.date()` or a transform, becomes an open schema instead of failing the whole document.
+
+- Paths come from the method, the path (`:id` becomes `{id}`) and the `params` and `query` schemas.
+- Each body and response is a component, `PostAuthLoginRequest` and `PostAuthLoginResponse` for example. Errors share one `Problem` component.
+- Scenarios with a status become documented responses, and `auth: 'bearer'` adds a security requirement and a 401.
+- Request bodies and success responses carry an example, generated from the schema with the config `seed`.
+- Keys are sorted and nothing random is written, so a diff shows only real changes.
+
+### Swagger UI
+
+`tempo-api up` serves Swagger UI at `/docs`, reading `/docs/openapi.json`. The document is built from the running config. The UI files come from the pinned `swagger-ui-dist` package. Only its scripts, styles and icons are served.
+
+### Postman
+
+The collection is built straight from the OpenAPI document by a small generator in `@rn-tempo/dev-api`, not with `openapi-to-postmanv2`. That converter puts random ids in its output, so `api:check` could never pass, and it brings a large dependency tree for a mapping this small. Our output is deterministic.
+
+- Folders are the tags. Each request has `{{baseUrl}}`, the example body and, for protected endpoints, bearer auth with `{{token}}`.
+- A request whose response holds an `accessToken` (the login) stores it in the `token` variable, so the others work right after.
+- The environment holds `baseUrl` (`http://localhost:<port>`) and an empty `token`. It has no secrets.
+
+### MSW handlers
+
+`api/generated/msw-handlers.ts` is a few lines. It imports the config and calls `toMswHandlers(config, { http, HttpResponse })`. Handlers are not written out one by one, so there is nothing to drift. The file is generated, instead of asked for, so its import path to the config is right and `api:check` notices a hand edit.
+
+`toMswHandlers` takes `http` and `HttpResponse` from your own `msw` install. That way there is one copy of `msw` (a second copy would give mismatched types) and `@rn-tempo/dev-api` does not import it. Handler paths start with `*`, so any host matches and an API base URL override keeps working. Use `server.use(...)` in a test to override one endpoint.

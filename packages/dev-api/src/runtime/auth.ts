@@ -1,7 +1,7 @@
 import { ApiError, defineEndpoint, type EndpointDefinition } from '@rn-tempo/api-contract';
 import { z } from 'zod';
 
-import type { Store } from './store.ts';
+import type { MemoryStore } from './store.ts';
 
 /**
  * Mock auth for local development ONLY.
@@ -43,7 +43,7 @@ export function bearerToken(header: string | string[] | undefined): string | und
 }
 
 /** The C13 auth endpoints: login, refresh and me, backed by the store's tokens. */
-export function mockAuthEndpoints(store: Store): EndpointDefinition[] {
+export function mockAuthEndpoints(store: MemoryStore): EndpointDefinition[] {
   const login = defineEndpoint({
     id: 'post.auth.login',
     method: 'POST',

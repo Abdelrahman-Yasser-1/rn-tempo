@@ -43,3 +43,14 @@ All commands take `--config <file>` (default `api/tempo-api.config.ts`) and `--c
 The config is TypeScript, loaded with [jiti](https://github.com/unjs/jiti) with `tsconfigPaths`, so it can import app code through aliases such as `@features/*`.
 
 `up` listens on `0.0.0.0` by default so a phone on the same Wi-Fi can use the QR code. Pass `--host 127.0.0.1` to keep it on this machine.
+
+## Runtime entry and generators
+
+`@rn-tempo/dev-api/runtime` exports `createRuntime(config)`: the request pipeline (auth, validate, scenario, data, response check) with an in-memory store, and no `express`, `pino`, `node:*` or faker import. The Express server calls it, and so do the MSW handlers (`toMswHandlers`) and the template's in-app mock adapter. A test checks the import list of `src/runtime`.
+
+`tempo-api openapi | collections | msw | generate | check` write and verify `generated/` next to the config.
+
+- **OpenAPI 3.1:** `z.toJSONSchema` (default target, which is JSON Schema 2020-12 and so valid in 3.1; `io: 'input'` for requests, `'output'` for responses). Sorted keys, no random values.
+- **Postman v2.1:** written directly from the OpenAPI document (`src/docs/postman.ts`). `openapi-to-postmanv2` was not used because it writes random ids, which would make `check` fail on every run, and it is a large dependency for a small mapping.
+- **MSW:** the generated file only calls `toMswHandlers(config, { http, HttpResponse })`. The helper takes `http` from the app's own `msw`, so there is one install and nothing to drift.
+- **Swagger UI:** `/docs`, from the pinned `swagger-ui-dist`.
