@@ -1,0 +1,9 @@
+{
+  "title": "Backend",
+  "description": "The dev API for local work and the optional full backend with an admin portal.",
+  "icon": "server",
+  "pages": [
+    "index",
+    "dev-api"
+  ]
+}

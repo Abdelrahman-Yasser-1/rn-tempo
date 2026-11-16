@@ -1,0 +1,25 @@
+---
+title: Backend
+description: "Two tiers of backend for an RN-TEMPO app, a dev API every project gets and a full backend you can opt into."
+---
+
+An RN-TEMPO app talks to an HTTP API. The template gives you two ways to have one, and both are built from the same endpoint definitions.
+
+## The two tiers
+
+| | Tier 1: dev API | Tier 2: backend and portal |
+| --- | --- | --- |
+| Package | `@rn-tempo/dev-api` | `backend/api`, `backend/portal` |
+| Who gets it | Every project, as a dev dependency | Projects created with `--with-backend` |
+| Data | Seeded random data from your Zod schemas, or data you fix | PostgreSQL through Prisma |
+| Auth | A mock login for the public test user | Real accounts, hashed passwords, rotating refresh tokens |
+| Use it for | Building screens, demos and tests before a real API exists | A real API, an admin portal and a CMS |
+| Runs in production | Never | Yes |
+
+Start with tier 1. When the app needs real data, tier 2 mounts the same definitions under `/api/v1`, so your request and response shapes do not change.
+
+## One contract
+
+Both tiers read endpoint definitions written with `@rn-tempo/api-contract`. A definition is a method, a path and Zod schemas for the params, query, body and response. The dev API serves it, and later phases generate OpenAPI, Postman collections and MSW handlers from the same file.
+
+Start with [Dev API](/docs/backend/dev-api).

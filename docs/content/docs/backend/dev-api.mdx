@@ -1,0 +1,21 @@
+---
+title: Dev API
+description: A local mock API built from Zod endpoint definitions, with seeded data, scenarios and a tempo-api command.
+---
+
+<Callout title="Development only" type="warn">
+  The dev API is a development tool. Its mock login accepts a public test user and issues opaque tokens that are not real JWTs. Never expose it to an untrusted network and never use it in production.
+</Callout>
+
+## Packages
+
+| Package | Role |
+| --- | --- |
+| `@rn-tempo/api-contract` | The definition format: `defineEndpoint`, `resource`, `defineConfig` and request validation. It has no server code. |
+| `@rn-tempo/dev-api` | The server, the data generator and the `tempo-api` command. |
+
+Both are ESM packages for Node 22 or newer. `zod` 4.6.7 is a peer dependency of `@rn-tempo/api-contract`, pinned to the same version as the template, so schemas from your app and from the contract are the same Zod instance.
+
+## Commit scopes
+
+The shared commitlint config accepts the scopes `api`, `portal`, `api-contract`, `dev-api`, `backend` and `docker`.
