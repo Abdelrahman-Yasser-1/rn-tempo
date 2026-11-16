@@ -22,7 +22,7 @@ Format: `- [ ] T<id> (AC…) <summary>`, followed by its commit and its docs pag
   - Docs: `backend/dev-api`.
 
 ## Phase B: generators and template switch (`ws15/b-dev-api-template`)
-- [ ] **T15.B1** (AC-D-7) Generators and `yarn api:check`.
+- [x] **T15.B1** (AC-D-7) Generators and `yarn api:check`.
   - OpenAPI 3.1 with Swagger UI, a Postman collection and environment, and MSW handlers.
   - Commit: `feat(dev-api): generate openapi collections and msw handlers`.
 - [ ] **T15.B2** C13 definitions in `template/api/endpoints/`, the `yarn api` scripts, and `.tempo-api/` in `.gitignore`.

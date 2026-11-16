@@ -179,3 +179,38 @@ describe('stale pid files', () => {
     expect(existsSync(join(dir, '.tempo-api/server.pid'))).toBe(false);
   });
 });
+
+describe('tempo-api generators', () => {
+  it('writes the four files, and check passes until one is edited or removed', async () => {
+    const generate = await api('generate');
+    expect(generate.code, generate.err).toBe(0);
+    for (const name of ['openapi.json', 'postman.collection.json', 'postman.environment.json', 'msw-handlers.ts']) {
+      expect(existsSync(join(dir, 'api/generated', name)), name).toBe(true);
+    }
+    const document = JSON.parse(readFileSync(join(dir, 'api/generated/openapi.json'), 'utf8')) as { openapi: string; paths: object };
+    expect(document.openapi).toBe('3.1.0');
+    expect(Object.keys(document.paths)).toContain('/products/{id}');
+
+    const ok = await api('check');
+    expect(ok.code, ok.err).toBe(0);
+    expect(ok.out).toMatch(/up to date/);
+
+    writeFileSync(join(dir, 'api/generated/openapi.json'), '{}\n');
+    const stale = await api('check');
+    expect(stale.code).toBe(1);
+    expect(stale.err).toMatch(/openapi\.json is out of date/);
+
+    rmSync(join(dir, 'api/generated/postman.collection.json'));
+    expect((await api('check')).err).toMatch(/postman\.collection\.json is missing/);
+
+    expect((await api('openapi')).code).toBe(0);
+    expect((await api('collections')).code).toBe(0);
+    expect((await api('check')).code).toBe(0);
+  });
+
+  it('check fails when nothing was generated yet', async () => {
+    const result = await api('check');
+    expect(result.code).toBe(1);
+    expect(result.err).toMatch(/is missing/);
+  });
+});

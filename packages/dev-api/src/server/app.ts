@@ -1,27 +1,23 @@
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { join } from 'node:path';
-import { setTimeout as sleep } from 'node:timers/promises';
 
 import {
-  ApiError,
   mountedPath,
   problem,
   PROBLEM_CONTENT_TYPE,
-  validateRequest,
-  validateResponse,
   type ApiConfig,
   type EndpointDefinition,
   type ProblemDetails,
-  type Scenario,
 } from '@rn-tempo/api-contract';
 import express, { type Express, type NextFunction, type Request, type Response } from 'express';
 import type { Logger } from 'pino';
 
-import { resolveData } from '../data.ts';
-import { bearerToken, mockAuthEndpoints } from './auth.ts';
+import { fallbackData } from '../data.ts';
+import { createRuntime, type Runtime } from '../runtime/pipeline.ts';
+import { BUILTIN_SCENARIOS, CONTROL_HEADER, findScenario, scenarioNames } from '../runtime/scenarios.ts';
+import { docsRouter } from './docs.ts';
 import { createLogger } from './logger.ts';
 import { redactDeep, redactUrl } from './redact.ts';
-import { BUILTIN_SCENARIOS, CONTROL_HEADER, SCENARIO_HEADER } from './scenarios.ts';
 import { Store } from './store.ts';
 
 export interface ServerOptions {
@@ -42,6 +38,8 @@ export interface DevServer {
   readonly store: Store;
   readonly logger: Logger;
   readonly controlToken: string;
+  /** The request pipeline the routes call. */
+  readonly runtime: Runtime;
   /** Endpoints as served, with the mock-auth ones included. */
   readonly endpoints: readonly EndpointDefinition[];
 }
@@ -53,18 +51,6 @@ function sendProblem(res: Response, body: ProblemDetails): void {
   const payload = { ...body, message: body.detail ?? body.title };
   res.locals.responseBody = payload;
   res.status(body.status).type(PROBLEM_CONTENT_TYPE).send(JSON.stringify(payload));
-}
-
-function sendJson(res: Response, status: number, body: unknown): void {
-  res.locals.responseBody = body;
-  if (status === 204) res.status(204).end();
-  else res.status(status).json(body);
-}
-
-/** Static segments before `:param` ones, so `/products/search` is tried before `/products/:id`. */
-function routeOrder(endpoints: readonly EndpointDefinition[]): EndpointDefinition[] {
-  const weight = (e: EndpointDefinition): number => e.path.split('/').filter((s) => s.startsWith(':')).length;
-  return endpoints.map((e, i) => ({ e, i })).sort((a, b) => weight(a.e) - weight(b.e) || a.i - b.i).map(({ e }) => e);
 }
 
 function sameToken(given: string | undefined, expected: string): boolean {
@@ -85,11 +71,12 @@ export function createServer(config: ApiConfig, options: ServerOptions = {}): De
   const controlToken = options.controlToken ?? randomBytes(24).toString('hex');
   const store = new Store(config, dataDir, logger);
 
-  const userRoutes = new Set(config.endpoints.map((e) => `${e.method} ${e.path}`));
-  const authEndpoints = config.auth
-    ? mockAuthEndpoints(store).filter((e) => !userRoutes.has(`${e.method} ${e.path}`))
-    : [];
-  const endpoints = [...config.endpoints, ...authEndpoints];
+  const runtime = createRuntime(config, {
+    store,
+    fallbackData: (endpoint, ctx) => fallbackData(endpoint, ctx, { seed: config.seed, fixturesDir: options.fixturesDir }),
+    onError: (fields, message) => logger.error(fields, message),
+  });
+  const endpoints = runtime.endpoints;
   const byId = new Map(endpoints.map((e) => [e.id, e]));
 
   const app = express();
@@ -166,7 +153,7 @@ export function createServer(config: ApiConfig, options: ServerOptions = {}): De
       return sendProblem(res, problem(400, { detail: 'Send { endpointId, name } of a known endpoint.' }));
     }
     if (findScenario(endpoint, body.name) === undefined) {
-      const names = Object.keys({ ...BUILTIN_SCENARIOS, ...endpoint.scenarios }).join(', ');
+      const names = scenarioNames(endpoint).join(', ');
       return sendProblem(res, problem(400, { detail: `Unknown scenario "${body.name}". Available: ${names}.` }));
     }
     store.setScenario(endpoint.id, body.name);
@@ -178,89 +165,29 @@ export function createServer(config: ApiConfig, options: ServerOptions = {}): De
   });
   app.use('/__tempo', internal);
 
-  // ---- endpoints
-  const router = express.Router();
-  for (const endpoint of routeOrder(endpoints)) {
-    const method = endpoint.method.toLowerCase() as 'get' | 'post' | 'put' | 'patch' | 'delete';
-    router[method](endpoint.path, (req, res) => handle(endpoint, req, res));
-  }
-  app.use(config.basePath === '' ? '/' : config.basePath, router);
+  // ---- Swagger UI
+  app.use('/docs', docsRouter(config));
 
-  async function handle(endpoint: EndpointDefinition, req: Request, res: Response): Promise<void> {
-    // 1. auth first, so a caller without a token learns nothing about the request shape
-    if (endpoint.auth === 'bearer') {
-      const token = bearerToken(req.headers.authorization);
-      if (token === undefined || store.findToken(token, 'access') === undefined) {
-        res.setHeader('www-authenticate', 'Bearer');
-        return sendProblem(res, problem(401, { detail: 'Missing or invalid access token.' }));
-      }
-    }
-
-    // 2. validate
-    const checked = validateRequest(endpoint, { params: { ...req.params }, query: { ...req.query }, body: req.body });
-    if (!checked.ok) return sendProblem(res, checked.problem);
-
-    // 3. scenario: the header wins over the one set through the store
-    const headerName = req.header(SCENARIO_HEADER);
-    const name = headerName ?? store.scenarioFor(endpoint.id);
-    let scenario: Scenario | undefined;
-    if (name !== undefined) {
-      scenario = findScenario(endpoint, name);
-      if (scenario === undefined && headerName !== undefined) {
-        const names = Object.keys({ ...BUILTIN_SCENARIOS, ...endpoint.scenarios }).join(', ');
-        return sendProblem(res, problem(400, { detail: `Unknown scenario "${headerName}". Available: ${names}.` }));
-      }
-    }
-    if (scenario?.delayMs !== undefined) await sleep(scenario.delayMs);
-    let status = endpoint.status;
-    if (scenario?.status !== undefined) status = scenario.status;
-    if (scenario?.body !== undefined) return sendJson(res, status, scenario.body);
-    if (scenario?.status !== undefined && scenario.status >= 400) return sendProblem(res, problem(scenario.status));
-
-    // 4. data
-    let value: unknown;
+  // ---- endpoints: one catch-all, because the runtime does the matching and the whole pipeline
+  app.use(async (req, res, next) => {
     try {
-      value = await resolveData(
-        endpoint,
-        {
-          params: checked.value.params as Record<string, string>,
-          query: checked.value.query as Record<string, unknown>,
-          body: checked.value.body as undefined,
-          headers: req.headers,
-          db: store.db,
-        },
-        { seed: config.seed, fixturesDir: options.fixturesDir },
-      );
+      const result = await runtime.resolve({
+        method: req.method,
+        path: req.path,
+        query: { ...req.query },
+        body: req.body,
+        headers: req.headers,
+      });
+      res.locals.responseBody = result.body;
+      for (const [name, value] of Object.entries(result.headers)) res.setHeader(name, value);
+      if (result.body === undefined) res.status(result.status).end();
+      else res.status(result.status).send(JSON.stringify(result.body));
     } catch (error) {
-      if (error instanceof ApiError) return sendProblem(res, error.toProblem());
-      logger.error({ endpoint: endpoint.id, err: error instanceof Error ? error.message : String(error) }, 'data failed');
-      return sendProblem(
-        res,
-        problem(500, {
-          title: 'Endpoint data failed',
-          detail: `${endpoint.id}: ${error instanceof Error ? error.message : String(error)}`,
-        }),
-      );
+      next(error);
     }
-
-    // 5. never send data the response schema rejects
-    const response = validateResponse(endpoint, value);
-    if (!response.ok) {
-      logger.error({ endpoint: endpoint.id, issues: response.issues }, 'response does not match its schema');
-      return sendProblem(
-        res,
-        problem(500, {
-          title: 'Response does not match its schema',
-          detail: `The data for ${endpoint.id} does not match its response schema. Fix the endpoint's data function or its fixture.`,
-          errors: response.issues,
-        }),
-      );
-    }
-    sendJson(res, status, value);
-  }
+  });
 
   // ---- fallbacks
-  app.use((_req, res) => sendProblem(res, problem(404, { detail: 'No endpoint matches this request.' })));
   app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
     const type = (error as { type?: string } | null)?.type;
     if (type === 'entity.parse.failed') return sendProblem(res, problem(400, { detail: 'The request body is not valid JSON.' }));
@@ -269,10 +196,5 @@ export function createServer(config: ApiConfig, options: ServerOptions = {}): De
     sendProblem(res, problem(500, { detail: 'Unexpected server error.' }));
   });
 
-  return { app, store, logger, controlToken, endpoints };
-}
-
-/** An endpoint's own scenario, or a built-in one of that name. */
-function findScenario(endpoint: EndpointDefinition, name: string): Scenario | undefined {
-  return endpoint.scenarios[name] ?? BUILTIN_SCENARIOS[name];
+  return { app, store, logger, controlToken, runtime, endpoints };
 }

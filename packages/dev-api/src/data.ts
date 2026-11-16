@@ -38,6 +38,19 @@ export function readFixture(
 }
 
 /**
+ * Data for an endpoint without a `data` function: `fixtures/<endpointId>.json`, or generated from
+ * the response schema. This is the Node-only half of the pipeline's data step.
+ */
+export function fallbackData(endpoint: EndpointDefinition, ctx: AnyDataContext, source: DataSource): unknown {
+  const fixture = readFixture(source.fixturesDir, endpoint.id);
+  if (fixture !== undefined) return fixture.value;
+  return generate(endpoint.response as z.ZodType, {
+    seed: source.seed,
+    key: `${endpoint.id}|${stableStringify(ctx.params)}|${stableStringify(ctx.query)}`,
+  });
+}
+
+/**
  * Computes an endpoint's data. Fixed data wins over generation, in this order:
  * 1. the endpoint's own `data`, 2. `fixtures/<endpointId>.json`, 3. generated from the response schema.
  */
@@ -47,12 +60,7 @@ export async function resolveData(
   source: DataSource,
 ): Promise<unknown> {
   if (endpoint.data !== undefined) return await endpoint.data(ctx);
-  const fixture = readFixture(source.fixturesDir, endpoint.id);
-  if (fixture !== undefined) return fixture.value;
-  return generate(endpoint.response as z.ZodType, {
-    seed: source.seed,
-    key: `${endpoint.id}|${stableStringify(ctx.params)}|${stableStringify(ctx.query)}`,
-  });
+  return fallbackData(endpoint, ctx, source);
 }
 
 /**

@@ -7,7 +7,7 @@ import qrcode from 'qrcode-terminal';
 import { createServer } from '../server/app.ts';
 import { createLogger } from '../server/logger.ts';
 import { listen } from '../server/listen.ts';
-import { CONTROL_HEADER } from '../server/scenarios.ts';
+import { CONTROL_HEADER } from '../runtime/scenarios.ts';
 import { loadConfig } from './config.ts';
 import { ensureControlToken, ensureDataDir, readControlToken, resolvePaths, DEFAULT_CONFIG, type Paths } from './paths.ts';
 import { fetchHealth, isAlive, lanAddress, readPid, removePid, sleep, writePid } from './process.ts';

@@ -7,5 +7,5 @@ export type { DevServer, ServerOptions } from './server/app.ts';
 export { listen } from './server/listen.ts';
 export type { ListenOptions } from './server/listen.ts';
 export { createLogger } from './server/logger.ts';
-export { BUILTIN_SCENARIOS, CONTROL_HEADER, SCENARIO_HEADER } from './server/scenarios.ts';
+export { BUILTIN_SCENARIOS, CONTROL_HEADER, SCENARIO_HEADER } from './runtime/scenarios.ts';
 export { DB_FILE, Store } from './server/store.ts';
