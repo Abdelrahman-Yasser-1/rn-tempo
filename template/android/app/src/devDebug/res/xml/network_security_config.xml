@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Network security config for the devDebug variant ONLY (dev flavor, debug build type).
+  devRelease, staging and prod have no such file, so they trust system CAs only.
+
+  Why it exists: the local dev API and the Docker backend serve HTTPS with a certificate made by
+  mkcert. Its CA is installed on the emulator or device as a USER certificate, and Android apps
+  ignore user CAs by default (API 24+). See docs: Backend, Local HTTPS.
+
+  The debug variants allowed cleartext before (the RN gradle plugin sets usesCleartextTraffic=true
+  for debuggable builds: Metro on localhost and 10.0.2.2, the plain-HTTP dev API). A config file
+  sets cleartext policy itself, so it states that choice explicitly below and does not rely on
+  the manifest flag. The merged devDebug manifest still has usesCleartextTraffic="true".
+-->
+<network-security-config>
+    <!-- cleartextTrafficPermitted="true" keeps what devDebug had: http:// to Metro and the HTTP dev API. -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <!-- Keep trusting the system CAs, so dummyjson.com and every public host still work. -->
+            <certificates src="system" />
+            <!-- The addition: trust CAs the user installed (the mkcert root CA), in this variant only. -->
+            <certificates src="user" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

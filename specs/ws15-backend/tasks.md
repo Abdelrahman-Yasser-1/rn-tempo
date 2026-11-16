@@ -36,7 +36,7 @@ Format: `- [ ] T<id> (AC…) <summary>`, followed by its commit and its docs pag
 ## Phase C: local HTTPS (`ws15/c-https`)
 - [x] **T15.C1** `yarn backend:certs` with mkcert, used by both dev-api and Caddy.
   - Commit: `feat(dev-api): serve over local https`.
-- [ ] **T15.C2** (AC-D-6) Native trust of the local CA in dev builds.
+- [x] **T15.C2** (AC-D-6) Native trust of the local CA in dev builds.
   - A dev-only Android `network_security_config`.
   - An iOS simulator CA script.
   - A commented dev-api `API_BASE_URL` in `.env.dev`, and pinning notes.
