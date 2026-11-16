@@ -19,3 +19,79 @@ Both are ESM packages for Node 22 or newer. `zod` 4.6.7 is a peer dependency of 
 ## Commit scopes
 
 The shared commitlint config accepts the scopes `api`, `portal`, `api-contract`, `dev-api`, `backend` and `docker`.
+
+## Define endpoints
+
+Write endpoints with `defineEndpoint` from `@rn-tempo/api-contract`. Every part is a Zod schema.
+
+```ts
+import { defineEndpoint, resource } from '@rn-tempo/api-contract';
+import { z } from 'zod';
+
+const Item = z.object({ id: z.number(), title: z.string(), price: z.number() });
+
+export const getProduct = defineEndpoint({
+  method: 'GET',
+  path: '/products/:id',
+  params: z.object({ id: z.coerce.number() }),
+  response: Item,
+  // Optional. Leave it out to get data generated from `response`.
+  data: ({ params, db }) => db.collection('products').get<z.input<typeof Item>>(params.id),
+  scenarios: { notFound: { status: 404 }, slow: { delayMs: 3000 } },
+});
+```
+
+| Option | Meaning |
+| --- | --- |
+| `method`, `path` | `path` is Express style, with `:param` segments. |
+| `params`, `query`, `body` | Schemas for each request part. The parsed values (coerced, defaulted) reach `data`. |
+| `response` | The success body. The server checks every response against it. |
+| `status` | Success status. Defaults to 200. |
+| `auth: 'bearer'` | Requires a token from the mock login. |
+| `data` | Fixed data. It must return `z.input<typeof response>` or a promise of it, so a wrong shape is a compile error. |
+| `scenarios` | Named canned responses `{ status?, delayMs?, body? }`. |
+| `id` | Overrides the stable id, which is `<method>.<path>`, for example `get.products.:id`. |
+| `summary`, `tags` | Used by the generated docs. |
+
+`data` receives `{ params, query, body, db, headers }`. Each part is typed from its schema. `db.collection(name)` returns the stored collection of a `resource`. Throw `ApiError(404, 'Not found')` to answer with an error status.
+
+### Resources
+
+`resource(name, itemSchema, options)` expands to five endpoints that read and write one collection.
+
+| Endpoint | Route |
+| --- | --- |
+| list | `GET /<name>?limit=&skip=&q=` answers `{ <name>: Item[], total, skip, limit }` |
+| get | `GET /<name>/:id` |
+| create | `POST /<name>/add` (201) |
+| update | `PATCH /<name>/:id` |
+| delete | `DELETE /<name>/:id`, answers the removed item |
+
+Options: `seed` (a count to generate, or the items), `searchBy` (fields that `q` searches), `idField` (default `id`), `createSchema`, `updateSchema` and `listKey` (the key that holds the items in the list response).
+
+### Config
+
+```ts
+import { defineConfig } from '@rn-tempo/api-contract';
+
+export default defineConfig({
+  endpoints: [getProduct, resource('products', Item, { seed: 50, searchBy: ['title'] })],
+  basePath: '', // the real backend mounts the same endpoints under '/api/v1'
+  port: 8443,
+  seed: 1,
+});
+```
+
+### Request errors
+
+A request that fails validation gets a 400 `application/problem+json` response in RFC 9457 shape. Every invalid field is listed, prefixed with the request part:
+
+```json
+{
+  "type": "about:blank",
+  "title": "Invalid request",
+  "status": 400,
+  "detail": "1 field failed validation.",
+  "errors": [{ "path": "body.email", "message": "Invalid email address" }]
+}
+```

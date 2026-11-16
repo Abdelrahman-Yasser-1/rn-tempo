@@ -8,7 +8,7 @@ Format: `- [ ] T<id> (AC…) <summary>`, followed by its commit and its docs pag
 ## Phase A: contract and dev API core (`ws15/a-dev-api`)
 - [x] **T15.A1** Add the workspaces `packages/api-contract` and `packages/dev-api`, and the commitlint scopes.
   - Commits: `chore(repo): add api contract and dev api packages`, `feat(commitlint-config): add backend scopes`.
-- [ ] **T15.A2** (AC-D-3) `defineEndpoint` and `resource` types, plus request validation.
+- [x] **T15.A2** (AC-D-3) `defineEndpoint` and `resource` types, plus request validation.
   - Commit: `feat(api-contract): add endpoint definition format`.
 - [ ] **T15.A3** (AC-D-2) Seeded random data from Zod schemas.
   - Includes the field-name heuristics, `meta` examples, fixed `data` and fixture files.
