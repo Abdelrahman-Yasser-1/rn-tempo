@@ -103,7 +103,7 @@ export function createDevMockAdapter({
       body: bodyOf(config.data),
       headers: headersOf(config),
     };
-    const { status, body } = match.route.resolve(request);
+    const { status, body } = await match.route.resolve(request);
     const response: AxiosResponse = {
       data: body,
       status,

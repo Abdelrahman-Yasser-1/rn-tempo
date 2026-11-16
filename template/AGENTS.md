@@ -70,7 +70,7 @@ specs/          product.md, tech.md, one folder per feature
 scripts/        ai-log, ai-sync, assets and icons-add, native helpers, verify-changed, spec-check
 ```
 
-Aliases: `@app` `@navigation` `@features` `@shared` `@services` `@theme` `@assets` `@locales` `@config` `@test-utils`, each mapping to `src/<name>`. They live in `tsconfig.json` `paths` only (Babel, Jest and ESLint read them); import through them, never through `../`. Barrels name their exports (`export { A } from './A'`), never `export *`. A new runtime dependency needs an ownership entry in `eslint.config.mjs` (`yarn lint:deps`).
+Aliases: `@app` `@navigation` `@features` `@shared` `@services` `@theme` `@assets` `@locales` `@config` `@test-utils`, each mapping to `src/<name>`, and `@api` (the root `api/` folder, for the endpoint definitions and generated mocks). They live in `tsconfig.json` `paths` only (Babel, Jest and ESLint read them); import through them, never through `../`. Barrels name their exports (`export { A } from './A'`), never `export *`. A new runtime dependency needs an ownership entry in `eslint.config.mjs` (`yarn lint:deps`).
 
 ## Golden rules
 

@@ -1,4 +1,5 @@
-import { mockUser } from './auth';
+import { MOCK_USER as mockUser } from '@api/endpoints/auth';
+
 import type { MockRoute } from './types';
 
 /** Id dummyjson assigns to a newly added user. */

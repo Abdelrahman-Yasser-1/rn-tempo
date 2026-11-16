@@ -14,11 +14,12 @@ export type MockResponse = {
 };
 
 /**
- * One mock API endpoint, written once and consumed twice: MSW handlers for Jest, and the in-app
- * axios adapter for dev builds. `path` uses `:param` segments and excludes the host.
+ * One mock API endpoint as a plain route, for the in-app axios adapter and for tests that pass their
+ * own table. The app's endpoints are defined once in `api/endpoints` (see `api/README.md`); this
+ * shape is derived from them. `path` uses `:param` segments and excludes the host.
  */
 export type MockRoute = {
   method: MockMethod;
   path: string;
-  resolve: (request: MockRequest) => MockResponse;
+  resolve: (request: MockRequest) => MockResponse | Promise<MockResponse>;
 };
