@@ -6,7 +6,7 @@ Format: `- [ ] T<id> (AC…) <summary>`, followed by its commit and its docs pag
 - Check every library's API and version against its current docs while implementing, then pin it exactly.
 
 ## Phase A: contract and dev API core (`ws15/a-dev-api`)
-- [ ] **T15.A1** Add the workspaces `packages/api-contract` and `packages/dev-api`, and the commitlint scopes.
+- [x] **T15.A1** Add the workspaces `packages/api-contract` and `packages/dev-api`, and the commitlint scopes.
   - Commits: `chore(repo): add api contract and dev api packages`, `feat(commitlint-config): add backend scopes`.
 - [ ] **T15.A2** (AC-D-3) `defineEndpoint` and `resource` types, plus request validation.
   - Commit: `feat(api-contract): add endpoint definition format`.

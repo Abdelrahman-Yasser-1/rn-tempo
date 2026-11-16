@@ -5,6 +5,8 @@ export const SCOPES = [
   // repo
   'repo', 'template', 'packages', 'cli', 'contracts', 'eslint-config', 'prettier-config', 'commitlint-config', 'tsconfig',
   'docs', 'docs-content', 'specs', 'ai', 'ci', 'release', 'deps',
+  // backend (WS15)
+  'api', 'portal', 'api-contract', 'dev-api', 'backend', 'docker',
   // app infrastructure
   'native', 'android', 'ios', 'env', 'app', 'navigation', 'theme', 'i18n', 'http', 'storage', 'security', 'flags',
   'remote-config', 'logger', 'network', 'toast',

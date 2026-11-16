@@ -21,7 +21,7 @@
   },
   "scripts": {
     "lint": "node --check index.mjs",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run",
     "typecheck": "true"
   },
   "peerDependencies": {
