@@ -27,3 +27,19 @@ We chose this over `z.toJSONSchema()` because JSON Schema cannot represent sever
 Field names such as `email`, `phone`, `firstName`, `price`, `rating`, `stock` and `createdAt` get realistic values from `@faker-js/faker`. A hint is used only when the schema accepts it. `.meta({ example })` (or `examples`) overrides a field, and so does `.describe('... example: foo')`.
 
 Recursive schemas (`lazy` or getters) stop at a depth cap: optional fields are left out, nullable ones become `null` and arrays become empty.
+
+## Command line
+
+```sh
+tempo-api up [--port 8443] [--host 0.0.0.0]   # background server, prints URLs and a QR code
+tempo-api status | down | logs [-f] | reset
+tempo-api scenario set <endpointId> <name>
+tempo-api scenario clear [endpointId]
+tempo-api start                                # foreground, for Docker and debugging
+```
+
+All commands take `--config <file>` (default `api/tempo-api.config.ts`) and `--cwd <dir>`. State lives in `.tempo-api/`: `server.pid`, `server.log`, `db.json` and `control-token` (owner-only; the CLI sends it to the internal control routes). `down` only stops the process named in its own pid file, and only after the recorded port answers `/__tempo/health` with that same pid.
+
+The config is TypeScript, loaded with [jiti](https://github.com/unjs/jiti) with `tsconfigPaths`, so it can import app code through aliases such as `@features/*`.
+
+`up` listens on `0.0.0.0` by default so a phone on the same Wi-Fi can use the QR code. Pass `--host 127.0.0.1` to keep it on this machine.

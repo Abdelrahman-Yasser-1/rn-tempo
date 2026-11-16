@@ -174,3 +174,57 @@ Logs are JSON lines written with `pino`. Each request logs its method, path, sta
 | `POST /__tempo/scenario`, `POST /__tempo/reset` | Used by the CLI. They need the control token (header `x-tempo-token`). |
 
 The server listens over plain HTTP in this phase. The listener accepts TLS options, which a later phase uses for local HTTPS.
+
+## The tempo-api command
+
+`@rn-tempo/dev-api` installs the `tempo-api` binary. Run it with `yarn tempo-api` (a later phase adds the `yarn api` shortcut to the template).
+
+| Command | Does |
+| --- | --- |
+| `up [--port 8443] [--host 0.0.0.0]` | Starts the server in the background and waits until it answers. Prints the local URL, the LAN URL and a QR code of the LAN URL for a phone. If it is already running, it says so and exits 0. |
+| `down` | Stops the server. |
+| `status` | Shows whether it runs, its pid and any active scenarios. |
+| `logs [-f] [-n 50] [--raw]` | Prints the log. `-f` keeps following it. |
+| `reset` | Re-seeds the stored data. When the server is not running it deletes `db.json`, so the next start seeds again. |
+| `scenario set <endpointId> <name>` | Makes one endpoint answer with a scenario until cleared. |
+| `scenario clear [endpointId]` | Clears one scenario, or all of them. |
+| `start` | Runs in the foreground. Use it in Docker or when debugging. |
+
+Every command takes `--config <file>` (default `api/tempo-api.config.ts`) and `--cwd <dir>`.
+
+### Config file
+
+The config is a TypeScript file that default-exports `defineConfig(...)`. It is loaded without a build step, and it follows your `tsconfig.json` `paths`, so it can import the app's own schemas:
+
+```ts
+// api/tempo-api.config.ts
+import { defineConfig, resource } from '@rn-tempo/api-contract';
+
+import { ItemSchema } from '@features/items/schemas'; // an alias from tsconfig
+
+export default defineConfig({
+  auth: true,
+  endpoints: [resource('products', ItemSchema, { seed: 50, searchBy: ['title'] })],
+});
+```
+
+Fixture files go in `api/fixtures/`, next to the config.
+
+### Endpoint ids
+
+Every endpoint has a stable id, `<method>.<path>` in lowercase, with `/` written as `.` and the `:param` kept: `get.products.:id`. A `resource` uses `list.<name>`, `get.<name>`, `create.<name>`, `update.<name>` and `delete.<name>`. Set `id` on `defineEndpoint` to choose your own. List them with `GET /__tempo/endpoints`.
+
+### What `up` and `down` keep in `.tempo-api/`
+
+| File | Content |
+| --- | --- |
+| `server.pid` | The pid, port and host of the background server. |
+| `server.log` | JSON log lines, redacted. |
+| `db.json` | Stored resource data and mock tokens. |
+| `control-token` | A random secret, readable only by you. The CLI sends it so only the local CLI can switch scenarios. |
+
+`down` is careful. It stops only the process in its own pid file, and only after the recorded port answers the health check with that same pid. A stale pid file (the process is gone) is removed. A pid file that points at some other process is removed too, and that process is left alone.
+
+<Callout title="LAN access" type="warn">
+  `up` listens on all network interfaces by default so a phone can open the QR code URL. Anyone on the same network can reach the server and use its public test login. Use `--host 127.0.0.1` on a network you do not trust.
+</Callout>

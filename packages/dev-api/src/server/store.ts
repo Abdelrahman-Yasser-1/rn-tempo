@@ -34,12 +34,14 @@ export class Store {
   private readonly scenarios = new Map<string, string>();
   private readonly bindings: Map<string, ResourceBinding>;
   private readonly file: string;
+  private readonly config: ApiConfig;
+  private readonly dataDir: string;
+  private readonly logger: Logger;
 
-  constructor(
-    private readonly config: ApiConfig,
-    private readonly dataDir: string,
-    private readonly logger: Logger,
-  ) {
+  constructor(config: ApiConfig, dataDir: string, logger: Logger) {
+    this.config = config;
+    this.dataDir = dataDir;
+    this.logger = logger;
     this.bindings = new Map(config.resources.map((r) => [r.name, r]));
     this.file = join(dataDir, DB_FILE);
     this.load();

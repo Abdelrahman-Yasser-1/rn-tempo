@@ -28,9 +28,12 @@ const MAX_ROUNDS = 8;
 
 /** The schema cannot be generated, or no value that it accepts was found. */
 export class GenerateError extends Error {
-  constructor(message: string, readonly path: string) {
+  readonly path: string;
+
+  constructor(message: string, path: string) {
     super(path === '' ? message : `${message} (at ${path})`);
     this.name = 'GenerateError';
+    this.path = path;
   }
 }
 
