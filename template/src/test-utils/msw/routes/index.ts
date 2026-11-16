@@ -1,7 +1,6 @@
 import { appConfigRoutes } from './appConfig';
 import { definitionRoutes } from './fromDefinitions';
 import type { MockRoute } from './types';
-import { userRoutes } from './users';
 
 export {
   MOCK_ACCESS_TOKEN,
@@ -15,8 +14,7 @@ export type { MockMethod, MockRequest, MockResponse, MockRoute } from './types';
 
 /** The mock API: every endpoint, once, in match order. */
 export const routes: MockRoute[] = [
-  // Defined in api/endpoints: auth, forgot password, OTP and products.
-  ...definitionRoutes.filter((route) => /^\/(?:auth\/|products)/.test(route.path)),
-  ...userRoutes,
+  // Defined in api/endpoints: auth, forgot password, OTP, users and products.
+  ...definitionRoutes.filter((route) => /^\/(?:auth\/|users|products)/.test(route.path)),
   ...appConfigRoutes,
 ];
