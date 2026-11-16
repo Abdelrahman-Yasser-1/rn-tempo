@@ -66,6 +66,18 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Whether `value` is an `ApiError`, even one made by another copy of this package. A config loaded
+ * through a TypeScript loader (jiti) can end up with its own copy of the module, so `instanceof`
+ * alone would miss an error that its `data` function threw.
+ */
+export function isApiError(value: unknown): value is ApiError {
+  if (value instanceof ApiError) return true;
+  if (typeof value !== 'object' || value === null) return false;
+  const candidate = value as { name?: unknown; status?: unknown; toProblem?: unknown };
+  return candidate.name === 'ApiError' && typeof candidate.status === 'number' && typeof candidate.toProblem === 'function';
+}
+
 /** Formats a Zod issue path as `a.b[0].c`, prefixed with the request part. */
 export function formatPath(part: string, path: readonly PropertyKey[]): string {
   let out = part;

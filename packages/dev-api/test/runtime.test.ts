@@ -144,6 +144,26 @@ describe('createRuntime', () => {
   });
 });
 
+describe('errors from another copy of the contract package', () => {
+  it('still answer with their status (a loader can give a config its own copy)', async () => {
+    class OtherCopy extends Error {
+      override name = 'ApiError';
+      status = 418;
+      toProblem = () => ({ type: 'about:blank', title: 'Teapot', status: 418, detail: 'short and stout' });
+    }
+    const teapot = defineEndpoint({
+      method: 'GET',
+      path: '/teapot',
+      response: z.object({ ok: z.boolean() }),
+      data: () => {
+        throw new OtherCopy('short and stout');
+      },
+    });
+    const res = await createRuntime(defineConfig({ endpoints: [teapot] })).resolve({ method: 'GET', path: '/teapot' });
+    expect(res).toMatchObject({ status: 418, body: { detail: 'short and stout', message: 'short and stout' } });
+  });
+});
+
 describe('parseQuery', () => {
   it('decodes, keeps repeated keys as arrays and accepts a leading ?', () => {
     expect(parseQuery('?q=a%20b&tag=1&tag=2&flag')).toEqual({ q: 'a b', tag: ['1', '2'], flag: '' });

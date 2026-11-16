@@ -6,6 +6,7 @@ import {
   defineConfig,
   defineEndpoint,
   endpointId,
+  isApiError,
   mountedPath,
   resource,
   validateRequest,
@@ -100,6 +101,26 @@ describe('validateResponse', () => {
     expect(validateResponse(endpoint, { id: 1, title: 't', price: 2 }).ok).toBe(true);
     const bad = validateResponse(endpoint, { id: 1, title: 't', price: 'free' });
     expect(bad).toMatchObject({ ok: false, issues: [{ path: 'response.price' }] });
+  });
+});
+
+describe('isApiError', () => {
+  it('accepts an ApiError, and one that another copy of the package made', () => {
+    expect(isApiError(new ApiError(404))).toBe(true);
+    class OtherCopy extends Error {
+      status = 404;
+      toProblem = () => ({});
+    }
+    const foreign = new OtherCopy('x');
+    foreign.name = 'ApiError';
+    expect(isApiError(foreign)).toBe(true);
+  });
+
+  it('rejects other values', () => {
+    expect(isApiError(new Error('x'))).toBe(false);
+    expect(isApiError({ name: 'ApiError', status: 'no' })).toBe(false);
+    expect(isApiError(null)).toBe(false);
+    expect(isApiError('ApiError')).toBe(false);
   });
 });
 
