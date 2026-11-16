@@ -1,0 +1,44 @@
+{
+  "name": "@rn-tempo/api-contract",
+  "version": "0.0.0",
+  "description": "Endpoint definitions for RN-TEMPO: one Zod-typed contract for the dev API, the real backend, OpenAPI and MSW handlers.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Abdelrahman-Yasser-1/rn-tempo.git",
+    "directory": "packages/api-contract"
+  },
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "lint": "tsc --noEmit --noUnusedLocals --noUnusedParameters",
+    "test": "vitest run --typecheck",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@rn-tempo/tsconfig": "workspace:*",
+    "@types/node": "24.19.2",
+    "tsdown": "0.23.2",
+    "typescript": "6.0.3",
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
+  }
+}

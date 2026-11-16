@@ -1,0 +1,41 @@
+{
+  "name": "@rn-tempo/dev-api",
+  "version": "0.0.0",
+  "description": "RN-TEMPO dev API: a local mock server with seeded data, scenarios and generated docs, started with the tempo-api command.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "tempo-api": "dist/tempo-api.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Abdelrahman-Yasser-1/rn-tempo.git",
+    "directory": "packages/dev-api"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "lint": "tsc --noEmit --noUnusedLocals --noUnusedParameters",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@rn-tempo/api-contract": "workspace:*"
+  },
+  "devDependencies": {
+    "@rn-tempo/tsconfig": "workspace:*",
+    "@types/node": "24.19.2",
+    "tsdown": "0.23.2",
+    "typescript": "6.0.3",
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
+  }
+}

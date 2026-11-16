@@ -2556,6 +2556,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@rn-tempo/api-contract@workspace:*, @rn-tempo/api-contract@workspace:packages/api-contract":
+  version: 0.0.0-use.local
+  resolution: "@rn-tempo/api-contract@workspace:packages/api-contract"
+  dependencies:
+    "@rn-tempo/tsconfig": "workspace:*"
+    "@types/node": "npm:24.19.2"
+    tsdown: "npm:0.23.2"
+    typescript: "npm:6.0.3"
+    vite: "npm:8.3.5"
+    vitest: "npm:5.0.5"
+  languageName: unknown
+  linkType: soft
+
 "@rn-tempo/commitlint-config@workspace:*, @rn-tempo/commitlint-config@workspace:packages/commitlint-config":
   version: 0.0.0-use.local
   resolution: "@rn-tempo/commitlint-config@workspace:packages/commitlint-config"
@@ -2577,6 +2590,22 @@ __metadata:
     ajv-formats: "npm:3.0.1"
     vite: "npm:8.3.5"
     vitest: "npm:5.0.5"
+  languageName: unknown
+  linkType: soft
+
+"@rn-tempo/dev-api@workspace:packages/dev-api":
+  version: 0.0.0-use.local
+  resolution: "@rn-tempo/dev-api@workspace:packages/dev-api"
+  dependencies:
+    "@rn-tempo/api-contract": "workspace:*"
+    "@rn-tempo/tsconfig": "workspace:*"
+    "@types/node": "npm:24.19.2"
+    tsdown: "npm:0.23.2"
+    typescript: "npm:6.0.3"
+    vite: "npm:8.3.5"
+    vitest: "npm:5.0.5"
+  bin:
+    tempo-api: dist/tempo-api.mjs
   languageName: unknown
   linkType: soft
 
@@ -2632,7 +2661,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@rn-tempo/tsconfig@workspace:packages/tsconfig":
+"@rn-tempo/tsconfig@workspace:*, @rn-tempo/tsconfig@workspace:packages/tsconfig":
   version: 0.0.0-use.local
   resolution: "@rn-tempo/tsconfig@workspace:packages/tsconfig"
   dependencies:
