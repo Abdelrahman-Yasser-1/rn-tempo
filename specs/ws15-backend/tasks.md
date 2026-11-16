@@ -13,7 +13,7 @@ Format: `- [ ] T<id> (AC…) <summary>`, followed by its commit and its docs pag
 - [x] **T15.A3** (AC-D-2) Seeded random data from Zod schemas.
   - Includes the field-name heuristics, `meta` examples, fixed `data` and fixture files.
   - Commit: `feat(dev-api): generate data from schemas`.
-- [ ] **T15.A4** (AC-D-4, AC-D-5) Server.
+- [x] **T15.A4** (AC-D-4, AC-D-5) Server.
   - Express, scenarios, `resource` CRUD stored in `.tempo-api/db.json`, and the mock auth helper.
   - Commit: `feat(dev-api): add mock server`.
 - [ ] **T15.A5** (AC-D-1) `tempo-api` CLI with up, down, status, logs, reset and scenario.

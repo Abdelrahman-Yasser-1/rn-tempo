@@ -114,3 +114,63 @@ Fixed data wins over generation, in this order:
 3. Generation.
 
 A resource's first items follow the same idea: `seed: 50` generates 50 items (numeric ids count from 1), and `seed: [...]` lists them.
+
+## How a request is handled
+
+The server (`createServer(config, { dataDir })`, built on Express 5) runs every request through the same steps:
+
+1. **Validate** params, query and body. A failure is a 400 problem+json that names each field.
+2. **Check auth.** An endpoint with `auth: 'bearer'` returns 401 without a valid token.
+3. **Pick a scenario.** The `x-tempo-scenario` header wins over the scenario set with `tempo-api scenario set`.
+4. **Compute data** (`data`, fixture file, then generation).
+5. **Check the response** against the `response` schema. If it does not match, the server answers 500 problem+json that says which field is wrong. It never sends invalid data. A 500 here means your `data` function or fixture is wrong, not the app.
+
+Unknown routes get a 404 problem+json. Every response carries an `x-tempo-dev-api` header, so a mock is easy to recognize.
+
+### Scenarios
+
+A scenario is `{ status?, delayMs?, body? }`. Declare your own in `scenarios`, or use the built-in names that every endpoint has:
+
+| Name | Effect |
+| --- | --- |
+| `notFound`, `unauthorized`, `forbidden`, `rateLimited` | 404, 401, 403, 429 problem+json |
+| `serverError`, `unavailable` | 500, 503 problem+json |
+| `slow` | Waits 3 seconds, then answers normally |
+
+```sh
+curl -H 'x-tempo-scenario: notFound' http://localhost:8443/products/1
+```
+
+A name that does not exist on the endpoint is a 400 that lists the available ones. Scenarios set with the CLI live in memory, so restarting the server clears them.
+
+### Stored data
+
+`resource` data lives in memory and is saved to `<dataDir>/db.json` (default `.tempo-api/`, gitignored) with atomic writes: a temp file, then a rename. A collection is seeded the first time it is used, so a restart keeps your edits. The store's `reset()` drops every collection and seeds it again. A `db.json` that cannot be read is renamed to `db.json.corrupt-<time>` and the server starts clean.
+
+### Mock auth
+
+Set `auth: true` in `defineConfig` to get the C13 endpoints:
+
+| Route | Does |
+| --- | --- |
+| `POST /auth/login` | Accepts `emilys` / `emilyspass`. Answers the user plus `accessToken` and `refreshToken`. |
+| `POST /auth/refresh` | Trades a refresh token for a new pair. The old refresh token stops working. |
+| `GET /auth/me` | The signed-in user. Needs a bearer token. |
+
+<Callout title="This is not real authentication" type="warn">
+  The credentials are public. Tokens are random opaque strings (`tempo_dev_access_...`) kept in `db.json`, not signed JWTs, so nothing can be verified or read from them. Use this only on your own machine. The real backend (tier 2) has real accounts.
+</Callout>
+
+### Logs
+
+Logs are JSON lines written with `pino`. Each request logs its method, path, status and time. At `debug` level the headers and bodies are logged too. Values of `authorization`, `cookie`, `password`, `token`, `refreshToken`, `accessToken`, `otp`, `code`, `email` and `phone` are replaced with `[REDACTED]` at any depth, in headers, bodies and query strings.
+
+### Internal routes
+
+| Route | Does |
+| --- | --- |
+| `GET /__tempo/health` | `{ ok, service, pid, startedAt, scenarios }`. Used by the CLI to check the server is the dev API. |
+| `GET /__tempo/endpoints` | A list of endpoints: id, method, path, auth, tags and scenario names. |
+| `POST /__tempo/scenario`, `POST /__tempo/reset` | Used by the CLI. They need the control token (header `x-tempo-token`). |
+
+The server listens over plain HTTP in this phase. The listener accepts TLS options, which a later phase uses for local HTTPS.
