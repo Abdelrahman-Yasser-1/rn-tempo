@@ -181,6 +181,99 @@ Daily use of the CLI (certs, trust, `.env.dev` edits, rebuilds, scenario command
 - It never disables TLS verification. It trusts the project CA explicitly, as the CLI does.
 - Builds are unsigned until the release phase (I). The docs explain the Gatekeeper "Open" step. Signing and notarization are added in Phase I.
 
+## Tier 1c: Tempo Local Backend app (owner, 2026-11-17; supersedes the app parts of Tier 1b)
+The desktop app becomes an **independent local backend**: no code project and no Node install needed. A backend is a folder holding JSON definitions. The app runs it as a real HTTPS server with a database, auth, media and an admin dashboard. The template app (or any app) talks to it like a real backend. Tier 1b's dev-api additions (X1–X3) stay; the app's "open a code project" mode is dropped. Code-defined mocks remain in the CLI (`yarn api`) and Jest.
+
+### Decisions
+- **Name and location:** "Tempo Local Backend", in `apps/local-backend` (the X4–X6 shell is moved and reworked).
+- **Engine:**
+  - A TypeScript server in `apps/local-backend/engine`, reusing `@rn-tempo/dev-api` pieces (redaction, certs, the OpenAPI writer).
+  - Shipped inside the app as a **Node single executable (SEA) sidecar**, so nothing else needs installing. The app is about 90 MB.
+- **Database:** **SQLite** through the built-in `node:sqlite`, so there is no native addon (SEA-friendly). One file per backend: `.data/db.sqlite`. Writes are transactional.
+- **Backend folder (user-chosen, e.g. `rn-tempo/local-backend/`):**
+  ```
+  backend.json        # name, port, https, auth settings, collections, endpoints, content types (committable)
+  handlers/*.js       # optional custom handlers (committable)
+  seed/*.json         # optional seed data (committable)
+  .data/              # db.sqlite, media/, secrets.json, logs/ (gitignored, never committed)
+  ```
+  - A `.gitignore` inside `.data/` is created automatically.
+  - **Snapshot:** export or import one `.zip` (definitions + data + media).
+- **Endpoint types (no code):**
+
+  | Type | Behavior |
+  |---|---|
+  | `crud` | Bound to a collection: list (paging with `limit`/`skip` or `page`, sort, filter by field, search `q`), get, create, update (PUT/PATCH), delete. Per-endpoint field visibility and an auth requirement. |
+  | `static` | A fixed status, headers and JSON body, with scenarios. |
+  | `auth` | login, refresh, me, logout, register, forgot-password, otp verify/resend, against the built-in **app users**. |
+  | `upload` / `download` | Multipart upload of any file type; download/stream with the right content type and range support. |
+  | `handler` | A JavaScript function file `handlers/<name>.js`, given `{ req, db, media, auth, log }`. It runs in a worker thread with a timeout. The docs state it is **not** a security sandbox: only open backends you trust. |
+
+  Every endpoint can have scenarios (status, delay, body), as in dev-api.
+- **Collections:** typed fields (string, number, boolean, date, enum, json, relation, media), required/unique, defaults, and seed data. Changing a field updates the table (add/rename/remove with a confirm step).
+- **Changes apply live:** saving an endpoint, collection or data hot-reloads the engine without a restart. The mobile app sees the change on its next request.
+- **Auth:**
+  - App users are stored in SQLite with scrypt password hashes.
+  - JWT (HS256) access and refresh tokens, with the secret per backend in `.data/secrets.json`.
+  - Configurable token lifetimes. Refresh tokens are rotated and revocable.
+  - Token shapes compatible with the template (C13).
+- **Media:**
+  - Any file type. Default max 100 MB per file, configurable.
+  - Stored under `.data/media/` with generated ids; original names are kept only as metadata.
+  - The content type is detected from the bytes.
+  - `Content-Disposition: attachment` for anything but images, video and audio.
+  - No path is taken from user input.
+- **HTTPS:**
+  - Reuses the mkcert flow (create, trust on Mac/simulator/emulator, CA QR for phones).
+  - HTTP is optional.
+  - The API port binds on all interfaces so phones work.
+  - **The admin channel never does:** the dashboard talks to the engine over a separate `127.0.0.1` admin port with a per-launch token, proxied through Rust.
+- **Logs:**
+  - Every request and response, redacted (passwords, tokens, secrets), filterable, with a detail view.
+  - Engine logs and handler `log` output.
+  - Kept in `.data/logs/` with rotation.
+  - Export as JSON.
+- **Contract:**
+  - The engine serves OpenAPI 3.1 and Swagger UI for each backend, generated from its definitions.
+  - "Check against an OpenAPI file" compares a backend with the template's `api/generated/openapi.json` and lists missing endpoints and shape mismatches.
+- **Template preset:**
+  - "New backend → Tempo template" creates every C13 endpoint (login, refresh, me, users add/update, products list/search/get/add, app-config, forgot-password, OTP) with seeded data matching today's mocks (emilys/emilyspass, 100 products).
+  - Adding a product or editing the profile persists and shows in the app.
+  - The template reaches it through the debug menu's API source → Local dev API.
+- **Content (CMS):**
+  - Content types with typed fields and per-locale entries (the template's languages), draft/published states, and scheduled publish.
+  - Served read-only by `GET /content/:type?locale=` and `GET /content/:type/:id`, in the same shape the WS16 `tempo` CMS adapter reads.
+
+### Dashboard (UI)
+Simple first: one window, a left list of backends, and per backend 8 tabs with plain words.
+
+| Tab | Contents |
+|---|---|
+| Dashboard | Start/Stop and the addresses with a QR code; cards for requests/min, error rate, slowest endpoints, records per collection, media storage. |
+| Endpoints | A list with method, path and type. Add, edit, duplicate, delete. A form per type, a scenario picker, and "Try it". |
+| Data | Collections. A table to browse, search, add, edit and delete rows. Edit fields; import/export JSON and CSV. "Open database file" reveals `db.sqlite`. |
+| Media | A grid/list with preview (images, video, audio, PDF), upload (drag & drop), download, delete, copy URL. |
+| Users | App users: add, reset password, disable, sign out everywhere (revoke tokens). |
+| Content | Content types and entries per locale, draft/publish/schedule. |
+| Logs | Live requests plus engine logs, filters, detail, export. |
+| Settings | Port, HTTPS/HTTP, certificates (create, trust Mac/simulator/emulator, phone QR), auth token lifetimes, media limits, snapshot export/import, OpenAPI contract check. |
+
+- Every destructive action asks for confirmation.
+- Empty states explain the next step in one sentence.
+- Light/dark follows the system.
+
+### Security
+- All the Tier 1b rules still apply:
+  - fixed Rust commands
+  - a strict CSP
+  - Rust proxying with only the backend CA trusted
+  - safe reveal/save of files
+  - no TLS bypass
+- **The admin API is localhost-only, with a token; the public API never exposes admin routes.**
+- No secrets in `backend.json`. `.data/` stays gitignored.
+- Redaction everywhere logs or the UI show request bodies.
+- Handler code runs only from the backend folder the user opened.
+
 ## Tier 2: full backend and portal
 
 ### API (`backend/api`)
@@ -311,6 +404,15 @@ Daily use of the CLI (certs, trust, `.env.dev` edits, rebuilds, scenario command
 - **AC-DA-5** A standalone workspace made in the app (or imported from an OpenAPI file) serves its endpoints. "Export to code" produces a config that `tempo-api check` and `typecheck` accept in a fresh template copy.
 - **AC-DA-6** With **API source → Local dev API** in the debug menu and an app restart, the template dev build talks to the dev API with `.env.dev` untouched. A release bundle contains no new code paths (bundle check).
 - **AC-DA-7** Without Node ≥ 22, the app says so and links the install docs; it does not crash.
+- **AC-LB-1** On a Mac with no Node installed, the app creates a backend from the "Tempo template" preset and starts it over HTTPS. The template dev build (API source → Local dev API) logs in as emilys, lists products, adds a product, which then appears in the list after a reload, and edits the profile, which persists across an engine restart.
+- **AC-LB-2** Adding, editing and deleting an endpoint or a collection field in the app takes effect on the next request, without a restart.
+- **AC-LB-3** Records added, edited or deleted in the Data tab are returned by the API immediately, and survive quitting the app.
+- **AC-LB-4** Uploading a file of any type (image, video, PDF, zip) through the API or the Media tab, then downloading it, returns identical bytes with a correct content type. Oversized files get 413.
+- **AC-LB-5** A `handler` endpoint runs its JS with `db` access. An infinite loop is stopped by the timeout with a 500 and a log entry; the engine keeps serving.
+- **AC-LB-6** The Logs tab shows each request live with passwords and tokens redacted. Admin routes are unreachable on the LAN address.
+- **AC-LB-7** Publishing a content entry in Content makes it appear from `GET /content/:type?locale=ar`; unpublishing hides it.
+- **AC-LB-8** The OpenAPI contract check against the template's `openapi.json` reports no differences for the preset.
+- **AC-LB-9** Snapshot export, then import into a new folder, reproduces definitions, data and media.
 
 ### Backend (AC-B-*)
 - **AC-B-1** `docker compose --profile dev up` starts the API, portal, Postgres and Caddy. The health route (`GET /api/v1/health` on host `api.tempo.test`, port 8443) answers 200 with a trusted cert.
