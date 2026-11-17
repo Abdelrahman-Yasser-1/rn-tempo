@@ -54,7 +54,7 @@ Spec: "Tier 1b" in `spec.md`. Starts after Phase C merges.
   - Commit: `feat(dev-api): add json workspaces with openapi import and code export`.
 - [x] **T15.X3** (AC-DA-6) The debug menu's API source switch.
   - Commit: `feat(app): switch the api source from the debug menu`.
-- [ ] **T15.X4** (AC-DA-1, AC-DA-7) Desktop app shell: Tauri 2 + React/Vite, the process manager, projects and recents, overview, tray.
+- [x] **T15.X4** (AC-DA-1, AC-DA-7) Desktop app shell: Tauri 2 + React/Vite, the process manager, projects and recents, overview, tray.
   - Commits: `build(deps): add tauri and the desktop ui stack`, `feat(desktop): add the dev api desktop shell`.
 - [ ] **T15.X5** (AC-DA-2 to AC-DA-5) Endpoints, Requests, Data, Certificates and Logs screens, and the workspace editor.
   - Commits: one per screen, `feat(desktop): add <screen>`.

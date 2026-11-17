@@ -1,7 +1,27 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "main-capability",
-  "description": "The main window: events from Rust, plus the folder and file pickers. App commands are listed in build.rs.",
-  "windows": ["main"],
-  "permissions": ["core:event:allow-listen", "core:event:allow-unlisten", "dialog:allow-open"]
+  "description": "The main window: events from Rust, the folder and file pickers, and the app's own commands.",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:event:allow-listen",
+    "core:event:allow-unlisten",
+    "dialog:allow-open",
+    "allow-node-info",
+    "allow-list-recents",
+    "allow-open-project",
+    "allow-remove-recent",
+    "allow-create-workspace",
+    "allow-project-state",
+    "allow-cli",
+    "allow-control",
+    "allow-subscribe-events",
+    "allow-unsubscribe-events",
+    "allow-list-booted-simulators",
+    "allow-read-workspace",
+    "allow-write-workspace",
+    "allow-open-target"
+  ]
 }
