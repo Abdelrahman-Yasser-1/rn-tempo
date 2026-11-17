@@ -327,3 +327,26 @@ describe('export code', () => {
     expect(existsSync(join(dir, 'other.json'))).toBe(true);
   });
 });
+
+describe('importOpenApi expansion budget', () => {
+  it('rejects a document whose $refs fan out exponentially', () => {
+    // Each level references the next one 10 times: 10^8 nodes if expanded naively.
+    const schemas: Record<string, unknown> = { L8: { type: 'string' } };
+    for (let level = 0; level < 8; level += 1) {
+      const properties: Record<string, unknown> = {};
+      for (let i = 0; i < 10; i += 1) properties[`p${i}`] = { $ref: `#/components/schemas/L${level + 1}` };
+      schemas[`L${level}`] = { type: 'object', properties };
+    }
+    const doc = {
+      openapi: '3.1.0',
+      info: { title: 'fan-out', version: '1' },
+      components: { schemas },
+      paths: {
+        '/boom': {
+          get: { responses: { '200': { description: 'ok', content: { 'application/json': { schema: { $ref: '#/components/schemas/L0' } } } } } },
+        },
+      },
+    };
+    expect(() => importOpenApi(doc)).toThrow(/expands to more than/);
+  });
+});

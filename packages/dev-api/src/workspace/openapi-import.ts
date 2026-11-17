@@ -14,6 +14,15 @@ const METHODS: Record<string, HttpMethod> = { get: 'GET', post: 'POST', put: 'PU
 /** Keys of an OpenAPI schema that JSON Schema does not know. */
 const OPENAPI_ONLY = ['xml', 'discriminator', 'externalDocs', 'example'];
 const MAX_DEPTH = 24;
+/**
+ * Total nodes `resolve` may produce in one import. Shared `$ref`s are copied at every use, so a small
+ * file whose refs fan out (each ref used many times by the next) would otherwise expand exponentially.
+ */
+export const MAX_RESOLVED_NODES = 200_000;
+
+interface Budget {
+  left: number;
+}
 
 const isObject = (value: unknown): value is Json => typeof value === 'object' && value !== null && !Array.isArray(value);
 
@@ -49,9 +58,13 @@ function pointer(doc: Json, ref: string): unknown {
  * Copies a value with every local `$ref` replaced by what it points to, and OpenAPI 3.0 schema
  * dialect turned into JSON Schema 2020-12 (`nullable`). A reference to itself becomes `{}` (any).
  */
-function resolve(doc: Json, value: unknown, warnings: string[], trail: readonly string[] = [], depth = 0): unknown {
+function resolve(doc: Json, value: unknown, warnings: string[], budget: Budget, trail: readonly string[] = [], depth = 0): unknown {
+  budget.left -= 1;
+  if (budget.left < 0) {
+    throw new Error(`This OpenAPI document expands to more than ${MAX_RESOLVED_NODES} schema nodes once its $refs are resolved; it is too large or its references fan out too much to import.`);
+  }
   if (depth > MAX_DEPTH) return {};
-  if (Array.isArray(value)) return value.map((item) => resolve(doc, item, warnings, trail, depth + 1));
+  if (Array.isArray(value)) return value.map((item) => resolve(doc, item, warnings, budget, trail, depth + 1));
   if (!isObject(value)) return value;
   if (typeof value.$ref === 'string') {
     const ref = value.$ref;
@@ -63,10 +76,10 @@ function resolve(doc: Json, value: unknown, warnings: string[], trail: readonly 
       warnings.push(`Reference ${ref} is recursive and was cut to "any" at the second level.`);
       return {};
     }
-    return resolve(doc, pointer(doc, ref) ?? {}, warnings, [...trail, ref], depth + 1);
+    return resolve(doc, pointer(doc, ref) ?? {}, warnings, budget, [...trail, ref], depth + 1);
   }
   const out: Json = {};
-  for (const [key, child] of Object.entries(value)) out[key] = resolve(doc, child, warnings, trail, depth + 1);
+  for (const [key, child] of Object.entries(value)) out[key] = resolve(doc, child, warnings, budget, trail, depth + 1);
   return out;
 }
 
@@ -167,9 +180,10 @@ export function importOpenApi(input: unknown, fallbackName = 'imported-api'): Im
   const paths = isObject(doc.paths) ? doc.paths : {};
   const endpoints: WorkspaceEndpoint[] = [];
   const ids = new Set<string>();
+  const budget: Budget = { left: MAX_RESOLVED_NODES };
 
   for (const [rawPath, rawItem] of Object.entries(paths)) {
-    const item = resolve(doc, rawItem, warnings);
+    const item = resolve(doc, rawItem, warnings, budget);
     if (!isObject(item)) continue;
     for (const [verb, rawOperation] of Object.entries(item)) {
       const method = METHODS[verb];
