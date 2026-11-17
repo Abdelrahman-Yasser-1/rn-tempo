@@ -119,7 +119,7 @@ export function presetDefinition(name: string, preset: Preset): BackendInput {
 }
 
 /** The usual five endpoints of a collection: list, search, get, create (plus `/add`), update and delete. */
-export function crudEndpoints(collection: string, options: { basePath: string; addAlias?: boolean }): BackendInput['endpoints'] {
+export function crudEndpoints(collection: string, options: { basePath: string; addAlias?: boolean }): NonNullable<BackendInput['endpoints']> {
   const base = options.basePath;
   const id = (suffix: string): string => `${collection}.${suffix}`;
   return [
