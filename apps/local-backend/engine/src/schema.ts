@@ -183,6 +183,7 @@ const SeedUser = z.strictObject({
 
 const AuthConfig = z.strictObject({
   accessTtlMin: z.number().int().positive().max(525_600).default(30).meta({ description: 'Access token lifetime in minutes.' }),
+  maxAccessTtlMin: z.number().int().positive().max(525_600).default(60).meta({ description: 'The longest access token a client can get, even when it asks for more with `expiresInMins`.' }),
   refreshTtlDays: z.number().int().positive().max(3650).default(30).meta({ description: 'Refresh token lifetime in days.' }),
   otpCode: z.string().min(1).max(32).default('123456').meta({ description: 'The one-time code `otpVerify` accepts.' }),
   otpResendSec: z.number().int().min(0).max(86_400).default(60).meta({ description: 'The `retryAfterSec` that `otpResend` answers.' }),
