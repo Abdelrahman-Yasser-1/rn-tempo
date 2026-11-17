@@ -9,3 +9,14 @@ export type { ListenOptions } from './server/listen.ts';
 export { createLogger } from './server/logger.ts';
 export { BUILTIN_SCENARIOS, CONTROL_HEADER, SCENARIO_HEADER } from './runtime/scenarios.ts';
 export { DB_FILE, Store } from './server/store.ts';
+// Pieces other tools reuse (the Tempo Local Backend engine): redaction, the request ring, certificates, docs helpers.
+export { isSensitiveKey, REDACTED, redactDeep, redactUrl } from './server/redact.ts';
+export { MAX_BODY_CHARS, RequestLog, RING_SIZE, viewBody } from './server/events.ts';
+export type { BodyView, EntryInput, RequestEntry } from './server/events.ts';
+export { swaggerDir } from './server/docs.ts';
+export { openApiPath, sortKeys } from './docs/openapi.ts';
+export type { Json } from './docs/openapi.ts';
+export { caRoot, createCerts, MKCERT_HINT, realRunner } from './cli/certs.ts';
+export type { CertsOptions, Runner, RunResult } from './cli/certs.ts';
+export { CA_FILE, CERT_FILE, KEY_FILE } from './cli/tls.ts';
+export { lanAddress } from './cli/process.ts';
