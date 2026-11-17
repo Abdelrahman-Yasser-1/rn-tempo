@@ -323,6 +323,12 @@ pub async fn list_booted_simulators(state: State<'_, AppState>) -> Res<Vec<Simul
         .map_err(|_| "The simulator lookup stopped unexpectedly.".to_string())?
 }
 
+/// Whether the project has certificate files (details such as expiry come from the running server).
+#[tauri::command]
+pub fn cert_status(state: State<'_, AppState>, path: String) -> Res<project::CertFiles> {
+    Ok(project::cert_files(&state.known_project(&path)?))
+}
+
 #[tauri::command]
 pub fn read_workspace(state: State<'_, AppState>, path: String) -> Res<String> {
     let project = state.known_project(&path)?;

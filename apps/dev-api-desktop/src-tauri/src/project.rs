@@ -29,6 +29,22 @@ pub fn detect_kind(dir: &Path) -> Option<ProjectKind> {
     }
 }
 
+/// Which certificate files the project's `.tempo-api/certs` folder holds.
+#[derive(Debug, Clone, Copy, serde::Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct CertFiles {
+    pub has_cert: bool,
+    pub has_ca: bool,
+}
+
+pub fn cert_files(project: &Path) -> CertFiles {
+    let dir = data_dir(project).join("certs");
+    CertFiles {
+        has_cert: dir.join("cert.pem").is_file() && dir.join("key.pem").is_file(),
+        has_ca: dir.join("rootCA.pem").is_file(),
+    }
+}
+
 /// The record `tempo-api up` writes to `.tempo-api/server.pid`.
 #[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
 pub struct PidRecord {
@@ -194,6 +210,29 @@ mod tests {
         assert!(conn.https);
         assert_eq!(conn.token.as_deref(), Some("tok"));
         assert!(conn.ca.ends_with(".tempo-api/certs/rootCA.pem"));
+    }
+
+    #[test]
+    fn reports_which_cert_files_exist() {
+        let dir = tempdir().unwrap();
+        assert_eq!(
+            cert_files(dir.path()),
+            CertFiles {
+                has_cert: false,
+                has_ca: false
+            }
+        );
+        write(dir.path(), ".tempo-api/certs/cert.pem", "c");
+        assert!(!cert_files(dir.path()).has_cert, "the key is needed too");
+        write(dir.path(), ".tempo-api/certs/key.pem", "k");
+        write(dir.path(), ".tempo-api/certs/rootCA.pem", "r");
+        assert_eq!(
+            cert_files(dir.path()),
+            CertFiles {
+                has_cert: true,
+                has_ca: true
+            }
+        );
     }
 
     #[test]

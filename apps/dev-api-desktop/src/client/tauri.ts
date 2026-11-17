@@ -18,6 +18,7 @@ export const tauriClient: Client = {
   subscribeEvents: (path) => invoke('subscribe_events', { path }),
   unsubscribeEvents: (path) => invoke('unsubscribe_events', { path }),
   listBootedSimulators: () => invoke('list_booted_simulators'),
+  certStatus: (path) => invoke('cert_status', { path }),
   readWorkspace: (path) => invoke('read_workspace', { path }),
   writeWorkspace: (path, text) => invoke('write_workspace', { path, text }),
   openTarget: (path, target) => invoke('open_target', { path, target }),

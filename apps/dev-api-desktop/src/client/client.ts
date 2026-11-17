@@ -1,4 +1,5 @@
 import type {
+  CertFiles,
   CliAction,
   CliOutput,
   EventsState,
@@ -29,6 +30,7 @@ export interface Client {
   subscribeEvents(path: string): Promise<void>;
   unsubscribeEvents(path: string): Promise<void>;
   listBootedSimulators(): Promise<Simulator[]>;
+  certStatus(path: string): Promise<CertFiles>;
   readWorkspace(path: string): Promise<string>;
   writeWorkspace(path: string, text: string): Promise<void>;
   openTarget(path: string, target: OpenTarget): Promise<void>;

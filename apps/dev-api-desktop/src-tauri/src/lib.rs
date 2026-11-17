@@ -29,6 +29,7 @@ pub fn run() {
             commands::subscribe_events,
             commands::unsubscribe_events,
             commands::list_booted_simulators,
+            commands::cert_status,
             commands::read_workspace,
             commands::write_workspace,
             commands::open_target,

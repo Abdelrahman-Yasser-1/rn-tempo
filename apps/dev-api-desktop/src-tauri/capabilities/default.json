@@ -22,6 +22,7 @@
     "allow-list-booted-simulators",
     "allow-read-workspace",
     "allow-write-workspace",
-    "allow-open-target"
+    "allow-open-target",
+    "allow-cert-status"
   ]
 }
