@@ -41,7 +41,7 @@ rewrites it, a test keeps it in sync).
   - `users`: `action` `add` (`POST /users/add`), `update` (`PUT /users/:id`), `get`: the C13 user routes on
     the built-in app users.
   - `upload`: `maxBytes`, `multiple`. `download`: the path needs an `:id` segment. See "Media" below.
-  - `handler`: accepted and answers 501 until the next commit of Y2.
+  - `handler`: `file` (`handlers/<name>.js`), `timeoutMs` (default 5000, at most 30000). See "Handlers" below.
 - Paths starting with `/__` are reserved for the engine (`/__health`, `/__docs`).
 
 List queries: `limit`/`skip` or `page`/`pageSize`, `sort=field` / `-field` (also `sortBy`+`order`), equality
@@ -111,6 +111,40 @@ Built-in tables (their names start with `_`, which no collection name can) live 
   first `download` endpoint (else `/media/<id>`).
 - **Admin routes**: `GET /media` (paging, `type=image` or `type=image/png`, `q`), `GET /media/:id`,
   `GET /media/:id/file`, `POST /media` (upload), `DELETE /media/:id` (removes the file), `GET /media/usage`.
+
+## Handlers
+
+A `handler` endpoint runs your JavaScript: `handlers/<name>.js` exports `default async function (ctx)`.
+
+**Handlers are trusted code, not a sandbox.** They run in a worker thread so a loop or a crash cannot stop the
+engine (heap limit 128 MB, hard timeout through `worker.terminate()`), but they can read files, use the network and
+spawn processes like any Node program. Only open backends you trust.
+
+```js
+export default async function (ctx) {
+  const total = await ctx.db.count('products');
+  ctx.log.info('counted', { total });
+  return { status: 200, headers: { 'x-total': String(total) }, body: { total } };
+}
+```
+
+- **Answer**: `{ status, headers, body }` (an object with only those keys and a numeric `status` from 200 to 599), or any
+  other value as the body of a 200 (`undefined` is a 204). A string body with a non-JSON `content-type`, or a
+  `Uint8Array`, is sent as is.
+- **`ctx.req`**: `{ method, path, params, query, headers, body, user }`. `headers` are the real ones, authorization
+  included (the handler is trusted). `body` is the parsed JSON, or the text. `user` is `{ id, username }` on a `bearer`
+  endpoint.
+- **`ctx.db`**: `list(collection, { where, q, sort: '-price', limit, skip }) -> { rows, total }`, `get`, `count`,
+  `create`, `update` (a patch), `delete`. Calls go to the main thread, which owns SQLite, and use the same
+  validation and parameterized statements as `crud`. There is no raw SQL.
+- **`ctx.media`**: `get(id)` and `url(id)`. **`ctx.log`**: `debug info warn error (message, fields)` into
+  `.data/logs/engine.log`, fields redacted. `console.log` output is logged too. **`ctx.scenario`**: the picked scenario.
+- **Where**: the file must resolve (`realpath`, links included) inside the backend's `handlers/` folder, or the answer is
+  a 500. Imports between files in `handlers/` work.
+- **Timeout and errors**: a handler that exceeds `timeoutMs` is killed (504, logged, the engine keeps serving). A
+  throw, an uncaught error or running out of memory is a 500 with the message.
+- **Hot reload**: `handlers/` is watched, and every file is also checked by its modification time per request;
+  after a change the workers are replaced, so the next request runs the new code (helpers included).
 
 ## Migrations
 
