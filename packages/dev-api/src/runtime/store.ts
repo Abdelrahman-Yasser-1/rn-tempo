@@ -128,6 +128,11 @@ export class MemoryStore {
     };
   }
 
+  /** A copy of every declared resource's rows (seeding the ones not used yet), by resource name. */
+  snapshot(): Record<string, Item[]> {
+    return Object.fromEntries([...this.bindings.keys()].map((name) => [name, clone(this.rows(name))]));
+  }
+
   /** Drops every collection and seeds them again. Scenarios and tokens are kept. */
   reset(): void {
     this.state.collections = {};
