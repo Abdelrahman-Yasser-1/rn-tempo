@@ -15,7 +15,7 @@ my-backend/
 ## Commands
 
 ```sh
-node src/cli.ts create <dir> [--name shop] [--preset empty|products]
+node src/cli.ts create <dir> [--name shop] [--preset empty|products|tempo-template]
 node src/cli.ts certs  <dir>                  # mkcert leaf certificate in <dir>/.data/certs (no trust store is changed)
 node src/cli.ts serve  <dir> [--port 8443] [--http] [--admin-port N] [--no-watch]
 ```
@@ -137,6 +137,7 @@ export default async function (ctx) {
 - **`ctx.db`**: `list(collection, { where, q, sort: '-price', limit, skip }) -> { rows, total }`, `get`, `count`,
   `create`, `update` (a patch), `delete`. Calls go to the main thread, which owns SQLite, and use the same
   validation and parameterized statements as `crud`. There is no raw SQL.
+- **`ctx.users.count()`**: how many app users exist (only the number).
 - **`ctx.media`**: `get(id)` and `url(id)`. **`ctx.log`**: `debug info warn error (message, fields)` into
   `.data/logs/engine.log`, fields redacted. `console.log` output is logged too. **`ctx.scenario`**: the picked scenario.
 - **Where**: the file must resolve (`realpath`, links included) inside the backend's `handlers/` folder, or the answer is
@@ -145,6 +146,35 @@ export default async function (ctx) {
   throw, an uncaught error or running out of memory is a 500 with the message.
 - **Hot reload**: `handlers/` is watched, and every file is also checked by its modification time per request;
   after a change the workers are replaced, so the next request runs the new code (helpers included).
+
+## Presets
+
+`create <dir> --preset empty|products|tempo-template`. The engine exports `presets` (`{ id, name, description }[]`)
+so the desktop app can list them. A preset is plain data written at create time: a `backend.json`, optionally
+`seed/*.json` and `handlers/*.js`; nothing is hidden in the engine, and the owner edits all of it afterwards.
+
+**Tempo template** (`src/presets.ts`) is the C13 contract of the template app, with the mock data of
+`template/api/endpoints` (a test compares the shapes with `template/api/generated/openapi.json`):
+
+| Endpoint | Type | Notes |
+|---|---|---|
+| `POST /auth/login`, `/auth/refresh` | `auth` | seeded user `emilys` / `emilyspass` (Emily Johnson, id 1) |
+| `GET /auth/me` | `auth` | `bearer` |
+| `POST /auth/forgot-password`, `/auth/otp/verify`, `/auth/otp/resend` | `auth` | OTP code `123456`, resend wait 60 s |
+| `POST /users/add` | `users` | register |
+| `PUT /users/:id` | `users` | `bearer`, only your own profile (403 otherwise) |
+| `GET /products`, `/products/search`, `/products/:id` | `crud` on `products` | dummyjson list shape, default limit 30, `q` searches `title` |
+| `POST /products/add` | `crud` create | alias of `POST /products`, `unknownFields: "strip"` (the app sends `quantity`, `tags`, ...), every field has the mock's default so `{}` works |
+| `GET /app-config` | `static` | see below |
+| `POST /media/upload`, `GET /media/:id` | `upload`, `download` | addition |
+| `GET /stats/summary` | `handler` | addition: `handlers/stats-summary.js` counts products and users with `ctx.db.count` and `ctx.users.count` |
+
+The 100 products are `seed/products.json` (`Product N`, price `5 + N`, four categories in turn, the
+`dummyjson.com/image` thumbnails, rating and stock from `N`). A new product gets id 101, like the mock.
+**app-config is a `static` endpoint**, not a collection: a `crud` endpoint cannot serve a single object at
+`/app-config` (a list answers `{ app_config: [...] }`, a `get` needs an `:id`), and a handler would hide the shape
+from OpenAPI. Flip `maintenance` or `flags` by editing the endpoint body (hot reload); the scenarios
+`maintenance` and `forceUpdate` are ready-made.
 
 ## Migrations
 

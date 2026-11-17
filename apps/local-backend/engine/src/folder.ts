@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { closeSync, constants, existsSync, lstatSync, mkdirSync, openSync, readFileSync, realpathSync, renameSync, writeFileSync } from 'node:fs';
 import { join, resolve, sep } from 'node:path';
 
+import { presetBundle } from './presets.ts';
 import { DefinitionError, parseBackend, type Backend, type BackendInput } from './schema.ts';
 
 export const DEFINITION_FILE = 'backend.json';
@@ -77,7 +78,7 @@ export function openBackend(dir: string): BackendFolder {
   return { dir: root, definitionPath, dataDir: prepareDataDir(root), definition, text };
 }
 
-export const PRESETS = ['empty', 'products'] as const;
+export const PRESETS = ['empty', 'products', 'tempo-template'] as const;
 export type Preset = (typeof PRESETS)[number];
 
 /** The text of a definition, as written to disk. */
@@ -94,6 +95,8 @@ export function writeFileAtomic(path: string, text: string): void {
 
 /** A starting definition. The `products` preset is a small dummyjson-style collection with its endpoints. */
 export function presetDefinition(name: string, preset: Preset): BackendInput {
+  const bundle = presetBundle(preset, name);
+  if (bundle !== undefined) return bundle.definition;
   const base: BackendInput = { name, port: 8443, https: true, collections: [], endpoints: [] };
   if (preset === 'empty') return base;
   return {
@@ -151,6 +154,12 @@ export function createBackend(dir: string, options: { name: string; preset?: Pre
   if (existsSync(definitionPath)) throw new DefinitionError(`${DEFINITION_FILE} already exists in ${root}.`);
   const input = presetDefinition(options.name, options.preset ?? 'empty');
   parseBackend(input, 'The new definition');
+  // Preset files (seed data, handlers) have fixed names; they never overwrite anything (`wx`).
+  for (const file of presetBundle(options.preset ?? 'empty', options.name)?.files ?? []) {
+    const target = join(root, file.path);
+    ensureRealDir(resolve(target, '..'), file.path.split('/')[0] ?? '', true);
+    writeFileSync(target, file.text, { flag: 'wx', mode: 0o600 });
+  }
   writeFileSync(definitionPath, serializeDefinition(input), { flag: 'wx' });
   return openBackend(root);
 }

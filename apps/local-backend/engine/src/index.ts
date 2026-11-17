@@ -6,3 +6,5 @@ export type { BackendFolder, Preset } from './folder.ts';
 export { backendJsonSchema, BackendSchema, DefinitionError, parseBackend } from './schema.ts';
 export type { Backend, BackendInput, Collection, Endpoint, Field } from './schema.ts';
 export { MigrationConfirmError, MigrationError, Store } from './store.ts';
+export { presets } from './presets.ts';
+export type { PresetInfo } from './presets.ts';
