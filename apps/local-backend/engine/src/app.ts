@@ -1,6 +1,7 @@
 import type { Server } from 'node:http';
 import { join } from 'node:path';
 
+import { snapshotStream } from './snapshot.ts';
 import { createAdminServer, errorReply } from './admin.ts';
 import { docsHandler } from './docs.ts';
 import { Engine, type EngineOptions } from './engine.ts';
@@ -92,6 +93,16 @@ export async function startBackend(dir: string, options: StartOptions = {}): Pro
             return errorReply(error);
           }
         },
+      },
+      {
+        // The snapshot zip, streamed: definitions, handlers, seed, a consistent database copy and media. Never secrets or certs.
+        method: 'GET',
+        pattern: '/snapshot',
+        handler: () => ({
+          status: 200,
+          headers: { 'content-type': 'application/zip', 'content-disposition': 'attachment; filename="backend-snapshot.zip"', 'cache-control': 'no-store' },
+          stream: snapshotStream({ dir: engine.folder.dir, db: engine.store.db }),
+        }),
       },
       { method: 'GET', pattern: '/openapi', handler: () => jsonReply(200, buildOpenApi(engine.definition)) },
     ],
