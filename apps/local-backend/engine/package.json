@@ -1,0 +1,35 @@
+{
+  "name": "@rn-tempo/local-backend-engine",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Tempo Local Backend engine: serves a backend folder (backend.json) as a real HTTPS API with a SQLite database.",
+  "license": "MIT",
+  "type": "module",
+  "bin": "dist/cli.mjs",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "engines": {
+    "node": ">=24.3.0"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsdown",
+    "lint": "tsc --noEmit --noUnusedLocals --noUnusedParameters",
+    "test": "vitest run",
+    "schema": "node scripts/write-schema.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@rn-tempo/api-contract": "workspace:*",
+    "@rn-tempo/dev-api": "workspace:*",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@rn-tempo/tsconfig": "workspace:*",
+    "@types/node": "24.19.2",
+    "tsdown": "0.23.2",
+    "typescript": "6.0.3",
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
+  }
+}
