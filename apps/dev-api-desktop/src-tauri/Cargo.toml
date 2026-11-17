@@ -33,3 +33,7 @@ lto = true
 opt-level = "s"
 panic = "abort"
 strip = true
+
+# Stripping proc-macro and build-script dylibs makes macOS refuse to load them ("mis-aligned LINKEDIT").
+[profile.release.build-override]
+strip = "none"
