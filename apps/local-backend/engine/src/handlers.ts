@@ -55,6 +55,7 @@ parentPort.on('message', async (msg) => {
         update: (collection, id, data) => call('db.update', [collection, id, data]),
         delete: (collection, id) => call('db.delete', [collection, id]),
       },
+      users: { count: () => call('users.count', []) },
       media: {
         get: (id) => call('media.get', [id, msg.origin]),
         url: (id) => call('media.url', [id, msg.origin]),
