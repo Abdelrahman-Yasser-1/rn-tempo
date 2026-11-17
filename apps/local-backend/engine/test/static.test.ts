@@ -37,10 +37,10 @@ describe('static endpoints', () => {
     expect(await json(response)).toEqual({ minVersion: '1.2.0' });
   });
 
-  it('checks that a bearer token is present on a bearer endpoint', async () => {
+  it('verifies the token on a bearer endpoint (a made-up token is refused)', async () => {
     const { url } = await serve(definition);
     expect((await fetch(`${url}/me`)).status).toBe(401);
-    expect((await fetch(`${url}/me`, { headers: { authorization: 'Bearer abc' } })).status).toBe(200);
+    expect((await fetch(`${url}/me`, { headers: { authorization: 'Bearer abc' } })).status).toBe(401);
   });
 });
 

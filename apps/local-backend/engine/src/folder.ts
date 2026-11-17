@@ -19,7 +19,7 @@ export interface BackendFolder {
 }
 
 /** Throws unless `path` is a real directory (or absent, when `create` is set, in which case it is made). */
-function ensureRealDir(path: string, label: string, create: boolean): void {
+export function ensureRealDir(path: string, label: string, create: boolean): void {
   let stat;
   try {
     stat = lstatSync(path);

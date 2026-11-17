@@ -1,6 +1,8 @@
-import type { IncomingHttpHeaders } from 'node:http';
+import type { IncomingHttpHeaders, IncomingMessage } from 'node:http';
 
 import { problem, PROBLEM_CONTENT_TYPE, type FieldIssue } from '@rn-tempo/api-contract';
+
+import type { AuthUser } from './accounts.ts';
 
 /** A request as the engine sees it: the listener has already read the (size-limited) body. */
 export interface RequestCtx {
@@ -12,6 +14,14 @@ export interface RequestCtx {
   query: URLSearchParams;
   headers: IncomingHttpHeaders;
   bodyText: string;
+  /** `scheme://host` the client used, for absolute URLs in answers. */
+  origin?: string;
+  /** The raw request, for upload endpoints only (their body is not read up front). */
+  stream?: IncomingMessage;
+  /** Set once the access token has been verified (`auth: "bearer"` endpoints, `me`, `logout`, ...). */
+  user?: AuthUser;
+  /** The scenario that was picked for this request, when it still reaches the endpoint. */
+  scenario?: string;
 }
 
 export interface Reply {
@@ -19,6 +29,10 @@ export interface Reply {
   headers: Record<string, string>;
   /** Sent as JSON. `undefined` sends no body. */
   body?: unknown;
+  /** Sent as is (text or bytes) instead of JSON. */
+  raw?: string | Uint8Array;
+  /** A stored file to stream, with the byte range to send. */
+  file?: { path: string; start: number; end: number };
   /** The scenario that shaped this reply. */
   scenario?: string;
 }
