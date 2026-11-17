@@ -5,6 +5,7 @@
   "pages": [
     "index",
     "dev-api",
-    "local-https"
+    "local-https",
+    "desktop-app"
   ]
 }
