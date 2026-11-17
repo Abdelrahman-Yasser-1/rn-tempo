@@ -5,6 +5,7 @@ import type { ProjectInfo } from '../client/types';
 import { Certificates } from './Certificates';
 import { Data } from './Data';
 import { Endpoints } from './Endpoints';
+import { Logs } from './Logs';
 import { Overview } from './Overview';
 import { Requests } from './Requests';
 
@@ -23,4 +24,5 @@ export const screens: Screen[] = [
   { id: 'requests', label: 'Requests', component: Requests },
   { id: 'data', label: 'Data', component: Data },
   { id: 'certificates', label: 'Certificates', component: Certificates },
+  { id: 'logs', label: 'Logs', component: Logs },
 ];
