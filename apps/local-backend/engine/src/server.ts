@@ -88,6 +88,12 @@ export function sendReply(res: ServerResponse, reply: Reply, headOnly = false): 
     pipeline(source, res, () => undefined);
     return;
   }
+  if (reply.stream !== undefined) {
+    if (headOnly) reply.stream.destroy();
+    else pipeline(reply.stream, res, () => undefined);
+    if (headOnly) res.end();
+    return;
+  }
   res.end(headOnly ? undefined : payload);
 }
 
