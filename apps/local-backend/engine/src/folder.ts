@@ -48,7 +48,7 @@ export function prepareDataDir(dir: string): string {
     if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
     if (lstatSync(ignore).isSymbolicLink()) throw new DefinitionError(`.data/.gitignore is a symbolic link and is not used: ${ignore}`);
   }
-  for (const sub of ['logs']) ensureRealDir(join(dataDir, sub), `.data/${sub}`, true);
+  for (const sub of ['logs', 'certs']) ensureRealDir(join(dataDir, sub), `.data/${sub}`, true);
   return dataDir;
 }
 
