@@ -367,13 +367,28 @@ export class MediaService {
       const saving: Promise<MediaRecord>[] = [];
       const streams = new Set<Readable>();
       let failure: unknown;
+      let settled = false;
+      /** Answers once every file task is done: all saved, or none kept when anything failed. */
+      const settle = (): void => {
+        if (settled) return;
+        settled = true;
+        void Promise.allSettled(saving).then((results) => {
+          const saved = results.flatMap((result) => (result.status === 'fulfilled' ? [result.value] : []));
+          if (failure === undefined && saved.length === 0) failure = new UploadError('Send the file in a multipart field named "file".');
+          if (failure !== undefined) {
+            for (const record of saved) this.remove(record.id); // all or nothing
+            reject(failure instanceof Error ? failure : new UploadError('The upload failed.'));
+          } else resolve(saved);
+        });
+      };
       const fail = (error: unknown): void => {
         if (failure !== undefined) return;
         failure = error;
         req.unpipe(parser);
-        for (const stream of streams) stream.destroy();
+        for (const stream of streams) stream.destroy(error instanceof Error ? error : new UploadError('The upload failed.'));
         parser.destroy();
         req.resume();
+        settle();
       };
       parser.on('file', (field, stream, info) => {
         if (field !== 'file' || failure !== undefined) {
@@ -397,16 +412,7 @@ export class MediaService {
       req.on('close', () => {
         if (!req.complete) fail(new UploadError('The upload was cut off.'));
       });
-      parser.on('close', () => {
-        void Promise.allSettled(saving).then((results) => {
-          const saved = results.flatMap((result) => (result.status === 'fulfilled' ? [result.value] : []));
-          if (failure === undefined && saved.length === 0) failure = new UploadError('Send the file in a multipart field named "file".');
-          if (failure !== undefined) {
-            for (const record of saved) this.remove(record.id); // all or nothing
-            reject(failure instanceof Error ? failure : new UploadError('The upload failed.'));
-          } else resolve(saved);
-        });
-      });
+      parser.on('close', settle);
       req.pipe(parser);
     });
   }

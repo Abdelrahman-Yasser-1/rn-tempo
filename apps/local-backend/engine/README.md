@@ -40,7 +40,8 @@ rewrites it, a test keeps it in sync).
     "App users and auth" below.
   - `users`: `action` `add` (`POST /users/add`), `update` (`PUT /users/:id`), `get`: the C13 user routes on
     the built-in app users.
-  - `upload`, `download`, `handler` are accepted and answer 501 until the next commits of Y2.
+  - `upload`: `maxBytes`, `multiple`. `download`: the path needs an `:id` segment. See "Media" below.
+  - `handler`: accepted and answers 501 until the next commit of Y2.
 - Paths starting with `/__` are reserved for the engine (`/__health`, `/__docs`).
 
 List queries: `limit`/`skip` or `page`/`pageSize`, `sort=field` / `-field` (also `sortBy`+`order`), equality
@@ -84,6 +85,32 @@ Built-in tables (their names start with `_`, which no collection name can) live 
 - **Logs**: dev-api redacts `password`, `passwordHash`, `token`, `accessToken`, `refreshToken`, `secret`, `jwtSecret`,
   `code` and more by key name at any depth. `code` stays redacted (it is only the request log; the OTP check
   itself still sees it), because an OTP is a credential.
+
+## Media
+
+- **Storage**: files live at `.data/media/<id[0..2]>/<id>`, `id` being 16 random bytes in hex, with their metadata
+  (`originalName`, `mime`, `size`, `sha256`, `createdAt`, `uploadedBy`) in the `_media` table. No path is ever
+  built from a request: a download id must match `^[0-9a-f]{32}$`, and names are metadata only (folders and control
+  characters are stripped). An upload streams to `.data/media/.tmp` (`O_EXCL|O_NOFOLLOW`), then is renamed into place;
+  leftovers of a crash are removed at start.
+- **`upload` endpoint**: a multipart `file` field (several parts when `multiple: true`, answering `{ files }`), or a raw
+  body whose `Content-Type` is the file's type (name from `?name=` or `x-file-name`). It answers
+  `201 { id, url, name, mime, size }`. The limit is `media.maxBytes` (100 MB) or the endpoint's `maxBytes`, enforced as
+  bytes arrive: the temp file is deleted and the answer is `413` (`connection: close`). A declared `Content-Length`
+  over the limit is refused before anything is read. A multipart request with several files keeps all or none.
+- **Type**: from the bytes (png, jpeg, gif, webp, bmp, ico, tiff, heic, avif, mp4, mov, webm, avi, mp3, wav, ogg, flac,
+  m4a, pdf, zip, gzip, svg, html, json), else the declared type (sanitized to `type/subtype`), else `text/plain` for
+  text, else `application/octet-stream`.
+- **`download` endpoint** (`GET /media/:id`): `Content-Type`, `Content-Length`, `ETag` (304 on `If-None-Match`),
+  `Accept-Ranges`, one `Range` (206, or 416 with `Content-Range: bytes */size`; several ranges get the whole file),
+  `X-Content-Type-Options: nosniff`, a sandboxing `Content-Security-Policy`, and `Content-Disposition` that is
+  `inline` only for images (not SVG), video and audio; everything else, SVG and HTML included, is `attachment`, with
+  an ASCII `filename` and an RFC 5987 `filename*`.
+- **`media` fields** store ids (and a write is refused when the file does not exist). A crud endpoint's `media`
+  setting shows them as the `id` (default), a `url`, or an `object` `{ id, url, name, mime, size }`. URLs point at the
+  first `download` endpoint (else `/media/<id>`).
+- **Admin routes**: `GET /media` (paging, `type=image` or `type=image/png`, `q`), `GET /media/:id`,
+  `GET /media/:id/file`, `POST /media` (upload), `DELETE /media/:id` (removes the file), `GET /media/usage`.
 
 ## Migrations
 
