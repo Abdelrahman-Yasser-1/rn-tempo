@@ -79,7 +79,8 @@ export type CrudAction = (typeof CRUD_ACTIONS)[number];
 const EndpointPath = z
   .string()
   .regex(/^\/[^\s?#]*$/, 'A path starts with "/" and has no spaces, "?" or "#".')
-  .refine((path) => !path.startsWith('/__'), { message: 'Paths starting with "/__" are reserved for the engine.' })
+  .refine((path) => !(path.split('/').find((part) => part !== '') ?? '').startsWith('__'), { message: 'Paths starting with "/__" are reserved for the engine.' })
+  .refine((path) => !path.includes('//'), { message: 'A path may not contain "//".' })
   .refine((path) => !path.split('/').includes('..'), { message: 'A path may not contain "..".' })
   .meta({ description: 'Express-style path with `:param` segments, for example `/products/:id`.' });
 

@@ -89,7 +89,7 @@ export function createPublicServer(
         sendReply(res, { status: 200, headers: { 'content-type': 'application/json' }, body: { ok: true, service: 'tempo-local-backend', name: engine.definition.name, startedAt: engine.startedAt } }, head);
         return;
       }
-      if (ctx.path.startsWith('/__')) {
+      if ((ctx.path.split('/').find((part) => part !== '') ?? '').startsWith('__')) {
         if (extra(ctx, res)) return;
         sendReply(res, problemReply(404, { detail: 'Not found.' }), head);
         return;
