@@ -17,6 +17,7 @@ my-backend/
 ```sh
 node src/cli.ts create <dir> [--name shop] [--preset empty|products|tempo-template]
 node src/cli.ts certs  <dir>                  # mkcert leaf certificate in <dir>/.data/certs (no trust store is changed)
+node src/cli.ts check  <dir> --openapi <file> [--json]   # exit 1 when the backend differs from the file
 node src/cli.ts serve  <dir> [--port 8443] [--http] [--admin-port N] [--no-watch]
 ```
 
@@ -175,6 +176,34 @@ The 100 products are `seed/products.json` (`Product N`, price `5 + N`, four cate
 `/app-config` (a list answers `{ app_config: [...] }`, a `get` needs an `:id`), and a handler would hide the shape
 from OpenAPI. Flip `maintenance` or `flags` by editing the endpoint body (hot reload); the scenarios
 `maintenance` and `forceUpdate` are ready-made.
+
+## Contract check (AC-LB-8)
+
+`check <dir> --openapi <file>` (and the admin route `POST /__admin/contract-check`) compares the backend with an
+OpenAPI file such as `template/api/generated/openapi.json`. The file is the contract; the backend must fit it. The
+backend side is the engine's own generated OpenAPI (`/__docs/openapi.json`), which now describes `auth`, `users`,
+`upload`, `download` and `static` answers too (a `static` body gives a schema inferred from it; a `handler`'s
+answer has none).
+
+- **Body of the admin route**: an OpenAPI document (JSON), or `{ "path": "contract.json" }` naming a JSON file
+  inside the backend folder (links are resolved and must stay inside, 16 MB at most).
+- **Paths** are compared with the server base path in front and parameter names erased (`{id}` = `{productId}`).
+- **`missing`**: a path of the file the backend does not have. **`methodMismatches`**: the path exists, not with
+  that method. **`extra`**: only in the backend; information, never a failure.
+- **`differences`**, per success (2xx) answer of a matched operation, each with the property path
+  (`products[].price`, `maintenance.message`):
+  - `status`: the file answers 201, the backend 200.
+  - `missing-property`: the file requires a property the backend never sends.
+  - `not-required`: the file requires it, the backend may leave it out.
+  - `type`: a different type (`integer` fits where the file says `number`, not the reverse).
+  - `nullable`: the backend can send `null` where the file does not allow it.
+  - `enum`: the backend can send a value the file's enum does not list (or has no enum).
+  Properties only the backend has, and optional properties it lacks, are not differences. `$ref`, `allOf`, `oneOf`
+  with `null` and 3.0 `nullable` are followed; this is not full JSON Schema equivalence (unions, `additionalProperties`,
+  string formats and numeric ranges are not compared, request bodies are not compared).
+- **`unchecked`**: answers the backend does not describe (a handler), listed as information.
+- **Output**: the report as JSON (`ok`, `missing`, `extra`, `methodMismatches`, `differences`, `unchecked`, `counts`);
+  the CLI prints text (or the JSON with `--json`) and exits 1 when `ok` is false.
 
 ## Migrations
 
