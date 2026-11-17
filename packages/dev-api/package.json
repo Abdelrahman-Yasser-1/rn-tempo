@@ -38,7 +38,7 @@
     }
   },
   "scripts": {
-    "build": "tsdown",
+    "build": "rm -rf dist && tsdown",
     "lint": "tsc --noEmit --noUnusedLocals --noUnusedParameters",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"

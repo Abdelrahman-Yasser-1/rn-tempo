@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { basename } from 'node:path';
 import { closeSync, createReadStream, existsSync, openSync, readFileSync, rmSync, statSync, watchFile, unwatchFile } from 'node:fs';
 
 import { defineCommand } from 'citty';
@@ -12,7 +13,7 @@ import { loadConfig } from './config.ts';
 import { certs as certsCommand } from './certs.ts';
 import { ensureControlToken, ensureDataDir, readControlToken, resolvePaths, DEFAULT_CONFIG, type Paths } from './paths.ts';
 import { fetchHealth, isAlive, lanAddress, localRequest, readPid, removePid, sleep, writePid, type Scheme } from './process.ts';
-import { certCoversIp, chooseScheme, NO_CERT_NOTICE, readTls, targetFor } from './tls.ts';
+import { certCoversIp, certInfo, chooseScheme, NO_CERT_NOTICE, readTls, targetFor } from './tls.ts';
 
 export { certsCommand as certs };
 
@@ -73,9 +74,17 @@ export const start = defineCommand({
     }
     const token = ensureControlToken(paths);
     const logger = createLogger({ level: process.env.TEMPO_API_LOG_LEVEL ?? 'info' });
-    const server = createServer(config, { dataDir: paths.dataDir, fixturesDir: paths.fixturesDir, logger, controlToken: token });
     const port = parsePort(args.port) ?? config.port;
     const scheme = chooseScheme(paths, args.http === true);
+    const lan = args.host === '127.0.0.1' || args.host === 'localhost' ? undefined : lanAddress();
+    const server = createServer(config, {
+      dataDir: paths.dataDir,
+      fixturesDir: paths.fixturesDir,
+      certsDir: paths.certsDir,
+      logger,
+      controlToken: token,
+      info: { project: basename(paths.cwd), scheme, port, lan, cert: certInfo(paths, lan) },
+    });
     let http;
     try {
       http = await listen(server, { port, host: args.host, ...(scheme === 'https' ? { tls: readTls(paths) } : {}) });
@@ -91,69 +100,79 @@ export const start = defineCommand({
   },
 });
 
-/** Starts the server as a detached process and waits until it answers. */
+export interface UpOptions {
+  cwd?: string | undefined;
+  config?: string | undefined;
+  port?: string | undefined;
+  host: string;
+  http?: boolean | undefined;
+}
+
+/** Starts the server as a detached process and waits until it answers. Shared by `up` and `dev`. */
+export async function startInBackground(args: UpOptions): Promise<void> {
+  const paths = resolvePaths(args.cwd, args.config);
+  const existing = readPid(paths.pidFile);
+  if (existing !== undefined) {
+    const health = isAlive(existing.pid) ? await fetchHealth(targetFor(paths, existing)) : undefined;
+    if (health?.pid === existing.pid) {
+      say(`The dev API is already running (pid ${existing.pid}).`);
+      await printUrls(existing.host, existing.port, existing.scheme, true);
+      return;
+    }
+    removePid(paths.pidFile); // stale: the process is gone or the port belongs to something else
+  }
+
+  let configPort: number;
+  try {
+    // Loading here reports a broken config in the terminal instead of the log file.
+    configPort = (await loadConfig(paths.config)).port;
+  } catch (error) {
+    return fail(error instanceof Error ? error.message : String(error));
+  }
+  const port = parsePort(args.port) ?? configPort;
+  ensureDataDir(paths);
+  ensureControlToken(paths);
+  const scheme = chooseScheme(paths, args.http === true);
+
+  const log = openSync(paths.logFile, 'a', 0o600);
+  const script = process.argv[1];
+  if (script === undefined) return fail('Cannot find the tempo-api script to start.');
+  const child = spawn(
+    process.execPath,
+    [...process.execArgv, script, 'start', '--cwd', paths.cwd, '--config', paths.config, '--port', String(port), '--host', args.host, ...(scheme === 'http' ? ['--http'] : [])],
+    { detached: true, stdio: ['ignore', log, log], cwd: paths.cwd },
+  );
+  child.unref();
+  closeSync(log);
+  const pid = child.pid;
+  if (pid === undefined) return fail('The server process did not start.');
+  let exited = false;
+  child.once('exit', () => (exited = true));
+
+  // Only a health answer from OUR child counts; another dev API on the port must not pass.
+  for (let waited = 0; waited < 15_000; waited += 100) {
+    const health = await fetchHealth(targetFor(paths, { port, scheme }), 500);
+    if (health?.pid === pid) {
+      writePid(paths.pidFile, { pid, port, host: args.host, scheme });
+      say('The dev API is running.');
+      await printUrls(args.host, port, scheme, true);
+      if (scheme === 'http' && args.http !== true) say(`  ${NO_CERT_NOTICE}`);
+      warnStaleCert(paths, args.host, scheme);
+      say(`  Logs:   tempo-api logs -f   (${paths.logFile})`);
+      return;
+    }
+    if (exited) break;
+    await sleep(100);
+  }
+  const tail = existsSync(paths.logFile) ? readFileSync(paths.logFile, 'utf8').trim().split('\n').slice(-5).join('\n') : '';
+  if (isAlive(pid) && !exited) process.kill(pid, 'SIGTERM');
+  return fail(`The dev API did not start on port ${port}.${tail === '' ? '' : `\nLast log lines:\n${tail}`}`);
+}
+
 export const up = defineCommand({
   meta: { name: 'up', description: 'Start the dev API in the background' },
   args: serverArgs,
-  async run({ args }) {
-    const paths = resolvePaths(args.cwd, args.config);
-    const existing = readPid(paths.pidFile);
-    if (existing !== undefined) {
-      const health = isAlive(existing.pid) ? await fetchHealth(targetFor(paths, existing)) : undefined;
-      if (health?.pid === existing.pid) {
-        say(`The dev API is already running (pid ${existing.pid}).`);
-        await printUrls(existing.host, existing.port, existing.scheme, true);
-        return;
-      }
-      removePid(paths.pidFile); // stale: the process is gone or the port belongs to something else
-    }
-
-    let configPort: number;
-    try {
-      // Loading here reports a broken config in the terminal instead of the log file.
-      configPort = (await loadConfig(paths.config)).port;
-    } catch (error) {
-      return fail(error instanceof Error ? error.message : String(error));
-    }
-    const port = parsePort(args.port) ?? configPort;
-    ensureDataDir(paths);
-    ensureControlToken(paths);
-    const scheme = chooseScheme(paths, args.http === true);
-
-    const log = openSync(paths.logFile, 'a', 0o600);
-    const script = process.argv[1];
-    if (script === undefined) return fail('Cannot find the tempo-api script to start.');
-    const child = spawn(
-      process.execPath,
-      [...process.execArgv, script, 'start', '--cwd', paths.cwd, '--config', paths.config, '--port', String(port), '--host', args.host, ...(scheme === 'http' ? ['--http'] : [])],
-      { detached: true, stdio: ['ignore', log, log], cwd: paths.cwd },
-    );
-    child.unref();
-    closeSync(log);
-    const pid = child.pid;
-    if (pid === undefined) return fail('The server process did not start.');
-    let exited = false;
-    child.once('exit', () => (exited = true));
-
-    // Only a health answer from OUR child counts; another dev API on the port must not pass.
-    for (let waited = 0; waited < 15_000; waited += 100) {
-      const health = await fetchHealth(targetFor(paths, { port, scheme }), 500);
-      if (health?.pid === pid) {
-        writePid(paths.pidFile, { pid, port, host: args.host, scheme });
-        say('The dev API is running.');
-        await printUrls(args.host, port, scheme, true);
-        if (scheme === 'http' && args.http !== true) say(`  ${NO_CERT_NOTICE}`);
-        warnStaleCert(paths, args.host, scheme);
-        say(`  Logs:   tempo-api logs -f   (${paths.logFile})`);
-        return;
-      }
-      if (exited) break;
-      await sleep(100);
-    }
-    const tail = existsSync(paths.logFile) ? readFileSync(paths.logFile, 'utf8').trim().split('\n').slice(-5).join('\n') : '';
-    if (isAlive(pid) && !exited) process.kill(pid, 'SIGTERM');
-    return fail(`The dev API did not start on port ${port}.${tail === '' ? '' : `\nLast log lines:\n${tail}`}`);
-  },
+  run: ({ args }) => startInBackground(args),
 });
 
 /** Tells the user when the certificate was made before the LAN address changed (one command fixes it). */

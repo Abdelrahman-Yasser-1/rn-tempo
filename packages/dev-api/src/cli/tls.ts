@@ -2,6 +2,8 @@ import { X509Certificate } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import type { CertInfo } from '../server/info.ts';
+
 import type { Paths } from './paths.ts';
 import type { PidRecord, Scheme, Target } from './process.ts';
 
@@ -39,4 +41,19 @@ export function targetFor(paths: Paths, record: Pick<PidRecord, 'port' | 'scheme
   if (record.scheme === 'http') return { scheme: 'http', port: record.port };
   const caFile = join(paths.certsDir, CA_FILE);
   return { scheme: 'https', port: record.port, ...(existsSync(caFile) ? { ca: readFileSync(caFile, 'utf8') } : {}) };
+}
+
+/** What `/__tempo/info` reports about the certificate in the project's certs folder. */
+export function certInfo(paths: Paths, lan: string | undefined): CertInfo {
+  if (!hasCerts(paths)) return { present: false };
+  try {
+    const cert = new X509Certificate(readTls(paths).cert);
+    return {
+      present: true,
+      notAfter: new Date(cert.validTo).toISOString(),
+      ...(lan === undefined ? {} : { coversLanIp: cert.checkIP(lan) !== undefined }),
+    };
+  } catch {
+    return { present: true };
+  }
 }

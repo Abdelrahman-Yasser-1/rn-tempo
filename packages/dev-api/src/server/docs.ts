@@ -1,5 +1,7 @@
+import { existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { dirname } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import type { ApiConfig } from '@rn-tempo/api-contract';
 import express, { type Router } from 'express';
@@ -30,8 +32,13 @@ const INITIALIZER = `window.ui = SwaggerUIBundle({
 });
 `;
 
-/** The folder of the `swagger-ui-dist` package, which holds the prebuilt UI files. */
+/**
+ * The folder with the prebuilt Swagger UI files. The standalone build has no node_modules, so it
+ * ships them in a `swagger-ui` folder next to the bundle; otherwise they come from `swagger-ui-dist`.
+ */
 function swaggerDir(): string {
+  const bundled = join(dirname(fileURLToPath(import.meta.url)), 'swagger-ui');
+  if (existsSync(bundled)) return bundled;
   return dirname(createRequire(import.meta.url).resolve('swagger-ui-dist/package.json'));
 }
 
