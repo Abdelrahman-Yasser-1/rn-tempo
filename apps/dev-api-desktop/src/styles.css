@@ -536,3 +536,18 @@ button.link {
   border-radius: 6px;
   padding: 8px 10px;
 }
+
+.logbox {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  height: 52vh;
+  overflow: auto;
+}
+label.check {
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  color: var(--text);
+}
