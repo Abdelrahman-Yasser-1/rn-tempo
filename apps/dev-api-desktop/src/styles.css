@@ -522,3 +522,17 @@ button.link {
   max-height: 200px;
   overflow: auto;
 }
+
+.plain {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.confirm {
+  border: 1px solid var(--warn);
+  border-radius: 6px;
+  padding: 8px 10px;
+}

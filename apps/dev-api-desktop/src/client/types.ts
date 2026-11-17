@@ -73,6 +73,11 @@ export interface HttpReply {
   contentType: string | null;
 }
 
+export interface CertFiles {
+  hasCert: boolean;
+  hasCa: boolean;
+}
+
 export interface Simulator {
   udid: string;
   name: string;

@@ -12,6 +12,7 @@ fn main() {
         "subscribe_events",
         "unsubscribe_events",
         "list_booted_simulators",
+        "cert_status",
         "read_workspace",
         "write_workspace",
         "open_target",

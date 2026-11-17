@@ -45,6 +45,7 @@ export function makeClient(overrides: Partial<Client> = {}): Client {
     subscribeEvents: vi.fn(() => Promise.resolve()),
     unsubscribeEvents: vi.fn(() => Promise.resolve()),
     listBootedSimulators: vi.fn(() => Promise.resolve([])),
+    certStatus: vi.fn(() => Promise.resolve({ hasCert: false, hasCa: false })),
     readWorkspace: vi.fn(unexpected('readWorkspace')),
     writeWorkspace: vi.fn(() => Promise.resolve()),
     openTarget: vi.fn(() => Promise.resolve()),
