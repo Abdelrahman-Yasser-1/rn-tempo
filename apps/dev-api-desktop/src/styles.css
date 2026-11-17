@@ -551,3 +551,26 @@ label.check {
   gap: 4px;
   color: var(--text);
 }
+
+.short {
+  width: 80px;
+}
+.errors {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--bad);
+}
+.scenario-row {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.scenario-row legend {
+  color: var(--muted);
+  font-size: 11px;
+}
+button.bad {
+  color: var(--bad);
+}

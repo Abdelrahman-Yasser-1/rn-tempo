@@ -56,7 +56,7 @@ Spec: "Tier 1b" in `spec.md`. Starts after Phase C merges.
   - Commit: `feat(app): switch the api source from the debug menu`.
 - [x] **T15.X4** (AC-DA-1, AC-DA-7) Desktop app shell: Tauri 2 + React/Vite, the process manager, projects and recents, overview, tray.
   - Commits: `build(deps): add tauri and the desktop ui stack`, `feat(desktop): add the dev api desktop shell`.
-- [ ] **T15.X5** (AC-DA-2 to AC-DA-5) Endpoints, Requests, Data, Certificates and Logs screens, and the workspace editor.
+- [x] **T15.X5** (AC-DA-2 to AC-DA-5) Endpoints, Requests, Data, Certificates and Logs screens, and the workspace editor.
   - Commits: one per screen, `feat(desktop): add <screen>`.
 - [ ] **T15.X6** macOS build in CI (unsigned artifacts), tests (vitest + RTL for the UI, `cargo test` for the process manager), and a manual run with screenshots.
   - Commit: `ci(desktop): build the desktop app`.
