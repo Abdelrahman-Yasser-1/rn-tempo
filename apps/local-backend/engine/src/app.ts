@@ -54,7 +54,7 @@ export async function startBackend(dir: string, options: StartOptions = {}): Pro
       options.onRequest?.(entry, endpointId);
     },
   });
-  engineLog.logger.info({ name: engine.definition.name }, 'engine started');
+  engineLog.logger.info({ backend: engine.definition.name }, 'engine started');
   const wantsHttps = options.https ?? engine.definition.https;
   const tls = wantsHttps ? readTls(certsDirOf(engine)) : undefined;
   const notice = wantsHttps && tls === undefined ? 'No certificate in .data/certs: serving HTTP. Create one with `local-backend-engine certs <dir>`.' : undefined;
