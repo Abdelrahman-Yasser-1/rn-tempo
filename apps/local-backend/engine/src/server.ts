@@ -1,7 +1,9 @@
 import { readFileSync, existsSync } from 'node:fs';
+import { closeSync, constants, createReadStream, openSync } from 'node:fs';
 import { createServer as createHttpServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { createServer as createHttpsServer } from 'node:https';
 import { join, isAbsolute, resolve } from 'node:path';
+import { pipeline } from 'node:stream';
 
 import { CERT_FILE, KEY_FILE } from '@rn-tempo/dev-api';
 
@@ -43,21 +45,47 @@ export function readBody(req: IncomingMessage, max = MAX_BODY_BYTES): Promise<{ 
 export function toCtx(req: IncomingMessage, bodyText: string): RequestCtx {
   const url = req.url ?? '/';
   const parsed = new URL(url, 'http://local');
-  return { method: req.method ?? 'GET', path: parsed.pathname, url, query: parsed.searchParams, headers: req.headers, bodyText };
+  const encrypted = (req.socket as { encrypted?: boolean }).encrypted === true;
+  const host = typeof req.headers.host === 'string' && /^[A-Za-z0-9.:[\]-]+$/.test(req.headers.host) ? req.headers.host : undefined;
+  return {
+    method: req.method ?? 'GET',
+    path: parsed.pathname,
+    url,
+    query: parsed.searchParams,
+    headers: req.headers,
+    bodyText,
+    ...(host === undefined ? {} : { origin: `${encrypted ? 'https' : 'http'}://${host}` }),
+  };
 }
 
 export function sendReply(res: ServerResponse, reply: Reply, headOnly = false): void {
-  const payload = reply.body === undefined ? undefined : JSON.stringify(reply.body);
+  let fd: number | undefined;
+  if (reply.file !== undefined && !headOnly) {
+    try {
+      fd = openSync(reply.file.path, constants.O_RDONLY | constants.O_NOFOLLOW);
+    } catch {
+      sendReply(res, problemReply(404, { detail: 'The file is missing.' }));
+      return;
+    }
+  }
+  const payload = reply.raw !== undefined ? reply.raw : reply.body === undefined ? undefined : JSON.stringify(reply.body);
   try {
     res.writeHead(reply.status, {
-      ...reply.headers,
       'x-content-type-options': 'nosniff',
-      ...(payload === undefined ? {} : { 'content-length': Buffer.byteLength(payload) }),
+      ...reply.headers,
+      ...(payload === undefined ? {} : { 'content-length': String(Buffer.byteLength(payload)) }),
     });
   } catch {
     // A header name or value the engine cannot send (for example a line break in a static header).
+    if (fd !== undefined) closeSync(fd);
     res.writeHead(500, { 'content-type': 'text/plain' });
     res.end('Invalid response headers in the endpoint definition.');
+    return;
+  }
+  if (reply.file !== undefined && fd !== undefined) {
+    // The path comes from a validated media id. `O_NOFOLLOW` keeps a planted link from being read.
+    const source = createReadStream(reply.file.path, { fd, start: reply.file.start, end: reply.file.end });
+    pipeline(source, res, () => undefined);
     return;
   }
   res.end(headOnly ? undefined : payload);
@@ -77,13 +105,17 @@ export function createPublicServer(
 ): Server {
   const handler = (req: IncomingMessage, res: ServerResponse): void => {
     void (async (): Promise<void> => {
-      const body = await readBody(req);
+      // An upload streams its own body; every other request is read up front, with a small limit.
+      const path = new URL(req.url ?? '/', 'http://local').pathname;
+      const streaming = engine.streamsBody(req.method === 'HEAD' ? 'GET' : (req.method ?? 'GET'), path);
+      const body = streaming ? { ok: true as const, text: '' } : await readBody(req);
       if (!body.ok) {
         sendReply(res, problemReply(413, { title: 'Payload Too Large', detail: `Bodies are limited to ${MAX_BODY_BYTES} bytes.` }));
         return;
       }
       const head = req.method === 'HEAD';
       const ctx = toCtx(req, body.text);
+      if (streaming) ctx.stream = req;
       if (head) ctx.method = 'GET';
       if (ctx.path === '/__health') {
         sendReply(res, { status: 200, headers: { 'content-type': 'application/json' }, body: { ok: true, service: 'tempo-local-backend', name: engine.definition.name, startedAt: engine.startedAt } }, head);

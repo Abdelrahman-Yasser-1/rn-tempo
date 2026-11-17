@@ -2,6 +2,7 @@ import { lstatSync } from 'node:fs';
 
 import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
 
+import { migrateBuiltins } from './accounts.ts';
 import { quoteIdent, uniqueIndexName } from './names.ts';
 import type { Collection, Field, FieldType } from './schema.ts';
 import { decodeValue, encodeValue, validateRecord } from './values.ts';
@@ -92,7 +93,7 @@ function escapeLike(text: string): string {
   return text.replace(/[\\%_]/g, (char) => `\\${char}`);
 }
 
-function uniqueField(error: unknown): UniqueViolationError | undefined {
+export function uniqueViolation(error: unknown): UniqueViolationError | undefined {
   if (error instanceof Error && (error as { errcode?: unknown }).errcode === 2067) {
     const match = /UNIQUE constraint failed: [^.]+\.(\w+)/.exec(error.message);
     return new UniqueViolationError(match?.[1]);
@@ -124,6 +125,7 @@ export class Store {
     const db = new DatabaseSync(path, { timeout: 5000 });
     db.exec('PRAGMA journal_mode = WAL; PRAGMA synchronous = NORMAL; PRAGMA foreign_keys = ON;');
     db.exec('CREATE TABLE IF NOT EXISTS _meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)');
+    migrateBuiltins(db);
     const row = db.prepare("SELECT value FROM _meta WHERE key = 'schema'").get();
     const applied = row === undefined ? [] : (JSON.parse(String(row.value)) as Collection[]);
     return new Store(db, applied);
@@ -254,7 +256,7 @@ export class Store {
       this.db.exec('ROLLBACK');
       this.applied = this.readApplied();
       if (error instanceof MigrationError || error instanceof MigrationConfirmError) throw error;
-      if (uniqueField(error) !== undefined) throw new MigrationError('Existing rows have duplicate values, so the field cannot be unique.');
+      if (uniqueViolation(error) !== undefined) throw new MigrationError('Existing rows have duplicate values, so the field cannot be unique.');
       throw error;
     }
     return plan;
@@ -408,7 +410,7 @@ export class Store {
       const id = this.insertRow(collection, values);
       return this.get(collectionName, id) as Row;
     } catch (error) {
-      throw uniqueField(error) ?? error;
+      throw uniqueViolation(error) ?? error;
     }
   }
 
@@ -423,7 +425,7 @@ export class Store {
         this.db.prepare(`UPDATE ${quoteIdent(collection.name)} SET ${sets} WHERE id = ?`).run(...params, id);
       }
     } catch (error) {
-      throw uniqueField(error) ?? error;
+      throw uniqueViolation(error) ?? error;
     }
     return this.get(collectionName, id);
   }

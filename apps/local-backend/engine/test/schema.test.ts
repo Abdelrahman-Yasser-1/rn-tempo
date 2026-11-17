@@ -29,7 +29,7 @@ describe('backend.json schema', () => {
   it('fills the defaults', () => {
     const def = parseBackend(minimal);
     expect(def).toMatchObject({ port: 8443, https: true, collections: [], endpoints: [], media: { maxBytes: 104_857_600 } });
-    expect(def.auth.accessTokenSeconds).toBe(3600);
+    expect(def.auth.accessTtlMin).toBe(30);
   });
 
   it('accepts every field type and every endpoint type', () => {
@@ -55,11 +55,12 @@ describe('backend.json schema', () => {
         { id: 'b', type: 'auth', method: 'POST', path: '/login', action: 'login' },
         { id: 'c', type: 'upload', method: 'POST', path: '/up' },
         { id: 'd', type: 'download', method: 'GET', path: '/down/:id' },
-        { id: 'e', type: 'handler', method: 'POST', path: '/h', file: 'h.js' },
+        { id: 'e', type: 'handler', method: 'POST', path: '/h', file: 'handlers/h.js' },
+        { id: 'f', type: 'users', method: 'POST', path: '/users/add', action: 'add' },
       ],
       contentTypes: [{ name: 'article' }],
     });
-    expect(def.endpoints).toHaveLength(5);
+    expect(def.endpoints).toHaveLength(6);
   });
 
   it('names the path of every problem', () => {

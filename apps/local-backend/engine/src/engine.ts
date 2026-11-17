@@ -2,22 +2,26 @@ import { join } from 'node:path';
 
 import { BUILTIN_SCENARIOS, redactUrl, RequestLog, SCENARIO_HEADER } from '@rn-tempo/dev-api';
 
+import { Accounts } from './accounts.ts';
+import { authHandler, AuthService, usersHandler } from './auth.ts';
 import { crudHandler } from './crud.ts';
 import { readSeedFile, type BackendFolder } from './folder.ts';
 import { jsonReply, loggableBody, problemReply, type Reply, type RequestCtx } from './http.ts';
 import type { EngineLogger } from './logs.ts';
-import { Router, type Handler } from './router.ts';
+import { downloadReply, MediaService, uploadFailure, uploadJson } from './media.ts';
+import { mountPath, Router, type Handler } from './router.ts';
 import type { Backend, Collection, Endpoint, Scenario } from './schema.ts';
 import { Stats } from './stats.ts';
 import { Store, type Plan, type RenameHints } from './store.ts';
+import { loadJwtSecret } from './tokens.ts';
 
 export interface EngineOptions {
   /** Waits for a scenario's delay. Tests pass a faster one. */
   sleep?: (ms: number) => Promise<void>;
   now?: () => Date;
   /**
-   * Decides whether a `bearer` endpoint may be called. Y1 only checks that a bearer token is present; Y2
-   * replaces this with real token verification.
+   * Decides whether a `bearer` endpoint may be called. The default verifies the JWT and sets `ctx.user`;
+   * a replacement should set `ctx.user` too if the endpoints it guards use `ownerField` or handlers.
    */
   authorize?: (ctx: RequestCtx, endpoint: Endpoint) => boolean;
   /** Where engine problems go (`.data/logs/engine.log` when started through `startBackend`). */
@@ -32,7 +36,6 @@ interface State {
 }
 
 const defaultSleep = (ms: number): Promise<void> => new Promise((done) => setTimeout(done, ms));
-const hasBearer = (ctx: RequestCtx): boolean => /^Bearer\s+\S+/i.test(String(ctx.headers.authorization ?? ''));
 
 /**
  * The running backend: a definition, its database, the route table built from it, the scenario picks and
@@ -45,6 +48,10 @@ export class Engine {
   readonly requests = new RequestLog();
   readonly stats = new Stats();
   readonly startedAt = new Date().toISOString();
+  /** App users, tokens and the JWT checks. */
+  readonly auth: AuthService;
+  /** Stored files (`.data/media`). */
+  readonly media: MediaService;
   private state: State;
   private readonly options: Required<Pick<EngineOptions, 'sleep' | 'now' | 'authorize'>> & Pick<EngineOptions, 'onRequest' | 'logger'>;
   private readonly scenarioPicks = new Map<string, string>();
@@ -54,10 +61,13 @@ export class Engine {
     this.folder = folder;
     this.store = store;
     this.state = state;
+    const now = options.now ?? ((): Date => new Date());
+    this.auth = new AuthService(new Accounts(store.db, now), loadJwtSecret(folder.dataDir), () => this.state.definition.auth, now);
+    this.media = new MediaService(folder.dataDir, store.db, now);
     this.options = {
       sleep: options.sleep ?? defaultSleep,
-      now: options.now ?? ((): Date => new Date()),
-      authorize: options.authorize ?? ((ctx): boolean => hasBearer(ctx)),
+      now,
+      authorize: options.authorize ?? ((ctx): boolean => this.auth.authenticate(ctx)),
       ...(options.onRequest === undefined ? {} : { onRequest: options.onRequest }),
       ...(options.logger === undefined ? {} : { logger: options.logger }),
     };
@@ -72,9 +82,39 @@ export class Engine {
       store.close();
       throw error;
     }
-    const engine = new Engine(folder, store, { definition: folder.definition, router: new Router([], undefined) }, options);
-    engine.state = engine.build(folder.definition);
-    return engine;
+    try {
+      const engine = new Engine(folder, store, { definition: folder.definition, router: new Router([], undefined) }, options);
+      engine.state = engine.build(folder.definition);
+      engine.seedUsers();
+      return engine;
+    } catch (error) {
+      store.close();
+      throw error;
+    }
+  }
+
+  /** Creates the `auth.seedUsers` that were never seeded before. A user deleted later is not brought back. */
+  private seedUsers(): void {
+    const key = 'seeded_users';
+    const row = this.store.db.prepare('SELECT value FROM _meta WHERE key = ?').get(key);
+    const seeded = new Set<string>(row === undefined ? [] : (JSON.parse(String(row.value)) as string[]));
+    const created = this.auth.seed(this.state.definition.auth.seedUsers, seeded);
+    if (created.length === 0) return;
+    for (const name of created) seeded.add(name);
+    this.store.db.prepare('INSERT INTO _meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value').run(key, JSON.stringify([...seeded]));
+  }
+
+  /** Whether the endpoint for this request reads its own body (uploads), so the listener must not. */
+  streamsBody(method: string, path: string): boolean {
+    const match = this.state.router.match(method, path);
+    return match.kind === 'found' && match.route.endpoint.type === 'upload';
+  }
+
+  /** The URL a stored file is served from: the first `download` endpoint, else the conventional `/media/<id>`. */
+  mediaUrl(id: string, origin?: string): string {
+    const download = this.state.definition.endpoints.find((endpoint) => endpoint.type === 'download');
+    const path = download === undefined ? '/media/:id' : download.path;
+    return `${origin ?? ''}${mountPath(this.state.definition.basePath, path).replace(':id', id)}`;
   }
 
   get definition(): Backend {
@@ -104,8 +144,30 @@ export class Engine {
       case 'crud': {
         const collection = collections.get(endpoint.collection);
         if (collection === undefined) throw new Error(`Unknown collection "${endpoint.collection}".`);
-        return crudHandler(endpoint, collection, this.store, this.options.now);
+        return crudHandler(endpoint, collection, this.store, this.options.now, {
+          mediaRecord: (id) => this.media.get(id),
+          mediaUrl: (id, origin) => this.mediaUrl(id, origin),
+        });
       }
+      case 'auth':
+        return authHandler(endpoint, this.auth);
+      case 'users':
+        return usersHandler(endpoint, this.auth);
+      case 'upload':
+        return async (ctx) => {
+          try {
+            const limit = endpoint.maxBytes ?? this.state.definition.media.maxBytes;
+            const records = await this.media.receive(ctx, { maxBytes: limit, multiple: endpoint.multiple, uploadedBy: ctx.user?.id });
+            return uploadJson(
+              records.map((record) => this.media.describe(record, this.mediaUrl(record.id, ctx.origin))),
+              endpoint.multiple,
+            );
+          } catch (error) {
+            return uploadFailure(error);
+          }
+        };
+      case 'download':
+        return (ctx, params) => downloadReply(this.media, params.id ?? '', ctx.headers);
       case 'static':
         return () => ({
           status: endpoint.status,
@@ -139,6 +201,7 @@ export class Engine {
       this.options.logger?.info({ ops: plan.ops.map((op) => op.op) }, 'definition applied');
       const state = this.build(next);
       this.state = state;
+      this.seedUsers();
       const ids = new Set(next.endpoints.map((endpoint) => endpoint.id));
       for (const id of this.scenarioPicks.keys()) if (!ids.has(id)) this.scenarioPicks.delete(id);
       return plan;
@@ -217,7 +280,7 @@ export class Engine {
   /** Auth, then the scenario (header first, then the admin pick), then the endpoint itself. */
   private async run(ctx: RequestCtx, endpoint: Endpoint, handle: () => Reply | Promise<Reply>): Promise<Reply> {
     if (endpoint.auth === 'bearer' && !this.options.authorize(ctx, endpoint)) {
-      return problemReply(401, { detail: 'Missing or wrong access token.' });
+      return problemReply(401, { detail: 'Invalid or expired token' });
     }
     const headerName = ctx.headers[SCENARIO_HEADER];
     const requested = typeof headerName === 'string' && headerName !== '' ? headerName : undefined;
@@ -227,6 +290,7 @@ export class Engine {
       return problemReply(400, { detail: `Unknown scenario "${requested}". Available: ${this.scenarioNames(endpoint).join(', ')}.` });
     }
     if (scenario === undefined || name === undefined) return handle();
+    ctx.scenario = name;
     if (scenario.delayMs !== undefined) await this.options.sleep(scenario.delayMs);
     const status = scenario.status ?? 200;
     const extra = scenario.headers ?? {};

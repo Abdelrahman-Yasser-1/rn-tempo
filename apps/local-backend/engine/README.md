@@ -36,7 +36,11 @@ rewrites it, a test keeps it in sync).
   - `crud`: `collection`, `action` (`list get create update delete`), `listShape` (`dummyjson` or `paged`),
     `searchFields`, `hiddenFields`, `unknownFields`, `deleteMarkers`, `aliases` (for example `/products/add`).
   - `static`: `status`, `headers`, `body`.
-  - `auth`, `upload`, `download`, `handler` are accepted and answer 501 until Y2.
+  - `auth`: `action` is `login refresh me logout register updateMe forgotPassword otpVerify otpResend`; see
+    "App users and auth" below.
+  - `users`: `action` `add` (`POST /users/add`), `update` (`PUT /users/:id`), `get`: the C13 user routes on
+    the built-in app users.
+  - `upload`, `download`, `handler` are accepted and answer 501 until the next commits of Y2.
 - Paths starting with `/__` are reserved for the engine (`/__health`, `/__docs`).
 
 List queries: `limit`/`skip` or `page`/`pageSize`, `sort=field` / `-field` (also `sortBy`+`order`), equality
@@ -44,6 +48,38 @@ filters `?field=value`, `q` search. Errors are `application/problem+json` naming
 
 Scenarios (`status`, `delayMs`, `body`, `headers`) are picked with the `x-tempo-scenario` header or the admin
 API. The built-ins of dev-api (`notFound`, `serverError`, `slow`...) exist on every endpoint.
+
+## App users and auth
+
+Built-in tables (their names start with `_`, which no collection name can) live in the same SQLite file:
+`_users`, `_refresh_tokens` (and `_media`). A request to a `bearer` endpoint is verified for real now.
+
+- **Passwords**: scrypt (`N=16384, r=8, p=1`, a random salt), stored as `scrypt$N$r$p$salt$hash`, so the
+  parameters can change later. Verification is constant time, and a missing user costs the same work as a wrong
+  password. The hash never appears in any response, admin routes included (tested).
+- **Access token**: a JWT HS256 made with `node:crypto`, payload `{ sub, iat, exp, typ: "access" }`. Only
+  `alg: HS256` is accepted (`none` and every other algorithm are refused), the signature is compared with
+  `timingSafeEqual`, and `exp` must be a finite number after `iat` and in the future. The secret is 32 random bytes in
+  `.data/secrets.json` (mode 0600, created with `O_EXCL|O_NOFOLLOW`, never logged, never returned). Removing the
+  file signs everyone out. A disabled or deleted user is refused on the next request, even with a valid token.
+- **Lifetimes**: `auth.accessTtlMin` (30) and `auth.refreshTtlDays` (30). C13's `expiresInMins` is honoured up to
+  1440 minutes.
+- **Refresh tokens** are opaque random strings, stored as a sha256. Every refresh rotates: the old token is
+  revoked and a new one issued in the same family. Using a revoked token revokes the whole family and answers
+  401. A sign-in starts a new family. `logout` revokes the given token's family, or every session of the caller.
+- **Answers match C13**: `login` is `User & { accessToken, refreshToken }`, `refresh` is `{ accessToken, refreshToken }`,
+  `me` is `User`. Wrong credentials are `400 { message: "Invalid credentials" }`; a disabled user is 403.
+- **Mocks kept**: `forgotPassword` always answers `{ success: true }`; `otpVerify` accepts `auth.otpCode`
+  (default `123456`); `otpResend` answers `retryAfterSec` from `auth.otpResendSec` (60).
+- **Seeding**: `auth.seedUsers` (`username`, `password`, optional profile fields). Passwords are hashed on
+  seed. A username is seeded once; deleting a seeded user keeps it deleted.
+- **`ownerField`** on a `crud` endpoint (needs `auth: "bearer"`): lists show only the caller's rows, other rows
+  answer 404, and writes force the field to the caller's id.
+- **Admin routes**: `GET/POST /users`, `GET/PUT/PATCH/DELETE /users/:id`, `POST /users/:id/password`,
+  `.../disable`, `.../enable`, `.../revoke`, `GET /sessions` (no hashes), `DELETE /sessions/:id`.
+- **Logs**: dev-api redacts `password`, `passwordHash`, `token`, `accessToken`, `refreshToken`, `secret`, `jwtSecret`,
+  `code` and more by key name at any depth. `code` stays redacted (it is only the request log; the OTP check
+  itself still sees it), because an OTP is a credential.
 
 ## Migrations
 
