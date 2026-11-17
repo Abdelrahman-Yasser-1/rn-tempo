@@ -16,13 +16,37 @@ import { shouldSkipRefresh } from './skipRefresh';
 
 let resolvedBaseUrl: string | undefined;
 
-/** Debug-menu override (non-prod only) falling back to `ENV.API_BASE_URL`; read once per launch. */
+/**
+ * Dev builds only: the local dev API's URL when the debug menu's API source is `dev-api`. The
+ * `require` sits directly inside this exact `if`, so release bundles do not contain `apiSource`.
+ */
+function devApiBaseUrl(): string | undefined {
+  if (__DEV__ && !isProd) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- guarded require keeps the api source out of release bundles
+    const { readApiSource, readDevApiUrl } = require('./apiSource') as {
+      readApiSource: () => string;
+      readDevApiUrl: () => string;
+    };
+    return readApiSource() === 'dev-api' ? readDevApiUrl() : undefined;
+  }
+  return undefined;
+}
+
+/**
+ * Debug-menu choice (non-prod only): the dev API URL when that API source is picked, otherwise the
+ * base URL override, falling back to `ENV.API_BASE_URL`; read once per launch.
+ */
 export function resolveBaseUrl(): string {
   if (resolvedBaseUrl) {
     return resolvedBaseUrl;
   }
   if (!isProd) {
     try {
+      const devApi = devApiBaseUrl();
+      if (devApi) {
+        resolvedBaseUrl = devApi;
+        return devApi;
+      }
       const override = storage.getString(STORAGE_KEYS.apiBaseUrlOverride);
       if (override) {
         resolvedBaseUrl = override;
@@ -43,19 +67,19 @@ export function resetBaseUrlCache(): void {
 }
 
 /**
- * Dev builds with `API_MOCKING=true` answer from the shared mock route table instead of the
- * network. The `require` sits inside the `__DEV__` branch, which Metro folds away in release
- * bundles, so the adapter and its routes never ship.
+ * Dev builds choose the adapter per request source (debug menu "API source": env, mocks or the
+ * local dev API; `env` follows `API_MOCKING`). The `require` sits inside the `__DEV__` branch, which
+ * Metro folds away in release bundles, so the adapters and their routes never ship.
  */
 function resolveAdapter(): AxiosAdapter | undefined {
   // Keep the `require` directly inside this exact `if`: Metro only folds `__DEV__` conditions in
   // this shape, and a release bundle must not contain the adapter or its routes.
-  if (__DEV__ && ENV.API_MOCKING) {
+  if (__DEV__ && !isProd) {
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- guarded require keeps the mock adapter out of release bundles
-    const { createDevMockAdapter } = require('./devMockAdapter') as {
-      createDevMockAdapter: () => AxiosAdapter;
+    const { createSwitchingAdapter } = require('./devAdapter') as {
+      createSwitchingAdapter: () => AxiosAdapter;
     };
-    return createDevMockAdapter();
+    return createSwitchingAdapter();
   }
   return undefined;
 }

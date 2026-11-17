@@ -1,5 +1,16 @@
 {
   "debug": {
+    "apiSource": {
+      "devApi": "Local dev API",
+      "env": "Build default (env file)",
+      "hint": "Applies after restarting the app. Local dev API needs `yarn api up`; on a phone use the LAN URL it prints.",
+      "mocks": "In-app mocks",
+      "reset": "Use default",
+      "save": "Save URL",
+      "saved": "Saved. Restart the app to apply.",
+      "title": "API source",
+      "urlLabel": "Local dev API URL"
+    },
     "apiUrl": {
       "clear": "Clear",
       "hint": "Saved to storage. Applies after restarting the app. Leave empty to use the build default.",
