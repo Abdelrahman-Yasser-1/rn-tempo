@@ -5,13 +5,16 @@ import { parseArgs } from 'node:util';
 import { createCerts, lanAddress, realRunner } from '@rn-tempo/dev-api';
 
 import { startBackend } from './app.ts';
-import { createBackend, PRESETS, prepareDataDir, type Preset } from './folder.ts';
+import { checkContract, formatReport, parseOpenApi } from './contract.ts';
+import { readFileSync } from 'node:fs';
+import { readDefinitionText, createBackend, PRESETS, prepareDataDir, type Preset } from './folder.ts';
 import { DefinitionError } from './schema.ts';
 
 const USAGE = `local-backend-engine: serve a Tempo Local Backend folder
 
   local-backend-engine create <dir> [--name <name>] [--preset empty|products|tempo-template]
   local-backend-engine certs  <dir>            create an HTTPS certificate with mkcert (never changes a trust store)
+  local-backend-engine check  <dir> --openapi <file> [--json]   compare the backend with an OpenAPI file (exit 1 on differences)
   local-backend-engine serve  <dir> [--port <n>] [--http] [--admin-port <n>] [--no-watch]
 
 serve prints one JSON line on stdout when it is ready, with the admin port and its token.
@@ -52,6 +55,8 @@ async function main(): Promise<void> {
       preset: { type: 'string' },
       port: { type: 'string' },
       'admin-port': { type: 'string' },
+      openapi: { type: 'string' },
+      json: { type: 'boolean' },
       http: { type: 'boolean' },
       'no-watch': { type: 'boolean' },
       help: { type: 'boolean', short: 'h' },
@@ -75,6 +80,19 @@ async function main(): Promise<void> {
       const outDir = join(prepareDataDir(root), 'certs');
       createCerts({ outDir, extraHosts: [], install: false, lan: lanAddress() }, realRunner, () => undefined);
       err(`Certificate written to ${outDir}. The local CA is in \`mkcert -CAROOT\`; nothing was added to a trust store.`);
+      return;
+    }
+    case 'check': {
+      if (values.openapi === undefined) throw new DefinitionError('check needs --openapi <file>.');
+      let text: string;
+      try {
+        text = readFileSync(resolve(values.openapi), 'utf8');
+      } catch {
+        throw new DefinitionError(`Cannot read ${values.openapi}.`);
+      }
+      const report = checkContract(readDefinitionText(join(root, 'backend.json')).definition, parseOpenApi(text, values.openapi));
+      process.stdout.write(values.json === true ? `${JSON.stringify(report, null, 2)}\n` : formatReport(report));
+      process.exit(report.ok ? 0 : 1);
       return;
     }
     case 'serve':

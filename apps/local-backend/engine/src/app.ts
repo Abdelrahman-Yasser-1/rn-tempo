@@ -1,11 +1,12 @@
 import type { Server } from 'node:http';
 import { join } from 'node:path';
 
-import { createAdminServer } from './admin.ts';
+import { createAdminServer, errorReply } from './admin.ts';
 import { docsHandler } from './docs.ts';
 import { Engine, type EngineOptions } from './engine.ts';
 import { openBackend } from './folder.ts';
-import { jsonReply } from './http.ts';
+import { checkContract, readOpenApiInside, requireDocument } from './contract.ts';
+import { jsonReply, problemReply, readJson } from './http.ts';
 import { createEngineLog, RequestFiles } from './logs.ts';
 import { Manager } from './manager.ts';
 import { buildOpenApi } from './openapi.ts';
@@ -72,6 +73,24 @@ export async function startBackend(dir: string, options: StartOptions = {}): Pro
         handler: () => {
           const collections = Object.fromEntries(engine.definition.collections.map((collection) => [collection.name, engine.store.count(collection.name)]));
           return jsonReply(200, { ...engine.stats.snapshot(), collections });
+        },
+      },
+      {
+        // Body: an OpenAPI document (JSON), or `{ "path": "openapi.json" }` naming a JSON file inside the backend folder.
+        method: 'POST',
+        pattern: '/contract-check',
+        handler: (ctx) => {
+          const body = readJson(ctx);
+          if (!body.ok) return body.reply;
+          try {
+            const value = body.value;
+            const isPath = typeof value === 'object' && value !== null && !('paths' in value) && 'path' in value;
+            if (isPath && typeof (value as { path: unknown }).path !== 'string') return problemReply(400, { detail: 'path must be text.' });
+            const document = isPath ? readOpenApiInside(engine.folder.dir, (value as { path: string }).path) : requireDocument(value);
+            return jsonReply(200, checkContract(engine.definition, document));
+          } catch (error) {
+            return errorReply(error);
+          }
         },
       },
       { method: 'GET', pattern: '/openapi', handler: () => jsonReply(200, buildOpenApi(engine.definition)) },
