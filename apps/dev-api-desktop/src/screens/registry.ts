@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 
 import type { ProjectInfo } from '../client/types';
 
+import { Data } from './Data';
 import { Endpoints } from './Endpoints';
 import { Overview } from './Overview';
 import { Requests } from './Requests';
@@ -19,4 +20,5 @@ export const screens: Screen[] = [
   { id: 'overview', label: 'Overview', component: Overview },
   { id: 'endpoints', label: 'Endpoints', component: Endpoints },
   { id: 'requests', label: 'Requests', component: Requests },
+  { id: 'data', label: 'Data', component: Data },
 ];
