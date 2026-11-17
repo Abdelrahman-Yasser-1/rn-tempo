@@ -249,7 +249,7 @@ describe('users endpoints (C13 /users/add, /users/:id)', () => {
     const getAs = (id: number): Promise<Response> => fetch(`${url}/users/${id}`, { headers: bearer(session.accessToken) });
     expect((await getAs(session.id)).status).toBe(200);
     expect((await getAs(carl.id)).status).toBe(403);
-    expect((await put(9999, { firstName: 'Nope' })).status).toBe(404);
+    expect((await put(9999, { firstName: 'Nope' })).status).toBe(403); // other ids look the same, so ids cannot be probed
     expect((await post(`${url}/auth/login`, { username: 'emilys', password: 'hacked1' })).status).toBe(400); // password is not a profile field here
   });
 });
