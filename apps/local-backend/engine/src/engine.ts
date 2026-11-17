@@ -5,8 +5,10 @@ import { BUILTIN_SCENARIOS, redactUrl, RequestLog, SCENARIO_HEADER } from '@rn-t
 import { crudHandler } from './crud.ts';
 import { readSeedFile, type BackendFolder } from './folder.ts';
 import { jsonReply, loggableBody, problemReply, type Reply, type RequestCtx } from './http.ts';
+import type { EngineLogger } from './logs.ts';
 import { Router, type Handler } from './router.ts';
 import type { Backend, Collection, Endpoint, Scenario } from './schema.ts';
+import { Stats } from './stats.ts';
 import { Store, type Plan, type RenameHints } from './store.ts';
 
 export interface EngineOptions {
@@ -18,6 +20,8 @@ export interface EngineOptions {
    * replaces this with real token verification.
    */
   authorize?: (ctx: RequestCtx, endpoint: Endpoint) => boolean;
+  /** Where engine problems go (`.data/logs/engine.log` when started through `startBackend`). */
+  logger?: EngineLogger;
   /** Called with every request log entry, after redaction. */
   onRequest?: (entry: ReturnType<RequestLog['record']>, endpointId: string | undefined) => void;
 }
@@ -39,9 +43,10 @@ export class Engine {
   readonly folder: BackendFolder;
   readonly store: Store;
   readonly requests = new RequestLog();
+  readonly stats = new Stats();
   readonly startedAt = new Date().toISOString();
   private state: State;
-  private readonly options: Required<Pick<EngineOptions, 'sleep' | 'now' | 'authorize'>> & Pick<EngineOptions, 'onRequest'>;
+  private readonly options: Required<Pick<EngineOptions, 'sleep' | 'now' | 'authorize'>> & Pick<EngineOptions, 'onRequest' | 'logger'>;
   private readonly scenarioPicks = new Map<string, string>();
   private queue: Promise<unknown> = Promise.resolve();
 
@@ -54,6 +59,7 @@ export class Engine {
       now: options.now ?? ((): Date => new Date()),
       authorize: options.authorize ?? ((ctx): boolean => hasBearer(ctx)),
       ...(options.onRequest === undefined ? {} : { onRequest: options.onRequest }),
+      ...(options.logger === undefined ? {} : { logger: options.logger }),
     };
   }
 
@@ -130,6 +136,7 @@ export class Engine {
         ...(options.confirm === undefined ? {} : { confirm: options.confirm }),
         seedRows: (collection) => seedRows(this.folder.dir, collection),
       });
+      this.options.logger?.info({ ops: plan.ops.map((op) => op.op) }, 'definition applied');
       const state = this.build(next);
       this.state = state;
       const ids = new Set(next.endpoints.map((endpoint) => endpoint.id));
@@ -185,7 +192,7 @@ export class Engine {
         reply = await this.run(ctx, endpoint, () => match.route.handler(ctx, match.params));
       }
     } catch (error) {
-      process.stderr.write(`engine error: ${error instanceof Error ? error.message : String(error)}\n`);
+      this.options.logger?.error({ err: error instanceof Error ? error.message : String(error), method: ctx.method, path: ctx.path }, 'request failed');
       reply = problemReply(500, { detail: 'Unexpected server error.' });
     }
     const ms = Math.round(Number(process.hrtime.bigint() - started) / 1e6);
@@ -202,6 +209,7 @@ export class Engine {
       },
       this.options.now(),
     );
+    this.stats.record(endpointId, reply.status, ms);
     this.options.onRequest?.(entry, endpointId);
     return reply;
   }
