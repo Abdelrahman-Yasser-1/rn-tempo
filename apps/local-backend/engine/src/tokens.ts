@@ -83,15 +83,17 @@ export interface AccessClaims {
   iat: number;
   exp: number;
   typ: 'access';
+  /** The user's `tokenVersion` when the token was made. */
+  ver: number;
 }
 
 const encodeJson = (value: unknown): string => Buffer.from(JSON.stringify(value)).toString('base64url');
 const sign = (secret: Buffer, input: string): Buffer => createHmac('sha256', secret).update(input).digest();
 
 /** Signs `{ sub, iat, exp, typ: 'access' }` as a compact HS256 JWT. */
-export function signAccessToken(secret: Buffer, subject: string, ttlSeconds: number, nowMs: number): string {
+export function signAccessToken(secret: Buffer, subject: string, ttlSeconds: number, nowMs: number, version = 0): string {
   const iat = Math.floor(nowMs / 1000);
-  const claims: AccessClaims = { sub: subject, iat, exp: iat + ttlSeconds, typ: 'access' };
+  const claims: AccessClaims = { sub: subject, iat, exp: iat + ttlSeconds, typ: 'access', ver: version };
   const input = `${encodeJson({ alg: 'HS256', typ: 'JWT' })}.${encodeJson(claims)}`;
   return `${input}.${b64(sign(secret, input))}`;
 }
@@ -125,11 +127,11 @@ export function verifyAccessToken(secret: Buffer, token: string, nowMs: number):
   if (given.length !== expected.length || !timingSafeEqual(given, expected)) return { ok: false, reason: 'signature' };
   const payload = decodeJson(payloadPart);
   if (payload === undefined) return { ok: false, reason: 'malformed' };
-  const { sub, iat, exp, typ } = payload;
-  if (typeof sub !== 'string' || sub === '' || typ !== 'access' || typeof iat !== 'number' || !Number.isFinite(iat)) return { ok: false, reason: 'claims' };
+  const { sub, iat, exp, typ, ver } = payload;
+  if (typeof sub !== 'string' || sub === '' || typ !== 'access' || typeof iat !== 'number' || !Number.isFinite(iat) || typeof ver !== 'number' || !Number.isInteger(ver)) return { ok: false, reason: 'claims' };
   if (typeof exp !== 'number' || !Number.isFinite(exp) || exp <= iat) return { ok: false, reason: 'claims' };
   if (exp <= nowMs / 1000) return { ok: false, reason: 'expired' };
-  return { ok: true, claims: { sub, iat, exp, typ: 'access' } };
+  return { ok: true, claims: { sub, iat, exp, typ: 'access', ver } };
 }
 
 // ---- the per-backend secret

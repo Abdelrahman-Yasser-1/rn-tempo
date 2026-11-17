@@ -89,9 +89,22 @@ describe('login, me and the C13 shapes', () => {
     const short = claims((await login('emilys', 'emilyspass', { expiresInMins: 5 })).accessToken);
     expect(short.exp - short.iat).toBe(300);
     const capped = claims((await login('emilys', 'emilyspass', { expiresInMins: 9_999_999 })).accessToken);
-    expect(capped.exp - capped.iat).toBe(1440 * 60);
+    expect(capped.exp - capped.iat).toBe(60 * 60); // auth.maxAccessTtlMin defaults to 60
     const standard = claims((await login()).accessToken);
     expect(standard.exp - standard.iat).toBe(30 * 60);
+  });
+
+  it('clamps expiresInMins to auth.maxAccessTtlMin, and to the one-day hard cap', async () => {
+    const low = await start({ ...base, auth: { ...base.auth, maxAccessTtlMin: 20 } });
+    const clamped = claims((await low.login('emilys', 'emilyspass', { expiresInMins: 50 })).accessToken);
+    expect(clamped.exp - clamped.iat).toBe(20 * 60);
+    const refreshed = await post(`${low.url}/auth/refresh`, { refreshToken: (await low.login()).refreshToken, expiresInMins: 500 });
+    const rotated = claims(TokensSchema.parse(await refreshed.json()).accessToken);
+    expect(rotated.exp - rotated.iat).toBe(20 * 60);
+    await stopAll();
+    const high = await start({ ...base, auth: { ...base.auth, maxAccessTtlMin: 100_000 } });
+    const day = claims((await high.login('emilys', 'emilyspass', { expiresInMins: 100_000 })).accessToken);
+    expect(day.exp - day.iat).toBe(1440 * 60);
   });
 
   it('takes the lifetimes from backend.json auth', async () => {
@@ -334,5 +347,65 @@ describe('admin: users and sessions', () => {
     expect((await admin('DELETE', '/users/1')).status).toBe(200);
     expect((await admin('POST', '/reload')).status).toBe(200);
     expect((await json(await admin('GET', '/users'))).total).toBe(0);
+  });
+});
+
+describe('access tokens die with the user\'s tokenVersion', () => {
+  const meStatus = async (url: string, token: string): Promise<number> => (await fetch(`${url}/auth/me`, { headers: bearer(token) })).status;
+
+  it('changing the password in updateMe signs out every other session and hands the caller a fresh pair', async () => {
+    const { url, login } = await start();
+    const here = await login();
+    const elsewhere = await login();
+    const response = await fetch(`${url}/auth/me`, { method: 'PATCH', headers: { ...bearer(here.accessToken), 'content-type': 'application/json' }, body: JSON.stringify({ password: 'brandnew1', currentPassword: 'emilyspass' }) });
+    expect(response.status).toBe(200);
+    const fresh = LoginResponseSchema.parse(await response.json());
+    expect(UserSchema.parse(fresh).username).toBe('emilys');
+    // Everything issued before the change is dead: access and refresh tokens, the caller's own included.
+    for (const old of [here, elsewhere]) {
+      expect(await meStatus(url, old.accessToken)).toBe(401);
+      expect((await post(`${url}/auth/refresh`, { refreshToken: old.refreshToken })).status).toBe(401);
+    }
+    // The fresh pair works.
+    expect(await meStatus(url, fresh.accessToken)).toBe(200);
+    expect((await post(`${url}/auth/refresh`, { refreshToken: fresh.refreshToken })).status).toBe(200);
+  });
+
+  it('a profile change without a password keeps sessions', async () => {
+    const { url, login } = await start();
+    const session = await login();
+    await fetch(`${url}/auth/me`, { method: 'PATCH', headers: { ...bearer(session.accessToken), 'content-type': 'application/json' }, body: JSON.stringify({ firstName: 'Em' }) });
+    expect(await meStatus(url, session.accessToken)).toBe(200);
+  });
+
+  it('an admin password reset, revoke and disable each invalidate access tokens already issued', async () => {
+    const { url, login, admin } = await start();
+    for (const [path, body] of [['/users/1/password', { password: 'resetpass1' }], ['/users/1/revoke', undefined], ['/users/1/disable', undefined]] as const) {
+      await admin('POST', '/users/1/enable');
+      const password = path.endsWith('password') ? 'emilyspass' : 'resetpass1';
+      const session = await login('emilys', password);
+      expect(await meStatus(url, session.accessToken), path).toBe(200);
+      expect((await admin('POST', path, body)).status).toBe(200);
+      expect(await meStatus(url, session.accessToken), path).toBe(401);
+    }
+  });
+
+  it('logging out everywhere kills access tokens; logging out one session does not', async () => {
+    const { url, login } = await start();
+    const one = await login();
+    const two = await login();
+    await post(`${url}/auth/logout`, { refreshToken: one.refreshToken }, bearer(one.accessToken));
+    expect(await meStatus(url, two.accessToken)).toBe(200);
+    await post(`${url}/auth/logout`, {}, bearer(two.accessToken));
+    expect(await meStatus(url, two.accessToken)).toBe(401);
+    expect(await meStatus(url, one.accessToken)).toBe(401);
+  });
+
+  it('rejects a token whose ver is not the current tokenVersion', async () => {
+    const { url, login, backend } = await start();
+    const session = await login();
+    backend.engine.store.db.prepare('UPDATE _users SET tokenVersion = tokenVersion + 1').run();
+    expect(await meStatus(url, session.accessToken)).toBe(401);
+    expect(claims(session.accessToken)).toMatchObject({ ver: 0 });
   });
 });

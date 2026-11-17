@@ -15,7 +15,7 @@ function forge(header: unknown, claims: unknown, key: Buffer = secret): string {
   const input = `${enc(header)}.${enc(claims)}`;
   return `${input}.${createHmac('sha256', key).update(input).digest('base64url')}`;
 }
-const goodClaims = { sub: '1', iat: NOW / 1000, exp: NOW / 1000 + 600, typ: 'access' };
+const goodClaims = { sub: '1', iat: NOW / 1000, exp: NOW / 1000 + 600, typ: 'access', ver: 0 };
 
 describe('scrypt passwords', () => {
   it('hashes with a salt and the parameters in the string, and verifies', async () => {
@@ -45,7 +45,7 @@ describe('JWT HS256', () => {
     const header = JSON.parse(Buffer.from(token.split('.')[0] ?? '', 'base64url').toString()) as unknown;
     expect(header).toEqual({ alg: 'HS256', typ: 'JWT' });
     const result = verifyAccessToken(secret, token, NOW + 1000);
-    expect(result).toEqual({ ok: true, claims: { sub: '42', iat: NOW / 1000, exp: NOW / 1000 + 600, typ: 'access' } });
+    expect(result).toEqual({ ok: true, claims: { sub: '42', iat: NOW / 1000, exp: NOW / 1000 + 600, typ: 'access', ver: 0 } });
   });
 
   it('rejects an expired token', () => {
@@ -87,6 +87,9 @@ describe('JWT HS256', () => {
     expect(verifyAccessToken(secret, forge(header, { ...goodClaims, typ: 'refresh' }), NOW)).toEqual({ ok: false, reason: 'claims' });
     expect(verifyAccessToken(secret, forge(header, { ...goodClaims, sub: 5 }), NOW)).toEqual({ ok: false, reason: 'claims' });
     expect(verifyAccessToken(secret, forge(header, { ...goodClaims, iat: 'now' }), NOW)).toEqual({ ok: false, reason: 'claims' });
+    expect(verifyAccessToken(secret, forge(header, { ...goodClaims, ver: undefined }), NOW)).toEqual({ ok: false, reason: 'claims' });
+    expect(verifyAccessToken(secret, forge(header, { ...goodClaims, ver: 1.5 }), NOW)).toEqual({ ok: false, reason: 'claims' });
+    expect(verifyAccessToken(secret, signAccessToken(secret, '1', 60, NOW, 3), NOW)).toMatchObject({ ok: true, claims: { ver: 3 } });
   });
 
   it('rejects malformed input', () => {

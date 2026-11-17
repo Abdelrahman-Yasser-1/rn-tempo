@@ -22,7 +22,8 @@ export function migrateBuiltins(db: DatabaseSync): void {
       disabled INTEGER NOT NULL DEFAULT 0,
       createdAt TEXT NOT NULL,
       updatedAt TEXT NOT NULL,
-      extra TEXT
+      extra TEXT,
+      tokenVersion INTEGER NOT NULL DEFAULT 0
     );
     CREATE TABLE IF NOT EXISTS _refresh_tokens (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -45,6 +46,10 @@ export function migrateBuiltins(db: DatabaseSync): void {
       uploadedBy INTEGER
     );
   `);
+  // A database made before `tokenVersion` existed gets the column.
+  if (!db.prepare('PRAGMA table_info(_users)').all().some((column) => column.name === 'tokenVersion')) {
+    db.exec('ALTER TABLE _users ADD COLUMN tokenVersion INTEGER NOT NULL DEFAULT 0');
+  }
 }
 
 /** A stored user. `passwordHash` never leaves this module's callers: use `publicUser` / `adminUser`. */
@@ -61,6 +66,8 @@ export interface UserRecord {
   createdAt: string;
   updatedAt: string;
   extra: Record<string, unknown>;
+  /** Put in every access token (`ver`); bumping it makes the tokens already issued stop working. */
+  tokenVersion: number;
 }
 
 /** The signed-in user a request carries (`ctx.user`). */
@@ -123,6 +130,7 @@ function toUser(raw: Record<string, unknown>): UserRecord {
     createdAt: String(raw.createdAt),
     updatedAt: String(raw.updatedAt),
     extra,
+    tokenVersion: Number(raw.tokenVersion ?? 0),
   };
 }
 
@@ -232,11 +240,11 @@ export class Accounts {
   }
 
   setPasswordHash(id: number, passwordHash: string): boolean {
-    return Number(this.db.prepare('UPDATE _users SET passwordHash = ?, updatedAt = ? WHERE id = ?').run(passwordHash, this.stamp(), id).changes) > 0;
+    return Number(this.db.prepare('UPDATE _users SET passwordHash = ?, tokenVersion = tokenVersion + 1, updatedAt = ? WHERE id = ?').run(passwordHash, this.stamp(), id).changes) > 0;
   }
 
   setDisabled(id: number, disabled: boolean): boolean {
-    return Number(this.db.prepare('UPDATE _users SET disabled = ?, updatedAt = ? WHERE id = ?').run(disabled ? 1 : 0, this.stamp(), id).changes) > 0;
+    return Number(this.db.prepare('UPDATE _users SET disabled = ?, tokenVersion = tokenVersion + 1, updatedAt = ? WHERE id = ?').run(disabled ? 1 : 0, this.stamp(), id).changes) > 0;
   }
 
   remove(id: number): boolean {
@@ -310,7 +318,9 @@ export class Accounts {
     return Number(this.db.prepare('UPDATE _refresh_tokens SET revokedAt = ? WHERE family = ? AND revokedAt IS NULL').run(this.stamp(), family).changes);
   }
 
+  /** Signs the user out everywhere: every refresh token, and (by bumping `tokenVersion`) every access token. */
   revokeUser(userId: number): number {
+    this.db.prepare('UPDATE _users SET tokenVersion = tokenVersion + 1 WHERE id = ?').run(userId);
     return Number(this.db.prepare('UPDATE _refresh_tokens SET revokedAt = ? WHERE userId = ? AND revokedAt IS NULL').run(this.stamp(), userId).changes);
   }
 
