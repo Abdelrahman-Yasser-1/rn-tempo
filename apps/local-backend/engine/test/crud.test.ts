@@ -203,11 +203,11 @@ describe('crud get / create / update / delete', () => {
     expect((await post(`${url}/books`, { on: 'later' })).status).toBe(400);
   });
 
-  it('applies the base path and answers 501 for types coming in Y2', async () => {
+  it('applies the base path and answers 501 for a handler endpoint not built yet', async () => {
     const { url } = await serve({
       ...definition(),
       basePath: '/api/v1',
-      endpoints: [...(definition().endpoints ?? []), { id: 'login', type: 'auth', action: 'login', method: 'POST', path: '/auth/login' }],
+      endpoints: [...(definition().endpoints ?? []), { id: 'login', type: 'handler', file: 'handlers/x.js', method: 'POST', path: '/auth/login' }],
     });
     expect((await fetch(`${url}/api/v1/products/1`)).status).toBe(200);
     expect((await fetch(`${url}/products/1`)).status).toBe(404);

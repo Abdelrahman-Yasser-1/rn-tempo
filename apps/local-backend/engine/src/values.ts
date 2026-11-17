@@ -82,6 +82,8 @@ export interface ValidateOptions {
   unknownFields: 'reject' | 'strip';
   /** Does a record with this id exist in that collection? Used by relation fields. */
   exists: (collection: string, id: number) => boolean;
+  /** Does a media file with this id exist? Media fields are checked with it when given. */
+  mediaExists?: (id: string) => boolean;
   /** Seed rows may carry their own id. */
   allowId?: boolean;
   /** `body` (a request) or `seed[3]`. */
@@ -124,7 +126,9 @@ export function validateRecord(collection: Collection, body: unknown, options: V
     }
     const problem = checkShape(field, value);
     if (problem !== undefined) issues.push({ path: `${part}.${key}`, message: problem });
-    else if (field.type === 'relation' && !options.exists(field.relationTo ?? '', value as number)) {
+    else if (field.type === 'media' && options.mediaExists !== undefined && !options.mediaExists(value as string)) {
+      issues.push({ path: `${part}.${key}`, message: `No media with id ${String(value)}.` });
+    } else if (field.type === 'relation' && !options.exists(field.relationTo ?? '', value as number)) {
       issues.push({ path: `${part}.${key}`, message: `No ${field.relationTo ?? 'record'} with id ${String(value)}.` });
     } else values[key] = value;
   }

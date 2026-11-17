@@ -3,6 +3,7 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 
 import type { FieldIssue } from '@rn-tempo/api-contract';
 
+import { adminAuthRoutes } from './admin-users.ts';
 import { jsonReply, problemReply, readJson, type Reply, type RequestCtx } from './http.ts';
 import { Manager, NotFoundError } from './manager.ts';
 import { DefinitionError, type Collection } from './schema.ts';
@@ -287,6 +288,7 @@ export function createAdminServer(manager: Manager, extras: AdminExtras = {}, to
       },
     },
     { method: 'GET', pattern: '/requests', handler: (ctx) => jsonReply(200, engine.requests.snapshot(Number(ctx.query.get('after') ?? 0) || 0)) },
+    ...adminAuthRoutes(engine),
     ...(extras.routes ?? []),
   ];
 
@@ -350,6 +352,8 @@ export function adminRouteList(extras: AdminExtras = {}): string[] {
     'DELETE /endpoints/x', 'GET /collections', 'POST /collections', 'GET /collections/x', 'DELETE /collections/x', 'POST /collections/x/rename',
     'POST /collections/x/fields', 'PUT /collections/x/fields/y', 'DELETE /collections/x/fields/y', 'POST /collections/x/fields/y/rename',
     'GET /data/x', 'GET /data/x/1', 'POST /data/x', 'PUT /data/x/1', 'PATCH /data/x/1', 'DELETE /data/x/1', 'GET /scenarios', 'PUT /scenarios/x',
-    'DELETE /scenarios/x', 'DELETE /scenarios', 'GET /requests', 'GET /events', ...(extras.routes ?? []).map((route) => `${route.method} ${route.pattern}`),
+    'DELETE /scenarios/x', 'DELETE /scenarios', 'GET /requests', 'GET /events',
+    'GET /users', 'POST /users', 'GET /users/1', 'PUT /users/1', 'PATCH /users/1', 'DELETE /users/1', 'POST /users/1/password', 'POST /users/1/disable',
+    'POST /users/1/enable', 'POST /users/1/revoke', 'GET /sessions', 'DELETE /sessions/1', ...(extras.routes ?? []).map((route) => `${route.method} ${route.pattern}`),
   ].map((entry) => entry.replace(' /', ` ${ADMIN_PREFIX}/`));
 }
