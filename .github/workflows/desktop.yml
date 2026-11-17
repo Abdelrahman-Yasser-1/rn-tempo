@@ -1,0 +1,67 @@
+name: Desktop app
+
+# The Tempo Dev API desktop app (Tauri 2). It runs on macOS only and only when the app or the dev API changes,
+# so the main CI stays fast. Builds are unsigned; signing and notarization come with the release phase.
+on:
+  pull_request:
+    paths:
+      - 'apps/dev-api-desktop/**'
+      - 'packages/dev-api/**'
+      - '.github/workflows/desktop.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/dev-api-desktop/**'
+      - 'packages/dev-api/**'
+      - '.github/workflows/desktop.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  desktop:
+    name: Desktop (tests, build, dmg)
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - run: corepack enable
+      - run: yarn install --immutable
+      - name: Cache Cargo
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            apps/dev-api-desktop/src-tauri/target
+          key: cargo-${{ runner.os }}-${{ hashFiles('apps/dev-api-desktop/src-tauri/Cargo.lock') }}
+          restore-keys: cargo-${{ runner.os }}-
+      - name: UI lint, types and tests
+        run: |
+          yarn workspace @rn-tempo/dev-api-desktop lint
+          yarn workspace @rn-tempo/dev-api-desktop typecheck
+          yarn workspace @rn-tempo/dev-api-desktop test
+      # Tauri bundles the standalone dev API as a resource, so it must exist before cargo builds.
+      - name: Build the standalone dev API
+        run: yarn workspace @rn-tempo/dev-api-desktop standalone
+      - name: Rust tests and lints
+        working-directory: apps/dev-api-desktop/src-tauri
+        run: |
+          rustup component add clippy
+          cargo test
+          cargo clippy --all-targets -- -D warnings
+      - name: Build the app and the dmg (unsigned)
+        run: yarn workspace @rn-tempo/dev-api-desktop tauri build --bundles app,dmg
+      - uses: actions/upload-artifact@v7
+        with:
+          name: tempo-dev-api-dmg
+          path: apps/dev-api-desktop/src-tauri/target/release/bundle/dmg/*.dmg
+          if-no-files-found: error
