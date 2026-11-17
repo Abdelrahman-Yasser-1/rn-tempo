@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, renameSync, writeFileSync } from 'node:fs';
+import { closeSync, constants, existsSync, lstatSync, mkdirSync, openSync, readFileSync, realpathSync, renameSync, writeFileSync } from 'node:fs';
 import { join, resolve, sep } from 'node:path';
 
 import { DefinitionError, parseBackend, type Backend, type BackendInput } from './schema.ts';
@@ -40,8 +40,14 @@ function ensureRealDir(path: string, label: string, create: boolean): void {
 export function prepareDataDir(dir: string): string {
   const dataDir = join(dir, DATA_DIR);
   ensureRealDir(dataDir, '.data', true);
+  // `wx` never follows a link, not even a dangling one; an existing path is left alone unless it is a link.
   const ignore = join(dataDir, '.gitignore');
-  if (!existsSync(ignore)) writeFileSync(ignore, '*\n');
+  try {
+    writeFileSync(ignore, '*\n', { flag: 'wx' });
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+    if (lstatSync(ignore).isSymbolicLink()) throw new DefinitionError(`.data/.gitignore is a symbolic link and is not used: ${ignore}`);
+  }
   for (const sub of ['logs']) ensureRealDir(join(dataDir, sub), `.data/${sub}`, true);
   return dataDir;
 }
@@ -81,8 +87,8 @@ export function serializeDefinition(definition: BackendInput | Backend): string 
 
 /** Writes a file next to its target and renames it over, so a watcher never reads half of it. */
 export function writeFileAtomic(path: string, text: string): void {
-  const temp = `${path}.${randomBytes(4).toString('hex')}.tmp`;
-  writeFileSync(temp, text, { mode: 0o600 });
+  const temp = `${path}.${randomBytes(8).toString('hex')}.tmp`;
+  writeFileSync(temp, text, { mode: 0o600, flag: 'wx' }); // `wx`: never follows a planted link
   renameSync(temp, path);
 }
 
@@ -174,4 +180,14 @@ export function readSeedFile(dir: string, name: string): Record<string, unknown>
     throw new DefinitionError(`seed/${name} must be a JSON array of objects.`);
   }
   return json as Record<string, unknown>[];
+}
+
+/** Opens a file for appending without following a symlink (`O_NOFOLLOW`). The caller closes the descriptor. */
+export function openAppendNoFollow(path: string): number {
+  return openSync(path, constants.O_WRONLY | constants.O_APPEND | constants.O_CREAT | constants.O_NOFOLLOW, 0o600);
+}
+
+/** Creates an empty file if missing, never following a link. */
+export function touchNoFollow(path: string): void {
+  closeSync(openAppendNoFollow(path));
 }
