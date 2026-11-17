@@ -171,7 +171,25 @@ Logs are JSON lines written with `pino`. Each request logs its method, path, sta
 | --- | --- |
 | `GET /__tempo/health` | `{ ok, service, pid, startedAt, scenarios }`. Used by the CLI to check the server is the dev API. |
 | `GET /__tempo/endpoints` | A list of endpoints: id, method, path, auth, tags and scenario names. |
+| `GET /__tempo/info` | No token (it holds nothing secret). `{ service, version, project, scheme, port, urls: { local, lan?, androidEmulator, iosSimulator }, cert: { present, notAfter?, coversLanIp? }, startedAt }`. The process that starts the server fills in the scheme, port, LAN address and certificate status. |
+| `GET /__tempo/events` | A server-sent event stream of the request log. Needs the control token. See [Request stream](#request-stream). |
+| `GET /__tempo/ca.pem` | The **public** root CA (`.tempo-api/certs/rootCA.pem`), as `application/x-pem-file`, so a phone can download it. 404 when `tempo-api certs` has not run. It reads that one file only, never a key, and refuses a file that holds a private key block. |
 | `POST /__tempo/scenario`, `POST /__tempo/reset` | Used by the CLI. They need the control token (header `x-tempo-token`). |
+
+### Request stream
+
+`GET /__tempo/events` (header `x-tempo-token`) is a `text/event-stream`. The server keeps the last 500 requests in memory. A new client first gets those, then each new request as it finishes. Every message is `id: <n>`, `event: request` and `data: <json>`. A client that reconnects with `Last-Event-ID` only gets the entries after that id. A `: keep-alive` comment line is sent every 15 seconds, and closing the connection removes its listener and timer.
+
+```json
+{
+  "id": 7, "at": "2026-11-17T08:30:00.000Z", "method": "POST", "url": "/auth/login",
+  "status": 200, "ms": 4, "scenario": "slow",
+  "req": { "headers": { "authorization": "[REDACTED]" }, "body": { "username": "emilys", "password": "[REDACTED]" } },
+  "res": { "body": { "accessToken": "[REDACTED]" } }
+}
+```
+
+Entries are built with the same redaction as the log (at every log level), including query strings. A body longer than 32 KB is cut to its first 32 KB of JSON text and the side gets `"truncated": true`. Requests to `/__tempo/*` are not listed.
 
 The server listens over plain HTTP in this phase. The listener accepts TLS options, which a later phase uses for local HTTPS.
 
@@ -184,6 +202,7 @@ The server listens over plain HTTP in this phase. The listener accepts TLS optio
 | `up [--port 8443] [--host 0.0.0.0] [--http]` | Starts the server in the background and waits until it answers. Serves HTTPS when a certificate exists (see [Local HTTPS](/docs/backend/local-https)); `--http` forces plain HTTP. Prints the local URL, the LAN URL and a QR code of the LAN URL for a phone. If it is already running, it says so and exits 0. |
 | `certs [--out dir] [--host name] [--install]` | Creates a local HTTPS certificate with mkcert. |
 | `trust ios` / `trust android` | Trusts the local CA on a simulator or emulator. |
+| `dev ios` / `dev android [--port] [--http]` | The daily command: creates certificates when missing, then `trust ios` (booted simulator) or `trust android --push` (prints the install steps), then `up`. With `--http` it skips certificates and trust and only starts the server. |
 | `down` | Stops the server. |
 | `status` | Shows whether it runs, its pid and any active scenarios. |
 | `logs [-f] [-n 50] [--raw]` | Prints the log. `-f` keeps following it. |
@@ -195,6 +214,16 @@ The server listens over plain HTTP in this phase. The listener accepts TLS optio
 | `check` | Fails when a generated file is out of date. |
 
 Every command takes `--config <file>` (default `api/tempo-api.config.ts`) and `--cwd <dir>`.
+
+### Standalone build
+
+`yarn workspace @rn-tempo/dev-api build` also writes `dist/standalone/tempo-api.mjs` (about 4 MB) with every dependency inlined, plus a `swagger-ui/` folder (about 2 MB) that it finds next to itself. It runs with no `node_modules`:
+
+```sh
+node tempo-api.mjs up --cwd /path/to/project
+```
+
+The project's own config still imports `@rn-tempo/api-contract` and `zod` from the project's `node_modules`. The desktop app bundles this build for projects that have no `@rn-tempo/dev-api`. It is not part of the npm package (`files` lists only the small build), because it is about 50 times larger.
 
 ### Config file
 

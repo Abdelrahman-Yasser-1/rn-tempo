@@ -38,6 +38,7 @@ tempo-api scenario clear [endpointId]
 tempo-api start                                # foreground, for Docker and debugging
 tempo-api certs [--out dir] [--host name]...   # local HTTPS certificate (needs mkcert)
 tempo-api trust ios | android                  # trust the local CA on a simulator or emulator
+tempo-api dev ios | android [--port] [--http]  # certs if missing, trust, then up
 ```
 
 `up` and `start` serve HTTPS when `.tempo-api/certs/cert.pem` and `key.pem` exist, and plain HTTP otherwise (with a one-line hint). `--http` forces HTTP.

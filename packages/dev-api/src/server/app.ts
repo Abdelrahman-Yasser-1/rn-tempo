@@ -1,5 +1,6 @@
 import { randomBytes, timingSafeEqual } from 'node:crypto';
-import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { basename, join } from 'node:path';
 
 import {
   mountedPath,
@@ -16,6 +17,8 @@ import { fallbackData } from '../data.ts';
 import { createRuntime, type Runtime } from '../runtime/pipeline.ts';
 import { BUILTIN_SCENARIOS, CONTROL_HEADER, findScenario, scenarioNames } from '../runtime/scenarios.ts';
 import { docsRouter } from './docs.ts';
+import { RequestLog } from './events.ts';
+import { buildInfo, type ServerInfoOptions } from './info.ts';
 import { createLogger } from './logger.ts';
 import { redactDeep, redactUrl } from './redact.ts';
 import { Store } from './store.ts';
@@ -31,6 +34,15 @@ export interface ServerOptions {
    * it from a file in the data dir. A random one is used when omitted.
    */
   controlToken?: string;
+  /**
+   * What `/__tempo/info` reports (project, scheme, port, LAN address, certificate). The process
+   * that starts the server knows these; without them the route reports plain HTTP on the config port.
+   */
+  info?: ServerInfoOptions;
+  /** Where `rootCA.pem` (the public CA, written by `tempo-api certs`) lives. Defaults to `<dataDir>/certs`. */
+  certsDir?: string;
+  /** Milliseconds between the keep-alive comments on `/__tempo/events`. Defaults to 15000. */
+  keepAliveMs?: number;
 }
 
 export interface DevServer {
@@ -42,9 +54,15 @@ export interface DevServer {
   readonly runtime: Runtime;
   /** Endpoints as served, with the mock-auth ones included. */
   readonly endpoints: readonly EndpointDefinition[];
+  /** The last requests, redacted, and the listeners of the event stream. */
+  readonly requests: RequestLog;
 }
 
-const startedAt = new Date().toISOString();
+/** The public CA file `tempo-api certs` copies next to the leaf. It is the only file `/__tempo/ca.pem` reads. */
+const CA_FILE_NAME = 'rootCA.pem';
+const DEFAULT_KEEP_ALIVE_MS = 15_000;
+/** A client that lets this much pile up unread is dropped. */
+const MAX_BUFFERED_BYTES = 4 * 1024 * 1024;
 
 function sendProblem(res: Response, body: ProblemDetails): void {
   // `message` repeats `detail` for clients written against dummyjson's `{ message }` errors.
@@ -69,7 +87,15 @@ export function createServer(config: ApiConfig, options: ServerOptions = {}): De
   const logger = options.logger ?? createLogger();
   const dataDir = options.dataDir ?? join(process.cwd(), '.tempo-api');
   const controlToken = options.controlToken ?? randomBytes(24).toString('hex');
+  const certsDir = options.certsDir ?? join(dataDir, 'certs');
+  const keepAliveMs = options.keepAliveMs ?? DEFAULT_KEEP_ALIVE_MS;
+  const startedAt = new Date().toISOString();
   const store = new Store(config, dataDir, logger);
+  const requests = new RequestLog();
+  const info = buildInfo(
+    options.info ?? { project: basename(process.cwd()), scheme: 'http', port: config.port, cert: { present: false } },
+    startedAt,
+  );
 
   const runtime = createRuntime(config, {
     store,
@@ -96,6 +122,16 @@ export function createServer(config: ApiConfig, options: ServerOptions = {}): De
       const ms = Number(process.hrtime.bigint() - started) / 1e6;
       const line = { method: req.method, url: redactUrl(req.originalUrl), status: res.statusCode, ms: Math.round(ms) };
       logger.info(line, 'request');
+      // The control routes are polled by tools; keeping them out leaves the log for the app's traffic.
+      if (!req.originalUrl.startsWith('/__tempo/')) {
+        requests.record({
+          ...line,
+          scenario: typeof res.locals.scenario === 'string' ? res.locals.scenario : undefined,
+          reqHeaders: req.headers,
+          reqBody: req.body,
+          resBody: res.locals.responseBody,
+        });
+      }
       if (logger.isLevelEnabled('debug')) {
         logger.debug(
           {
@@ -163,6 +199,51 @@ export function createServer(config: ApiConfig, options: ServerOptions = {}): De
     store.reset();
     res.json({ ok: true });
   });
+  internal.get('/info', (_req, res) => void res.json(info));
+
+  // The public root CA, for a phone to download. Only the one fixed file is read, never a path from
+  // the request, and a file that holds a private key block is refused.
+  internal.get('/ca.pem', (_req, res) => {
+    let pem: string;
+    try {
+      pem = readFileSync(join(certsDir, CA_FILE_NAME), 'utf8');
+    } catch {
+      return sendProblem(res, problem(404, { detail: 'No CA certificate. Run `tempo-api certs` first.' }));
+    }
+    if (/PRIVATE KEY/.test(pem)) {
+      logger.error({ file: CA_FILE_NAME }, 'rootCA.pem holds a private key and was not served');
+      return sendProblem(res, problem(404, { detail: 'No CA certificate. Run `tempo-api certs` first.' }));
+    }
+    res.type('application/x-pem-file').setHeader('content-disposition', 'attachment; filename="tempo-dev-ca.pem"');
+    res.send(pem);
+  });
+
+  // Server-sent events: the kept entries first, then each new one. `Last-Event-ID` (sent by a
+  // reconnecting client) skips what it already has. A comment line every `keepAliveMs` keeps proxies
+  // and idle timers from closing the stream; closing the request removes the listener and the timer.
+  internal.get('/events', control, (req, res) => {
+    res.status(200).set({
+      'content-type': 'text/event-stream; charset=utf-8',
+      'cache-control': 'no-cache, no-transform',
+      connection: 'keep-alive',
+      'x-accel-buffering': 'no',
+    });
+    res.flushHeaders();
+    const last = Number(req.header('last-event-id'));
+    const send = (entry: { id: number }): void => {
+      if (res.writableLength > MAX_BUFFERED_BYTES) return void res.end();
+      res.write(`id: ${entry.id}\nevent: request\ndata: ${JSON.stringify(entry)}\n\n`);
+    };
+    res.write('retry: 2000\n\n');
+    // Subscribing and reading the snapshot happen in one tick, so no entry is missed or sent twice.
+    const unsubscribe = requests.subscribe(send);
+    for (const entry of requests.snapshot(Number.isInteger(last) && last > 0 ? last : 0)) send(entry);
+    const timer = setInterval(() => res.write(': keep-alive\n\n'), keepAliveMs);
+    res.on('close', () => {
+      clearInterval(timer);
+      unsubscribe();
+    });
+  });
   app.use('/__tempo', internal);
 
   // ---- Swagger UI
@@ -179,6 +260,7 @@ export function createServer(config: ApiConfig, options: ServerOptions = {}): De
         headers: req.headers,
       });
       res.locals.responseBody = result.body;
+      res.locals.scenario = result.scenario;
       for (const [name, value] of Object.entries(result.headers)) res.setHeader(name, value);
       if (result.body === undefined) res.status(result.status).end();
       else res.status(result.status).send(JSON.stringify(result.body));
@@ -196,5 +278,5 @@ export function createServer(config: ApiConfig, options: ServerOptions = {}): De
     sendProblem(res, problem(500, { detail: 'Unexpected server error.' }));
   });
 
-  return { app, store, logger, controlToken, runtime, endpoints };
+  return { app, store, logger, controlToken, runtime, endpoints, requests };
 }

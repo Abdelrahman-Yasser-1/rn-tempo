@@ -37,6 +37,8 @@ export interface RuntimeResponse {
   headers: Record<string, string>;
   /** The endpoint that answered, when one matched. */
   endpointId?: string;
+  /** The scenario that shaped this response (from the header or `scenario set`), when one applied. */
+  scenario?: string;
 }
 
 export interface RuntimeOptions {
@@ -151,12 +153,14 @@ export function createRuntime(config: ApiConfig, options: RuntimeOptions = {}): 
         return problemResponse(problem(400, { detail }), {}, endpoint.id);
       }
     }
+    const applied = (response: RuntimeResponse): RuntimeResponse =>
+      scenario === undefined || name === undefined ? response : { ...response, scenario: name };
     if (scenario?.delayMs !== undefined) await sleep(scenario.delayMs);
     let status = endpoint.status;
     if (scenario?.status !== undefined) status = scenario.status;
-    if (scenario?.body !== undefined) return jsonResponse(status, scenario.body, endpoint.id);
+    if (scenario?.body !== undefined) return applied(jsonResponse(status, scenario.body, endpoint.id));
     if (scenario?.status !== undefined && scenario.status >= 400) {
-      return problemResponse(problem(scenario.status), {}, endpoint.id);
+      return applied(problemResponse(problem(scenario.status), {}, endpoint.id));
     }
 
     // 4. data
@@ -175,12 +179,14 @@ export function createRuntime(config: ApiConfig, options: RuntimeOptions = {}): 
         throw new Error('it has no data function, and this host cannot generate data. Add `data` to the endpoint.');
       }
     } catch (error) {
-      if (isApiError(error)) return problemResponse(error.toProblem(), {}, endpoint.id);
+      if (isApiError(error)) return applied(problemResponse(error.toProblem(), {}, endpoint.id));
       options.onError?.({ endpoint: endpoint.id, err: errorMessage(error) }, 'data failed');
-      return problemResponse(
-        problem(500, { title: 'Endpoint data failed', detail: `${endpoint.id}: ${errorMessage(error)}` }),
-        {},
-        endpoint.id,
+      return applied(
+        problemResponse(
+          problem(500, { title: 'Endpoint data failed', detail: `${endpoint.id}: ${errorMessage(error)}` }),
+          {},
+          endpoint.id,
+        ),
       );
     }
 
@@ -188,17 +194,19 @@ export function createRuntime(config: ApiConfig, options: RuntimeOptions = {}): 
     const response = validateResponse(endpoint, value);
     if (!response.ok) {
       options.onError?.({ endpoint: endpoint.id, issues: response.issues }, 'response does not match its schema');
-      return problemResponse(
-        problem(500, {
-          title: 'Response does not match its schema',
-          detail: `The data for ${endpoint.id} does not match its response schema. Fix the endpoint's data function or its fixture.`,
-          errors: response.issues,
-        }),
-        {},
-        endpoint.id,
+      return applied(
+        problemResponse(
+          problem(500, {
+            title: 'Response does not match its schema',
+            detail: `The data for ${endpoint.id} does not match its response schema. Fix the endpoint's data function or its fixture.`,
+            errors: response.issues,
+          }),
+          {},
+          endpoint.id,
+        ),
       );
     }
-    return jsonResponse(status, value, endpoint.id);
+    return applied(jsonResponse(status, value, endpoint.id));
   }
 
   return {
