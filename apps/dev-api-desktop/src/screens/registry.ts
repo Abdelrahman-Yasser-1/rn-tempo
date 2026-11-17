@@ -8,6 +8,7 @@ import { Endpoints } from './Endpoints';
 import { Logs } from './Logs';
 import { Overview } from './Overview';
 import { Requests } from './Requests';
+import { WorkspaceEditor } from './WorkspaceEditor';
 
 export interface Screen {
   id: string;
@@ -25,4 +26,5 @@ export const screens: Screen[] = [
   { id: 'data', label: 'Data', component: Data },
   { id: 'certificates', label: 'Certificates', component: Certificates },
   { id: 'logs', label: 'Logs', component: Logs },
+  { id: 'workspace', label: 'Workspace', component: WorkspaceEditor, workspaceOnly: true },
 ];
