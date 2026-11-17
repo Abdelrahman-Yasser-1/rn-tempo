@@ -3,6 +3,8 @@ import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'n
 import { dirname, join, resolve } from 'node:path';
 
 export const DEFAULT_CONFIG = 'api/tempo-api.config.ts';
+/** The JSON workspace a project may have instead of a TypeScript config. */
+export const WORKSPACE_FILE = 'tempo-api.json';
 
 /** Everything the CLI reads and writes lives in `<cwd>/.tempo-api`. */
 export interface Paths {
@@ -20,7 +22,11 @@ export interface Paths {
 export function resolvePaths(cwd: string | undefined, config: string | undefined): Paths {
   const root = resolve(cwd ?? process.cwd());
   const dataDir = join(root, '.tempo-api');
-  const configPath = resolve(root, config ?? DEFAULT_CONFIG);
+  let configPath = resolve(root, config ?? DEFAULT_CONFIG);
+  // No TypeScript config, but a workspace file at the project root: use that.
+  if (config === undefined && !existsSync(configPath) && existsSync(join(root, WORKSPACE_FILE))) {
+    configPath = join(root, WORKSPACE_FILE);
+  }
   return {
     cwd: root,
     config: configPath,

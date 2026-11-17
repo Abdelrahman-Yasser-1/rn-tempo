@@ -50,7 +50,7 @@ Spec: "Tier 1b" in `spec.md`. Starts after Phase C merges.
   - Commit: `docs(specs): add the dev api desktop app`.
 - [x] **T15.X1** (AC-DA-1, AC-DA-3, AC-DA-4) dev-api control additions: `/__tempo/info`, the `/__tempo/events` SSE log, `/__tempo/ca.pem`, `tempo-api dev ios|android`, and the standalone build.
   - Commit: `feat(dev-api): add desktop control endpoints`.
-- [ ] **T15.X2** (AC-DA-5) The JSON workspace config loader, `import openapi` and `export code`.
+- [x] **T15.X2** (AC-DA-5) The JSON workspace config loader, `import openapi` and `export code`.
   - Commit: `feat(dev-api): add json workspaces with openapi import and code export`.
 - [ ] **T15.X3** (AC-DA-6) The debug menu's API source switch.
   - Commit: `feat(app): switch the api source from the debug menu`.

@@ -4,6 +4,8 @@ import { dirname, join, parse } from 'node:path';
 import { defineConfig, type ApiConfig, type ApiConfigInput } from '@rn-tempo/api-contract';
 import { createJiti } from 'jiti';
 
+import { loadWorkspace } from '../workspace/load.ts';
+
 /** The nearest `tsconfig.json` at or above a folder, for `paths` aliases such as `@features/*`. */
 export function findTsconfig(from: string): string | undefined {
   for (let dir = from; ; dir = dirname(dir)) {
@@ -18,13 +20,19 @@ function isApiConfig(value: unknown): value is ApiConfig {
 }
 
 /**
- * Loads a TypeScript config file. jiti compiles it on the fly (no build step for the user), and
+ * Loads a config: a TypeScript file, or a JSON workspace when the path ends in `.json`. jiti compiles it on the fly (no build step for the user), and
  * `tsconfigPaths` makes imports like `@features/products/schema` resolve the way the app's own
  * tsconfig says, so a config can import the app's Zod schemas.
  */
 export async function loadConfig(configPath: string): Promise<ApiConfig> {
   if (!existsSync(configPath)) {
     throw new Error(`Config file not found: ${configPath}. Create it, or pass --config <file>.`);
+  }
+  // A `.json` file is a workspace (`tempo-api.json`): data, no code, so jiti is not involved.
+  if (configPath.endsWith('.json')) {
+    const { config, warnings } = loadWorkspace(configPath);
+    for (const warning of warnings) process.stderr.write(`tempo-api: warning: ${warning}\n`);
+    return config;
   }
   const tsconfig = findTsconfig(dirname(configPath));
   const jiti = createJiti(import.meta.url, {
