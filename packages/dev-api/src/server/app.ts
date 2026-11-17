@@ -61,6 +61,8 @@ export interface DevServer {
 /** The public CA file `tempo-api certs` copies next to the leaf. It is the only file `/__tempo/ca.pem` reads. */
 const CA_FILE_NAME = 'rootCA.pem';
 const DEFAULT_KEEP_ALIVE_MS = 15_000;
+/** The most rows `/__tempo/data` sends per collection. */
+const DATA_ROWS_PER_COLLECTION = 500;
 /** A client that lets this much pile up unread is dropped. */
 const MAX_BUFFERED_BYTES = 4 * 1024 * 1024;
 
@@ -200,6 +202,17 @@ export function createServer(config: ApiConfig, options: ServerOptions = {}): De
     res.json({ ok: true });
   });
   internal.get('/info', (_req, res) => void res.json(info));
+
+  // The stored `resource()` records, read-only, for the desktop app's Data screen. It needs the
+  // control token and redacts like the request log does; at most `DATA_ROWS_PER_COLLECTION` rows each.
+  internal.get('/data', control, (_req, res) => {
+    const collections = Object.entries(store.snapshot()).map(([name, rows]) => ({
+      name,
+      total: rows.length,
+      items: redactDeep(rows.slice(0, DATA_ROWS_PER_COLLECTION)),
+    }));
+    res.json({ collections });
+  });
 
   // The public root CA, for a phone to download. Only the one fixed file is read, never a path from
   // the request, and a file that holds a private key block is refused.
