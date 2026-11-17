@@ -1,0 +1,111 @@
+---
+title: Desktop app
+description: Tempo Dev API, a desktop app that starts, inspects and controls the dev API, with certificate and simulator trust in a few clicks.
+---
+
+<Callout title="Development only" type="warn">
+  Like the dev API it wraps, the desktop app is a development tool. It only talks to servers on `127.0.0.1`, and everything it does is also possible with the `tempo-api` command.
+</Callout>
+
+Daily use of the CLI means many small steps: make certificates, trust them, start the server, switch a scenario, read the log. **Tempo Dev API** puts those steps in one window. It wraps the dev API only. Environments, icons and CI stay in the `tempo` CLI.
+
+The app is built with Tauri 2. It is private (not on npm) and ships as a GitHub release artifact, for macOS first. Windows and Linux builds are best effort, and simulator trust is macOS only.
+
+## Install
+
+1. Download the `.dmg` from the release (or from the `Desktop app` workflow run's `tempo-dev-api-dmg` artifact), open it, and drag **Tempo Dev API** to Applications.
+2. The build is **unsigned** until the release phase, so macOS blocks the first launch. Right-click the app and choose **Open**, then **Open** again. If the Open button is missing, go to **System Settings, Privacy & Security**, scroll to the message about Tempo Dev API and choose **Open Anyway**.
+3. Install [Node.js](https://nodejs.org/en/download) 22 or newer if you have not. The app does not bundle Node (see [Node discovery](#node-discovery)).
+4. Optional: install mkcert (`brew install mkcert`) for HTTPS. The app never downloads it.
+
+## Open a project
+
+Choose **Add folder…** and pick a folder that has `api/tempo-api.config.ts`. That is any RN-TEMPO app, or any project that uses the dev API. The project appears in the sidebar with a status dot, and in the **Recent** list (kept in the app's data folder).
+
+Which dev API runs:
+
+- The project's own `node_modules/@rn-tempo/dev-api`, when it is installed. The Overview shows its version.
+- Otherwise the **standalone build** bundled in the app (one file with every dependency inlined). A code project's config imports `@rn-tempo/api-contract`, so a project that does not have the dev API installed should use a workspace instead.
+
+Several projects can run at once, each on its own port.
+
+## Standalone workspaces
+
+A project without a config can be a **workspace**: its endpoints are stored as JSON (`tempo-api.json`, see [JSON workspaces](/docs/backend/dev-api#json-workspaces)). Choose **New workspace**, give it a name, and pick where it lives: the app's data folder, or a folder you choose. A new workspace has one `GET /ping` endpoint. You can also import an OpenAPI 3.x file from the **Workspace** tab, and later **Export to code** to turn the workspace into `api/tempo-api.config.ts` and `api/endpoints/*.ts` in a project.
+
+## Screens
+
+### Overview
+
+Start and Stop, the HTTPS or HTTP choice, and the port (empty means the config's port). The app starts the server in the background with `tempo-api up`, so it keeps running if you reload the window, and **quitting the app stops every server the app started**. A server that you started from the terminal is left running.
+
+When the server runs you see its addresses (this Mac, the LAN, the Android emulator at `10.0.2.2`, the iOS simulator), a QR code with the LAN address for a phone, and buttons for Swagger UI, the OpenAPI JSON and the Postman files. The Postman button writes the collection to the project's generated folder and shows it in Finder.
+
+### Endpoints
+
+A searchable list grouped by tag. Each endpoint has a **scenario picker**: choose a scenario and the next response uses it, choose **default** to restore the normal response, with no CLI command. Select an endpoint to open **Try it**: path parameters, a query string, a JSON body and a bearer token. **Mock login** signs in with the public test user and fills the token. The response shows the status, the time and the JSON.
+
+### Requests
+
+A live log of the requests the server receives, streamed from `/__tempo/events` and redacted by the server, so tokens and passwords never reach the screen. Filter by method, status class and path text, and click a row for the request and response in a detail drawer. The view keeps the newest 500 entries, like the server.
+
+### Data
+
+The records the server stores for each `resource()`, read-only and redacted, with a filter and a **Reset** button that re-seeds the data after you confirm. It reads `GET /__tempo/data`.
+
+### Certificates
+
+- **Status**: whether a certificate exists, when it expires and whether it covers your current LAN address (the last two when the server runs).
+- **Create or Recreate**: runs `tempo-api certs`. It never changes a trust store. Restart the server afterwards so it loads the new certificate.
+- **Trust on this Mac**: runs `certs --install` only after you confirm a dialog that says it asks for your password. It is never done automatically.
+- **iOS simulator**: lists the booted simulators and runs `trust ios --device <id>` for the one you choose. It never touches this Mac's keychain.
+- **Android emulator**: pushes the CA to the emulator's Download folder and lists the install steps (Settings, Security, Encryption and credentials, Install a certificate).
+- **Phone**: a QR code for `https://<lan>:<port>/__tempo/ca.pem`, the public CA only.
+
+See [Local HTTPS](/docs/backend/local-https) for the same steps in the terminal, and for physical devices.
+
+### Logs
+
+The server log, as `tempo-api logs` prints it, refreshed every two seconds, with a filter. The server's redaction applies.
+
+### Workspace (standalone workspaces)
+
+Edit endpoints: method, path, status, an example response in JSON, tags, auth, and scenarios (status, delay, body). **Save** checks the whole file with the dev API's own workspace schema and lists each problem with its path. Restart the server to serve the changes. **Import OpenAPI…** replaces the workspace with the imported endpoints, and **Export to code…** writes a TypeScript config into a project you pick (asking before it overwrites files).
+
+### Menu bar
+
+The tray icon lists your recent projects with a start or stop entry each, plus **Open window** and **Quit**. Closing the window keeps the app in the menu bar. **Quit** stops the servers the app started.
+
+## Security model
+
+- The app opens no port. It only talks to `127.0.0.1`, with the project's control token, which is a file only you can read.
+- The window holds no API logic and makes no network request. Control calls and the live log go through Rust. Over HTTPS, Rust trusts **only** the project's own `rootCA.pem`. Certificate checks are never switched off.
+- Rust runs a fixed set of commands: `node tempo-api.mjs up`, `down`, `status`, `reset`, `certs`, `trust`, `logs`, `collections`, `import` and `export`, plus `xcrun simctl list` to find simulators. The window cannot pass any other program or argument, and it can only act on projects you opened.
+- Tauri capabilities allow only the app's own commands, the folder and file pickers, and listening for the log events. There is no shell, file system or HTTP plugin.
+- A strict content security policy: scripts and styles only from the app itself, no remote content, no telemetry.
+- Project folders are opened in Finder only after checks that they are real folders inside the project, and they are revealed, never launched.
+
+## Node discovery
+
+macOS apps started from Finder do not get your shell's `PATH`, so the app asks your login shell: `$SHELL -lc 'command -v node'`. It then checks that `node --version` is 22 or newer. If Node is missing or too old the app shows a message with the download link and a **Check again** button instead of crashing. You do not need to restart it.
+
+If the app cannot find Node although you have it:
+
+1. Open a new terminal and run `command -v node` and `node --version`. If that fails, fix your Node install first.
+2. Make sure `node` is on the `PATH` set in your login shell files (`~/.zprofile`, `~/.zshenv`, `~/.bash_profile`), not only in `~/.zshrc`. Version managers such as nvm, fnm and Volta usually add themselves to `~/.zshrc`, which a non-interactive login shell does not read. Use `fnm env --use-on-cd` or the manager's login-shell instructions, or add a `PATH` line to `~/.zprofile`.
+3. Slow shell start-up helps nobody: the lookup times out after 10 seconds. Keep login files fast.
+4. Press **Check again**.
+
+`mkcert`, `xcrun` and `adb` are found through the same login-shell `PATH`.
+
+## Build from source
+
+```sh
+yarn install
+yarn workspace @rn-tempo/dev-api-desktop tauri dev          # run with hot reload
+yarn workspace @rn-tempo/dev-api-desktop tauri build --bundles app,dmg
+```
+
+You need Rust (1.85 or newer) and Xcode's command line tools. The build first builds the dev API's standalone bundle and copies it into the app as a resource. In the repository, the `Desktop app` GitHub workflow runs the UI tests, `cargo test`, `cargo clippy` and an unsigned build, and uploads the `.dmg`. It only runs when `apps/dev-api-desktop/**` or `packages/dev-api/**` changes (or by hand).
+
+To test with a throwaway certificate authority, start the app with `CAROOT` set to a temporary folder. It is passed to `mkcert`, so your real CA is untouched.

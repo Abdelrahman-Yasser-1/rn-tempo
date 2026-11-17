@@ -58,7 +58,7 @@ Spec: "Tier 1b" in `spec.md`. Starts after Phase C merges.
   - Commits: `build(deps): add tauri and the desktop ui stack`, `feat(desktop): add the dev api desktop shell`.
 - [x] **T15.X5** (AC-DA-2 to AC-DA-5) Endpoints, Requests, Data, Certificates and Logs screens, and the workspace editor.
   - Commits: one per screen, `feat(desktop): add <screen>`.
-- [ ] **T15.X6** macOS build in CI (unsigned artifacts), tests (vitest + RTL for the UI, `cargo test` for the process manager), and a manual run with screenshots.
+- [x] **T15.X6** macOS build in CI (unsigned artifacts), tests (vitest + RTL for the UI, `cargo test` for the process manager), and a manual run with screenshots.
   - Commit: `ci(desktop): build the desktop app`.
   - Docs: `backend/desktop-app`.
 

@@ -18,7 +18,7 @@ Both are ESM packages for Node 22 or newer. `zod` 4.6.7 is a peer dependency of 
 
 ## Commit scopes
 
-The shared commitlint config accepts the scopes `api`, `portal`, `api-contract`, `dev-api`, `backend` and `docker`.
+The shared commitlint config accepts the scopes `api`, `portal`, `api-contract`, `dev-api`, `backend`, `docker` and `desktop`.
 
 ## Define endpoints
 
@@ -173,6 +173,7 @@ Logs are JSON lines written with `pino`. Each request logs its method, path, sta
 | `GET /__tempo/endpoints` | A list of endpoints: id, method, path, auth, tags and scenario names. |
 | `GET /__tempo/info` | No token (it holds nothing secret). `{ service, version, project, scheme, port, urls: { local, lan?, androidEmulator, iosSimulator }, cert: { present, notAfter?, coversLanIp? }, startedAt }`. The process that starts the server fills in the scheme, port, LAN address and certificate status. |
 | `GET /__tempo/events` | A server-sent event stream of the request log. Needs the control token. See [Request stream](#request-stream). |
+| `GET /__tempo/data` | The stored `resource()` records, read-only, as `{ collections: [{ name, total, items }] }` (at most 500 items each), redacted like the request log. Needs the control token. The [desktop app](/docs/backend/desktop-app)'s Data screen reads it. |
 | `GET /__tempo/ca.pem` | The **public** root CA (`.tempo-api/certs/rootCA.pem`), as `application/x-pem-file`, so a phone can download it. 404 when `tempo-api certs` has not run. It reads that one file only, never a key, and refuses a file that holds a private key block. |
 | `POST /__tempo/scenario`, `POST /__tempo/reset` | Used by the CLI. They need the control token (header `x-tempo-token`). |
 
