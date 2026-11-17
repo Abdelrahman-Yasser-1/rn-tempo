@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { createBackend, openBackend, readSeedFile } from '../src/folder.ts';
+import { createBackend, openBackend, readSeedFile, touchNoFollow, writeFileAtomic } from '../src/folder.ts';
 import { DefinitionError } from '../src/schema.ts';
 
 const temp = (): string => mkdtempSync(join(tmpdir(), 'lb-folder-'));
@@ -56,5 +56,35 @@ describe('backend folder', () => {
     expect(() => readSeedFile(dir, '../outside.json')).toThrow(/outside/);
     expect(() => readSeedFile(dir, 'link.json')).toThrow(/outside/);
     expect(() => readSeedFile(dir, 'missing.json')).toThrow(/not found/);
+  });
+});
+
+describe('symlink-safe writes', () => {
+  it('does not write through a dangling .gitignore link', () => {
+    const dir = temp();
+    const victim = join(temp(), 'victim.txt');
+    writeFileSync(join(dir, 'backend.json'), JSON.stringify({ name: 'x' }));
+    mkdirSync(join(dir, '.data'));
+    symlinkSync(victim, join(dir, '.data/.gitignore'));
+    expect(() => openBackend(dir)).toThrow(/symbolic link/);
+    expect(existsSync(victim)).toBe(false);
+  });
+
+  it('createBackend does not write through a dangling backend.json link', () => {
+    const dir = temp();
+    const victim = join(temp(), 'victim.json');
+    symlinkSync(victim, join(dir, 'backend.json'));
+    expect(() => createBackend(dir, { name: 'x' })).toThrow();
+    expect(existsSync(victim)).toBe(false);
+  });
+
+  it('writeFileAtomic and the append helper never follow links', () => {
+    const dir = temp();
+    const victim = join(temp(), 'victim.txt');
+    symlinkSync(victim, join(dir, 'log.jsonl'));
+    expect(() => touchNoFollow(join(dir, 'log.jsonl'))).toThrow();
+    expect(existsSync(victim)).toBe(false);
+    writeFileAtomic(join(dir, 'f.json'), 'a');
+    expect(readFileSync(join(dir, 'f.json'), 'utf8')).toBe('a');
   });
 });
