@@ -67,7 +67,7 @@ Spec: "Tier 1c" in `spec.md`. It builds on Phase X (X1–X3 kept; the X4–X6 sh
 - [x] **T15.Y0** Spec and plan amendment 58.
   - Commit: `docs(specs): turn the desktop app into a local backend`.
 - [x] **T15.Y1** (AC-LB-2, AC-LB-3) The engine core: the `backend.json` schema, SQLite store, collections and migrations, the `crud` and `static` types, scenarios, hot reload, HTTPS, the admin channel, request log and OpenAPI.
-- [ ] **T15.Y2** (AC-LB-4, AC-LB-5) Auth and app users, media upload/download, `handler` endpoints in workers.
+- [x] **T15.Y2** (AC-LB-4, AC-LB-5) Auth and app users, media upload/download, `handler` endpoints in workers.
 - [ ] **T15.Y3** (AC-LB-1, AC-LB-8) The Tempo template preset, the OpenAPI contract check and snapshot export/import (AC-LB-9).
 - [ ] **T15.Y4** (AC-LB-6) The app UI rework in `apps/local-backend`: Dashboard, Endpoints, Data, Media, Users, Logs and Settings tabs; the code-project mode is removed.
 - [ ] **T15.Y5** (AC-LB-7) Content (CMS) types, entries and the public content endpoints.
