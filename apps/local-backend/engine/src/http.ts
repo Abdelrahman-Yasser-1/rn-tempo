@@ -1,3 +1,4 @@
+import type { Readable } from 'node:stream';
 import type { IncomingHttpHeaders, IncomingMessage } from 'node:http';
 
 import { problem, PROBLEM_CONTENT_TYPE, type FieldIssue } from '@rn-tempo/api-contract';
@@ -33,6 +34,8 @@ export interface Reply {
   raw?: string | Uint8Array;
   /** A stored file to stream, with the byte range to send. */
   file?: { path: string; start: number; end: number };
+  /** A stream sent as the body (a snapshot); it is destroyed if the client goes away. */
+  stream?: Readable;
   /** The scenario that shaped this reply. */
   scenario?: string;
 }
