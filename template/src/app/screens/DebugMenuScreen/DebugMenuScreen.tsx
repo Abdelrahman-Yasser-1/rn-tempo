@@ -1,9 +1,9 @@
-import type { ReactNode } from 'react';
+import type { ComponentType, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, View } from 'react-native';
 
 import { APP_BUNDLE_ID, APP_VERSION } from '@config/constants';
-import { ENV } from '@config/env';
+import { ENV, isProd } from '@config/env';
 import { isCrashReportingConfigured } from '@services/crash-reporting/crashReporting';
 import type { FlagKey } from '@services/flags/flags';
 import { resolveBaseUrl } from '@services/http/client';
@@ -17,6 +17,23 @@ const BUNDLE_SUFFIX: Record<typeof ENV.APP_ENV, string> = {
   staging: '.staging',
   prod: '',
 };
+
+/**
+ * The "API source" controls exist in dev builds only. The `require` sits directly inside this exact
+ * `if`, which Metro folds away in release bundles, so they (and the storage keys they use) never ship.
+ */
+function loadApiSourceControls(): ComponentType | null {
+  if (__DEV__ && !isProd) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- guarded require keeps the api source controls out of release bundles
+    const { ApiSourceControls } = require('@app/providers/ApiSourceControls') as {
+      ApiSourceControls: ComponentType;
+    };
+    return ApiSourceControls;
+  }
+  return null;
+}
+
+const ApiSourceControls = loadApiSourceControls();
 
 type SectionProps = { title: string; children: ReactNode };
 
@@ -127,6 +144,12 @@ export function DebugMenuScreen() {
           />
         </View>
       </Section>
+
+      {ApiSourceControls === null ? null : (
+        <Section title={t('debug.apiSource.title')}>
+          <ApiSourceControls />
+        </Section>
+      )}
 
       <Section title={t('debug.flags.title')}>
         {FLAG_KEYS.map((flag) => (

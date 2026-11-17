@@ -9,6 +9,8 @@ export const STORAGE_KEYS = {
   installMarker: 'app.install-marker',
   /** Non-prod only: debug-menu API base URL override, applied after a restart. */
   apiBaseUrlOverride: 'app.api-base-url-override',
+  // The debug menu's `app.api-source` and `app.dev-api-url` are not listed here on purpose: they live in
+  // `@services/http/apiSource`, which only `__DEV__` code requires, so release bundles never carry them.
   /** User opted out of crash reports (Settings); absent means shared. */
   crashReportsOptOut: 'app.crash-reports-opt-out',
   /** Prefix for Zustand persisted stores: `zustand.<store-name>`. */
