@@ -4,6 +4,7 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import type { FieldIssue } from '@rn-tempo/api-contract';
 
 import { adminAuthRoutes } from './admin-users.ts';
+import { adminMediaRoutes } from './admin-media.ts';
 import { jsonReply, problemReply, readJson, type Reply, type RequestCtx } from './http.ts';
 import { Manager, NotFoundError } from './manager.ts';
 import { DefinitionError, type Collection } from './schema.ts';
@@ -289,6 +290,7 @@ export function createAdminServer(manager: Manager, extras: AdminExtras = {}, to
     },
     { method: 'GET', pattern: '/requests', handler: (ctx) => jsonReply(200, engine.requests.snapshot(Number(ctx.query.get('after') ?? 0) || 0)) },
     ...adminAuthRoutes(engine),
+    ...adminMediaRoutes(engine),
     ...(extras.routes ?? []),
   ];
 
@@ -321,9 +323,12 @@ export function createAdminServer(manager: Manager, extras: AdminExtras = {}, to
     void (async (): Promise<void> => {
       if (!loopbackHost(req)) return sendReply(res, problemReply(403, { detail: 'The admin API answers on 127.0.0.1 only.' }));
       if (!sameToken(tokenOf(req), token)) return sendReply(res, problemReply(401, { detail: 'Missing or wrong admin token.' }));
-      const read = await readBody(req, MAX_ADMIN_BODY);
+      // The media upload streams its own (large) body; every other admin body is small and read up front.
+      const streaming = req.method === 'POST' && new URL(req.url ?? '/', 'http://local').pathname === `${ADMIN_PREFIX}/media`;
+      const read = streaming ? { ok: true as const, text: '' } : await readBody(req, MAX_ADMIN_BODY);
       if (!read.ok) return sendReply(res, problemReply(413, { title: 'Payload Too Large' }));
       const ctx = toCtx(req, read.text);
+      if (streaming) ctx.stream = req;
       if (!ctx.path.startsWith(`${ADMIN_PREFIX}/`)) return sendReply(res, problemReply(404, { detail: 'Not found.' }));
       const path = ctx.path.slice(ADMIN_PREFIX.length);
       if (ctx.method === 'GET' && path === '/events') return events(req, res);
@@ -354,6 +359,7 @@ export function adminRouteList(extras: AdminExtras = {}): string[] {
     'GET /data/x', 'GET /data/x/1', 'POST /data/x', 'PUT /data/x/1', 'PATCH /data/x/1', 'DELETE /data/x/1', 'GET /scenarios', 'PUT /scenarios/x',
     'DELETE /scenarios/x', 'DELETE /scenarios', 'GET /requests', 'GET /events',
     'GET /users', 'POST /users', 'GET /users/1', 'PUT /users/1', 'PATCH /users/1', 'DELETE /users/1', 'POST /users/1/password', 'POST /users/1/disable',
-    'POST /users/1/enable', 'POST /users/1/revoke', 'GET /sessions', 'DELETE /sessions/1', ...(extras.routes ?? []).map((route) => `${route.method} ${route.pattern}`),
+    'POST /users/1/enable', 'POST /users/1/revoke', 'GET /sessions', 'DELETE /sessions/1',
+    'GET /media', 'POST /media', 'GET /media/usage', 'GET /media/1', 'GET /media/1/file', 'DELETE /media/1', ...(extras.routes ?? []).map((route) => `${route.method} ${route.pattern}`),
   ].map((entry) => entry.replace(' /', ` ${ADMIN_PREFIX}/`));
 }
