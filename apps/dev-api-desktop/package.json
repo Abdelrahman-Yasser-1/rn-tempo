@@ -1,0 +1,50 @@
+{
+  "name": "@rn-tempo/dev-api-desktop",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Tempo Dev API: a desktop app (Tauri 2) that starts, inspects and controls the RN-TEMPO dev API.",
+  "license": "MIT",
+  "type": "module",
+  "prettier": "@rn-tempo/prettier-config",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "standalone": "yarn workspace @rn-tempo/dev-api build && node scripts/prepare-standalone.mjs",
+    "tauri": "tauri",
+    "lint": "eslint .",
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "5.107.1",
+    "@tauri-apps/api": "2.12.4",
+    "@tauri-apps/plugin-dialog": "2.8.4",
+    "qrcode-generator": "2.0.4",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@rn-tempo/prettier-config": "workspace:*",
+    "@rn-tempo/tsconfig": "workspace:*",
+    "@tauri-apps/cli": "2.12.4",
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.12",
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.3.0",
+    "eslint": "10.13.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.13.0",
+    "jsdom": "31.0.1",
+    "prettier": "3.9.10",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.0",
+    "vite": "8.3.8",
+    "vitest": "5.0.5"
+  }
+}

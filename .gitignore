@@ -47,3 +47,8 @@ projectStructure.cache.json
 
 # local HTTPS certificates and keys (mkcert); never commit them
 docker/certs/
+
+# desktop app (Tauri): Rust build output, generated schemas, the copied standalone dev API
+apps/*/src-tauri/target/
+apps/*/src-tauri/gen/
+apps/*/src-tauri/resources/

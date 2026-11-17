@@ -1,0 +1,35 @@
+[package]
+name = "dev-api-desktop"
+version = "0.0.0"
+description = "Tempo Dev API: starts, inspects and controls the RN-TEMPO dev API."
+authors = ["RN-TEMPO"]
+license = "MIT"
+edition = "2021"
+rust-version = "1.85"
+publish = false
+
+[lib]
+name = "dev_api_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+# Direct dependencies are pinned exactly; Cargo.lock is committed too.
+[build-dependencies]
+tauri-build = { version = "=2.7.4", features = [] }
+
+[dependencies]
+tauri = { version = "=2.12.4", features = ["tray-icon"] }
+tauri-plugin-dialog = "=2.8.4"
+serde = { version = "=1.0.228", features = ["derive"] }
+serde_json = "=1.0.153"
+reqwest = { version = "=0.13.5", default-features = false, features = ["rustls"] }
+tokio = { version = "=1.54.1", default-features = false, features = ["time"] }
+
+[dev-dependencies]
+tempfile = "=3.26.0"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true
