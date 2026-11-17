@@ -268,15 +268,19 @@ export function usersHandler(endpoint: UsersEndpoint, service: AuthService): Han
           return jsonReply(201, publicUser(user));
         }
         case 'get': {
+          // Fail closed: a profile holds an email, so only its owner reads it (the schema also demands bearer).
+          if (!service.authenticate(ctx) || ctx.user === undefined) return problemReply(401, { detail: NO_TOKEN });
           const id = wantId(params.id);
+          if (id !== undefined && ctx.user.id !== id) return problemReply(403, { detail: 'You can only read your own profile.' });
           const user = id === undefined ? undefined : service.accounts.byId(id);
           return user === undefined ? notFound(params.id) : jsonReply(200, publicUser(user));
         }
         case 'update': {
+          // Fail closed: the caller must present a valid token, whatever the endpoint's `auth` says, and be the user.
+          if (!service.authenticate(ctx) || ctx.user === undefined) return problemReply(401, { detail: NO_TOKEN });
           const id = wantId(params.id);
+          if (id !== undefined && ctx.user.id !== id) return problemReply(403, { detail: 'You can only change your own profile.' });
           if (id === undefined || service.accounts.byId(id) === undefined) return notFound(params.id);
-          // On a bearer endpoint a user edits only their own profile.
-          if (ctx.user !== undefined && ctx.user.id !== id) return problemReply(403, { detail: 'You can only change your own profile.' });
           const body = parseBody(ctx, UserFieldsBody);
           if (!body.ok) return body.reply;
           const patch = profileOf(body.value);
