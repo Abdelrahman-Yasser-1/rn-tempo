@@ -216,7 +216,7 @@ export class Engine {
               user: ctx.user,
             },
             rpc: createHandlerRpc(
-              { store: this.store, definition: () => this.state.definition, media: this.media, mediaUrl: (id, origin) => this.mediaUrl(id, origin), logger: this.options.logger },
+              { store: this.store, userCount: () => this.auth.accounts.list({ limit: 1 }).total, definition: () => this.state.definition, media: this.media, mediaUrl: (id, origin) => this.mediaUrl(id, origin), logger: this.options.logger },
               label,
             ),
           });
