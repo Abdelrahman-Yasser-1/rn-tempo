@@ -30,7 +30,7 @@ const base: BackendInput = {
     { id: 'otpVerify', type: 'auth', action: 'otpVerify', method: 'POST', path: '/auth/otp/verify' },
     { id: 'otpResend', type: 'auth', action: 'otpResend', method: 'POST', path: '/auth/otp/resend' },
     { id: 'usersAdd', type: 'users', action: 'add', method: 'POST', path: '/users/add' },
-    { id: 'usersGet', type: 'users', action: 'get', method: 'GET', path: '/users/:id' },
+    { id: 'usersGet', type: 'users', action: 'get', method: 'GET', path: '/users/:id', auth: 'bearer' },
     { id: 'usersPut', type: 'users', action: 'update', method: 'PUT', path: '/users/:id', auth: 'bearer' },
     { id: 'notesList', type: 'crud', collection: 'notes', action: 'list', method: 'GET', path: '/notes', auth: 'bearer', ownerField: 'owner' },
     { id: 'notesGet', type: 'crud', collection: 'notes', action: 'get', method: 'GET', path: '/notes/:id', auth: 'bearer', ownerField: 'owner' },
@@ -240,12 +240,15 @@ describe('users endpoints (C13 /users/add, /users/:id)', () => {
     const added = await post(`${url}/users/add`, { username: 'carl', email: 'carl@example.test', firstName: 'Carl', lastName: 'C' });
     expect(added.status).toBe(201);
     const carl = UserSchema.parse(await added.json());
-    expect((await fetch(`${url}/users/${carl.id}`)).status).toBe(200);
+    expect((await fetch(`${url}/users/${carl.id}`)).status).toBe(401); // reading a profile needs a token
     expect((await post(`${url}/auth/login`, { username: 'carl', password: '' })).status).toBe(400); // no password set: cannot sign in
     const session = await login();
     const put = (id: number, body: unknown): Promise<Response> => fetch(`${url}/users/${id}`, { method: 'PUT', headers: { ...bearer(session.accessToken), 'content-type': 'application/json' }, body: JSON.stringify(body) });
     expect(UserSchema.parse(await (await put(session.id, { firstName: 'Emilia', passwordHash: 'x', password: 'hacked1' })).json()).firstName).toBe('Emilia');
     expect((await put(carl.id, { firstName: 'Nope' })).status).toBe(403);
+    const getAs = (id: number): Promise<Response> => fetch(`${url}/users/${id}`, { headers: bearer(session.accessToken) });
+    expect((await getAs(session.id)).status).toBe(200);
+    expect((await getAs(carl.id)).status).toBe(403);
     expect((await put(9999, { firstName: 'Nope' })).status).toBe(404);
     expect((await post(`${url}/auth/login`, { username: 'emilys', password: 'hacked1' })).status).toBe(400); // password is not a profile field here
   });
