@@ -212,6 +212,8 @@ The server listens over plain HTTP in this phase. The listener accepts TLS optio
 | `start` | Runs in the foreground. Use it in Docker or when debugging. |
 | `openapi`, `collections`, `msw`, `generate` | Write the generated files. See [Generators](#generators). |
 | `check` | Fails when a generated file is out of date. |
+| `import openapi <file> [--out tempo-api.json] [--force]` | Turns an OpenAPI 3.0/3.1 file (JSON or YAML) into a [JSON workspace](#json-workspaces). |
+| `export code [--config tempo-api.json] [--out <project>] [--force]` | Writes a TypeScript config and endpoint files from a JSON workspace. |
 
 Every command takes `--config <file>` (default `api/tempo-api.config.ts`) and `--cwd <dir>`.
 
@@ -261,6 +263,80 @@ Every endpoint has a stable id, `<method>.<path>` in lowercase, with `/` written
 <Callout title="LAN access" type="warn">
   `up` listens on all network interfaces by default so a phone can open the QR code URL. Anyone on the same network can reach the server and use its public test login. Use `--host 127.0.0.1` on a network you do not trust.
 </Callout>
+
+## JSON workspaces
+
+A project does not have to write TypeScript. A **workspace** is one JSON file, `tempo-api.json`, that describes the endpoints as data. The server reads it like a code config, so everything else (scenarios, Swagger, Postman, `check`) works the same.
+
+```json
+{
+  "name": "shop",
+  "basePath": "/api/v1",
+  "port": 8443,
+  "seed": 7,
+  "endpoints": [
+    {
+      "id": "get.products.:id",
+      "method": "GET",
+      "path": "/products/:id",
+      "summary": "One product",
+      "tags": ["products"],
+      "auth": "bearer",
+      "request": {
+        "params": { "type": "object", "properties": { "id": { "type": "integer" } }, "required": ["id"] },
+        "query": { "type": "object", "properties": { "lang": { "type": "string" } } }
+      },
+      "response": {
+        "status": 200,
+        "schema": { "type": "object", "properties": { "id": { "type": "integer" }, "title": { "type": "string" } }, "required": ["id", "title"] },
+        "example": { "id": 1, "title": "Fixed" }
+      },
+      "scenarios": { "gone": { "status": 410, "body": { "message": "gone" } }, "slow": { "delayMs": 2000 } }
+    }
+  ]
+}
+```
+
+| Field | Meaning |
+| --- | --- |
+| `name`, `basePath?`, `port?`, `seed?` | Like the code config. |
+| `endpoints[].id`, `method`, `path` | `path` uses `:param` segments. `id` is what scenarios use. |
+| `summary?`, `tags?`, `auth?: "bearer"` | As in `defineEndpoint`. A bearer endpoint turns on the mock login (`/auth/login`), so a client can get a token. |
+| `request.params`, `request.query`, `request.body` | Each a JSON Schema. Path and query values arrive as text, so `integer` and `number` are coerced and `boolean` reads `true` or `false`. |
+| `response.status`, `schema?`, `example?` | `example` is served as given. Without it, data is generated from `schema` with the seed. An example that fails its own schema is dropped with a warning, because the server would otherwise answer 500. With neither, the body is `{}` (nothing for a 204). |
+| `scenarios?` | The same shape as in code: `status`, `delayMs`, `body`. |
+
+The file is checked with a Zod schema, and every problem is reported with its path. The JSON Schema of the file is `schemas/tempo-api.schema.json` in the package. Point an editor at it for completion, for example with `"$schema": "./node_modules/@rn-tempo/dev-api/schemas/tempo-api.schema.json"`. It is generated from the Zod schema (`yarn workspace @rn-tempo/dev-api schema`), and a test fails when the two differ.
+
+**How it is loaded.** Pass `--config tempo-api.json` (any path that ends in `.json`), or leave `--config` out: when `api/tempo-api.config.ts` does not exist and `tempo-api.json` is in the project folder, that file is used. JSON Schema becomes Zod with Zod 4's own `z.fromJSONSchema`, so the schemas are the ones Zod reads (draft 2020-12, local `$defs`/`$ref`). The OpenAPI 3.0 dialect (`nullable`) is turned into JSON Schema by the importer.
+
+### Import an OpenAPI file
+
+```sh
+tempo-api import openapi ./petstore.yaml --out tempo-api.json
+tempo-api up --config tempo-api.json
+```
+
+It reads OpenAPI 3.0 and 3.1, as JSON or YAML (the `yaml` package). Swagger 2.0 is not supported. Per operation it takes:
+
+- the path (`{id}` becomes `:id`), method, summary and tags,
+- path-level and operation-level parameters (`path` and `query`; header and cookie parameters are skipped),
+- the JSON request body schema,
+- the first 2xx response with its JSON schema and example (`example`, the first of `examples`, or the schema's own),
+- `security` (operation or document level) as `auth: "bearer"`,
+- the first server URL's path as `basePath`.
+
+Local `$ref`s are inlined. A schema that contains itself is cut to "any" where it repeats, and non-local references become "any"; both give a warning. `head`, `options` and `trace` are skipped with a warning. Error responses (4xx and 5xx) are not imported; add them as scenarios. The command refuses to overwrite its output without `--force`. Importing the template's own `api/generated/openapi.json` gives a workspace that serves all 13 endpoints.
+
+### Export to code
+
+```sh
+tempo-api export code --out ./my-project
+```
+
+From a workspace, it writes `api/tempo-api.config.ts` and one `api/endpoints/<tag>.ts` per first tag (`default.ts` for untagged endpoints), each endpoint as `defineEndpoint` with Zod schemas. It refuses to touch any existing file unless you pass `--force`, and checks all targets before writing the first.
+
+The JSON Schema to Zod step handles this subset: `type` (string, number, integer, boolean, null, array, object, or a list), `enum`, `const`, `anyOf`/`oneOf` (a `null` branch gives `.nullable()`), `allOf`, string `format` (`email`, `uuid`, `date-time`, `date`, `uri`), `minLength`, `maxLength`, `pattern`, the number bounds, `minItems`, `maxItems`, `items`, `properties`, `required` and `additionalProperties`. Anything else becomes `z.unknown()`. Run Prettier on the result. After export, delete or ignore `tempo-api.json`, because the code config wins when both exist.
 
 ## The runtime entry
 

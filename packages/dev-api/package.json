@@ -13,7 +13,8 @@
     "./package.json": "./package.json"
   },
   "files": [
-    "dist"
+    "dist",
+    "schemas"
   ],
   "engines": {
     "node": ">=22"
@@ -41,6 +42,7 @@
     "build": "rm -rf dist && tsdown",
     "lint": "tsc --noEmit --noUnusedLocals --noUnusedParameters",
     "test": "vitest run",
+    "schema": "node scripts/write-schema.ts",
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {

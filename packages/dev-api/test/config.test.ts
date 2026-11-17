@@ -33,6 +33,6 @@ describe('loadConfig', () => {
   });
 
   it('rejects a config without defineConfig', async () => {
-    await expect(loadConfig(join(fixture, 'tsconfig.json'))).rejects.toThrow(/defineConfig/);
+    await expect(loadConfig(join(fixture, 'src/features/products/schema.ts'))).rejects.toThrow(/defineConfig/);
   });
 });
