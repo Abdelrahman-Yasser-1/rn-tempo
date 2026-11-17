@@ -2746,7 +2746,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@rn-tempo/dev-api@workspace:packages/dev-api":
+"@rn-tempo/dev-api@workspace:*, @rn-tempo/dev-api@workspace:packages/dev-api":
   version: 0.0.0-use.local
   resolution: "@rn-tempo/dev-api@workspace:packages/dev-api"
   dependencies:
@@ -2814,6 +2814,24 @@ __metadata:
   peerDependencies:
     eslint: ">=10"
     typescript: ">=6"
+  languageName: unknown
+  linkType: soft
+
+"@rn-tempo/local-backend-engine@workspace:apps/local-backend/engine":
+  version: 0.0.0-use.local
+  resolution: "@rn-tempo/local-backend-engine@workspace:apps/local-backend/engine"
+  dependencies:
+    "@rn-tempo/api-contract": "workspace:*"
+    "@rn-tempo/dev-api": "workspace:*"
+    "@rn-tempo/tsconfig": "workspace:*"
+    "@types/node": "npm:24.19.2"
+    tsdown: "npm:0.23.2"
+    typescript: "npm:6.0.3"
+    vite: "npm:8.3.5"
+    vitest: "npm:5.0.5"
+    zod: "npm:4.6.7"
+  bin:
+    local-backend-engine: dist/cli.mjs
   languageName: unknown
   linkType: soft
 

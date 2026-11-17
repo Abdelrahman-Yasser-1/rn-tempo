@@ -1,0 +1,909 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "port": {
+      "default": 8443,
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65535
+    },
+    "https": {
+      "default": true,
+      "type": "boolean"
+    },
+    "basePath": {
+      "description": "Mounted in front of every endpoint path.",
+      "type": "string",
+      "pattern": "^(\\/[A-Za-z0-9._~-]+)*$"
+    },
+    "certsDir": {
+      "description": "Folder with cert.pem and key.pem. Defaults to `.data/certs`.",
+      "type": "string"
+    },
+    "auth": {
+      "default": {
+        "accessTokenSeconds": 3600,
+        "refreshTokenSeconds": 2592000
+      },
+      "type": "object",
+      "properties": {
+        "accessTokenSeconds": {
+          "default": 3600,
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "refreshTokenSeconds": {
+          "default": 2592000,
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "additionalProperties": false
+    },
+    "media": {
+      "default": {
+        "maxBytes": 104857600
+      },
+      "type": "object",
+      "properties": {
+        "maxBytes": {
+          "default": 104857600,
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "additionalProperties": false
+    },
+    "collections": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "fields": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "date",
+                    "enum",
+                    "json",
+                    "relation",
+                    "media"
+                  ]
+                },
+                "required": {
+                  "default": false,
+                  "type": "boolean"
+                },
+                "unique": {
+                  "default": false,
+                  "type": "boolean"
+                },
+                "default": {
+                  "description": "Used when a create request leaves the field out."
+                },
+                "enumValues": {
+                  "description": "The allowed values of an `enum` field.",
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "relationTo": {
+                  "description": "The collection a `relation` field points at (stores its id).",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "type"
+              ],
+              "additionalProperties": false,
+              "title": "Field"
+            }
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {}
+                }
+              }
+            ],
+            "description": "Rows to insert when the collection is first created: a file name inside `seed/`, or the rows themselves."
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false,
+        "title": "Collection"
+      }
+    },
+    "endpoints": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "description": "Stable id, for example `get.products.:id`. Scenarios and stats use it."
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "GET",
+                  "POST",
+                  "PUT",
+                  "PATCH",
+                  "DELETE"
+                ]
+              },
+              "path": {
+                "type": "string",
+                "pattern": "^\\/[^\\s?#]*$",
+                "description": "Express-style path with `:param` segments, for example `/products/:id`."
+              },
+              "aliases": {
+                "description": "Extra paths that serve the same endpoint, for example `/products/add`.",
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^\\/[^\\s?#]*$",
+                  "description": "Express-style path with `:param` segments, for example `/products/:id`."
+                }
+              },
+              "summary": {
+                "type": "string"
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "auth": {
+                "default": "none",
+                "type": "string",
+                "enum": [
+                  "none",
+                  "bearer"
+                ]
+              },
+              "scenarios": {
+                "default": {},
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "minimum": 100,
+                      "maximum": 599
+                    },
+                    "delayMs": {
+                      "description": "Wait this long before answering.",
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 60000
+                    },
+                    "body": {
+                      "description": "Sent as the JSON body instead of the normal response."
+                    },
+                    "headers": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "additionalProperties": false,
+                  "title": "Scenario",
+                  "description": "A canned response, picked with the x-tempo-scenario header or the admin API."
+                }
+              },
+              "type": {
+                "type": "string",
+                "const": "crud"
+              },
+              "collection": {
+                "type": "string"
+              },
+              "action": {
+                "type": "string",
+                "enum": [
+                  "list",
+                  "get",
+                  "create",
+                  "update",
+                  "delete"
+                ]
+              },
+              "listShape": {
+                "default": "dummyjson",
+                "description": "`dummyjson`: `{ <collection>: [...], total, skip, limit }`. `paged`: `{ items, total, page, pageSize }`.",
+                "type": "string",
+                "enum": [
+                  "dummyjson",
+                  "paged"
+                ]
+              },
+              "defaultLimit": {
+                "default": 30,
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10000
+              },
+              "searchFields": {
+                "description": "String fields the `q` parameter searches. Defaults to every string and enum field.",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "hiddenFields": {
+                "default": [],
+                "description": "Fields left out of every response of this endpoint.",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "unknownFields": {
+                "default": "reject",
+                "description": "What to do with request fields the collection does not define.",
+                "type": "string",
+                "enum": [
+                  "reject",
+                  "strip"
+                ]
+              },
+              "deleteMarkers": {
+                "default": true,
+                "description": "Add `isDeleted: true` and `deletedOn` to the deleted record, like dummyjson.",
+                "type": "boolean"
+              },
+              "successStatus": {
+                "description": "Defaults to 201 for create and 200 otherwise.",
+                "type": "integer",
+                "minimum": 200,
+                "maximum": 299
+              }
+            },
+            "required": [
+              "id",
+              "method",
+              "path",
+              "type",
+              "collection",
+              "action"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "description": "Stable id, for example `get.products.:id`. Scenarios and stats use it."
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "GET",
+                  "POST",
+                  "PUT",
+                  "PATCH",
+                  "DELETE"
+                ]
+              },
+              "path": {
+                "type": "string",
+                "pattern": "^\\/[^\\s?#]*$",
+                "description": "Express-style path with `:param` segments, for example `/products/:id`."
+              },
+              "aliases": {
+                "description": "Extra paths that serve the same endpoint, for example `/products/add`.",
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^\\/[^\\s?#]*$",
+                  "description": "Express-style path with `:param` segments, for example `/products/:id`."
+                }
+              },
+              "summary": {
+                "type": "string"
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "auth": {
+                "default": "none",
+                "type": "string",
+                "enum": [
+                  "none",
+                  "bearer"
+                ]
+              },
+              "scenarios": {
+                "default": {},
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "minimum": 100,
+                      "maximum": 599
+                    },
+                    "delayMs": {
+                      "description": "Wait this long before answering.",
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 60000
+                    },
+                    "body": {
+                      "description": "Sent as the JSON body instead of the normal response."
+                    },
+                    "headers": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "additionalProperties": false,
+                  "title": "Scenario",
+                  "description": "A canned response, picked with the x-tempo-scenario header or the admin API."
+                }
+              },
+              "type": {
+                "type": "string",
+                "const": "static"
+              },
+              "status": {
+                "default": 200,
+                "type": "integer",
+                "minimum": 100,
+                "maximum": 599
+              },
+              "headers": {
+                "default": {},
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "body": {}
+            },
+            "required": [
+              "id",
+              "method",
+              "path",
+              "type"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "description": "Stable id, for example `get.products.:id`. Scenarios and stats use it."
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "GET",
+                  "POST",
+                  "PUT",
+                  "PATCH",
+                  "DELETE"
+                ]
+              },
+              "path": {
+                "type": "string",
+                "pattern": "^\\/[^\\s?#]*$",
+                "description": "Express-style path with `:param` segments, for example `/products/:id`."
+              },
+              "aliases": {
+                "description": "Extra paths that serve the same endpoint, for example `/products/add`.",
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^\\/[^\\s?#]*$",
+                  "description": "Express-style path with `:param` segments, for example `/products/:id`."
+                }
+              },
+              "summary": {
+                "type": "string"
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "auth": {
+                "default": "none",
+                "type": "string",
+                "enum": [
+                  "none",
+                  "bearer"
+                ]
+              },
+              "scenarios": {
+                "default": {},
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "minimum": 100,
+                      "maximum": 599
+                    },
+                    "delayMs": {
+                      "description": "Wait this long before answering.",
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 60000
+                    },
+                    "body": {
+                      "description": "Sent as the JSON body instead of the normal response."
+                    },
+                    "headers": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "additionalProperties": false,
+                  "title": "Scenario",
+                  "description": "A canned response, picked with the x-tempo-scenario header or the admin API."
+                }
+              },
+              "type": {
+                "type": "string",
+                "const": "auth"
+              },
+              "action": {
+                "type": "string",
+                "enum": [
+                  "login",
+                  "refresh",
+                  "me",
+                  "logout",
+                  "register",
+                  "forgotPassword",
+                  "otpVerify",
+                  "otpResend"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "method",
+              "path",
+              "type",
+              "action"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "description": "Stable id, for example `get.products.:id`. Scenarios and stats use it."
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "GET",
+                  "POST",
+                  "PUT",
+                  "PATCH",
+                  "DELETE"
+                ]
+              },
+              "path": {
+                "type": "string",
+                "pattern": "^\\/[^\\s?#]*$",
+                "description": "Express-style path with `:param` segments, for example `/products/:id`."
+              },
+              "aliases": {
+                "description": "Extra paths that serve the same endpoint, for example `/products/add`.",
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^\\/[^\\s?#]*$",
+                  "description": "Express-style path with `:param` segments, for example `/products/:id`."
+                }
+              },
+              "summary": {
+                "type": "string"
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "auth": {
+                "default": "none",
+                "type": "string",
+                "enum": [
+                  "none",
+                  "bearer"
+                ]
+              },
+              "scenarios": {
+                "default": {},
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "minimum": 100,
+                      "maximum": 599
+                    },
+                    "delayMs": {
+                      "description": "Wait this long before answering.",
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 60000
+                    },
+                    "body": {
+                      "description": "Sent as the JSON body instead of the normal response."
+                    },
+                    "headers": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "additionalProperties": false,
+                  "title": "Scenario",
+                  "description": "A canned response, picked with the x-tempo-scenario header or the admin API."
+                }
+              },
+              "type": {
+                "type": "string",
+                "const": "upload"
+              },
+              "maxBytes": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "id",
+              "method",
+              "path",
+              "type"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "description": "Stable id, for example `get.products.:id`. Scenarios and stats use it."
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "GET",
+                  "POST",
+                  "PUT",
+                  "PATCH",
+                  "DELETE"
+                ]
+              },
+              "path": {
+                "type": "string",
+                "pattern": "^\\/[^\\s?#]*$",
+                "description": "Express-style path with `:param` segments, for example `/products/:id`."
+              },
+              "aliases": {
+                "description": "Extra paths that serve the same endpoint, for example `/products/add`.",
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^\\/[^\\s?#]*$",
+                  "description": "Express-style path with `:param` segments, for example `/products/:id`."
+                }
+              },
+              "summary": {
+                "type": "string"
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "auth": {
+                "default": "none",
+                "type": "string",
+                "enum": [
+                  "none",
+                  "bearer"
+                ]
+              },
+              "scenarios": {
+                "default": {},
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "minimum": 100,
+                      "maximum": 599
+                    },
+                    "delayMs": {
+                      "description": "Wait this long before answering.",
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 60000
+                    },
+                    "body": {
+                      "description": "Sent as the JSON body instead of the normal response."
+                    },
+                    "headers": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "additionalProperties": false,
+                  "title": "Scenario",
+                  "description": "A canned response, picked with the x-tempo-scenario header or the admin API."
+                }
+              },
+              "type": {
+                "type": "string",
+                "const": "download"
+              }
+            },
+            "required": [
+              "id",
+              "method",
+              "path",
+              "type"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "description": "Stable id, for example `get.products.:id`. Scenarios and stats use it."
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "GET",
+                  "POST",
+                  "PUT",
+                  "PATCH",
+                  "DELETE"
+                ]
+              },
+              "path": {
+                "type": "string",
+                "pattern": "^\\/[^\\s?#]*$",
+                "description": "Express-style path with `:param` segments, for example `/products/:id`."
+              },
+              "aliases": {
+                "description": "Extra paths that serve the same endpoint, for example `/products/add`.",
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^\\/[^\\s?#]*$",
+                  "description": "Express-style path with `:param` segments, for example `/products/:id`."
+                }
+              },
+              "summary": {
+                "type": "string"
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "auth": {
+                "default": "none",
+                "type": "string",
+                "enum": [
+                  "none",
+                  "bearer"
+                ]
+              },
+              "scenarios": {
+                "default": {},
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "minimum": 100,
+                      "maximum": 599
+                    },
+                    "delayMs": {
+                      "description": "Wait this long before answering.",
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 60000
+                    },
+                    "body": {
+                      "description": "Sent as the JSON body instead of the normal response."
+                    },
+                    "headers": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "additionalProperties": false,
+                  "title": "Scenario",
+                  "description": "A canned response, picked with the x-tempo-scenario header or the admin API."
+                }
+              },
+              "type": {
+                "type": "string",
+                "const": "handler"
+              },
+              "file": {
+                "type": "string",
+                "minLength": 1,
+                "description": "A file in `handlers/`."
+              },
+              "timeoutMs": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 60000
+              }
+            },
+            "required": [
+              "id",
+              "method",
+              "path",
+              "type",
+              "file"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "contentTypes": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": {},
+        "description": "Content types arrive in a later phase; only the name is checked."
+      }
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "additionalProperties": false,
+  "title": "backend.json",
+  "description": "A Tempo Local Backend definition."
+}

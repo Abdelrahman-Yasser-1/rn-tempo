@@ -10,6 +10,7 @@
   "workspaces": [
     "packages/*",
     "apps/*",
+    "apps/local-backend/*",
     "docs"
   ],
   "scripts": {
