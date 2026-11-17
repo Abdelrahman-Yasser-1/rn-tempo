@@ -106,7 +106,7 @@ export class AuthService {
     if (!verified.ok) return false;
     const id = Number(verified.claims.sub);
     const user = Number.isInteger(id) ? this.accounts.byId(id) : undefined;
-    if (user === undefined || user.disabled) return false;
+    if (user === undefined || user.disabled || user.tokenVersion !== verified.claims.ver) return false;
     ctx.user = { id: user.id, username: user.username } satisfies AuthUser;
     return true;
   }
@@ -128,8 +128,9 @@ export class AuthService {
   }
 
   private accessFor(user: UserRecord, requestedMinutes: number | undefined): string {
-    const minutes = Math.min(requestedMinutes ?? this.settings().accessTtlMin, MAX_EXPIRES_IN_MIN);
-    return signAccessToken(this.secret, String(user.id), minutes * 60, this.now().getTime());
+    const settings = this.settings();
+    const minutes = Math.min(requestedMinutes ?? settings.accessTtlMin, settings.maxAccessTtlMin, MAX_EXPIRES_IN_MIN);
+    return signAccessToken(this.secret, String(user.id), minutes * 60, this.now().getTime(), user.tokenVersion);
   }
 
   private refreshTtlMs(): number {
@@ -224,8 +225,12 @@ export function authHandler(endpoint: AuthEndpoint, service: AuthService): Handl
           if (typeof patch.email === 'string') patch.email = patch.email.toLowerCase();
           const updated = service.accounts.update(who.user.id, patch);
           if (updated === undefined) return unauthorized();
-          if (body.value.password !== undefined) service.accounts.setPasswordHash(updated.id, await hashPassword(body.value.password));
-          return jsonReply(200, publicUser(updated));
+          if (body.value.password === undefined) return jsonReply(200, publicUser(updated));
+          // A new password signs every other session out (refresh tokens and access tokens); the caller gets a fresh pair.
+          service.accounts.setPasswordHash(updated.id, await hashPassword(body.value.password));
+          service.accounts.revokeUser(updated.id);
+          const fresh = service.accounts.byId(updated.id) ?? updated;
+          return jsonReply(200, { ...publicUser(fresh), ...service.signIn(fresh) });
         }
         case 'forgotPassword': {
           const body = parseBody(ctx, ForgotBody);

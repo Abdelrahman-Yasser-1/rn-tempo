@@ -32,6 +32,7 @@
     "auth": {
       "default": {
         "accessTtlMin": 30,
+        "maxAccessTtlMin": 60,
         "refreshTtlDays": 30,
         "otpCode": "123456",
         "otpResendSec": 60,
@@ -42,6 +43,13 @@
         "accessTtlMin": {
           "default": 30,
           "description": "Access token lifetime in minutes.",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 525600
+        },
+        "maxAccessTtlMin": {
+          "default": 60,
+          "description": "The longest access token a client can get, even when it asks for more with `expiresInMins`.",
           "type": "integer",
           "exclusiveMinimum": 0,
           "maximum": 525600
