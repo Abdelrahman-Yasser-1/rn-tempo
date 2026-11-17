@@ -330,20 +330,60 @@ pub fn read_workspace(state: State<'_, AppState>, path: String) -> Res<String> {
         .map_err(|_| "This project has no tempo-api.json.".to_string())
 }
 
+/// Writes `tempo-api.json` in `dir` through a temp file with a fresh random-ish name, created with
+/// `create_new` (which fails on anything that already exists, a symlink included), then renamed over
+/// the target. Refuses when the target itself is a symlink.
+pub fn write_workspace_file(dir: &Path, text: &str) -> Res<()> {
+    use std::io::Write;
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    static COUNTER: AtomicU64 = AtomicU64::new(0);
+    let target = dir.join(project::WORKSPACE_FILE);
+    let meta = std::fs::symlink_metadata(&target)
+        .map_err(|_| "This project has no tempo-api.json.".to_string())?;
+    if meta.file_type().is_symlink() || !meta.is_file() {
+        return Err("tempo-api.json is not a regular file, so it was not changed.".to_string());
+    }
+    let nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |elapsed| elapsed.as_nanos());
+    for _ in 0..8 {
+        let unique = COUNTER.fetch_add(1, Ordering::Relaxed);
+        let temp = dir.join(format!(
+            ".tempo-api.{}.{nanos:x}.{unique}.tmp",
+            std::process::id()
+        ));
+        match std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&temp)
+        {
+            Ok(mut file) => {
+                let written = file
+                    .write_all(text.as_bytes())
+                    .and_then(|()| file.sync_all());
+                drop(file);
+                let result = written.and_then(|()| std::fs::rename(&temp, &target));
+                if result.is_err() {
+                    let _ = std::fs::remove_file(&temp);
+                }
+                return result.map_err(|error| format!("Could not save: {error}"));
+            }
+            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {}
+            Err(error) => return Err(format!("Could not save: {error}")),
+        }
+    }
+    Err("Could not save: no free temp file name.".to_string())
+}
+
 /// Saves `tempo-api.json`. The UI validates it against the dev API's schema first; this only checks
-/// that it is JSON, and writes through a temp file so a crash cannot leave half a file.
+/// that it is JSON.
 #[tauri::command]
 pub fn write_workspace(state: State<'_, AppState>, path: String, text: String) -> Res<()> {
     let project = state.known_project(&path)?;
     serde_json::from_str::<serde_json::Value>(&text)
         .map_err(|_| "That is not valid JSON.".to_string())?;
-    let file = project.join(project::WORKSPACE_FILE);
-    if !file.is_file() {
-        return Err("This project has no tempo-api.json.".to_string());
-    }
-    let temp = project.join("tempo-api.json.tmp");
-    std::fs::write(&temp, text).map_err(|error| format!("Could not save: {error}"))?;
-    std::fs::rename(&temp, &file).map_err(|error| format!("Could not save: {error}"))
+    write_workspace_file(&project, &text)
 }
 
 #[derive(Debug, Clone, Copy, serde::Deserialize)]
@@ -355,13 +395,53 @@ pub enum OpenTarget {
     GeneratedFolder,
 }
 
-fn open_with_system(target: &str) -> Res<()> {
-    let (program, args): (&str, Vec<&str>) = if cfg!(target_os = "macos") {
-        ("open", vec![target])
-    } else if cfg!(windows) {
-        ("explorer", vec![target])
+/// A folder inside the project that is safe to show: not a symlink, and still inside the project
+/// after resolving. A project could otherwise point `api/generated` anywhere, or at a bundle.
+pub fn safe_folder_in(project: &Path, folder: &Path) -> Res<PathBuf> {
+    let meta =
+        std::fs::symlink_metadata(folder).map_err(|_| "That folder does not exist.".to_string())?;
+    if meta.file_type().is_symlink() || !meta.is_dir() {
+        return Err("That is not a plain folder, so it was not opened.".to_string());
+    }
+    let canonical =
+        std::fs::canonicalize(folder).map_err(|_| "That folder does not exist.".to_string())?;
+    let root =
+        std::fs::canonicalize(project).map_err(|_| "That folder does not exist.".to_string())?;
+    if canonical.starts_with(&root) {
+        Ok(canonical)
     } else {
-        ("xdg-open", vec![target])
+        Err("That folder is outside the project, so it was not opened.".to_string())
+    }
+}
+
+/// The program and arguments that show a verified folder. On macOS it is a Finder reveal (`open -R`),
+/// which selects the item and never launches it, even when the name ends in `.app`.
+pub fn reveal_command(folder: &str) -> (&'static str, Vec<String>) {
+    if cfg!(target_os = "macos") {
+        ("open", vec!["-R".to_string(), folder.to_string()])
+    } else if cfg!(windows) {
+        ("explorer", vec![folder.to_string()])
+    } else {
+        ("xdg-open", vec![folder.to_string()])
+    }
+}
+
+fn reveal_folder(folder: &Path) -> Res<()> {
+    let (program, args) = reveal_command(&folder.to_string_lossy());
+    std::process::Command::new(program)
+        .args(args)
+        .spawn()
+        .map(|_| ())
+        .map_err(|_| "Could not open that.".to_string())
+}
+
+fn open_url(url: &str) -> Res<()> {
+    let (program, args): (&str, Vec<&str>) = if cfg!(target_os = "macos") {
+        ("open", vec![url])
+    } else if cfg!(windows) {
+        ("explorer", vec![url])
+    } else {
+        ("xdg-open", vec![url])
     };
     std::process::Command::new(program)
         .args(args)
@@ -376,18 +456,18 @@ fn open_with_system(target: &str) -> Res<()> {
 pub fn open_target(state: State<'_, AppState>, path: String, target: OpenTarget) -> Res<()> {
     let project = state.known_project(&path)?;
     match target {
-        OpenTarget::Folder => open_with_system(&project.to_string_lossy()),
+        OpenTarget::Folder => reveal_folder(&safe_folder_in(&project, &project)?),
         OpenTarget::GeneratedFolder => {
             let folder = project.join("api").join("generated");
-            let folder = if folder.is_dir() {
+            let folder = if folder.exists() {
                 folder
             } else {
                 project.join("generated")
             };
-            if !folder.is_dir() {
+            if !folder.exists() {
                 return Err("Nothing has been generated yet.".to_string());
             }
-            open_with_system(&folder.to_string_lossy())
+            reveal_folder(&safe_folder_in(&project, &folder)?)
         }
         OpenTarget::Swagger | OpenTarget::OpenApi => {
             let conn = project::connection(&project).ok_or("The dev API is not running.")?;
@@ -396,11 +476,124 @@ pub fn open_target(state: State<'_, AppState>, path: String, target: OpenTarget)
             } else {
                 "/docs/openapi.json"
             };
-            open_with_system(&format!(
+            open_url(&format!(
                 "{}://localhost:{}{route}",
                 if conn.https { "https" } else { "http" },
                 conn.port
             ))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use tempfile::tempdir;
+
+    #[cfg(unix)]
+    use std::os::unix::fs::symlink;
+
+    #[test]
+    fn accepts_a_plain_folder_inside_the_project() {
+        let project = tempdir().unwrap();
+        let inner = project.path().join("api/generated");
+        fs::create_dir_all(&inner).unwrap();
+        let safe = safe_folder_in(project.path(), &inner).unwrap();
+        assert!(safe.starts_with(fs::canonicalize(project.path()).unwrap()));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn refuses_a_symlinked_folder() {
+        let project = tempdir().unwrap();
+        let elsewhere = tempdir().unwrap();
+        fs::create_dir_all(project.path().join("api")).unwrap();
+        let link = project.path().join("api/generated");
+        symlink(elsewhere.path(), &link).unwrap();
+        assert!(safe_folder_in(project.path(), &link).is_err());
+    }
+
+    #[test]
+    fn refuses_a_folder_outside_the_project_and_plain_files() {
+        let project = tempdir().unwrap();
+        let outside = tempdir().unwrap();
+        assert!(safe_folder_in(project.path(), outside.path()).is_err());
+        let file = project.path().join("a.txt");
+        fs::write(&file, "x").unwrap();
+        assert!(safe_folder_in(project.path(), &file).is_err());
+        assert!(safe_folder_in(project.path(), &project.path().join("missing")).is_err());
+    }
+
+    #[test]
+    fn a_bundle_named_folder_is_only_revealed_on_macos() {
+        let (program, args) = reveal_command("/p/Evil.app");
+        if cfg!(target_os = "macos") {
+            assert_eq!(
+                (program, args.as_slice()),
+                (
+                    "open",
+                    ["-R".to_string(), "/p/Evil.app".to_string()].as_slice()
+                )
+            );
+        } else {
+            assert!(!args.is_empty());
+        }
+    }
+
+    fn workspace(dir: &Path) {
+        fs::write(dir.join(project::WORKSPACE_FILE), "{}").unwrap();
+    }
+
+    #[test]
+    fn saves_through_a_temp_file_and_leaves_none_behind() {
+        let dir = tempdir().unwrap();
+        workspace(dir.path());
+        write_workspace_file(dir.path(), "{\"name\":\"x\"}").unwrap();
+        assert_eq!(
+            fs::read_to_string(dir.path().join("tempo-api.json")).unwrap(),
+            "{\"name\":\"x\"}"
+        );
+        let names: Vec<_> = fs::read_dir(dir.path())
+            .unwrap()
+            .map(|e| e.unwrap().file_name())
+            .collect();
+        assert_eq!(names.len(), 1);
+    }
+
+    #[test]
+    fn refuses_when_there_is_no_workspace_file() {
+        let dir = tempdir().unwrap();
+        assert!(write_workspace_file(dir.path(), "{}").is_err());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn refuses_a_symlinked_workspace_file() {
+        let dir = tempdir().unwrap();
+        let victim = tempdir().unwrap();
+        let target = victim.path().join("victim.txt");
+        fs::write(&target, "keep").unwrap();
+        symlink(&target, dir.path().join("tempo-api.json")).unwrap();
+        assert!(write_workspace_file(dir.path(), "{}").is_err());
+        assert_eq!(fs::read_to_string(&target).unwrap(), "keep");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_planted_tmp_symlink_cannot_redirect_the_write() {
+        let dir = tempdir().unwrap();
+        let victim = tempdir().unwrap();
+        let target = victim.path().join("victim.txt");
+        fs::write(&target, "keep").unwrap();
+        workspace(dir.path());
+        // The old fixed name, and a guess at others.
+        symlink(&target, dir.path().join("tempo-api.json.tmp")).unwrap();
+        write_workspace_file(dir.path(), "{\"a\":1}").unwrap();
+        assert_eq!(fs::read_to_string(&target).unwrap(), "keep");
+        assert_eq!(
+            fs::read_to_string(dir.path().join("tempo-api.json")).unwrap(),
+            "{\"a\":1}"
+        );
     }
 }
