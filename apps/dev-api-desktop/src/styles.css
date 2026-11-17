@@ -140,7 +140,7 @@ label {
 
 .layout {
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 264px 1fr;
   height: 100vh;
 }
 .sidebar {
@@ -160,6 +160,9 @@ label {
 .sidebar .actions {
   display: flex;
   gap: 6px;
+}
+.sidebar .actions button {
+  white-space: nowrap;
 }
 .new-workspace {
   display: flex;
