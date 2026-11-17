@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { isIdentifier } from './names.ts';
+import { checkShape } from './values.ts';
 
 const identifier = z
   .string()
@@ -21,6 +22,10 @@ export const FieldSchema = z
   })
   .superRefine((field, ctx) => {
     if (field.name === 'id') ctx.addIssue({ code: 'custom', path: ['name'], message: '"id" is added to every collection; pick another name.' });
+    if (field.default !== undefined && field.default !== null) {
+      const problem = checkShape(field as Field, field.default);
+      if (problem !== undefined) ctx.addIssue({ code: 'custom', path: ['default'], message: `The default is wrong: ${problem}` });
+    }
     if (field.type === 'enum' && field.enumValues === undefined) {
       ctx.addIssue({ code: 'custom', path: ['enumValues'], message: 'An enum field needs enumValues.' });
     }
