@@ -237,6 +237,9 @@ export const BackendSchema = z
       }
       if (endpoint.type === 'users') {
         const needsUserId = endpoint.action !== 'add';
+        if (needsUserId && endpoint.auth !== 'bearer') {
+          ctx.addIssue({ code: 'custom', path: at('auth'), message: `A users "${endpoint.action}" endpoint needs auth: "bearer": it reads or edits a profile, so the caller must be signed in as that user.` });
+        }
         const methods: Record<(typeof USER_ACTIONS)[number], HttpMethod[]> = { add: ['POST'], update: ['PUT', 'PATCH'], get: ['GET'] };
         if (!methods[endpoint.action].includes(endpoint.method)) ctx.addIssue({ code: 'custom', path: at('method'), message: `A users "${endpoint.action}" endpoint uses ${methods[endpoint.action].join(' or ')}.` });
         for (const path of [endpoint.path, ...(endpoint.aliases ?? [])]) {
