@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 
 import type { ProjectInfo } from '../client/types';
 
+import { Endpoints } from './Endpoints';
 import { Overview } from './Overview';
 
 export interface Screen {
@@ -13,4 +14,7 @@ export interface Screen {
 }
 
 /** The project's tabs, in order. Each screen is one file in this folder. */
-export const screens: Screen[] = [{ id: 'overview', label: 'Overview', component: Overview }];
+export const screens: Screen[] = [
+  { id: 'overview', label: 'Overview', component: Overview },
+  { id: 'endpoints', label: 'Endpoints', component: Endpoints },
+];

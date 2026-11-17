@@ -377,3 +377,94 @@ main {
   max-height: 260px;
   overflow: auto;
 }
+
+.grow {
+  flex: 1;
+}
+.split {
+  display: grid;
+  grid-template-columns: minmax(300px, 1fr) minmax(300px, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.list h3 {
+  margin: 6px 0 2px;
+}
+.endpoint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.endpoint.selected {
+  border-color: var(--accent);
+}
+.endpoint-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  background: transparent;
+  border: 0;
+}
+.endpoint-path {
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.summary {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.method {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 44px;
+  text-align: center;
+  border-radius: 4px;
+  padding: 1px 4px;
+  background: var(--code-bg);
+}
+.method.get {
+  color: var(--ok);
+}
+.method.post {
+  color: var(--accent);
+}
+.method.delete {
+  color: var(--bad);
+}
+.method.put,
+.method.patch {
+  color: var(--warn);
+}
+.scenario {
+  margin-right: 6px;
+  max-width: 130px;
+}
+.scenario.active {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+.try textarea {
+  font-family: var(--mono);
+  font-size: 12px;
+  resize: vertical;
+}
+.response pre {
+  max-height: 340px;
+  overflow: auto;
+  background: var(--code-bg);
+  border-radius: 6px;
+  padding: 8px;
+}
