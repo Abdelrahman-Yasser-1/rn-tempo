@@ -2373,3 +2373,10 @@ Recorded by the integrator during WS0. Where this list and the plan disagree, **
     - It works with any folder that has `api/tempo-api.config.ts`, and with standalone JSON workspaces (OpenAPI import, export to code).
     - It runs after Phase C and before Phase D. Spec: "Tier 1b" in `specs/ws15-backend/spec.md`.
     - §C15 gains the MMKV key `app.api-source` (non-prod only), set from the debug menu: env default, in-app mocks, or local dev API.
+58. **WS15 Phase Y: Tempo Local Backend (owner, 2026-11-17).**
+    - The desktop app becomes an independent local backend in `apps/local-backend`. It ships its engine as a Node SEA sidecar, uses SQLite (`node:sqlite`), and keeps a user-chosen folder (`backend.json` + `handlers/` + `seed/` committable, `.data/` gitignored).
+    - It provides no-code endpoint types plus optional JS handlers, app users with JWT auth, media of any type, CMS content, live logs, HTTPS through mkcert, and a simple 8-tab dashboard.
+    - It ships a Tempo template preset that matches C13.
+    - The app's code-project mode is dropped; code mocks stay in the CLI and Jest.
+    - Phases D/E (Express + Postgres + Docker + portal) stay as the deployable backend and are done later.
+    - Spec: "Tier 1c" in `specs/ws15-backend/spec.md`.

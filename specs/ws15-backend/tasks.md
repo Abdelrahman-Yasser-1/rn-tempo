@@ -62,6 +62,17 @@ Spec: "Tier 1b" in `spec.md`. Starts after Phase C merges.
   - Commit: `ci(desktop): build the desktop app`.
   - Docs: `backend/desktop-app`.
 
+## Phase Y: Tempo Local Backend app (`ws15/y-local-backend`)
+Spec: "Tier 1c" in `spec.md`. It builds on Phase X (X1–X3 kept; the X4–X6 shell is reworked). One PR per step: Y1–Y6 are separate branches `ws15/y<n>-<slug>`.
+- [x] **T15.Y0** Spec and plan amendment 58.
+  - Commit: `docs(specs): turn the desktop app into a local backend`.
+- [ ] **T15.Y1** (AC-LB-2, AC-LB-3) The engine core: the `backend.json` schema, SQLite store, collections and migrations, the `crud` and `static` types, scenarios, hot reload, HTTPS, the admin channel, request log and OpenAPI.
+- [ ] **T15.Y2** (AC-LB-4, AC-LB-5) Auth and app users, media upload/download, `handler` endpoints in workers.
+- [ ] **T15.Y3** (AC-LB-1, AC-LB-8) The Tempo template preset, the OpenAPI contract check and snapshot export/import (AC-LB-9).
+- [ ] **T15.Y4** (AC-LB-6) The app UI rework in `apps/local-backend`: Dashboard, Endpoints, Data, Media, Users, Logs and Settings tabs; the code-project mode is removed.
+- [ ] **T15.Y5** (AC-LB-7) Content (CMS) types, entries and the public content endpoints.
+- [ ] **T15.Y6** (AC-LB-1) Packaging: the Node SEA sidecar, the CI `.dmg`, the user guide `backend/local-backend` and the device run on the iOS simulator.
+
 ## Phase D: backend API foundation (`ws15/d-api`)
 - [ ] **T15.D1** (AC-B-8) `backend/api` skeleton.
   - env for dev, staging and prod; `pino` with redaction; helmet, CORS and limits; problem+json; `/api/v1/health`.
