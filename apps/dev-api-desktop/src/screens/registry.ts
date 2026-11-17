@@ -4,6 +4,7 @@ import type { ProjectInfo } from '../client/types';
 
 import { Endpoints } from './Endpoints';
 import { Overview } from './Overview';
+import { Requests } from './Requests';
 
 export interface Screen {
   id: string;
@@ -17,4 +18,5 @@ export interface Screen {
 export const screens: Screen[] = [
   { id: 'overview', label: 'Overview', component: Overview },
   { id: 'endpoints', label: 'Endpoints', component: Endpoints },
+  { id: 'requests', label: 'Requests', component: Requests },
 ];
