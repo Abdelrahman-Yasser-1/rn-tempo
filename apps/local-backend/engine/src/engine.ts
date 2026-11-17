@@ -5,8 +5,10 @@ import { BUILTIN_SCENARIOS, redactUrl, RequestLog, SCENARIO_HEADER } from '@rn-t
 import { Accounts } from './accounts.ts';
 import { authHandler, AuthService, usersHandler } from './auth.ts';
 import { crudHandler } from './crud.ts';
+import { createHandlerRpc } from './handler-host.ts';
+import { HandlerFileError, handlerFailure, HandlerPool, replyFromHandler, resolveHandlerFile } from './handlers.ts';
 import { readSeedFile, type BackendFolder } from './folder.ts';
-import { jsonReply, loggableBody, problemReply, type Reply, type RequestCtx } from './http.ts';
+import { jsonReply, loggableBody, problemReply, readJson, type Reply, type RequestCtx } from './http.ts';
 import type { EngineLogger } from './logs.ts';
 import { downloadReply, MediaService, uploadFailure, uploadJson } from './media.ts';
 import { mountPath, Router, type Handler } from './router.ts';
@@ -52,6 +54,8 @@ export class Engine {
   readonly auth: AuthService;
   /** Stored files (`.data/media`). */
   readonly media: MediaService;
+  /** Workers that run `handler` endpoints. */
+  readonly handlers: HandlerPool;
   private state: State;
   private readonly options: Required<Pick<EngineOptions, 'sleep' | 'now' | 'authorize'>> & Pick<EngineOptions, 'onRequest' | 'logger'>;
   private readonly scenarioPicks = new Map<string, string>();
@@ -64,6 +68,7 @@ export class Engine {
     const now = options.now ?? ((): Date => new Date());
     this.auth = new AuthService(new Accounts(store.db, now), loadJwtSecret(folder.dataDir), () => this.state.definition.auth, now);
     this.media = new MediaService(folder.dataDir, store.db, now);
+    this.handlers = new HandlerPool(options.logger);
     this.options = {
       sleep: options.sleep ?? defaultSleep,
       now,
@@ -126,6 +131,7 @@ export class Engine {
   }
 
   close(): void {
+    void this.handlers.close();
     this.store.close();
   }
 
@@ -174,9 +180,50 @@ export class Engine {
           headers: { 'content-type': 'application/json; charset=utf-8', ...endpoint.headers },
           ...(endpoint.body === undefined ? {} : { body: endpoint.body }),
         });
-      default:
-        return () =>
-          problemReply(501, { title: 'Not Implemented', detail: `Endpoint type "${endpoint.type}" is coming in a later phase (Y2).` });
+      case 'handler':
+        return async (ctx, params) => {
+          const label = endpoint.id;
+          let file: string;
+          try {
+            file = resolveHandlerFile(this.folder.dir, endpoint.file);
+          } catch (error) {
+            if (!(error instanceof HandlerFileError)) throw error;
+            this.options.logger?.warn({ handler: label }, error.message);
+            return problemReply(500, { detail: error.message });
+          }
+          this.handlers.watchFolder(join(this.folder.dir, 'handlers'));
+          let body: unknown;
+          if (ctx.bodyText !== '') {
+            if (/json/i.test(String(ctx.headers['content-type'] ?? ''))) {
+              const parsed = readJson(ctx);
+              if (!parsed.ok) return parsed.reply;
+              body = parsed.value;
+            } else body = ctx.bodyText;
+          }
+          const result = await this.handlers.run({
+            file,
+            label,
+            timeoutMs: endpoint.timeoutMs,
+            scenario: ctx.scenario,
+            origin: ctx.origin,
+            req: {
+              method: ctx.method,
+              path: ctx.path,
+              params,
+              query: Object.fromEntries(ctx.query),
+              headers: { ...ctx.headers },
+              body,
+              user: ctx.user,
+            },
+            rpc: createHandlerRpc(
+              { store: this.store, definition: () => this.state.definition, media: this.media, mediaUrl: (id, origin) => this.mediaUrl(id, origin), logger: this.options.logger },
+              label,
+            ),
+          });
+          if (result.kind === 'ok') return replyFromHandler(result.value);
+          this.options.logger?.warn({ handler: label, outcome: result.kind, ...(result.kind === 'timeout' ? { timeoutMs: endpoint.timeoutMs } : { message: result.message }) }, 'handler did not finish');
+          return handlerFailure(result);
+        };
     }
   }
 
