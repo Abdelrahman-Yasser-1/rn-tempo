@@ -3,6 +3,7 @@ import { mkdtempSync, statSync, symlinkSync, writeFileSync, readFileSync } from 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { redactDeep } from '@rn-tempo/dev-api';
 import { describe, expect, it } from 'vitest';
 
 import { hashPassword, hashPasswordSync, loadJwtSecret, signAccessToken, verifyAccessToken, verifyPassword } from '../src/tokens.ts';
@@ -119,5 +120,15 @@ describe('.data/secrets.json', () => {
     const other = dataDir();
     writeFileSync(join(other, 'secrets.json'), JSON.stringify({ jwtSecret: 'short' }));
     expect(() => loadJwtSecret(other)).toThrow(/jwtSecret/);
+  });
+});
+
+describe('log redaction keys', () => {
+  it('hides hashes, passwords, tokens and the jwt secret at any depth', () => {
+    const redacted = JSON.stringify(
+      redactDeep({ user: { passwordHash: 'a', password: 'b', currentPassword: 'c', confirmPassword: 'd' }, tokenHash: 'e', refreshToken: 'f', accessToken: 'g', jwtSecret: 'h', keep: 'visible' }),
+    );
+    for (const hidden of ['"a"', '"b"', '"c"', '"d"', '"e"', '"f"', '"g"', '"h"']) expect(redacted).not.toContain(hidden);
+    expect(redacted).toContain('visible');
   });
 });
