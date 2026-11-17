@@ -9,6 +9,7 @@
   },
   "workspaces": [
     "packages/*",
+    "apps/*",
     "docs"
   ],
   "scripts": {
