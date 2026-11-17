@@ -62,8 +62,12 @@ Built-in tables (their names start with `_`, which no collection name can) live 
   `timingSafeEqual`, and `exp` must be a finite number after `iat` and in the future. The secret is 32 random bytes in
   `.data/secrets.json` (mode 0600, created with `O_EXCL|O_NOFOLLOW`, never logged, never returned). Removing the
   file signs everyone out. A disabled or deleted user is refused on the next request, even with a valid token.
-- **Lifetimes**: `auth.accessTtlMin` (30) and `auth.refreshTtlDays` (30). C13's `expiresInMins` is honoured up to
-  1440 minutes.
+- **Lifetimes**: `auth.accessTtlMin` (30) and `auth.refreshTtlDays` (30). C13's `expiresInMins` is honoured but
+  clamped to `min(requested, auth.maxAccessTtlMin (60), 1440)`.
+- **Immediate sign-out**: each user has a `tokenVersion`, put in the access token as `ver`. A token whose `ver` is
+  not the current one is refused. The version is bumped by a password change (`updateMe`, admin reset), disable and
+  enable, revoke-all and "log out everywhere", so tokens already issued stop working at once. `updateMe` with a
+  new password also revokes all refresh tokens and answers with a fresh `accessToken`/`refreshToken` pair.
 - **Refresh tokens** are opaque random strings, stored as a sha256. Every refresh rotates: the old token is
   revoked and a new one issued in the same family. Using a revoked token revokes the whole family and answers
   401. A sign-in starts a new family. `logout` revokes the given token's family, or every session of the caller.
