@@ -9,6 +9,8 @@ import { isPlainObject, validateRecord } from './values.ts';
 
 export interface HostDeps {
   store: Store;
+  /** How many app users exist (handlers only get the number, never the users). */
+  userCount: () => number;
   definition: () => Backend;
   media: MediaService;
   mediaUrl: (id: string, origin?: string) => string;
@@ -90,6 +92,8 @@ export function createHandlerRpc(deps: HostDeps, label: string): HandlerRpc {
         deps.store.remove(collection.name, id);
         return row;
       }
+      case 'users.count':
+        return deps.userCount();
       case 'media.get': {
         const record = deps.media.get(asString(args[0], 'The media id'));
         const origin = typeof args[1] === 'string' ? args[1] : undefined;

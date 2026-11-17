@@ -10,7 +10,7 @@ import { DefinitionError } from './schema.ts';
 
 const USAGE = `local-backend-engine: serve a Tempo Local Backend folder
 
-  local-backend-engine create <dir> [--name <name>] [--preset empty|products]
+  local-backend-engine create <dir> [--name <name>] [--preset empty|products|tempo-template]
   local-backend-engine certs  <dir>            create an HTTPS certificate with mkcert (never changes a trust store)
   local-backend-engine serve  <dir> [--port <n>] [--http] [--admin-port <n>] [--no-watch]
 

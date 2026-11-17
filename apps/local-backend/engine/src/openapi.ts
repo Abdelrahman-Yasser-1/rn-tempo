@@ -21,6 +21,24 @@ const PROBLEM: JsonObject = {
   required: ['type', 'title', 'status'],
 };
 
+const str: JsonObject = { type: 'string' };
+const USER: JsonObject = {
+  type: 'object',
+  description: 'Contract C13 `User`. Custom profile fields are added to it.',
+  properties: { id: { type: 'integer' }, username: str, email: str, firstName: str, lastName: str, gender: str, image: str },
+  required: ['id', 'username', 'email', 'firstName', 'lastName', 'gender', 'image'],
+};
+const object = (properties: JsonObject, required: string[]): JsonObject => ({ type: 'object', properties, required });
+/** Component schemas of the built-in endpoint types; written when an `auth`, `users` or `upload` endpoint exists. */
+const BUILTIN_SCHEMAS: Readonly<Record<string, JsonObject>> = {
+  User: USER,
+  LoginResult: object({ ...(USER.properties as JsonObject), accessToken: str, refreshToken: str }, [...(USER.required as string[]), 'accessToken', 'refreshToken']),
+  Tokens: object({ accessToken: str, refreshToken: str }, ['accessToken', 'refreshToken']),
+  Success: object({ success: { type: 'boolean' } }, ['success']),
+  OtpResendResult: object({ success: { type: 'boolean' }, retryAfterSec: { type: 'integer', minimum: 0 } }, ['success', 'retryAfterSec']),
+  MediaFile: object({ id: str, url: str, name: str, mime: str, size: { type: 'integer' } }, ['id', 'url', 'name', 'mime', 'size']),
+};
+
 const STATUS_TEXT: Readonly<Record<number, string>> = {
   200: 'OK', 201: 'Created', 202: 'Accepted', 204: 'No Content', 400: 'Bad Request', 401: 'Unauthorized', 403: 'Forbidden',
   404: 'Not Found', 405: 'Method Not Allowed', 409: 'Conflict', 429: 'Too Many Requests', 500: 'Internal Server Error',
@@ -64,14 +82,17 @@ function collectionSchemas(collection: Collection, hidden: ReadonlySet<string> =
   const props: JsonObject = { id: { type: 'integer' } };
   const inputProps: JsonObject = {};
   const required: string[] = [];
+  const present: string[] = ['id'];
   for (const field of collection.fields) {
     const schema = fieldSchema(field);
     inputProps[field.name] = schema;
     if (!hidden.has(field.name)) props[field.name] = field.required ? schema : { oneOf: [schema, { type: 'null' }] };
+    // A required field always holds a value, so every response shows it.
+    if (!hidden.has(field.name) && field.required) present.push(field.name);
     if (field.required && field.default === undefined) required.push(field.name);
   }
   return {
-    output: { type: 'object', properties: props, required: ['id'] },
+    output: { type: 'object', properties: props, required: present },
     input: { type: 'object', properties: inputProps, additionalProperties: false, ...(required.length > 0 ? { required } : {}) },
   };
 }
@@ -122,8 +143,8 @@ function crudOperation(endpoint: CrudEndpoint, collection: Collection, name: str
       }
       const list: JsonObject =
         endpoint.listShape === 'paged'
-          ? { type: 'object', properties: { items: { type: 'array', items: record }, total: { type: 'integer' }, page: { type: 'integer' }, pageSize: { type: 'integer' } } }
-          : { type: 'object', properties: { [collection.name]: { type: 'array', items: record }, total: { type: 'integer' }, skip: { type: 'integer' }, limit: { type: 'integer' } } };
+          ? { type: 'object', properties: { items: { type: 'array', items: record }, total: { type: 'integer' }, page: { type: 'integer' }, pageSize: { type: 'integer' } }, required: ['items', 'total', 'page', 'pageSize'] }
+          : { type: 'object', properties: { [collection.name]: { type: 'array', items: record }, total: { type: 'integer' }, skip: { type: 'integer' }, limit: { type: 'integer' } }, required: [collection.name, 'total', 'skip', 'limit'] };
       responses['200'] = { description: STATUS_TEXT[200] ?? 'OK', content: json(list) };
       responses['400'] = problem('A query parameter is invalid.');
       break;
@@ -161,6 +182,113 @@ function crudOperation(endpoint: CrudEndpoint, collection: Collection, name: str
   return { ...(parameters.length > 0 ? { parameters } : {}), ...(requestBody === undefined ? {} : { requestBody }), responses };
 }
 
+/** A schema that describes a JSON example: its types, with every key required. Good enough to compare shapes. */
+export function inferSchema(value: unknown): JsonObject {
+  if (value === null) return { type: 'null' };
+  if (Array.isArray(value)) return value.length === 0 ? { type: 'array' } : { type: 'array', items: inferSchema(value[0]) };
+  switch (typeof value) {
+    case 'string':
+      return str;
+    case 'number':
+      return { type: 'number' };
+    case 'boolean':
+      return { type: 'boolean' };
+    case 'object': {
+      const entries = Object.entries(value as Record<string, unknown>);
+      const properties: JsonObject = {};
+      for (const [key, entry] of entries) properties[key] = inferSchema(entry);
+      return { type: 'object', properties, required: entries.map(([key]) => key) };
+    }
+    default:
+      return {};
+  }
+}
+
+const ref = (name: string): Json => ({ $ref: `#/components/schemas/${name}` });
+const jsonContent = (schema: Json): JsonObject => ({ 'application/json': { schema } });
+const answer = (status: number, schema: Json): JsonObject => ({ description: STATUS_TEXT[status] ?? 'Response', content: jsonContent(schema) });
+const requestOf = (properties: JsonObject, required: string[]): JsonObject => ({ required: true, content: jsonContent({ type: 'object', properties, required }) });
+
+/** The operation of an `auth`, `users`, `upload`, `download` or `handler` endpoint. */
+function builtinOperation(endpoint: Exclude<Endpoint, { type: 'crud' | 'static' }>): JsonObject {
+  const responses: JsonObject = {};
+  let requestBody: JsonObject | undefined;
+  switch (endpoint.type) {
+    case 'auth':
+      switch (endpoint.action) {
+        case 'login':
+          requestBody = requestOf({ username: str, password: str, expiresInMins: { type: 'integer', exclusiveMinimum: 0 } }, ['username', 'password']);
+          responses['200'] = answer(200, ref('LoginResult'));
+          responses['400'] = problem('Invalid credentials.');
+          break;
+        case 'refresh':
+          requestBody = requestOf({ refreshToken: str }, ['refreshToken']);
+          responses['200'] = answer(200, ref('Tokens'));
+          responses['401'] = problem('Invalid refresh token.');
+          break;
+        case 'me':
+          responses['200'] = answer(200, ref('User'));
+          break;
+        case 'register':
+          requestBody = requestOf({ username: str, password: str }, ['username', 'password']);
+          responses['201'] = answer(201, ref('User'));
+          responses['409'] = problem('The username or email is taken.');
+          break;
+        case 'updateMe':
+          requestBody = requestOf({ firstName: str, lastName: str, email: str }, []);
+          responses['200'] = answer(200, ref('User'));
+          responses['400'] = problem('The body failed validation.');
+          break;
+        case 'logout':
+          responses['200'] = answer(200, ref('Success'));
+          break;
+        case 'forgotPassword':
+          requestBody = requestOf({ email: str }, ['email']);
+          responses['200'] = answer(200, ref('Success'));
+          responses['400'] = problem('The body failed validation.');
+          break;
+        case 'otpVerify':
+          requestBody = requestOf({ target: str, code: str, purpose: str }, ['target', 'code']);
+          responses['200'] = answer(200, ref('Success'));
+          responses['400'] = problem('The body failed validation.');
+          break;
+        case 'otpResend':
+          requestBody = requestOf({ target: str, purpose: str }, ['target']);
+          responses['200'] = answer(200, ref('OtpResendResult'));
+          responses['400'] = problem('The body failed validation.');
+          break;
+      }
+      break;
+    case 'users':
+      if (endpoint.action !== 'get') requestBody = requestOf({ username: str, email: str, firstName: str, lastName: str }, []);
+      responses[endpoint.action === 'add' ? '201' : '200'] = answer(endpoint.action === 'add' ? 201 : 200, ref('User'));
+      responses['400'] = problem('The body failed validation.');
+      if (endpoint.action !== 'add') {
+        responses['403'] = problem('Only the signed-in user may read or change their own profile.');
+        responses['404'] = problem('No user with that id.');
+      }
+      break;
+    case 'upload':
+      requestBody = {
+        required: true,
+        content: { 'multipart/form-data': { schema: object({ file: { type: 'string', format: 'binary' } }, ['file']) } },
+      };
+      responses['201'] = answer(201, endpoint.multiple ? object({ files: { type: 'array', items: ref('MediaFile') } }, ['files']) : ref('MediaFile'));
+      responses['413'] = problem('The file is larger than the limit.');
+      break;
+    case 'download':
+      responses['200'] = { description: 'The file, with its own content type.', content: { 'application/octet-stream': { schema: { type: 'string', format: 'binary' } } } };
+      responses['404'] = problem('No file with that id.');
+      break;
+    case 'handler':
+      responses['200'] = { description: 'Whatever the handler returns.', content: { 'application/json': {} } };
+      responses['500'] = problem('The handler threw.');
+      responses['504'] = problem('The handler ran longer than its timeout.');
+      break;
+  }
+  return { ...(requestBody === undefined ? {} : { requestBody }), responses };
+}
+
 function operation(endpoint: Endpoint, collections: Map<string, Collection>): JsonObject {
   let body: JsonObject;
   if (endpoint.type === 'crud') {
@@ -170,13 +298,13 @@ function operation(endpoint: Endpoint, collections: Map<string, Collection>): Js
     const responses: JsonObject = {
       [String(endpoint.status)]: {
         description: STATUS_TEXT[endpoint.status] ?? 'Response',
-        ...(endpoint.body === undefined ? {} : { content: { 'application/json': { example: endpoint.body as Json } } }),
+        ...(endpoint.body === undefined ? {} : { content: { 'application/json': { schema: inferSchema(endpoint.body), example: endpoint.body as Json } } }),
       },
     };
     scenarioResponses(endpoint, responses, endpoint.status);
     body = { responses };
   } else {
-    body = { responses: { '501': problem(`The "${endpoint.type}" endpoint type is not available yet.`) } };
+    body = builtinOperation(endpoint);
   }
   const params: Json[] = [...((body.parameters ?? []) as Json[])];
   for (const [, name] of endpoint.path.matchAll(/:([A-Za-z0-9_]+)/g)) {
@@ -201,6 +329,12 @@ function operation(endpoint: Endpoint, collections: Map<string, Collection>): Js
 export function buildOpenApi(definition: Backend): JsonObject {
   const collections = new Map(definition.collections.map((collection) => [collection.name, collection]));
   const schemas: JsonObject = { Problem: PROBLEM };
+  const builtins = new Set<string>();
+  for (const endpoint of definition.endpoints) {
+    if (endpoint.type === 'auth' || endpoint.type === 'users') ['User', 'LoginResult', 'Tokens', 'Success', 'OtpResendResult'].forEach((name) => builtins.add(name));
+    if (endpoint.type === 'upload') builtins.add('MediaFile');
+  }
+  for (const name of [...builtins].sort()) schemas[name] = BUILTIN_SCHEMAS[name] as JsonObject;
   for (const collection of definition.collections) {
     const name = pascal(collection.name);
     const { output, input } = collectionSchemas(collection);
