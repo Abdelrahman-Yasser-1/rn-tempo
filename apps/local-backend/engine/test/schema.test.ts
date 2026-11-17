@@ -63,6 +63,14 @@ describe('backend.json schema', () => {
     expect(def.endpoints).toHaveLength(6);
   });
 
+  it('refuses a users get or update endpoint without bearer auth (fail closed)', () => {
+    for (const [action, method] of [['update', 'PUT'], ['get', 'GET']] as const) {
+      const issues = issuesOf({ name: 'x', endpoints: [{ id: 'u', type: 'users', method, path: '/users/:id', action }] });
+      expect(issues.some((issue) => issue.startsWith('endpoints[0].auth') && issue.includes('bearer'))).toBe(true);
+      expect(issuesOf({ name: 'x', endpoints: [{ id: 'u', type: 'users', method, path: '/users/:id', action, auth: 'bearer' }] })).toEqual([]);
+    }
+  });
+
   it('names the path of every problem', () => {
     const issues = issuesOf({
       name: 'x',
