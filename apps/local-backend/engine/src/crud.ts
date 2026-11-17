@@ -38,24 +38,42 @@ function filterValue(field: Field, raw: string): string | number | undefined {
   }
 }
 
+/** What a crud endpoint needs from the engine to show and check `media` fields. */
+export interface CrudServices {
+  mediaRecord(id: string): { id: string; originalName: string; mime: string; size: number } | undefined;
+  mediaUrl(id: string, origin?: string): string;
+}
+
 /** Builds the request handler of one crud endpoint. It captures the definition it was built from. */
-export function crudHandler(endpoint: CrudEndpoint, collection: Collection, store: Store, now: () => Date): Handler {
+export function crudHandler(endpoint: CrudEndpoint, collection: Collection, store: Store, now: () => Date, services: CrudServices): Handler {
   const hidden = new Set(endpoint.hiddenFields);
   const visibleFields = collection.fields.filter((field) => !hidden.has(field.name));
   const visibleNames = new Map(visibleFields.map((field) => [field.name, field]));
   const searchFields = (endpoint.searchFields ?? collection.fields.filter((f) => f.type === 'string' || f.type === 'enum').map((f) => f.name)).filter(
     (name) => !hidden.has(name),
   );
-  const show = (row: Row): Record<string, unknown> => {
+  const owner = endpoint.ownerField;
+  const showMedia = (id: unknown, origin: string | undefined): unknown => {
+    if (typeof id !== 'string' || endpoint.media === 'id') return id;
+    const url = services.mediaUrl(id, origin);
+    if (endpoint.media === 'url') return url;
+    const record = services.mediaRecord(id);
+    return record === undefined ? { id, url } : { id, url, name: record.originalName, mime: record.mime, size: record.size };
+  };
+  const show = (row: Row, origin?: string): Record<string, unknown> => {
     const out: Record<string, unknown> = { id: row.id };
-    for (const field of visibleFields) out[field.name] = row[field.name];
+    for (const field of visibleFields) out[field.name] = field.type === 'media' ? showMedia(row[field.name], origin) : row[field.name];
     return out;
   };
+  const mediaExists = (id: string): boolean => services.mediaRecord(id) !== undefined;
+  /** The body with the owner field forced to the caller, so a client cannot write rows for someone else. */
+  const withOwner = (value: unknown, userId: number | undefined): unknown =>
+    owner === undefined || userId === undefined || typeof value !== 'object' || value === null || Array.isArray(value) ? value : { ...value, [owner]: userId };
   const exists = (name: string, id: number): boolean => store.has(name, id);
   const notFound = (raw: string | undefined): Reply =>
     problemReply(404, { detail: `${collection.name} with id '${raw ?? ''}' not found.` });
 
-  function list(query: URLSearchParams): Reply {
+  function list(query: URLSearchParams, userId: number | undefined, origin: string | undefined): Reply {
     const errors: FieldIssue[] = [];
     const number = (name: string): number | undefined => {
       const raw = query.get(name);
@@ -98,6 +116,7 @@ export function crudHandler(endpoint: CrudEndpoint, collection: Collection, stor
       else where.push({ field: key, value });
     }
     if (errors.length > 0) return invalid(errors);
+    if (owner !== undefined && userId !== undefined) where.push({ field: owner, value: userId });
 
     const text = query.get('q');
     const result = store.list(collection.name, {
@@ -107,7 +126,7 @@ export function crudHandler(endpoint: CrudEndpoint, collection: Collection, stor
       ...(limit === undefined ? {} : { limit }),
       ...(text === null || text === '' ? {} : { search: { fields: searchFields, text } }),
     });
-    const rows = result.rows.map(show);
+    const rows = result.rows.map((row) => show(row, origin));
     if (endpoint.listShape === 'paged') {
       const pageSize = limit ?? Math.max(rows.length, 1);
       return jsonReply(200, { items: rows, total: result.total, page: Math.floor(skip / pageSize) + 1, pageSize });
@@ -117,38 +136,42 @@ export function crudHandler(endpoint: CrudEndpoint, collection: Collection, stor
 
   return (ctx, params) => {
     try {
+      const userId = ctx.user?.id;
+      if (owner !== undefined && userId === undefined) return problemReply(401, { detail: 'Invalid or expired token' });
+      /** A row that belongs to someone else does not exist for this caller. */
+      const mine = (row: Row | undefined): Row | undefined => (row === undefined || owner === undefined || row[owner] === userId ? row : undefined);
       switch (endpoint.action) {
         case 'list':
-          return list(ctx.query);
+          return list(ctx.query, userId, ctx.origin);
         case 'get': {
           const id = parseId(params.id);
-          const row = id === undefined ? undefined : store.get(collection.name, id);
-          return row === undefined ? notFound(params.id) : jsonReply(200, show(row));
+          const row = id === undefined ? undefined : mine(store.get(collection.name, id));
+          return row === undefined ? notFound(params.id) : jsonReply(200, show(row, ctx.origin));
         }
         case 'create': {
           const body = readJson(ctx);
           if (!body.ok) return body.reply;
-          const checked = validateRecord(collection, body.value, { mode: 'create', unknownFields: endpoint.unknownFields, exists });
+          const checked = validateRecord(collection, withOwner(body.value, userId), { mode: 'create', unknownFields: endpoint.unknownFields, exists, mediaExists });
           if (checked.issues.length > 0) return invalid(checked.issues);
-          return jsonReply(endpoint.successStatus ?? 201, show(store.insert(collection.name, checked.values)));
+          return jsonReply(endpoint.successStatus ?? 201, show(store.insert(collection.name, checked.values), ctx.origin));
         }
         case 'update': {
           const id = parseId(params.id);
-          if (id === undefined || !store.has(collection.name, id)) return notFound(params.id);
+          if (id === undefined || mine(store.get(collection.name, id)) === undefined) return notFound(params.id);
           const body = readJson(ctx);
           if (!body.ok) return body.reply;
           const mode = endpoint.method === 'PATCH' ? 'patch' : 'replace';
-          const checked = validateRecord(collection, body.value, { mode, unknownFields: endpoint.unknownFields, exists });
+          const checked = validateRecord(collection, withOwner(body.value, userId), { mode, unknownFields: endpoint.unknownFields, exists, mediaExists });
           if (checked.issues.length > 0) return invalid(checked.issues);
           const row = store.update(collection.name, id, checked.values);
-          return row === undefined ? notFound(params.id) : jsonReply(endpoint.successStatus ?? 200, show(row));
+          return row === undefined ? notFound(params.id) : jsonReply(endpoint.successStatus ?? 200, show(row, ctx.origin));
         }
         case 'delete': {
           const id = parseId(params.id);
-          const row = id === undefined ? undefined : store.get(collection.name, id);
+          const row = id === undefined ? undefined : mine(store.get(collection.name, id));
           if (id === undefined || row === undefined) return notFound(params.id);
           store.remove(collection.name, id);
-          const shown = show(row);
+          const shown = show(row, ctx.origin);
           return jsonReply(endpoint.successStatus ?? 200, endpoint.deleteMarkers ? { ...shown, isDeleted: true, deletedOn: now().toISOString() } : shown);
         }
       }

@@ -31,22 +31,90 @@
     },
     "auth": {
       "default": {
-        "accessTokenSeconds": 3600,
-        "refreshTokenSeconds": 2592000
+        "accessTtlMin": 30,
+        "refreshTtlDays": 30,
+        "otpCode": "123456",
+        "otpResendSec": 60,
+        "seedUsers": []
       },
       "type": "object",
       "properties": {
-        "accessTokenSeconds": {
-          "default": 3600,
+        "accessTtlMin": {
+          "default": 30,
+          "description": "Access token lifetime in minutes.",
           "type": "integer",
           "exclusiveMinimum": 0,
-          "maximum": 9007199254740991
+          "maximum": 525600
         },
-        "refreshTokenSeconds": {
-          "default": 2592000,
+        "refreshTtlDays": {
+          "default": 30,
+          "description": "Refresh token lifetime in days.",
           "type": "integer",
           "exclusiveMinimum": 0,
-          "maximum": 9007199254740991
+          "maximum": 3650
+        },
+        "otpCode": {
+          "default": "123456",
+          "description": "The one-time code `otpVerify` accepts.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "otpResendSec": {
+          "default": 60,
+          "description": "The `retryAfterSec` that `otpResend` answers.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 86400
+        },
+        "seedUsers": {
+          "default": [],
+          "description": "App users created at start-up when their username does not exist yet (and was never seeded before).",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "username": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "password": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "description": "Hashed (scrypt) when the user is seeded; it is never stored as written."
+              },
+              "email": {
+                "type": "string",
+                "maxLength": 254
+              },
+              "firstName": {
+                "type": "string"
+              },
+              "lastName": {
+                "type": "string"
+              },
+              "gender": {
+                "type": "string"
+              },
+              "image": {
+                "type": "string"
+              },
+              "extra": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {}
+              }
+            },
+            "required": [
+              "username",
+              "password"
+            ],
+            "additionalProperties": false
+          }
         }
       },
       "additionalProperties": false
@@ -315,6 +383,20 @@
                 "type": "integer",
                 "minimum": 200,
                 "maximum": 299
+              },
+              "ownerField": {
+                "description": "A number or relation field that holds the id of the signed-in app user. Needs `auth: \"bearer\"`. Lists show only the caller's rows, other rows answer 404, and a create sets the field to the caller.",
+                "type": "string"
+              },
+              "media": {
+                "default": "id",
+                "description": "How `media` fields appear in responses: the stored id, a download URL, or `{ id, url, name, mime, size }`.",
+                "type": "string",
+                "enum": [
+                  "id",
+                  "url",
+                  "object"
+                ]
               }
             },
             "required": [
@@ -545,6 +627,7 @@
                   "me",
                   "logout",
                   "register",
+                  "updateMe",
                   "forgotPassword",
                   "otpVerify",
                   "otpResend"
@@ -653,9 +736,15 @@
                 "const": "upload"
               },
               "maxBytes": {
+                "description": "Per-file limit. Defaults to `media.maxBytes`.",
                 "type": "integer",
                 "exclusiveMinimum": 0,
                 "maximum": 9007199254740991
+              },
+              "multiple": {
+                "default": false,
+                "description": "Accept several `file` parts in one multipart request (answers `{ files: [...] }`).",
+                "type": "boolean"
               }
             },
             "required": [
@@ -861,13 +950,15 @@
               },
               "file": {
                 "type": "string",
-                "minLength": 1,
-                "description": "A file in `handlers/`."
+                "pattern": "^handlers\\/[A-Za-z0-9_][A-Za-z0-9_.-]*(?:\\/[A-Za-z0-9_][A-Za-z0-9_.-]*)*\\.(?:js|mjs|cjs)$",
+                "description": "A JavaScript file in `handlers/` that exports `default async function (ctx)`. Handlers are TRUSTED CODE running in a worker thread with a timeout and a memory limit; this is not a security sandbox, so only open backends you trust."
               },
               "timeoutMs": {
+                "default": 5000,
+                "description": "The worker is terminated after this long (default 5000, at most 30000); the answer is 504.",
                 "type": "integer",
                 "exclusiveMinimum": 0,
-                "maximum": 60000
+                "maximum": 30000
               }
             },
             "required": [
@@ -876,6 +967,117 @@
               "path",
               "type",
               "file"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "description": "Stable id, for example `get.products.:id`. Scenarios and stats use it."
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "GET",
+                  "POST",
+                  "PUT",
+                  "PATCH",
+                  "DELETE"
+                ]
+              },
+              "path": {
+                "type": "string",
+                "pattern": "^\\/[^\\s?#]*$",
+                "description": "Express-style path with `:param` segments, for example `/products/:id`."
+              },
+              "aliases": {
+                "description": "Extra paths that serve the same endpoint, for example `/products/add`.",
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^\\/[^\\s?#]*$",
+                  "description": "Express-style path with `:param` segments, for example `/products/:id`."
+                }
+              },
+              "summary": {
+                "type": "string"
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "auth": {
+                "default": "none",
+                "type": "string",
+                "enum": [
+                  "none",
+                  "bearer"
+                ]
+              },
+              "scenarios": {
+                "default": {},
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "minimum": 100,
+                      "maximum": 599
+                    },
+                    "delayMs": {
+                      "description": "Wait this long before answering.",
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 60000
+                    },
+                    "body": {
+                      "description": "Sent as the JSON body instead of the normal response."
+                    },
+                    "headers": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "additionalProperties": false,
+                  "title": "Scenario",
+                  "description": "A canned response, picked with the x-tempo-scenario header or the admin API."
+                }
+              },
+              "type": {
+                "type": "string",
+                "const": "users"
+              },
+              "action": {
+                "type": "string",
+                "enum": [
+                  "add",
+                  "update",
+                  "get"
+                ],
+                "description": "Maps C13 `POST /users/add`, `PUT /users/:id` and `GET /users/:id` onto the built-in app users. Only safe fields are read or shown; the password hash never is."
+              }
+            },
+            "required": [
+              "id",
+              "method",
+              "path",
+              "type",
+              "action"
             ],
             "additionalProperties": false
           }
