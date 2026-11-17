@@ -18,6 +18,8 @@ my-backend/
 node src/cli.ts create <dir> [--name shop] [--preset empty|products|tempo-template]
 node src/cli.ts certs  <dir>                  # mkcert leaf certificate in <dir>/.data/certs (no trust store is changed)
 node src/cli.ts check  <dir> --openapi <file> [--json]   # exit 1 when the backend differs from the file
+node src/cli.ts snapshot export <dir> <file.zip>
+node src/cli.ts snapshot import <file.zip> <dir> [--no-certs]   # into a new or empty folder
 node src/cli.ts serve  <dir> [--port 8443] [--http] [--admin-port N] [--no-watch]
 ```
 
@@ -204,6 +206,41 @@ answer has none).
 - **`unchecked`**: answers the backend does not describe (a handler), listed as information.
 - **Output**: the report as JSON (`ok`, `missing`, `extra`, `methodMismatches`, `differences`, `unchecked`, `counts`);
   the CLI prints text (or the JSON with `--json`) and exits 1 when `ok` is false.
+
+## Snapshots (AC-LB-9)
+
+`snapshot export <dir> <file.zip>` writes one `.zip`; `snapshot import <file.zip> <dir>` restores it into a **new or
+empty** folder (anything in it, dot files included, is refused). The admin route `GET /__admin/snapshot` streams the
+same zip from a running engine (import is CLI/app side only, because it targets a new folder; the desktop app calls
+the CLI).
+
+**Format** (zip, deflate, UTF-8 names, no zip64, so at most 4 GB and 65534 files):
+
+```
+manifest.json      format, engineVersion, createdAt, backend name, counts, excluded, note, files[{ path, size, sha256 }]
+backend.json
+handlers/...       seed/...
+data/db.sqlite     a consistent copy (VACUUM INTO, taken in one transaction, so a running engine may keep writing)
+media/<xx>/<id>    the stored files (restored to .data/media/)
+```
+
+**Never included**: `.data/secrets.json` and `.data/certs/` (the manifest says so in `excluded`), logs, and the
+sign-in sessions (`_refresh_tokens` is emptied in the copy). After an import the backend gets **a new JWT secret** the
+first time it is served (every old access token is refused) and **no sessions** (old refresh tokens fail), and it
+needs **new certificates**: the CLI runs mkcert for them (`--no-certs` skips it; nothing is added to a trust store).
+App users and their password hashes are in the database, so the same logins work.
+
+**Import checks**, all before anything is written unless noted:
+- names: no absolute path, drive letter, `..`, `.`, empty part, backslash or control character; no duplicate (case
+  and Unicode folded); only `backend.json`, `manifest.json`, `handlers/`, `seed/`, `data/db.sqlite` and `media/`
+  are accepted, so `secrets.json`, `certs/` and anything else is refused;
+- no symbolic link or other special file entries, no encryption, only stored and deflate;
+- limits against zip bombs: 50,000 entries, 8 GB unpacked in total (declared sizes first, then counted again while
+  inflating), no entry may inflate past its declared size, and entries may not overlap (their compressed sizes must
+  fit the file);
+- `manifest.json` must be valid and list exactly the files in the archive; each file's size, CRC-32 and sha256 are
+  checked as it is written (files are created with `wx`, mode 0600, in real folders only);
+- the database passes `PRAGMA quick_check`. On any failure what was written is removed.
 
 ## Migrations
 
