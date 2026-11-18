@@ -15,13 +15,18 @@ my-backend/
 ## Commands
 
 ```sh
-node src/cli.ts create <dir> [--name shop] [--preset empty|products|tempo-template]
+node src/cli.ts create <dir> [--name shop] [--preset empty|products|tempo-template] [--port 8443]
 node src/cli.ts certs  <dir>                  # mkcert leaf certificate in <dir>/.data/certs (no trust store is changed)
 node src/cli.ts check  <dir> --openapi <file> [--json]   # exit 1 when the backend differs from the file
 node src/cli.ts snapshot export <dir> <file.zip>
 node src/cli.ts snapshot import <file.zip> <dir> [--no-certs]   # into a new or empty folder
-node src/cli.ts serve  <dir> [--port 8443] [--http] [--admin-port N] [--no-watch]
+node src/cli.ts trust  mac | ios [--device UDID] | android [--serial ID]   # explicit; mac runs `mkcert -install`
+node src/cli.ts serve  <dir> [--port 8443] [--http] [--admin-port N] [--no-watch] [--parent-stdin]
 ```
+
+`serve --parent-stdin` stops the engine when its stdin closes (the desktop app keeps the pipe open, so a crashed
+app does not leave an engine running). The public listener also answers `GET /__ca.pem` with the public half of the
+local CA (`.data/certs/rootCA.pem`) so a phone can install it; nothing else from `.data` is served.
 
 `serve` listens on `0.0.0.0:<port>` (HTTPS when `.data/certs` holds `cert.pem` and `key.pem`, otherwise
 HTTP with a notice). It prints **one JSON line** on stdout when ready, with the admin port and a per-launch

@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { lstatSync, readFileSync } from 'node:fs';
 import type { ServerResponse } from 'node:http';
 import { join } from 'node:path';
 
@@ -7,6 +7,7 @@ import { swaggerDir } from '@rn-tempo/dev-api';
 import type { Engine } from './engine.ts';
 import type { RequestCtx } from './http.ts';
 import { buildOpenApi } from './openapi.ts';
+import { certsDirOf } from './server.ts';
 
 const PAGE = `<!doctype html>
 <html lang="en">
@@ -53,6 +54,16 @@ export function docsHandler(engine: Engine): (ctx: RequestCtx, res: ServerRespon
     const path = ctx.path.replace(/\/+$/, '');
     if (path === '/__docs' || path === '/__docs/index.html') return send(res, 'text/html; charset=utf-8', PAGE, head);
     if (path === '/__docs/openapi.json') return send(res, 'application/json; charset=utf-8', `${JSON.stringify(buildOpenApi(engine.definition), null, 2)}\n`, head);
+    if (path === '/__ca.pem') {
+      // The PUBLIC half of the local CA, so a phone can install it. The file is read by fixed name and must be a plain file.
+      try {
+        const file = join(certsDirOf(engine), 'rootCA.pem');
+        if (!lstatSync(file).isFile()) return false;
+        return send(res, 'application/x-pem-file', readFileSync(file), head);
+      } catch {
+        return false;
+      }
+    }
     if (path === '/__docs/swagger-initializer.js') return send(res, 'text/javascript', INITIALIZER, head);
     const name = path.startsWith('/__docs/') ? path.slice('/__docs/'.length) : undefined;
     const type = name === undefined ? undefined : ASSETS[name];

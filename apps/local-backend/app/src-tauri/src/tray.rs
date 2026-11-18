@@ -1,4 +1,4 @@
-//! The menu bar item: the projects with a start/stop entry each, plus "Open window" and "Quit".
+//! The menu bar item: the backends with a start/stop entry each, plus "Open window" and "Quit".
 
 use std::path::PathBuf;
 use std::time::Duration;
@@ -7,9 +7,10 @@ use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{TrayIcon, TrayIconBuilder};
 use tauri::{AppHandle, Manager};
 
-use crate::recents;
-use crate::state::{self, AppState};
-use crate::tempo::CliAction;
+use crate::engine;
+use crate::fleet::RunState;
+use crate::registry;
+use crate::state::AppState;
 
 const TRAY_ID: &str = "main";
 const MAX_ITEMS: usize = 12;
@@ -48,15 +49,17 @@ fn entries(app: &AppHandle) -> Vec<Entry> {
     let Ok(dir) = app.path().app_data_dir() else {
         return Vec::new();
     };
-    recents::load(&dir)
+    let state = app.state::<AppState>();
+    registry::load(&dir)
         .into_iter()
         .take(MAX_ITEMS)
-        .filter_map(|recent| {
-            let path = std::fs::canonicalize(&recent.path).ok()?;
+        .filter_map(|path| {
+            let path = std::fs::canonicalize(path).ok()?;
+            let status = state.fleet.status(&path);
             Some(Entry {
-                running: state::is_running(&path),
+                running: matches!(status.state, RunState::Running | RunState::Starting),
+                name: status.name,
                 path,
-                name: recent.name,
             })
         })
         .collect()
@@ -68,7 +71,7 @@ fn build_menu(app: &AppHandle, entries: &[Entry]) -> tauri::Result<Menu<tauri::W
         menu.append(&MenuItem::with_id(
             app,
             "none",
-            "No projects yet",
+            "No backends yet",
             false,
             None::<&str>,
         )?)?;
@@ -120,15 +123,14 @@ fn toggle(app: &AppHandle, index: usize) {
     let handle = app.clone();
     std::thread::spawn(move || {
         let state = handle.state::<AppState>();
-        let action = if state::is_running(&path) {
-            CliAction::Down
-        } else {
-            CliAction::Up {
-                port: None,
-                http: false,
-            }
-        };
-        let _ = state::run_action(&handle, &state, &path, &action);
+        state.remember_backend(&path);
+        if matches!(state.fleet.status(&path).state, RunState::Running) {
+            state.fleet.stop(&path);
+        } else if let Ok(launch) =
+            engine::engine_launch(&state.node(false), &engine::dev_engine_script())
+        {
+            state.fleet.start(&launch, &path, None);
+        }
         apply(&handle, entries(&handle));
     });
 }
@@ -156,7 +158,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<TrayIcon> {
         builder = builder.icon(icon.clone());
     }
     let tray = builder.build(app)?;
-    // Keep the menu current: servers can be started or stopped from the CLI too.
+    // Keep the menu current: backends are started and stopped from the window too.
     let handle = app.clone();
     tauri::async_runtime::spawn(async move {
         let mut last: Vec<Entry> = Vec::new();
