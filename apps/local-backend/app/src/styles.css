@@ -577,3 +577,122 @@ label.check {
 button.bad {
   color: var(--bad);
 }
+
+/* ---- Tempo Local Backend */
+.dot.running {
+  background: var(--ok);
+  opacity: 1;
+}
+.dot.starting {
+  background: var(--warn);
+  opacity: 1;
+}
+.dot.error {
+  background: var(--bad);
+  opacity: 1;
+}
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.row.end {
+  justify-content: flex-end;
+}
+.between {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.empty {
+  color: var(--muted);
+  margin: 0;
+  padding: 8px 0;
+}
+.hint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  font-size: 10px;
+  color: var(--muted);
+  cursor: help;
+  text-transform: none;
+}
+button.big {
+  font-size: 15px;
+  padding: 10px 28px;
+  min-width: 120px;
+}
+button.danger {
+  background: var(--bad);
+  border-color: var(--bad);
+  color: #fff;
+}
+.hero {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+.big-number {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+}
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+.modal {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  width: min(520px, 92vw);
+  max-height: 88vh;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.modal.wide {
+  width: min(760px, 94vw);
+}
+.modal h2 {
+  font-size: 15px;
+}
+fieldset.step {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+fieldset.step:disabled {
+  opacity: 0.55;
+}
+label.choice {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--text);
+}
+.path-chip {
+  overflow-wrap: anywhere;
+}
+.sidebar .empty {
+  font-size: 12px;
+}
