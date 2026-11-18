@@ -10,15 +10,17 @@ import { exportSnapshot, importSnapshot } from './snapshot.ts';
 import { readFileSync } from 'node:fs';
 import { readDefinitionText, createBackend, PRESETS, prepareDataDir, type Preset } from './folder.ts';
 import { DefinitionError } from './schema.ts';
+import { trustAndroid, trustIos, trustMac } from './trust.ts';
 
 const USAGE = `local-backend-engine: serve a Tempo Local Backend folder
 
-  local-backend-engine create <dir> [--name <name>] [--preset empty|products|tempo-template]
+  local-backend-engine create <dir> [--name <name>] [--preset empty|products|tempo-template] [--port <n>]
   local-backend-engine certs  <dir>            create an HTTPS certificate with mkcert (never changes a trust store)
   local-backend-engine check  <dir> --openapi <file> [--json]   compare the backend with an OpenAPI file (exit 1 on differences)
   local-backend-engine snapshot export <dir> <file.zip>
   local-backend-engine snapshot import <file.zip> <dir> [--no-certs]   into a new or empty folder
-  local-backend-engine serve  <dir> [--port <n>] [--http] [--admin-port <n>] [--no-watch]
+  local-backend-engine trust  mac | ios [--device <udid>] | android [--serial <id>]   add the mkcert CA to a trust store (explicit)
+  local-backend-engine serve  <dir> [--port <n>] [--http] [--admin-port <n>] [--no-watch] [--parent-stdin]
 
 serve prints one JSON line on stdout when it is ready, with the admin port and its token.
 That line is the only place the token appears.
@@ -26,7 +28,7 @@ That line is the only place the token appears.
 
 const err = (line: string): void => void process.stderr.write(`${line}\n`);
 
-async function serve(dir: string, values: { port?: string | undefined; http?: boolean | undefined; 'admin-port'?: string | undefined; 'no-watch'?: boolean | undefined }): Promise<void> {
+async function serve(dir: string, values: { port?: string | undefined; http?: boolean | undefined; 'admin-port'?: string | undefined; 'no-watch'?: boolean | undefined; 'parent-stdin'?: boolean | undefined }): Promise<void> {
   const running = await startBackend(dir, {
     ...(values.port === undefined ? {} : { port: Number(values.port) }),
     ...(values.http === true ? { https: false } : {}),
@@ -46,6 +48,12 @@ async function serve(dir: string, values: { port?: string | undefined; http?: bo
     })}\n`,
   );
   const stop = (): void => void running.stop().then(() => process.exit(0));
+  // The desktop app keeps our stdin open; when it dies the pipe closes and the engine stops instead of lingering.
+  if (values['parent-stdin'] === true) {
+    process.stdin.on('end', stop);
+    process.stdin.on('close', stop);
+    process.stdin.resume();
+  }
   process.once('SIGINT', stop);
   process.once('SIGTERM', stop);
 }
@@ -63,6 +71,9 @@ async function main(): Promise<void> {
       'no-certs': { type: 'boolean' },
       http: { type: 'boolean' },
       'no-watch': { type: 'boolean' },
+      'parent-stdin': { type: 'boolean' },
+      device: { type: 'string' },
+      serial: { type: 'string' },
       help: { type: 'boolean', short: 'h' },
     },
   });
@@ -76,7 +87,9 @@ async function main(): Promise<void> {
     case 'create': {
       const preset = values.preset ?? 'empty';
       if (!(PRESETS as readonly string[]).includes(preset)) throw new DefinitionError(`Unknown preset "${preset}". Use ${PRESETS.join(' or ')}.`);
-      createBackend(root, { name: values.name ?? root.split('/').pop() ?? 'backend', preset: preset as Preset });
+      const port = values.port === undefined ? undefined : Number(values.port);
+      if (port !== undefined && !(Number.isInteger(port) && port >= 1 && port <= 65_535)) throw new DefinitionError('--port must be a number from 1 to 65535.');
+      createBackend(root, { name: values.name ?? root.split('/').pop() ?? 'backend', preset: preset as Preset, ...(port === undefined ? {} : { port }) });
       err(`Created ${join(root, 'backend.json')}`);
       return;
     }
@@ -124,6 +137,18 @@ async function main(): Promise<void> {
       }
       process.stdout.write(USAGE);
       process.exit(1);
+      return;
+    }
+    case 'trust': {
+      // `trust <mac|ios|android>`: here `dir` is the sub-command. Each one changes a trust store only when named.
+      const say = (line = ''): void => void process.stdout.write(`${line}\n`);
+      if (dir === 'mac') trustMac(realRunner, say);
+      else if (dir === 'ios') trustIos(realRunner, say, values.device);
+      else if (dir === 'android') trustAndroid(realRunner, say, values.serial);
+      else {
+        process.stdout.write(USAGE);
+        process.exit(1);
+      }
       return;
     }
     case 'serve':

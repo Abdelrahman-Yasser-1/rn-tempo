@@ -9,6 +9,7 @@ use std::sync::Mutex;
 use tauri::async_runtime::JoinHandle;
 use tauri::{AppHandle, Manager};
 
+use crate::fleet::Fleet;
 use crate::node::{self, NodeInfo};
 use crate::tempo::{self, CliAction, CliOutput, Selected};
 
@@ -23,6 +24,15 @@ pub struct AppState {
     /// The projects behind the tray menu's items, in menu order.
     pub tray_projects: Mutex<Vec<PathBuf>>,
     pub quitting: AtomicBool,
+    /// The engines this app runs, one per open backend.
+    pub fleet: Fleet,
+    /// Backends the user opened or created. Commands refuse any other folder.
+    backends: Mutex<HashSet<PathBuf>>,
+    /// Folders the user just chose in a folder dialog, so `create` only writes where they pointed.
+    picked: Mutex<HashSet<PathBuf>>,
+    /// Files dropped on the window; the upload command takes them, so the webview never names a path.
+    dropped: Mutex<Vec<PathBuf>>,
+    pub event_streams: Mutex<HashMap<String, JoinHandle<()>>>,
 }
 
 fn lock<T>(mutex: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
@@ -45,6 +55,48 @@ impl AppState {
         let info = node::detect();
         *cached = Some(info.clone());
         info
+    }
+
+    pub fn remember_backend(&self, path: &Path) {
+        lock(&self.backends).insert(path.to_path_buf());
+    }
+
+    pub fn forget_backend(&self, path: &Path) {
+        lock(&self.backends).remove(path);
+    }
+
+    /// The canonical folder for a path the UI sent, when it is a backend the user opened or created.
+    pub fn known_backend(&self, path: &str) -> Result<PathBuf, String> {
+        let canonical =
+            std::fs::canonicalize(path).map_err(|_| "That folder does not exist.".to_string())?;
+        if lock(&self.backends).contains(&canonical) {
+            Ok(canonical)
+        } else {
+            Err("Open the backend first.".to_string())
+        }
+    }
+
+    pub fn remember_picked(&self, path: &Path) {
+        lock(&self.picked).insert(path.to_path_buf());
+    }
+
+    /// A folder the user chose in the dialog (used once).
+    pub fn take_picked(&self, path: &str) -> Result<PathBuf, String> {
+        let canonical =
+            std::fs::canonicalize(path).map_err(|_| "That folder does not exist.".to_string())?;
+        if lock(&self.picked).remove(&canonical) {
+            Ok(canonical)
+        } else {
+            Err("Choose the folder first.".to_string())
+        }
+    }
+
+    pub fn set_dropped(&self, paths: Vec<PathBuf>) {
+        *lock(&self.dropped) = paths;
+    }
+
+    pub fn take_dropped(&self) -> Vec<PathBuf> {
+        std::mem::take(&mut *lock(&self.dropped))
     }
 
     pub fn remember(&self, project: &Path) {
