@@ -2,6 +2,7 @@ import { useRef, useState, type KeyboardEvent } from 'react';
 
 import type { BackendStatus } from '../api/types';
 import { Dashboard } from '../tabs/Dashboard';
+import { Data } from '../tabs/Data';
 import { Endpoints } from '../tabs/Endpoints';
 import { StatusDot } from '../ui/bits';
 
@@ -37,6 +38,7 @@ export function BackendView({ backend, render }: { backend: BackendStatus; rende
 
   const renderers: Partial<Record<TabName, (backend: BackendStatus) => React.ReactNode>> = {
     Dashboard: (b) => <Dashboard backend={b} />,
+    Data: (b) => <BackendOnly backend={b} show={(path) => <Data backend={path} />} />,
     Endpoints: (b) => <BackendOnly backend={b} show={(path) => <Endpoints backend={path} />} />,
     ...render,
   };
