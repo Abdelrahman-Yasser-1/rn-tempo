@@ -183,7 +183,8 @@ data behind the WS16 `tempo` CMS adapter and the template's "What's new" screen.
   one of them. `content.mount` (default `/content`) goes after `basePath`. No endpoint path (or alias) may sit
   under the mount once there is a content type: the schema refuses it, naming the endpoint.
 - A type has `name`, `label`, `fields[]`, `localized` and optional `singleton` (at most one entry) and `seed`
-  (entries made once, when the type is first added; each has `slug`, `status` and `values` per locale).
+  (entries made once, when the type is first added, and checked then against the type; each has `slug`, `status` and
+  `values` per locale). An old seed that no longer fits a changed type is ignored, so it never blocks an edit.
 - **Field types**: `string`, `text` (long), `richText` (**Markdown text, stored as written, never HTML**: render it
   with HTML disabled), `number`, `boolean`, `date` (ISO 8601), `enum` (`enumValues`), `media` (a media id that must
   exist), `json`, `list` (a list of strings). Each field has `required` and `default`. A draft may leave a required
