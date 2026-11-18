@@ -1,9 +1,10 @@
 //! An end-to-end run of the Rust side against the real engine: create a backend from the Tempo template, make a
 //! certificate in a throwaway CA, serve it over HTTPS, and go through the same proxies the tabs use.
 //!
-//! It needs Node 24, mkcert, a built engine (`yarn workspace @rn-tempo/local-backend-engine build`) and free ports,
-//! so it is ignored by default. Run it with
-//! `cargo test e2e -- --ignored --nocapture --test-threads=1`. Nothing is added to a trust store: the CA lives in a
+//! It needs mkcert, an engine and free ports, so it is ignored by default. By default the engine is
+//! `node dist/cli.mjs` (Node 24 and `yarn workspace @rn-tempo/local-backend-engine build`). With `E2E_SIDECAR` set to
+//! the bundled `tempo-engine` executable it runs that instead, and then Node must NOT be on `PATH`: the run proves the
+//! packaged engine needs no Node. Run it with `cargo test e2e -- --ignored --nocapture --test-threads=1`. Nothing is added to a trust store: the CA lives in a
 //! temporary folder, and the Rust client trusts only that CA.
 
 use std::net::TcpStream;
@@ -68,7 +69,7 @@ fn iso_after(seconds: u64) -> String {
 }
 
 #[test]
-#[ignore = "needs node, mkcert, a built engine and free ports; run by hand"]
+#[ignore = "needs mkcert, an engine (Node or E2E_SIDECAR) and free ports; run by hand"]
 fn the_app_side_runs_a_real_backend_end_to_end() {
     let work = tempfile::tempdir().unwrap();
     let caroot = work.path().join("caroot");
@@ -82,9 +83,20 @@ fn the_app_side_runs_a_real_backend_end_to_end() {
         .unwrap_or(8556);
     assert!(port_free(port), "port {port} is in use");
 
-    let node = crate::node::detect();
-    assert!(node.ok, "{:?}", node.message);
-    let launch = engine::engine_launch(&node, &engine::dev_engine_script()).unwrap();
+    let launch = match std::env::var_os("E2E_SIDECAR") {
+        Some(sidecar) => {
+            // The no-Node proof: `node` must not even start from this process's PATH.
+            assert!(
+                std::process::Command::new("node")
+                    .arg("--version")
+                    .output()
+                    .is_err(),
+                "Node is on PATH; run this with a PATH that has no node"
+            );
+            engine::launch_from(Some(Path::new(&sidecar)), None).unwrap()
+        }
+        None => engine::launch_from(None, None).unwrap(),
+    };
 
     // 1. New backend from the Tempo template, on a free port.
     let made = cli::run(

@@ -5,9 +5,8 @@ import { vi } from 'vitest';
 
 import type { Api } from '../api/client';
 import { ApiProvider } from '../api/context';
-import type { BackendStatus, HttpReply, HttpRequest, NodeInfo } from '../api/types';
+import type { BackendStatus, HttpReply, HttpRequest } from '../api/types';
 
-export const NODE_OK: NodeInfo = { ok: true, path: '/usr/local/bin/node', version: 'v24.3.0', loginPath: '/usr/bin', message: null, docsUrl: 'https://nodejs.org/en/download' };
 
 export const STOPPED: BackendStatus = { path: '/work/shop', name: 'shop', state: 'stopped', scheme: null, port: null, notice: null, error: null, logTail: [] };
 export const RUNNING: BackendStatus = { ...STOPPED, state: 'running', scheme: 'https', port: 8556 };
@@ -46,7 +45,6 @@ const unexpected = (name: string) => () => Promise.reject(new Error(`unexpected 
 /** An `Api` where every call fails unless the test provides it. Calls are `vi.fn`, so tests can assert on them. */
 export function makeApi(overrides: Partial<Api> = {}): Api {
   const defaults: Api = {
-    nodeInfo: vi.fn(() => Promise.resolve(NODE_OK)),
     listBackends: vi.fn(() => Promise.resolve([])),
     backendStatus: vi.fn(unexpected('backendStatus')),
     pickNewFolder: vi.fn(() => Promise.resolve(null)),

@@ -10,7 +10,6 @@ import type {
   HttpRequest,
   ImportFile,
   Loss,
-  NodeInfo,
   Preset,
   RequestEvent,
   RevealTarget,
@@ -24,7 +23,6 @@ import type {
  * a fake. The admin token and every path outside a backend folder stay on the Rust side.
  */
 export interface Api {
-  nodeInfo: (refresh: boolean) => Promise<NodeInfo>;
   listBackends: () => Promise<BackendStatus[]>;
   backendStatus: (path: string) => Promise<BackendStatus>;
   /** Step 1 of New backend: a folder dialog. `null` when cancelled. */

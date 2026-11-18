@@ -14,15 +14,6 @@ export interface BackendStatus {
   logTail: string[];
 }
 
-export interface NodeInfo {
-  ok: boolean;
-  path: string | null;
-  version: string | null;
-  loginPath: string | null;
-  message: string | null;
-  docsUrl: string;
-}
-
 export type Preset = 'tempo-template' | 'empty';
 
 export interface FolderPick {
