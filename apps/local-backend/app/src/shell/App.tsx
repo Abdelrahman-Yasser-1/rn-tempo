@@ -63,7 +63,7 @@ export function App() {
             <p className="muted">Pick a backend on the left, or make a new one. A backend is a folder that your app can talk to like a real server.</p>
           </div>
         ) : (
-          <BackendView key={current.path} backend={current} />
+          <BackendView key={current.path} backend={current} onOpen={setSelected} />
         )}
       </main>
     </div>

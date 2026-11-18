@@ -6,15 +6,12 @@ import { Data } from '../tabs/Data';
 import { Endpoints } from '../tabs/Endpoints';
 import { Logs } from '../tabs/Logs';
 import { Media } from '../tabs/Media';
+import { Settings } from '../tabs/Settings';
 import { Users } from '../tabs/Users';
 import { StatusDot } from '../ui/bits';
 
 export const TABS = ['Dashboard', 'Endpoints', 'Data', 'Media', 'Users', 'Content', 'Logs', 'Settings'] as const;
 export type TabName = (typeof TABS)[number];
-
-function Soon({ name }: { name: string }) {
-  return <p className="empty">The {name} tab arrives in the next step.</p>;
-}
 
 /** The tabs that read the engine's admin API need a running backend; a stopped one gets one sentence. */
 function BackendOnly({ backend, show }: { backend: BackendStatus; show: (path: string) => React.ReactNode }) {
@@ -23,7 +20,7 @@ function BackendOnly({ backend, show }: { backend: BackendStatus; show: (path: s
 }
 
 /** The 8 tabs of one backend. */
-export function BackendView({ backend, render }: { backend: BackendStatus; render?: Partial<Record<TabName, (backend: BackendStatus) => React.ReactNode>> }) {
+export function BackendView({ backend, onOpen, render }: { backend: BackendStatus; onOpen: (path: string) => void; render?: Partial<Record<TabName, (backend: BackendStatus) => React.ReactNode>> }) {
   const [tab, setTab] = useState<TabName>('Dashboard');
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
 
@@ -45,6 +42,8 @@ export function BackendView({ backend, render }: { backend: BackendStatus; rende
     Media: (b) => <BackendOnly backend={b} show={() => <Media backend={b} />} />,
     Users: (b) => <BackendOnly backend={b} show={(path) => <Users backend={path} />} />,
     Logs: (b) => <BackendOnly backend={b} show={() => <Logs backend={b} />} />,
+    Settings: (b) => <Settings backend={b} onOpen={onOpen} />,
+    Content: () => <p className="empty">Coming in the next update.</p>,
     Endpoints: (b) => <BackendOnly backend={b} show={(path) => <Endpoints backend={path} />} />,
     ...render,
   };
@@ -83,7 +82,7 @@ export function BackendView({ backend, render }: { backend: BackendStatus; rende
         ))}
       </div>
       <div className="panel" role="tabpanel" id="panel" aria-labelledby={`tab-${tab}`}>
-        {draw === undefined ? <Soon name={tab} /> : draw(backend)}
+        {draw?.(backend)}
       </div>
     </div>
   );
