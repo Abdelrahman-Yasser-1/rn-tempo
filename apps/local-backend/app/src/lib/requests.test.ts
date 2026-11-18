@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { RequestEntry } from '../client/types';
+import type { RequestEntry } from '../api/types';
 
 import { addEntry, bodyText, filterEntries, MAX_ENTRIES, methodsSeen, NO_FILTERS, statusClass } from './requests';
 

@@ -1,4 +1,4 @@
-import type { RequestEntry } from '../client/types';
+import type { RequestEntry } from '../api/types';
 
 /** The server keeps the last 500 entries, so the view does too. */
 export const MAX_ENTRIES = 500;
