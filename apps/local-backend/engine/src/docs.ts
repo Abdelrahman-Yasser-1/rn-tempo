@@ -2,8 +2,7 @@ import { lstatSync, readFileSync } from 'node:fs';
 import type { ServerResponse } from 'node:http';
 import { join } from 'node:path';
 
-import { swaggerDir } from '@rn-tempo/dev-api';
-
+import { readSwaggerAsset } from './assets.ts';
 import type { Engine } from './engine.ts';
 import type { RequestCtx } from './http.ts';
 import { buildOpenApi } from './openapi.ts';
@@ -69,7 +68,7 @@ export function docsHandler(engine: Engine): (ctx: RequestCtx, res: ServerRespon
     const type = name === undefined ? undefined : ASSETS[name];
     if (name === undefined || type === undefined) return false;
     try {
-      return send(res, type, readFileSync(join(swaggerDir(), name)), head);
+      return send(res, type, readSwaggerAsset(name), head);
     } catch {
       return false;
     }
