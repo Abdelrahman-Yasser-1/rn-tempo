@@ -37,3 +37,5 @@ yarn tempo g endpoint <feature>.<name>   # scaffold an endpoint, its API call an
 - **Errors.** Throw `ApiError(status, message)` from a `data` function. The response is problem+json with a `message` field, which the app's error normalizer reads.
 
 Documentation: the docs site, Backend > Dev API, and Guides > Add an endpoint.
+
+Prefer a real HTTPS server with a database, sign-in, uploads and a request log, run from a desktop app? Follow the step-by-step guide at Backend > Local Backend (`docs/content/docs/backend/local-backend.mdx`). It also shows how to point this app at it with the debug menu's API source.

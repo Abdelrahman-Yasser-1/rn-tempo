@@ -7,6 +7,10 @@ description: Serve the dev API over HTTPS with mkcert and make the iOS simulator
   The certificate authority (CA) you create here can sign a certificate for any site. Its private key stays on your machine, is never committed and is never copied to a device. Only the public `rootCA.pem` is installed on devices.
 </Callout>
 
+<Callout title="Using Tempo Local Backend?">
+  The [Local Backend guide](/docs/backend/local-backend) has a button for each step on this page (create the certificate, trust it on a simulator, send it to an emulator) and a QR code for a phone. This page shows the same steps in a terminal for the dev API.
+</Callout>
+
 ## Why HTTPS locally
 
 iOS App Transport Security, Android's network security config and SSL pinning all expect HTTPS. Testing against plain HTTP hides problems that appear on a real network. [mkcert](https://github.com/FiloSottile/mkcert) creates a local CA and a certificate signed by it, so the app can call the dev API the way it calls a real server.
