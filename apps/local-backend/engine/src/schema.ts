@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { isIdentifier } from './names.ts';
-import { checkContentShape, isBlankValue, isSlug, SLUG_HELP, validateLocaleData } from './content-values.ts';
+import { checkContentShape, isSlug, SLUG_HELP } from './content-values.ts';
 import { checkShape } from './values.ts';
 
 const identifier = z
@@ -282,18 +282,6 @@ function checkContent(def: { content: z.infer<typeof ContentConfig>; contentType
         if (!isSlug(entry.slug)) ctx.addIssue({ code: 'custom', path: at('slug'), message: SLUG_HELP });
         if (slugs.has(entry.slug)) ctx.addIssue({ code: 'custom', path: at('slug'), message: `Duplicate slug "${entry.slug}".` });
         slugs.add(entry.slug);
-      }
-      for (const [code, data] of Object.entries(entry.values)) {
-        const allowed = type.localized ? locales.includes(code) : code === defaultLocale;
-        if (!allowed) {
-          ctx.addIssue({ code: 'custom', path: at('values', code), message: type.localized ? `Unknown locale "${code}".` : `This type is not localized: use the default locale "${defaultLocale}".` });
-          continue;
-        }
-        for (const issue of validateLocaleData(type, data, `values.${code}`, {}).issues) ctx.addIssue({ code: 'custom', path: at('values', code, ...issue.path.split('.').slice(2)), message: issue.message });
-      }
-      if (entry.status === 'published') {
-        const missing = type.fields.filter((field) => field.required && isBlankValue(entry.values[defaultLocale]?.[field.name]));
-        for (const field of missing) ctx.addIssue({ code: 'custom', path: at('values', defaultLocale, field.name), message: 'Required to publish.' });
       }
     });
   });
