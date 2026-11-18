@@ -109,6 +109,13 @@ fn register(app: &AppHandle, state: &AppState, path: &Path) -> Res<()> {
     Ok(())
 }
 
+/// What the app knows about Node.js (the engine runs on it in development). Looking it up asks the login shell,
+/// so it runs off the main thread.
+#[tauri::command]
+pub async fn node_info(app: AppHandle, refresh: bool) -> Res<crate::node::NodeInfo> {
+    blocking(move || app.state::<AppState>().node(refresh)).await
+}
+
 #[tauri::command]
 pub async fn list_backends(app: AppHandle, state: State<'_, AppState>) -> Res<Vec<BackendStatus>> {
     let paths = registry::load(&data_dir(&app)?);

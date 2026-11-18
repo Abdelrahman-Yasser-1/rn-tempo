@@ -1,21 +1,17 @@
-//! Tempo Dev API: a small Tauri shell. The UI holds no API logic. This side runs the `tempo-api` CLI,
-//! reads the files it writes, and proxies control-API calls so the project CA is trusted.
+//! Tempo Local Backend: a small Tauri shell. The UI holds no API logic. This side runs the engine (one process
+//! per open backend), keeps its admin token, proxies the UI's calls to it and opens every file dialog.
 
 mod backends;
 mod cli;
-mod commands;
 mod engine;
 mod files;
 mod fleet;
 mod http;
 mod node;
-mod project;
 mod proxy;
-mod recents;
 mod registry;
 mod simulators;
 mod state;
-mod tempo;
 mod tray;
 
 use tauri::{Emitter, Manager, RunEvent, WindowEvent};
@@ -25,21 +21,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .manage(state::AppState::default())
         .invoke_handler(tauri::generate_handler![
-            commands::node_info,
-            commands::list_recents,
-            commands::open_project,
-            commands::remove_recent,
-            commands::create_workspace,
-            commands::project_state,
-            commands::cli,
-            commands::control,
-            commands::subscribe_events,
-            commands::unsubscribe_events,
-            commands::list_booted_simulators,
-            commands::cert_status,
-            commands::read_workspace,
-            commands::write_workspace,
-            commands::open_target,
+            backends::node_info,
             backends::list_backends,
             backends::backend_status,
             backends::pick_new_folder,
@@ -74,13 +56,13 @@ pub fn run() {
             Ok(())
         })
         .on_window_event(|window, event| {
-            // Closing the window keeps the app (and its tray item) running; Quit stops everything.
             if let WindowEvent::DragDrop(tauri::DragDropEvent::Drop { paths, .. }) = event {
                 // The paths stay on this side; the UI only learns how many files arrived.
                 let handle = window.app_handle();
                 handle.state::<state::AppState>().set_dropped(paths.clone());
                 let _ = handle.emit("lb://dropped", paths.len());
             }
+            // Closing the window keeps the app (and its tray item) running; Quit stops everything.
             if let WindowEvent::CloseRequested { api, .. } = event {
                 let state = window.app_handle().state::<state::AppState>();
                 if !state.quitting.load(std::sync::atomic::Ordering::SeqCst) {
@@ -98,8 +80,8 @@ pub fn run() {
             state
                 .quitting
                 .store(true, std::sync::atomic::Ordering::SeqCst);
+            // Every engine this app started stops with it.
             state.fleet.stop_all();
-            state::shutdown(handle, &state);
         }
         #[cfg(target_os = "macos")]
         RunEvent::Reopen { .. } => tray::show_window(handle),
