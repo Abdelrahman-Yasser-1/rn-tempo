@@ -735,3 +735,22 @@ fieldset.plain-fieldset legend {
   padding: 0;
   margin-bottom: 4px;
 }
+.data-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+.list-button {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  text-align: left;
+}
+.list-button.active {
+  border-color: var(--accent);
+  background: var(--code-bg);
+}
+.stack.tight {
+  gap: 2px;
+}
