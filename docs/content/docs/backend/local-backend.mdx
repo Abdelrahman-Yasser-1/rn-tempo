@@ -83,7 +83,13 @@ The people who log in to your app. Add a user, reset a password, disable or enab
 
 ### Content
 
-Not built yet. It says "Coming in the next update".
+A small CMS for the texts of your app: announcements, FAQs, a "What's new" list. The left list holds **content types**, the right side the **entries** of the chosen type, each with a **Draft**, **Published** or **Scheduled** badge, a status filter and a search box.
+
+- **Add type** makes a content type with fields: short text, long text, Markdown text, number, yes or no, date, one of a list, a media file, JSON, or a list of texts. Tick *Translated into every language* to write each entry once per language (the template's `en` and `ar`; change them in `backend.json`, under `content`). Tick *Only one entry* for a single page such as Home. **Edit type** changes it later: removing a field deletes its saved values, so you are asked first and shown how many.
+- **Add entry** opens the editor. A tab for each language marks a missing translation, and a field left empty in one language shows the default language's text in the public API. A media field picks a file from the Media tab. A Markdown field has a preview that shows only text: HTML in your Markdown is displayed as characters, never run.
+- **Save draft** keeps your work private. **Publish** puts the entry in the public API at once. **Schedule** publishes it at a date and time you pick (it goes live while the backend runs, within 30 seconds of that time). **Unpublish** hides it again and keeps the content. The last ten versions of each entry are listed, and **Revert** puts one back. Saving a published entry changes what your app sees straight away. Unpublish, Revert and Delete all ask first.
+
+Published entries are served to your app, with no sign-in, at `GET /content/<type>?locale=ar` (a list: `{ items, total, limit, skip, nextCursor }`), and `GET /content/<type>/<id or slug>`. A type with *Only one entry* answers `GET /content/<type>` with that one entry. The list is also in the OpenAPI document, and the template's "What's new" screen reads the `announcement` type that the Tempo template preset creates. See the engine README for the exact shape.
 
 ### Logs
 
