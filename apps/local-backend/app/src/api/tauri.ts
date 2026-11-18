@@ -6,7 +6,6 @@ import type { EventsState, RequestEvent, UploadProgress } from './types';
 
 /** The real client: every call goes to a Rust command that `build.rs` lists and the capability grants. */
 export const tauriApi: Api = {
-  nodeInfo: (refresh) => invoke('node_info', { refresh }),
   listBackends: () => invoke('list_backends'),
   backendStatus: (path) => invoke('backend_status', { path }),
   pickNewFolder: () => invoke('pick_new_folder'),

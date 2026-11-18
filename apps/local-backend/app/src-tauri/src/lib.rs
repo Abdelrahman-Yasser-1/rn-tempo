@@ -9,6 +9,8 @@ mod engine;
 mod files;
 mod fleet;
 mod http;
+mod login_env;
+#[cfg(debug_assertions)]
 mod node;
 mod proxy;
 mod registry;
@@ -23,7 +25,6 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .manage(state::AppState::default())
         .invoke_handler(tauri::generate_handler![
-            backends::node_info,
             backends::list_backends,
             backends::backend_status,
             backends::pick_new_folder,
@@ -55,6 +56,11 @@ pub fn run() {
         ])
         .setup(|app| {
             tray::build(app.handle())?;
+            // Ask the login shell for its PATH now, off the main thread, so the first start does not wait for it.
+            let handle = app.handle().clone();
+            std::thread::spawn(move || {
+                let _ = handle.state::<state::AppState>().login_path();
+            });
             Ok(())
         })
         .on_window_event(|window, event| {

@@ -3,16 +3,17 @@
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::AtomicBool;
-use std::sync::Mutex;
+use std::sync::{Mutex, OnceLock};
 
 use tauri::async_runtime::JoinHandle;
 
 use crate::fleet::Fleet;
-use crate::node::{self, NodeInfo};
+use crate::login_env;
 
 #[derive(Default)]
 pub struct AppState {
-    node: Mutex<Option<NodeInfo>>,
+    /// The login shell's `PATH`, asked for once.
+    login_path: OnceLock<Option<String>>,
     /// The engines this app runs, one per open backend.
     pub fleet: Fleet,
     /// Backends the user opened or created. Commands refuse any other folder.
@@ -35,18 +36,9 @@ fn lock<T>(mutex: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
 }
 
 impl AppState {
-    /// The cached Node lookup. A missing Node is looked up again each time, so installing it works
-    /// without restarting the app.
-    pub fn node(&self, refresh: bool) -> NodeInfo {
-        let mut cached = lock(&self.node);
-        if let Some(info) = cached.as_ref() {
-            if info.ok && !refresh {
-                return info.clone();
-            }
-        }
-        let info = node::detect();
-        *cached = Some(info.clone());
-        info
+    /// The login shell's `PATH` (so the engine finds `mkcert`, `xcrun` and `adb`), looked up once.
+    pub fn login_path(&self) -> Option<String> {
+        self.login_path.get_or_init(login_env::login_path).clone()
     }
 
     pub fn remember_backend(&self, path: &Path) {

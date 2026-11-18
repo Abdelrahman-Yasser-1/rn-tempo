@@ -64,7 +64,7 @@ pub fn preview_limit(mime: &str) -> Option<usize> {
 }
 
 fn launch_for(state: &AppState) -> Res<engine::Launch> {
-    engine::engine_launch(&state.node(false), &engine::dev_engine_script())
+    engine::engine_launch(state.login_path())
 }
 
 async fn blocking<T: Send + 'static>(work: impl FnOnce() -> T + Send + 'static) -> Res<T> {
@@ -107,13 +107,6 @@ fn register(app: &AppHandle, state: &AppState, path: &Path) -> Res<()> {
     state.remember_backend(path);
     registry::add(&data_dir(app)?, &path.to_string_lossy())?;
     Ok(())
-}
-
-/// What the app knows about Node.js (the engine runs on it in development). Looking it up asks the login shell,
-/// so it runs off the main thread.
-#[tauri::command]
-pub async fn node_info(app: AppHandle, refresh: bool) -> Res<crate::node::NodeInfo> {
-    blocking(move || app.state::<AppState>().node(refresh)).await
 }
 
 #[tauri::command]
@@ -486,7 +479,7 @@ pub async fn restore_snapshot(
 
 #[tauri::command]
 pub async fn list_simulators(state: State<'_, AppState>) -> Res<Vec<simulators::Simulator>> {
-    let login_path = state.node(false).login_path;
+    let login_path = state.login_path();
     blocking(move || simulators::list_booted(login_path.as_deref())).await?
 }
 
