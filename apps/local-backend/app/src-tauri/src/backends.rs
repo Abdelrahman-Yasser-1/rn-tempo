@@ -634,7 +634,15 @@ async fn upload_files(app: &AppHandle, ready: &Ready, paths: Vec<PathBuf>) -> Up
         let name = path
             .file_name()
             .map_or_else(|| "file".to_string(), |n| n.to_string_lossy().into_owned());
-        match upload_one(app, ready, &path, &name, index, count).await {
+        let progress_app = app.clone();
+        let progress_name = name.clone();
+        let progress = move |sent: u64, total: u64| {
+            let _ = progress_app.emit(
+                "lb://upload",
+                serde_json::json!({ "name": progress_name, "sent": sent, "total": total, "index": index, "count": count }),
+            );
+        };
+        match upload_one(ready, &path, &name, progress).await {
             Ok(()) => summary.uploaded += 1,
             Err(message) => summary.failed.push(format!("{name}: {message}")),
         }
@@ -642,13 +650,12 @@ async fn upload_files(app: &AppHandle, ready: &Ready, paths: Vec<PathBuf>) -> Up
     summary
 }
 
-async fn upload_one(
-    app: &AppHandle,
+/// Sends one file to the engine's admin `POST /media`, calling `progress(sent, total)` as chunks go out.
+pub async fn upload_one(
     ready: &Ready,
     path: &Path,
     name: &str,
-    index: usize,
-    count: usize,
+    progress: impl Fn(u64, u64) + Send + Sync + 'static,
 ) -> Res<()> {
     let meta = std::fs::symlink_metadata(path).map_err(|_| "it does not exist".to_string())?;
     if meta.file_type().is_symlink() || !meta.is_file() {
@@ -665,14 +672,9 @@ async fn upload_one(
         .step_by(CHUNK)
         .map(|start| data.slice(start..(start + CHUNK).min(total)))
         .collect();
-    let progress_app = app.clone();
-    let progress_name = name.to_string();
     let stream = futures_util::stream::iter(chunks).map(move |chunk| {
         let done = sent.fetch_add(chunk.len() as u64, Ordering::SeqCst) + chunk.len() as u64;
-        let _ = progress_app.emit(
-            "lb://upload",
-            serde_json::json!({ "name": progress_name, "sent": done, "total": total, "index": index, "count": count }),
-        );
+        progress(done, total as u64);
         Ok::<_, std::io::Error>(chunk)
     });
     let response = proxy::admin_client(Some(Duration::from_secs(600)))?

@@ -3,6 +3,8 @@
 
 mod backends;
 mod cli;
+#[cfg(test)]
+mod e2e;
 mod engine;
 mod files;
 mod fleet;
