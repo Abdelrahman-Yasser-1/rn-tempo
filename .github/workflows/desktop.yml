@@ -1,18 +1,21 @@
-name: Desktop app
+name: Local Backend app
 
-# The Tempo Dev API desktop app (Tauri 2). It runs on macOS only and only when the app or the dev API changes,
-# so the main CI stays fast. Builds are unsigned; signing and notarization come with the release phase.
+# The Tempo Local Backend desktop app (Tauri 2). It runs on macOS only and only when the app, its engine or the
+# dev API pieces the engine reuses change, so the main CI stays fast. Builds are unsigned; the bundled engine
+# (Node single executable) and the .dmg come with the packaging step.
 on:
   pull_request:
     paths:
-      - 'apps/local-backend/app/**'
+      - 'apps/local-backend/**'
       - 'packages/dev-api/**'
+      - 'packages/api-contract/**'
       - '.github/workflows/desktop.yml'
   push:
     branches: [main]
     paths:
-      - 'apps/local-backend/app/**'
+      - 'apps/local-backend/**'
       - 'packages/dev-api/**'
+      - 'packages/api-contract/**'
       - '.github/workflows/desktop.yml'
   workflow_dispatch:
 
@@ -24,8 +27,8 @@ permissions:
   contents: read
 
 jobs:
-  desktop:
-    name: Desktop (tests, build, dmg)
+  app:
+    name: Local Backend app (tests, build)
     runs-on: macos-latest
     timeout-minutes: 60
     steps:
@@ -44,24 +47,32 @@ jobs:
             apps/local-backend/app/src-tauri/target
           key: cargo-${{ runner.os }}-${{ hashFiles('apps/local-backend/app/src-tauri/Cargo.lock') }}
           restore-keys: cargo-${{ runner.os }}-
-      - name: UI lint, types and tests
+      # The app starts the engine, and the engine reuses the dev API's certificate and redaction code.
+      - name: Engine tests, types and build
+        run: |
+          yarn workspace @rn-tempo/dev-api build
+          yarn workspace @rn-tempo/local-backend-engine lint
+          yarn workspace @rn-tempo/local-backend-engine typecheck
+          yarn workspace @rn-tempo/local-backend-engine test
+          yarn workspace @rn-tempo/local-backend-engine build
+      - name: App UI lint, types and tests
         run: |
           yarn workspace @rn-tempo/local-backend-app lint
           yarn workspace @rn-tempo/local-backend-app typecheck
           yarn workspace @rn-tempo/local-backend-app test
-      # Tauri bundles the standalone dev API as a resource, so it must exist before cargo builds.
-      - name: Build the standalone dev API
-        run: yarn workspace @rn-tempo/local-backend-app standalone
-      - name: Rust tests and lints
+      - name: Rust format, tests and lints
         working-directory: apps/local-backend/app/src-tauri
         run: |
-          rustup component add clippy
+          rustup component add clippy rustfmt
+          cargo fmt --check
           cargo test
           cargo clippy --all-targets -- -D warnings
-      - name: Build the app and the dmg (unsigned)
-        run: yarn workspace @rn-tempo/local-backend-app tauri build --bundles app,dmg
+      - name: Build the app (unsigned)
+        run: yarn workspace @rn-tempo/local-backend-app tauri build --bundles app
+      - name: Zip the app
+        run: ditto -c -k --keepParent "apps/local-backend/app/src-tauri/target/release/bundle/macos/Tempo Local Backend.app" tempo-local-backend.app.zip
       - uses: actions/upload-artifact@v7
         with:
-          name: tempo-local-backend-dmg
-          path: apps/local-backend/app/src-tauri/target/release/bundle/dmg/*.dmg
+          name: tempo-local-backend-app
+          path: tempo-local-backend.app.zip
           if-no-files-found: error
