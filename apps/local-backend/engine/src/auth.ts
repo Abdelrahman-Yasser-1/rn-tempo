@@ -127,6 +127,11 @@ export class AuthService {
     return created;
   }
 
+  /** A short-lived access token for the admin "Log in as…" picker. No refresh token, so no session is created. */
+  accessTokenFor(user: UserRecord): { accessToken: string; expiresInMins: number } {
+    return { accessToken: this.accessFor(user, undefined), expiresInMins: Math.min(this.settings().accessTtlMin, this.settings().maxAccessTtlMin, MAX_EXPIRES_IN_MIN) };
+  }
+
   private accessFor(user: UserRecord, requestedMinutes: number | undefined): string {
     const settings = this.settings();
     const minutes = Math.min(requestedMinutes ?? settings.accessTtlMin, settings.maxAccessTtlMin, MAX_EXPIRES_IN_MIN);

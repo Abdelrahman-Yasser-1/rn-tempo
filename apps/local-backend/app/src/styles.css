@@ -696,3 +696,42 @@ label.choice {
 .sidebar .empty {
   font-size: 12px;
 }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.code-area {
+  font-family: var(--mono);
+  font-size: 12px;
+  resize: vertical;
+}
+.actions-cell {
+  white-space: nowrap;
+  font-family: var(--font);
+}
+.table td.summary {
+  font-family: var(--font);
+  max-width: 240px;
+}
+.table tbody tr {
+  cursor: default;
+}
+fieldset.plain-fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  align-items: center;
+}
+fieldset.plain-fieldset legend {
+  color: var(--muted);
+  font-size: 12px;
+  padding: 0;
+  margin-bottom: 4px;
+}

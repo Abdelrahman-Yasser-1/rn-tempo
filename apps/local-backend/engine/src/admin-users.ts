@@ -118,6 +118,17 @@ export function adminAuthRoutes(engine: Engine): AdminRoute[] {
       },
     },
     {
+      method: 'POST',
+      pattern: '/users/:id/token',
+      handler: (_ctx, params) => {
+        const id = wantId(params.id);
+        const user = id === undefined ? undefined : accounts.byId(id);
+        if (user === undefined) return missing(params.id);
+        if (user.disabled) return problemReply(403, { detail: 'This user is disabled.' });
+        return jsonReply(200, engine.auth.accessTokenFor(user));
+      },
+    },
+    {
       method: 'GET',
       pattern: '/sessions',
       handler: (ctx) => {
