@@ -788,3 +788,10 @@ fieldset.plain-fieldset legend {
   padding: 8px;
   text-align: center;
 }
+.logbox {
+  max-height: 220px;
+  overflow: auto;
+  background: var(--code-bg);
+  border-radius: 6px;
+  padding: 8px;
+}
