@@ -70,7 +70,7 @@ Spec: "Tier 1c" in `spec.md`. It builds on Phase X (X1–X3 kept; the X4–X6 sh
 - [x] **T15.Y2** (AC-LB-4, AC-LB-5) Auth and app users, media upload/download, `handler` endpoints in workers.
 - [x] **T15.Y3** (AC-LB-1, AC-LB-8) The Tempo template preset, the OpenAPI contract check and snapshot export/import (AC-LB-9).
 - [x] **T15.Y4** (AC-LB-6) The app UI rework in `apps/local-backend/app`: Dashboard, Endpoints, Data, Media, Users, Logs and Settings tabs (Content is a placeholder until Y5); the code-project mode is removed. The engine runs through one swappable `engine_launch` function (Y6 swaps it for the sidecar).
-- [ ] **T15.Y5** (AC-LB-7) Content (CMS) types, entries and the public content endpoints.
+- [x] **T15.Y5** (AC-LB-7) Content (CMS) types, entries and the public content endpoints.
 - [ ] **T15.Y6** (AC-LB-1) Packaging: the Node SEA sidecar, the CI `.dmg`, the user guide `backend/local-backend` and the device run on the iOS simulator.
 
 ## Phase D: backend API foundation (`ws15/d-api`)
