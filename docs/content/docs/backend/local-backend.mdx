@@ -1,45 +1,52 @@
 ---
 title: Local Backend
-description: Tempo Local Backend, a desktop app that runs a real HTTPS API with a database from a folder of JSON definitions, so your app has a backend before the real one exists.
+description: A step-by-step guide to Tempo Local Backend, a desktop app that runs a real HTTPS API with a database from a folder, so your app has a backend before the real one exists.
 ---
 
 <Callout title="Development only" type="warn">
   Tempo Local Backend is a development tool. It answers on your own machine, and the data it keeps is test data. It is not a place to run production traffic or keep real user data.
 </Callout>
 
-A **backend** is a folder. It holds a `backend.json` with your collections and endpoints, and the app serves it as a real API: HTTPS, a SQLite database, sign-in for app users, file uploads and a request log. Your app talks to it like a real server, and you change it from a window with eight tabs.
+A **backend** is a folder. The app serves that folder as a real API: HTTPS, a database, sign-in for app users, file uploads, a small CMS and a request log. Your app talks to it like a real server. You change it from a window with eight tabs.
 
-This page covers what you need to run it from the repository and what each tab does. The full guide (installing a packaged app, the Content tab and the device walkthrough) arrives with the packaging step. Code-defined mocks still live in the [dev API](/docs/backend/dev-api): run them with `yarn api`.
+This guide takes you from nothing to the template app logged in against your own backend. Code-defined mocks still live in the [dev API](/docs/backend/dev-api): run them with `yarn api`.
 
-## Run it from the repository
+## 1. Install
 
-You need Node 24 or newer, Rust 1.85 or newer and Xcode's command line tools. mkcert (`brew install mkcert`) is optional and only needed for HTTPS.
+You do not need Node.js, npm or Yarn to run the app. The engine is built into it.
+
+1. Get the `.dmg`. Open the **Local Backend** run in the repository's **Actions** tab, then download the `tempo-local-backend-dmg` artifact. If a release has a `.dmg`, you can download that instead. The artifact is a `.zip`: unzip it.
+2. Open the `.dmg` and drag **Tempo Local Backend** into **Applications**.
+3. The first time, right-click the app, choose **Open**, then choose **Open** again. The app is not signed with an Apple developer certificate, so macOS asks once. After that it opens normally.
+4. Optional: install [mkcert](https://github.com/FiloSottile/mkcert) with `brew install mkcert`. You need it only for HTTPS, and the next sections use HTTPS.
+
+The `.dmg` is for Macs with Apple silicon. On an Intel Mac, build it from source.
+
+### Or build it from source
+
+You need Node 26 or newer (it builds the engine into one file), Rust 1.85 or newer and Xcode's command line tools.
 
 ```sh
 yarn install
-yarn workspace @rn-tempo/local-backend-engine build        # the engine the app starts
-yarn workspace @rn-tempo/local-backend-app tauri dev       # the app with hot reload
-yarn workspace @rn-tempo/local-backend-app tauri build --bundles app
+yarn workspace @rn-tempo/local-backend-engine build:sea        # the engine, as one executable
+yarn workspace @rn-tempo/local-backend-app tauri build --bundles app,dmg
 ```
 
-In this step the app starts the engine with `node apps/local-backend/engine/dist/cli.mjs serve <folder>`, so it needs Node on your login shell's `PATH` and the built engine. A later step bundles the engine into the app, and then nothing needs installing.
+The `.app` and `.dmg` are in `apps/local-backend/app/src-tauri/target/release/bundle/`. For the window with hot reload, run `yarn workspace @rn-tempo/local-backend-app tauri dev`. Without `build:sea`, `tauri dev` falls back to `node apps/local-backend/engine/dist/cli.mjs` (run `yarn workspace @rn-tempo/local-backend-engine build` first, and have Node 24 or newer).
 
 The same engine runs without the app. See `apps/local-backend/engine/README.md` for `create`, `serve`, `check`, `snapshot` and the rest.
 
-## The window
+## 2. Create your first backend
 
-The left side lists your backends, each with a dot: green when it runs, grey when it is stopped, red when it stopped with an error. **New backend** opens two steps:
+1. Open the app and press **New backend**.
+2. **Choose a folder.** It must be new or empty. A folder inside your project, such as `backend-local`, is a good place.
+3. **Choose what it starts with.**
+   - **Tempo template** is ready for the template app: login, profile, 100 products and the rest of its API, with the test user `emilys`.
+   - **Empty** has nothing yet. You add collections and endpoints yourself.
+4. Optional: change the port. The default is `8443`. If another program uses it, pick a free one, such as `8556`.
+5. Press **Create backend**, then press **Start** on the Dashboard.
 
-1. **Choose a folder.** It must be empty or new.
-2. **Choose what it starts with.** **Tempo template** is ready for the template app: login, profile, 100 products and the rest of its API, with the test user `emilys`. **Empty** has nothing yet. You can also set a port here. **Open backend…** adds a folder that already holds a `backend.json`.
-
-Closing the window keeps the app in the menu bar, where each backend has a Start or Stop entry. **Quit** stops every engine the app started.
-
-## The eight tabs
-
-### Dashboard
-
-One big **Start** or **Stop** button and a status line. When it runs you see the addresses to put in your app, each with a Copy button:
+The dot next to the backend turns green. The Dashboard shows the addresses to use, each with a **Copy** button:
 
 | Address | For |
 | --- | --- |
@@ -48,75 +55,199 @@ One big **Start** or **Stop** button and a status line. When it runs you see the
 | Android emulator | `10.0.2.2`, the emulator's name for this Mac |
 | iOS simulator | `localhost` |
 
-There is a link to the Swagger page of the backend, and cards for requests per minute, the error rate, the slowest endpoints, records per collection and media storage. If the engine stops by itself, the tab shows the last lines it printed and a **Restart** button. If the port is busy, **Try another port** starts it on a different one.
+Closing the window keeps the app in the menu bar, where each backend has a Start or Stop entry. **Quit** stops every engine the app started.
 
-### Endpoints
+## 3. Connect the template app
 
-A table of method, path, type, whether sign-in is needed and a one-line note. **Add**, **Edit**, **Duplicate** and **Delete** use one form, and the fields below the type change with it:
+The template app must trust the backend's certificate, then know its address.
 
-| Type | The form asks for |
+### 3.1 Certificates
+
+1. Open **Settings** and find **Certificates**. Press **Create certificate**. This needs mkcert, and it changes no trust store.
+2. Pick your target:
+   - **iOS simulator.** Press **Trust on this simulator** next to the booted simulator.
+   - **Android emulator.** Press **Send to Android emulator**. The app copies `rootCA.pem` to the emulator's Download folder. Then, on the emulator, open **Settings**, **Security**, **Encryption & credentials**, **Install a certificate**, **CA certificate**, accept the warning and pick the file. Only the `devDebug` build of the template trusts it.
+   - **A real phone.** Scan the QR code in Settings with the phone's camera. It opens the public CA file. Install it, then turn on full trust: on an iPhone, in **Settings**, **General**, **About**, **Certificate Trust Settings**.
+   - **This Mac's browser.** Press **Trust on this Mac…**. The app asks you to confirm, then macOS asks for your password.
+3. Restart the backend after you create or renew the certificate.
+
+See [Local HTTPS](/docs/backend/local-https) for the same steps in a terminal.
+
+### 3.2 Choose the API source
+
+1. In the template app, open the **debug menu** (shake the device, or use the `debug` deep link).
+2. Open **API source** and pick **Local dev API**.
+3. Fill in the URL for your target. Use your backend's port (the examples use `8443`):
+
+| Target | URL |
 | --- | --- |
-| Collection | the collection, the action (list, get, create, update, delete), the list shape, the fields search looks in and an optional owner field |
-| Fixed answer | a status and a JSON body |
-| Sign-in | the step (log in, refresh, profile, log out, register, forgot password, one-time codes) |
-| Users | add, update or get an app user |
-| File upload and download | a size limit and whether several files are accepted |
-| Custom code | a file name in `handlers/`, a time limit and **Create file from example** |
+| iOS simulator | `https://localhost:8443` |
+| Android emulator | `https://10.0.2.2:8443` |
+| Real phone | `https://<your Mac's Wi-Fi address>:8443` (the Dashboard shows it) |
 
-Custom code runs on your Mac with your permissions. It is **not** a sandbox, so only open backends you trust.
+### 3.3 Restart the app
 
-Every endpoint has a **scenario** picker (a slow answer, a server error and so on), and the answer changes for the next request. **Try it** sends a real request through the app, with a **Log in as…** picker of your app users that fills in a bearer token.
+Close the template app completely and open it again. The API source applies on the next launch. Later changes to your backend apply live, with no restart.
 
-Saving goes through the engine, which reloads at once. The app on your phone sees the change on its next request, with no restart.
+### 3.4 Log in
 
-### Data
+On the login screen, use `emilys` and `emilyspass`. The products list and the profile now come from your backend. Open **Logs** in the window to watch the requests arrive.
 
-Your collections and their records. Pick a collection to browse it with paging and search, add or edit a record in a form made from its fields, or delete one. **Edit fields** adds, changes, renames and removes fields. A change that would delete data first shows exactly what would be lost (for example, "the field products.price and its 80 saved values") and needs a second confirm. You can import and export JSON and CSV, and **Show database file** reveals `db.sqlite` in Finder.
+## 4. Endpoints
 
-### Media
+An endpoint is one method and path your app can call. Open the **Endpoints** tab. The table shows method, path, type, whether sign-in is needed and a note. Use **Add**, **Edit**, **Duplicate** and **Delete**. The fields of the form change with the type.
 
-Every file the backend stores, as a grid. Upload with the button or by dropping files on the window, with progress. Download, delete, copy the URL and filter by type. Images, video and audio get a preview. Every other type, SVG and HTML included, shows an icon, because those can carry script.
+| Type | What it does | Example |
+| --- | --- | --- |
+| Collection | Lists, reads, creates, updates or deletes records of a collection | `GET /products` lists products, with paging and search |
+| Fixed answer | Always sends the same status and JSON body | `GET /app-config` answers `{ "minVersion": "1.2.0" }` |
+| Sign-in | One step of the login flow | `POST /auth/login` checks a password and returns tokens |
+| Users | Adds, updates or reads an app user | `GET /users/me` returns the signed-in user |
+| File upload and download | Receives files, or sends one | `POST /media` stores an upload |
+| Custom code | Runs your own JavaScript file | `GET /stats/summary` counts products and users (see step 11) |
 
-### Users
+**Scenarios.** Every endpoint has a scenario picker: a slow answer, a server error, an empty body and so on. Pick one and the next request gets that answer. This is how you see your app's error screens without breaking anything.
 
-The people who log in to your app. Add a user, reset a password, disable or enable, **Sign out everywhere** and see who is signed in now. Their passwords are stored with scrypt, and the app never shows a password or a token.
+**Try it.** Press **Try it** to send a real request through the app. The **Log in as…** picker lists your app users and fills in a bearer token for you.
 
-### Content
+Saving goes through the engine, which reloads at once.
 
-A small CMS for the texts of your app: announcements, FAQs, a "What's new" list. The left list holds **content types**, the right side the **entries** of the chosen type, each with a **Draft**, **Published** or **Scheduled** badge, a status filter and a search box.
+## 5. Data
 
-- **Add type** makes a content type with fields: short text, long text, Markdown text, number, yes or no, date, one of a list, a media file, JSON, or a list of texts. Tick *Translated into every language* to write each entry once per language (the template's `en` and `ar`; change them in `backend.json`, under `content`). Tick *Only one entry* for a single page such as Home. **Edit type** changes it later: removing a field deletes its saved values, so you are asked first and shown how many.
-- **Add entry** opens the editor. A tab for each language marks a missing translation, and a field left empty in one language shows the default language's text in the public API. A media field picks a file from the Media tab. A Markdown field has a preview that shows only text: HTML in your Markdown is displayed as characters, never run.
-- **Save draft** keeps your work private. **Publish** puts the entry in the public API at once. **Schedule** publishes it at a date and time you pick (it goes live while the backend runs, within 30 seconds of that time). **Unpublish** hides it again and keeps the content. The last ten versions of each entry are listed, and **Revert** puts one back. Saving a published entry changes what your app sees straight away. Unpublish, Revert and Delete all ask first.
+Open the **Data** tab.
 
-Published entries are served to your app, with no sign-in, at `GET /content/<type>?locale=ar` (a list: `{ items, total, limit, skip, nextCursor }`), and `GET /content/<type>/<id or slug>`. A type with *Only one entry* answers `GET /content/<type>` with that one entry. The list is also in the OpenAPI document, and the template's "What's new" screen reads the `announcement` type that the Tempo template preset creates. See the engine README for the exact shape.
+- A **collection** is a table, such as `products`. Pick one to browse its **rows** with paging and search.
+- **Add** or edit a row in a form made from the collection's **fields**. **Delete** removes one.
+- **Edit fields** adds, changes, renames and removes fields. A change that would delete data first shows exactly what would be lost, for example "the field products.price and its 80 saved values", and needs a second confirm.
+- **Import** and **Export** use JSON and CSV files.
+- **Show database file** reveals `db.sqlite` in Finder. Open a copy of it in [TablePlus](https://tableplus.com) or [DB Browser for SQLite](https://sqlitebrowser.org) to look at the data. Do not edit the file while the backend runs.
 
-### Logs
+## 6. Media
 
-Live requests with method, status and path filters. Click one for the request and the answer in a drawer. The engine hides passwords, tokens and similar fields before they reach the window. **Export JSON** saves what you see, and the engine's own log is underneath.
+Open the **Media** tab.
 
-### Settings
+1. **Upload** with the button, or drop files on the window.
+2. Use a file in a record: a field of the type "media file" lets you pick it. The record then holds the file's id.
+3. Your app downloads the file from `/media/:id`. Press the copy button on a file to copy its full URL.
 
-- **Server**: the port, HTTPS on or off, token lifetimes and the largest media file. A new port or HTTPS choice needs a restart, and the tab offers **Restart now**.
-- **Certificates**: whether a certificate exists, **Create certificate**, **Trust on this Mac…** (asks you to confirm, then macOS asks for your password), **Trust on this simulator** for each booted iOS simulator, **Send to Android emulator**, and a QR code with the address of the public CA for a phone.
-- **Backup**: **Export backup…** writes one `.zip` with the definitions, the data and the media. **Restore into new folder…** unpacks a backup into an empty folder and opens it. Secrets and certificates are never in a backup.
-- **Check against an OpenAPI file…**: compares the backend with a file such as `template/api/generated/openapi.json` and lists what is missing or different.
+Images, video and audio get a preview. Every other type, SVG and HTML included, shows an icon, because those can carry script.
+
+## 7. Users
+
+Open the **Users** tab. These are the people who log in to your app.
+
+- **Add a user** with a username and a password. Passwords are stored with scrypt, and the app never shows a password or a token.
+- **Reset a password**, **Disable** or **Enable** a user.
+- **Sign out everywhere** ends every session of a user. The next request from the app gets a 401, and the app goes to the login screen.
+
+## 8. Content
+
+Open the **Content** tab. It is a small CMS for the texts of your app: announcements, FAQs, a "What's new" list.
+
+1. **Add type.** A content type has fields: short text, long text, Markdown text, number, yes or no, date, one of a list, a media file, JSON, or a list of texts. Tick *Translated into every language* to write each entry once per language (the template uses `en` and `ar`; change them in `backend.json`, under `content`). Tick *Only one entry* for a single page such as Home.
+2. **Add entry.** A tab for each language marks a missing translation. A field left empty in one language shows the default language's text in the public API.
+3. **Publish.** **Save draft** keeps your work private. **Publish** puts the entry in the public API at once. **Schedule** publishes at a date and time you pick (within 30 seconds of it, while the backend runs). **Unpublish** hides it again. The last ten versions are listed, and **Revert** puts one back.
+
+Your app reads published entries with no sign-in:
+
+- `GET /content/<type>?locale=ar` is a list: `{ items, total, limit, skip, nextCursor }`
+- `GET /content/<type>/<id or slug>` is one entry
+- A type with *Only one entry* answers `GET /content/<type>` with that entry.
+
+The template's "What's new" screen reads the `announcement` type that the Tempo template creates.
+
+## 9. Logs
+
+Open the **Logs** tab. You see live requests with method, status and path filters. Click one to see the request and the answer. Passwords, tokens and similar fields are hidden. **Export JSON** saves what you see. The engine's own log is below.
+
+## 10. Settings
+
+- **Server.** The port, HTTPS on or off, token lifetimes and the largest media file. A new port or HTTPS choice needs a restart, and the tab offers **Restart now**.
+- **Certificates.** See step 3.1.
+- **Backup.** **Export backup…** writes one `.zip` with the definitions, the data and the media. **Restore into new folder…** unpacks a backup into an empty folder and opens it. Secrets and certificates are never in a backup, so a restored backup gets a new certificate and new secrets.
+- **Check against an OpenAPI file…** compares the backend with a file such as `template/api/generated/openapi.json`. It lists what is missing or different, so your local backend does not drift from the real contract.
 - **Open folder** reveals the backend in Finder.
 
-See [Local HTTPS](/docs/backend/local-https) for the trust steps in a terminal, and for physical devices.
+## 11. Custom code handlers
 
-## Security model
+Use a handler when no other endpoint type fits. Choose the **Custom code** type in an endpoint, then press **Create file from example**. The app writes `handlers/<name>.js`. Edit it in your editor. Saving the file reloads it, so the next request runs the new code.
 
+An example, `handlers/stats-summary.js`:
+
+```js
+// GET /stats/summary: how many products and users exist.
+export default async function (ctx) {
+  const products = await ctx.db.count('products');
+  const users = await ctx.users.count();
+  ctx.log.info('stats summary', { products, users });
+  return { products, users };
+}
+```
+
+What `ctx` has:
+
+| Part | What it gives you |
+| --- | --- |
+| `ctx.req` | `method`, `path`, `params`, `query`, `headers`, `body` and `user` (the signed-in user) |
+| `ctx.db` | `list`, `get`, `count`, `create`, `update`, `delete` on your collections. There is no raw SQL. |
+| `ctx.users.count()` | How many app users exist |
+| `ctx.media` | `get(id)` and `url(id)` |
+| `ctx.log` | `debug`, `info`, `warn`, `error`, written to the engine log with secrets hidden |
+| `ctx.scenario` | The scenario picked for this endpoint |
+
+What you return becomes the answer. Return a plain value for a 200, or `{ status, headers, body }` to choose them.
+
+The **timeout** is set on the endpoint (5 seconds by default, 30 at most). A handler that runs longer is stopped, and the app gets a 504. The engine keeps serving.
+
+<Callout title="Trusted code, not a sandbox" type="warn">
+  A handler runs on your Mac with your permissions. It can read files, use the network and start programs. Only open backends whose `handlers/` folder you trust.
+</Callout>
+
+## 12. What to commit
+
+Commit these:
+
+- `backend.json`: collections, endpoints, settings
+- `handlers/`: your custom code
+- `seed/`: the starting data
+
+Never commit `.data/`. It holds the database, uploaded files, secrets, certificates and logs. The backend writes its own `.gitignore` inside `.data/`, so Git skips it. Do not remove that file. To share a backend with its data, use **Export backup…** instead.
+
+## 13. Troubleshooting
+
+**The port is in use.** The Dashboard says so and offers **Try another port**. Or stop the other program, or set another port in **Settings**, then **Restart now**. The program on port `8443` may be a dev API you started with `yarn api up`.
+
+**Certificate errors.** The target does not trust the certificate yet. See step 3.1 for the target, then restart the template app.
+
+| Target | Message | Fix |
+| --- | --- | --- |
+| iOS simulator | error -1202, "server certificate is untrusted" | Press **Trust on this simulator**. On a real iPhone, turn on **Certificate Trust Settings**. |
+| Android emulator | "Trust anchor for certification path not found" | Install the CA from Settings and run the `devDebug` build. |
+| Browser | `ERR_CERT_AUTHORITY_INVALID` | Press **Trust on this Mac…** |
+| Only the Wi-Fi address fails | The certificate was made for another address | Create the certificate again, then restart the backend. |
+
+**"No internet connection" in the app.** The template shows this when a request fails before it reaches a server. A common cause is a comment on the same line as a value in `.env.dev`:
+
+```ini
+API_BASE_URL=https://localhost:8443  # my backend
+```
+
+The comment becomes part of the address, so every call fails. Put comments on their own line. The same message appears when the backend is stopped, when the address is wrong for the target (`localhost` does not work on the Android emulator: use `10.0.2.2`), or when the certificate is not trusted.
+
+**The app does not see my changes.** Changes to endpoints, data and handlers apply live: the next request sees them. Changing the **API source** in the debug menu needs a restart of the template app. A new certificate or port needs a restart of the backend.
+
+**The engine will not start.** The Dashboard shows its last lines. A message that the bundled engine is missing means the app is damaged: install it again.
+
+To test with a throwaway certificate authority, start the app with `CAROOT` set to a temporary folder. It is passed to mkcert, so your real CA is untouched.
+
+## 14. Security model
+
+- **No Node.js needed.** The engine is a single executable inside the app. The app runs that file and nothing else.
 - **Two listeners.** The API listens on all interfaces, so a phone can reach it. The admin API that the window uses listens only on `127.0.0.1`, on a random port, and wants a token that is new at every start. The public port answers 404 for every admin route.
 - **The token never reaches the window.** The engine prints it once, to the app. Rust keeps it and adds it to each admin call. The window has no token, no URL of the admin port and no way to make a request itself.
 - **Fixed commands.** Rust runs a closed set: start and stop an engine, `create`, `certs`, `trust` for this Mac, a simulator or Android, `snapshot` and `check`, plus `xcrun simctl list` to find simulators. The window cannot pass a program or an argument, and it can only act on backends you opened.
 - **Certificates stay on.** "Try it" calls go through Rust, which trusts only this backend's own `rootCA.pem`. Verification is never switched off, and the app never changes a trust store unless you press a Trust button and confirm.
 - **Files.** Folder and file dialogs open from Rust, so the window never names a path (dropped files are kept by Rust too). Writes use a fresh temp file and refuse symbolic links. Reveal shows a plain file or folder inside the backend in Finder with `open -R`, and never launches it.
 - **A strict content security policy.** Scripts and styles only from the app itself, no remote content and no telemetry. Media previews come from `blob:` URLs made from bytes Rust fetched after it checked the type.
-- **Secrets stay out of the folder you commit.** `backend.json`, `handlers/` and `seed/` are safe to commit. `.data/` (the database, media, secrets, certificates and logs) is ignored by its own `.gitignore`.
-
-## Node discovery
-
-For now the app finds Node through your login shell: `$SHELL -lc 'command -v node'`, then checks that `node --version` is 24 or newer. If it is missing, the app says so and offers **Check again**, without a restart. Version managers such as nvm usually add themselves to `~/.zshrc`, which a login shell does not read. Put the `PATH` line in `~/.zprofile` instead. `mkcert`, `xcrun` and `adb` are found the same way.
-
-To test with a throwaway certificate authority, start the app with `CAROOT` set to a temporary folder. It is passed to mkcert, so your real CA is untouched.
+- **Handlers are trusted code.** See step 11.
+- **Secrets stay out of the folder you commit.** See step 12.
