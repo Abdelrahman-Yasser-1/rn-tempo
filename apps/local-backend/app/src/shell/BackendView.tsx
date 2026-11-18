@@ -4,6 +4,7 @@ import type { BackendStatus } from '../api/types';
 import { Dashboard } from '../tabs/Dashboard';
 import { Data } from '../tabs/Data';
 import { Endpoints } from '../tabs/Endpoints';
+import { Media } from '../tabs/Media';
 import { StatusDot } from '../ui/bits';
 
 export const TABS = ['Dashboard', 'Endpoints', 'Data', 'Media', 'Users', 'Content', 'Logs', 'Settings'] as const;
@@ -39,6 +40,7 @@ export function BackendView({ backend, render }: { backend: BackendStatus; rende
   const renderers: Partial<Record<TabName, (backend: BackendStatus) => React.ReactNode>> = {
     Dashboard: (b) => <Dashboard backend={b} />,
     Data: (b) => <BackendOnly backend={b} show={(path) => <Data backend={path} />} />,
+    Media: (b) => <BackendOnly backend={b} show={() => <Media backend={b} />} />,
     Endpoints: (b) => <BackendOnly backend={b} show={(path) => <Endpoints backend={path} />} />,
     ...render,
   };
