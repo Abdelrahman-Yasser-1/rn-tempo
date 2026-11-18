@@ -754,3 +754,37 @@ fieldset.plain-fieldset legend {
 .stack.tight {
   gap: 2px;
 }
+.media-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+}
+.media-card .name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.thumb {
+  width: 100%;
+  height: 120px;
+  object-fit: contain;
+  background: var(--code-bg);
+  border-radius: 6px;
+}
+.thumb.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.dropzone {
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  text-align: center;
+}
