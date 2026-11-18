@@ -98,10 +98,6 @@ describe('content types in backend.json', () => {
     expect(issues({ name: 'x', contentTypes: [{ name: 'a', fields: [{ name: 'k', type: 'string' }, { name: 'K', type: 'string' }] }] }).join()).toContain('Duplicate field');
     expect(issues({ name: 'x', contentTypes: [{ name: 'a', singleton: true, seed: [{ values: {} }, { values: {} }] }] }).join()).toContain('singleton');
     const seeded = (seed: unknown): string => issues({ name: 'x', contentTypes: [{ ...article, seed: [seed] }] }).join();
-    expect(seeded({ values: { de: { title: 'x' } } })).toContain('Unknown locale "de"');
-    expect(seeded({ values: { en: { nope: 'x' } } })).toContain('Unknown field "nope"');
-    expect(seeded({ values: { en: { title: 5 } } })).toContain('Must be text');
-    expect(seeded({ values: { en: { summary: 'no title' } } })).toContain('Required to publish');
     expect(seeded({ slug: '123', values: { en: { title: 'x' } } })).toContain('slug');
   });
 
@@ -588,6 +584,26 @@ describe('snapshots keep content', () => {
 });
 
 describe('seeds and reloads', () => {
+  it('refuses a seed that does not fit its type when the type is added, naming the entry and the field', async () => {
+    const bad = (values: unknown): BackendInput => definition({ contentTypes: [{ ...articleType(), seed: [{ values: values as never }] }] });
+    for (const [values, message] of [
+      [{ de: { title: 'x' } }, 'Unknown locale "de"'],
+      [{ en: { nope: 'x' } }, 'Unknown field "nope"'],
+      [{ en: { title: 5 } }, 'Must be text'],
+      [{ en: { summary: 'no title' } }, 'Required to publish'],
+    ] as const) {
+      await expect(serve(bad(values))).rejects.toThrow(message);
+    }
+  });
+
+  it('a seed that no longer fits a changed type does not block editing the type', async () => {
+    const { call, create } = await setup(definition({ contentTypes: [{ ...articleType(), seed: [{ slug: 'welcome', values: { en: { title: 'Hi', summary: 'S' }, ar: { title: 'أهلا' } } }] }] }));
+    expect((await call('/content/types/article/fields/summary?confirm=true', 'DELETE')).status).toBe(200); // the seed still names it
+    const type = (await (await call('/content/types/article')).json()) as Record<string, unknown>;
+    expect((await call('/content/types/article?confirm=true', 'PUT', { ...type, localized: false })).status).toBe(200); // and has an "ar" text
+    await create({ type: 'article', values: { en: { title: 'More' } } });
+  });
+
   const seeded = (): BackendInput =>
     definition({ contentTypes: [{ ...articleType(), seed: [{ slug: 'welcome', status: 'published', values: { en: { title: 'Hi' }, ar: { title: 'أهلا' } } }, { slug: 'wip', status: 'draft', values: { en: { title: 'WIP' } } }] }] });
 
