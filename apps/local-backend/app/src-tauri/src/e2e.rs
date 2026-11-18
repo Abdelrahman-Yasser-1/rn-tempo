@@ -41,6 +41,32 @@ fn port_free(port: u16) -> bool {
     .is_err()
 }
 
+/// An ISO 8601 UTC time `seconds` from now (no date crate is needed for this one test).
+fn iso_after(seconds: u64) -> String {
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs()
+        + seconds;
+    let (days, rest) = ((now / 86_400) as i64, now % 86_400);
+    // Civil date from days since 1970-01-01 (Howard Hinnant's algorithm).
+    let z = days + 719_468;
+    let era = z.div_euclid(146_097);
+    let doe = z.rem_euclid(146_097);
+    let yoe = (doe - doe / 1_460 + doe / 36_524 - doe / 146_096) / 365;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let day = doy - (153 * mp + 2) / 5 + 1;
+    let month = if mp < 10 { mp + 3 } else { mp - 9 };
+    let year = yoe + era * 400 + i64::from(month <= 2);
+    format!(
+        "{year:04}-{month:02}-{day:02}T{:02}:{:02}:{:02}Z",
+        rest / 3_600,
+        rest % 3_600 / 60,
+        rest % 60
+    )
+}
+
 #[test]
 #[ignore = "needs node, mkcert, a built engine and free ports; run by hand"]
 fn the_app_side_runs_a_real_backend_end_to_end() {
@@ -204,6 +230,89 @@ fn the_app_side_runs_a_real_backend_end_to_end() {
         200
     );
     assert_eq!(me(&token), 401, "the old token stops working at once");
+
+    // 6b. Content: the template preset seeds an announcement; a draft is private, publish shows it, unpublish
+    // hides it, and a schedule 2 seconds ahead appears on its own.
+    let announcements = |locale: &str| {
+        let answer = public(req(
+            "GET",
+            &format!("/content/announcement?locale={locale}"),
+            None,
+        ))
+        .unwrap();
+        assert_eq!(answer.status, 200, "{}", answer.body);
+        json(&answer)
+    };
+    let seeded = announcements("ar");
+    assert_eq!(seeded["total"], serde_json::json!(1), "{seeded}");
+    assert_eq!(seeded["items"][0]["slug"], "welcome");
+    assert_eq!(seeded["items"][0]["locale"], "ar");
+    let draft = admin(req(
+        "POST",
+        "/content/entries",
+        Some(
+            r#"{"type":"announcement","slug":"y5","values":{"en":{"title":"Y5 news"},"ar":{"title":"أخبار Y5"}}}"#,
+        ),
+    ));
+    assert_eq!(draft.status, 201, "{}", draft.body);
+    let entry = json(&draft)["id"].as_u64().unwrap();
+    assert_eq!(
+        announcements("ar")["total"],
+        serde_json::json!(1),
+        "a draft is not public"
+    );
+    assert_eq!(
+        public(req("GET", "/content/announcement/y5", None))
+            .unwrap()
+            .status,
+        404
+    );
+    let published = admin(req(
+        "POST",
+        &format!("/content/entries/{entry}/publish"),
+        Some("{}"),
+    ));
+    assert_eq!(published.status, 200, "{}", published.body);
+    let live = announcements("ar");
+    assert_eq!(live["total"], serde_json::json!(2));
+    assert!(live.to_string().contains("أخبار Y5"), "{live}");
+    let hidden = admin(req(
+        "POST",
+        &format!("/content/entries/{entry}/unpublish"),
+        Some("{}"),
+    ));
+    assert_eq!(hidden.status, 200, "{}", hidden.body);
+    assert_eq!(
+        announcements("ar")["total"],
+        serde_json::json!(1),
+        "unpublished is hidden"
+    );
+    let at = iso_after(2);
+    let scheduled = admin(req(
+        "POST",
+        &format!("/content/entries/{entry}/schedule"),
+        Some(&format!(r#"{{"publishAt":"{at}"}}"#)),
+    ));
+    assert_eq!(scheduled.status, 200, "{}", scheduled.body);
+    assert_eq!(
+        announcements("ar")["total"],
+        serde_json::json!(1),
+        "not before its time"
+    );
+    std::thread::sleep(Duration::from_millis(3200));
+    assert_eq!(
+        announcements("ar")["total"],
+        serde_json::json!(2),
+        "after its time it is public"
+    );
+    // Removing a content field that holds values needs the second confirm.
+    let lost = admin(req(
+        "DELETE",
+        "/content/types/announcement/fields/title",
+        None,
+    ));
+    assert_eq!(lost.status, 409, "{}", lost.body);
+    assert_eq!(json(&lost)["lost"][0]["kind"], "contentField");
 
     // 7. Logs: the requests above are in the engine's log, redacted.
     let log = admin(req("GET", "/requests", None));
