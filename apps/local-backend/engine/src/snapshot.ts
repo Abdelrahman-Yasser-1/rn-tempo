@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
-import { closeSync, createReadStream, createWriteStream, lstatSync, mkdirSync, mkdtempSync, openSync, readdirSync, readSync, rmSync, statSync } from 'node:fs';
+import { closeSync, createReadStream, createWriteStream, lstatSync, mkdirSync, mkdtempSync, openSync, readdirSync, readSync, realpathSync, rmSync, statSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join, resolve, sep } from 'node:path';
 import { PassThrough, Readable, Transform, type TransformCallback } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { constants as zlibConstants, crc32, createDeflateRaw, createInflateRaw } from 'node:zlib';
@@ -63,6 +63,20 @@ interface SourceFile {
   /** The file on disk. */
   path: string;
   size: number;
+}
+
+/**
+ * Checks a folder the export reads from: absent is fine (`false`), but a symbolic link, a non-folder, or a path
+ * whose real location is outside the backend folder is refused, so a crafted folder cannot pull other files into the zip.
+ */
+function checkRoot(path: string, backend: string, label: string): boolean {
+  const stat = lstatSync(path, { throwIfNoEntry: false });
+  if (stat === undefined) return false;
+  if (stat.isSymbolicLink()) throw new DefinitionError(`${label} is a symbolic link and is not exported: ${path}`);
+  if (!stat.isDirectory()) throw new DefinitionError(`${label} is not a folder: ${path}`);
+  const real = realpathSync(path);
+  if (real !== backend && !real.startsWith(backend + sep)) throw new DefinitionError(`${label} is outside the backend folder and is not exported.`);
+  return true;
 }
 
 /** Regular files under `dir`, as `prefix/relative` names. Links and special files are skipped, never followed. */
@@ -251,8 +265,11 @@ export function snapshotStream(source: ExportSource): Readable {
     const definition = join(root, DEFINITION_FILE);
     if (!lstatSync(definition).isFile()) throw new DefinitionError(`${DEFINITION_FILE} is not a file.`);
     const files: SourceFile[] = [{ name: DEFINITION_FILE, path: definition, size: lstatSync(definition).size }];
-    const handlers = walk(join(root, 'handlers'), 'handlers');
-    const seeds = walk(join(root, 'seed'), 'seed');
+    const real = realpathSync(root);
+    const inside = (path: string, label: string): string[] => (checkRoot(path, real, label) ? [path] : []);
+    inside(dataDir, '.data');
+    const handlers = inside(join(root, 'handlers'), 'handlers').flatMap((path) => walk(path, 'handlers'));
+    const seeds = inside(join(root, 'seed'), 'seed').flatMap((path) => walk(path, 'seed'));
     files.push(...handlers, ...seeds);
     const dbSource = join(dataDir, 'db.sqlite');
     let hasDb = false;
@@ -266,7 +283,7 @@ export function snapshotStream(source: ExportSource): Readable {
       copyDatabase(source.db ?? dbSource, copy);
       files.push({ name: 'data/db.sqlite', path: copy, size: statSync(copy).size });
     }
-    const media = walk(join(dataDir, 'media'), 'media', new Set(['.tmp']));
+    const media = inside(join(dataDir, 'media'), '.data/media').flatMap((path) => walk(path, 'media', new Set(['.tmp'])));
     files.push(...media);
     if (files.length + 1 > SNAPSHOT_LIMITS.maxEntries) throw new DefinitionError('Too many files for a snapshot.');
 
