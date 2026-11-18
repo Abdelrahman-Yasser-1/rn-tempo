@@ -1,42 +1,49 @@
 import { useEffect, useState } from 'react';
 
-import { useClient } from '../client/context';
-import type { RequestEntry } from '../client/types';
+import { useApi } from '../api/context';
+import type { RequestEntry } from '../api/types';
 import { addEntry } from '../lib/requests';
 
 /**
- * The project's live request log. Rust reads the server's event stream (so the project CA is trusted)
- * and re-emits each entry; this hook listens first, then subscribes, so the replayed history is not missed.
+ * A backend's live request log. Rust reads the engine's event stream and re-emits each entry; this hook listens
+ * first, then subscribes, so the replayed history is not missed.
  */
-export function useRequestLog(project: string) {
-  const client = useClient();
+export function useRequestLog(backend: string) {
+  const api = useApi();
   const [entries, setEntries] = useState<RequestEntry[]>([]);
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    const unlisteners: (() => void)[] = [];
+    const offs: (() => void)[] = [];
     const start = async () => {
-      const offRequest = await client.onRequest((event) => {
-        if (event.project === project) setEntries((current) => addEntry(current, event.entry));
+      const offRequest = await api.onRequest((event) => {
+        if (event.backend === backend) setEntries((current) => addEntry(current, event.entry));
       });
-      const offState = await client.onEventsState((event) => {
-        if (event.project === project) setConnected(event.connected);
+      const offState = await api.onEventsState((event) => {
+        if (event.backend === backend) setConnected(event.connected);
       });
-      unlisteners.push(offRequest, offState);
+      offs.push(offRequest, offState);
       if (cancelled) return;
-      await client.subscribeEvents(project);
+      await api.subscribeRequests(backend);
     };
     start().catch((failure: unknown) => {
       setError(failure instanceof Error ? failure.message : String(failure));
     });
     return () => {
       cancelled = true;
-      for (const off of unlisteners) off();
-      client.unsubscribeEvents(project).catch(() => undefined);
+      for (const off of offs) off();
+      api.unsubscribeRequests(backend).catch(() => undefined);
     };
-  }, [client, project]);
+  }, [api, backend]);
 
-  return { entries, connected, error, clear: () => setEntries([]) };
+  return {
+    entries,
+    connected,
+    error,
+    clear: () => {
+      setEntries([]);
+    },
+  };
 }

@@ -4,6 +4,7 @@ import type { BackendStatus } from '../api/types';
 import { Dashboard } from '../tabs/Dashboard';
 import { Data } from '../tabs/Data';
 import { Endpoints } from '../tabs/Endpoints';
+import { Logs } from '../tabs/Logs';
 import { Media } from '../tabs/Media';
 import { Users } from '../tabs/Users';
 import { StatusDot } from '../ui/bits';
@@ -43,6 +44,7 @@ export function BackendView({ backend, render }: { backend: BackendStatus; rende
     Data: (b) => <BackendOnly backend={b} show={(path) => <Data backend={path} />} />,
     Media: (b) => <BackendOnly backend={b} show={() => <Media backend={b} />} />,
     Users: (b) => <BackendOnly backend={b} show={(path) => <Users backend={path} />} />,
+    Logs: (b) => <BackendOnly backend={b} show={() => <Logs backend={b} />} />,
     Endpoints: (b) => <BackendOnly backend={b} show={(path) => <Endpoints backend={path} />} />,
     ...render,
   };
