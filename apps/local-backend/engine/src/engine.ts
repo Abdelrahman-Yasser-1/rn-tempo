@@ -4,6 +4,8 @@ import { BUILTIN_SCENARIOS, redactUrl, RequestLog, SCENARIO_HEADER } from '@rn-t
 
 import { Accounts } from './accounts.ts';
 import { authHandler, AuthService, usersHandler } from './auth.ts';
+import { ContentService, modelOf } from './content.ts';
+import { handleContent } from './content-public.ts';
 import { crudHandler } from './crud.ts';
 import { createHandlerRpc } from './handler-host.ts';
 import { HandlerFileError, handlerFailure, HandlerPool, replyFromHandler, resolveHandlerFile } from './handlers.ts';
@@ -37,6 +39,9 @@ interface State {
   router: Router;
 }
 
+/** How often scheduled content is checked. */
+export const SCHEDULE_TICK_MS = 30_000;
+
 const defaultSleep = (ms: number): Promise<void> => new Promise((done) => setTimeout(done, ms));
 
 /**
@@ -54,20 +59,24 @@ export class Engine {
   readonly auth: AuthService;
   /** Stored files (`.data/media`). */
   readonly media: MediaService;
+  /** Content types' entries, versions and the public reads. */
+  readonly content: ContentService;
   /** Workers that run `handler` endpoints. */
   readonly handlers: HandlerPool;
   private state: State;
   private readonly options: Required<Pick<EngineOptions, 'sleep' | 'now' | 'authorize'>> & Pick<EngineOptions, 'onRequest' | 'logger'>;
   private readonly scenarioPicks = new Map<string, string>();
   private queue: Promise<unknown> = Promise.resolve();
+  private readonly dueTimer: NodeJS.Timeout;
 
-  private constructor(folder: BackendFolder, store: Store, state: State, options: EngineOptions) {
+  private constructor(folder: BackendFolder, store: Store, content: ContentService, state: State, options: EngineOptions) {
     this.folder = folder;
     this.store = store;
     this.state = state;
     const now = options.now ?? ((): Date => new Date());
     this.auth = new AuthService(new Accounts(store.db, now), loadJwtSecret(folder.dataDir), () => this.state.definition.auth, now);
     this.media = new MediaService(folder.dataDir, store.db, now);
+    this.content = content;
     this.handlers = new HandlerPool(options.logger);
     this.options = {
       sleep: options.sleep ?? defaultSleep,
@@ -76,19 +85,33 @@ export class Engine {
       ...(options.onRequest === undefined ? {} : { onRequest: options.onRequest }),
       ...(options.logger === undefined ? {} : { logger: options.logger }),
     };
+    // Scheduled entries also go live while nobody reads (a read publishes them too).
+    this.dueTimer = setInterval(() => {
+      try {
+        this.content.publishDue();
+      } catch (error) {
+        this.options.logger?.warn({ err: error instanceof Error ? error.message : String(error) }, 'publishing scheduled content failed');
+      }
+    }, SCHEDULE_TICK_MS);
+    this.dueTimer.unref();
   }
 
   /** Opens the database, migrates it to the folder's definition (seeding new collections) and builds the routes. */
   static start(folder: BackendFolder, options: EngineOptions = {}): Engine {
     const store = Store.open(join(folder.dataDir, 'db.sqlite'));
+    const content = new ContentService(store.db, options.now ?? ((): Date => new Date()));
     try {
-      store.migrate(folder.definition.collections, { seedRows: (collection) => seedRows(folder.dir, collection) });
+      const contentPlan = content.plan(modelOf(folder.definition));
+      store.migrate(folder.definition.collections, {
+        seedRows: (collection) => seedRows(folder.dir, collection),
+        within: () => contentPlan.run(),
+      });
     } catch (error) {
       store.close();
       throw error;
     }
     try {
-      const engine = new Engine(folder, store, { definition: folder.definition, router: new Router([], undefined) }, options);
+      const engine = new Engine(folder, store, content, { definition: folder.definition, router: new Router([], undefined) }, options);
       engine.state = engine.build(folder.definition);
       engine.seedUsers();
       return engine;
@@ -131,6 +154,7 @@ export class Engine {
   }
 
   close(): void {
+    clearInterval(this.dueTimer);
     void this.handlers.close();
     this.store.close();
   }
@@ -240,10 +264,13 @@ export class Engine {
    */
   applyDefinition(next: Backend, options: { confirm?: boolean; hints?: RenameHints } = {}): Promise<Plan> {
     return this.serialize(() => {
+      const contentPlan = this.content.plan(modelOf(next), options.hints?.contentFields);
       const plan = this.store.migrate(next.collections, {
         ...(options.hints === undefined ? {} : { hints: options.hints }),
         ...(options.confirm === undefined ? {} : { confirm: options.confirm }),
         seedRows: (collection) => seedRows(this.folder.dir, collection),
+        extraLost: contentPlan.lost,
+        within: () => contentPlan.run(),
       });
       this.options.logger?.info({ ops: plan.ops.map((op) => op.op) }, 'definition applied');
       const state = this.build(next);
@@ -291,15 +318,23 @@ export class Engine {
     let endpointId: string | undefined;
     let reply: Reply;
     try {
-      const match = router.match(ctx.method, ctx.path);
-      if (match.kind === 'none') {
-        reply = problemReply(404, { detail: `No endpoint for ${ctx.method} ${ctx.path}.` });
-      } else if (match.kind === 'method') {
-        reply = problemReply(405, { detail: `${ctx.method} is not allowed here.`, headers: { allow: match.allowed.join(', ') } });
+      const publicContent = handleContent(
+        { definition: this.state.definition, content: this.content, media: this.media, mediaUrl: (id, origin) => this.mediaUrl(id, origin) },
+        ctx,
+      );
+      if (publicContent !== undefined) {
+        reply = publicContent;
       } else {
-        const { endpoint } = match.route;
-        endpointId = endpoint.id;
-        reply = await this.run(ctx, endpoint, () => match.route.handler(ctx, match.params));
+        const match = router.match(ctx.method, ctx.path);
+        if (match.kind === 'none') {
+          reply = problemReply(404, { detail: `No endpoint for ${ctx.method} ${ctx.path}.` });
+        } else if (match.kind === 'method') {
+          reply = problemReply(405, { detail: `${ctx.method} is not allowed here.`, headers: { allow: match.allowed.join(', ') } });
+        } else {
+          const { endpoint } = match.route;
+          endpointId = endpoint.id;
+          reply = await this.run(ctx, endpoint, () => match.route.handler(ctx, match.params));
+        }
       }
     } catch (error) {
       this.options.logger?.error({ err: error instanceof Error ? error.message : String(error), method: ctx.method, path: ctx.path }, 'request failed');

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { isIdentifier } from './names.ts';
+import { checkContentShape, isBlankValue, isSlug, SLUG_HELP, validateLocaleData } from './content-values.ts';
 import { checkShape } from './values.ts';
 
 const identifier = z
@@ -168,7 +169,74 @@ export const EndpointSchema = z.discriminatedUnion('type', [
   UsersEndpoint,
 ]);
 
-const ContentTypeStub = z.looseObject({ name: identifier }).meta({ description: 'Content types arrive in a later phase; only the name is checked.' });
+export const CONTENT_FIELD_TYPES = ['string', 'text', 'richText', 'number', 'boolean', 'date', 'enum', 'media', 'json', 'list'] as const;
+export type ContentFieldType = (typeof CONTENT_FIELD_TYPES)[number];
+
+/** A language code such as `en`, `ar` or `pt-BR`. */
+export const LOCALE_PATTERN = /^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/;
+const locale = z.string().regex(LOCALE_PATTERN, 'A locale looks like "en", "ar" or "pt-BR".');
+
+export const ContentFieldSchema = z
+  .strictObject({
+    name: identifier,
+    type: z.enum(CONTENT_FIELD_TYPES).meta({
+      description:
+        '`string` (one line), `text` (long text), `richText` (Markdown text: stored as written, never HTML), `number`, `boolean`, `date` (ISO 8601), `enum`, `media` (a media id), `json`, `list` (a list of strings).',
+    }),
+    label: z.string().max(100).optional().meta({ description: 'The name shown in the app. Defaults to the field name.' }),
+    required: z.boolean().default(false).meta({ description: 'Needed to publish (in the default locale). A draft may leave it empty.' }),
+    default: z.unknown().optional().meta({ description: 'Put in existing entries when the field is added.' }),
+    enumValues: z.array(z.string()).min(1).optional().meta({ description: 'The allowed values of an `enum` field.' }),
+  })
+  .superRefine((field, ctx) => {
+    if (field.default !== undefined && field.default !== null) {
+      const problem = checkContentShape(field as ContentField, field.default);
+      if (problem !== undefined) ctx.addIssue({ code: 'custom', path: ['default'], message: `The default is wrong: ${problem}` });
+    }
+    if (field.type === 'enum' && field.enumValues === undefined) ctx.addIssue({ code: 'custom', path: ['enumValues'], message: 'An enum field needs enumValues.' });
+    if (field.type !== 'enum' && field.enumValues !== undefined) ctx.addIssue({ code: 'custom', path: ['enumValues'], message: 'enumValues only applies to an enum field.' });
+  })
+  .meta({ title: 'ContentField' });
+
+export const ContentSeedEntrySchema = z
+  .strictObject({
+    slug: z.string().optional(),
+    status: z.enum(['draft', 'published']).default('published'),
+    values: z.record(z.string(), z.record(z.string(), z.unknown())).meta({
+      description: 'Per locale, the field values: `{ "en": { "title": "Hello" }, "ar": { "title": "..." } }`. A type that is not localized uses the default locale.',
+    }),
+  })
+  .meta({ title: 'ContentSeedEntry' });
+
+export const ContentTypeSchema = z
+  .strictObject({
+    name: identifier,
+    label: z.string().max(100).optional().meta({ description: 'The name shown in the app. Defaults to the type name.' }),
+    fields: z.array(ContentFieldSchema).default([]),
+    localized: z.boolean().default(false).meta({ description: 'Entries hold one set of values per locale (a missing field falls back to the default locale).' }),
+    singleton: z.boolean().optional().meta({ description: 'At most one entry; `GET <mount>/<type>` answers that one object.' }),
+    seed: z.array(ContentSeedEntrySchema).optional().meta({ description: 'Entries to create when the type is first added.' }),
+  })
+  .superRefine((type, ctx) => {
+    const seen = new Set<string>();
+    type.fields.forEach((field, index) => {
+      const key = field.name.toLowerCase();
+      if (seen.has(key)) ctx.addIssue({ code: 'custom', path: ['fields', index, 'name'], message: `Duplicate field "${field.name}" (names are not case sensitive).` });
+      seen.add(key);
+    });
+  })
+  .meta({ title: 'ContentType' });
+
+const ContentConfig = z.strictObject({
+  mount: z
+    .string()
+    .regex(/^(\/[A-Za-z0-9._~-]+)+$/, 'A mount looks like "/content".')
+    .refine((path) => !path.startsWith('/__'), { message: 'Paths starting with "/__" are reserved for the engine.' })
+    .default('/content')
+    .meta({ description: 'Where the public content API lives, after `basePath`: `GET <mount>/<type>`.' }),
+  locales: z.array(locale).min(1).default(['en', 'ar']).meta({ description: 'The languages of localized content. The default is the template\'s (`template/src/locales`).' }),
+  defaultLocale: locale.default('en').meta({ description: 'The language a missing translation falls back to. It must be one of `locales`.' }),
+});
 
 const SeedUser = z.strictObject({
   username: z.string().min(1).max(64),
@@ -190,6 +258,57 @@ const AuthConfig = z.strictObject({
   seedUsers: z.array(SeedUser).default([]).meta({ description: 'App users created at start-up when their username does not exist yet (and was never seeded before).' }),
 });
 
+const pathSegments = (path: string): string[] => path.split('/').filter((part) => part !== '');
+
+/** Locales, type names, seeds, and no endpoint under the content mount. */
+function checkContent(def: { content: z.infer<typeof ContentConfig>; contentTypes: ContentType[]; endpoints: Endpoint[] }, ctx: z.RefinementCtx): void {
+  const { locales, defaultLocale, mount } = def.content;
+  const seenLocales = new Set<string>();
+  locales.forEach((code, index) => {
+    if (seenLocales.has(code)) ctx.addIssue({ code: 'custom', path: ['content', 'locales', index], message: `Duplicate locale "${code}".` });
+    seenLocales.add(code);
+  });
+  if (!locales.includes(defaultLocale)) ctx.addIssue({ code: 'custom', path: ['content', 'defaultLocale'], message: `The default locale "${defaultLocale}" must be one of the locales.` });
+  const names = new Set<string>();
+  def.contentTypes.forEach((type, ti) => {
+    const key = type.name.toLowerCase();
+    if (names.has(key)) ctx.addIssue({ code: 'custom', path: ['contentTypes', ti, 'name'], message: `Duplicate content type "${type.name}" (names are not case sensitive).` });
+    names.add(key);
+    if (type.singleton === true && (type.seed?.length ?? 0) > 1) ctx.addIssue({ code: 'custom', path: ['contentTypes', ti, 'seed'], message: 'A singleton holds one entry: seed at most one.' });
+    const slugs = new Set<string>();
+    (type.seed ?? []).forEach((entry, ei) => {
+      const at = (...rest: (string | number)[]): (string | number)[] => ['contentTypes', ti, 'seed', ei, ...rest];
+      if (entry.slug !== undefined) {
+        if (!isSlug(entry.slug)) ctx.addIssue({ code: 'custom', path: at('slug'), message: SLUG_HELP });
+        if (slugs.has(entry.slug)) ctx.addIssue({ code: 'custom', path: at('slug'), message: `Duplicate slug "${entry.slug}".` });
+        slugs.add(entry.slug);
+      }
+      for (const [code, data] of Object.entries(entry.values)) {
+        const allowed = type.localized ? locales.includes(code) : code === defaultLocale;
+        if (!allowed) {
+          ctx.addIssue({ code: 'custom', path: at('values', code), message: type.localized ? `Unknown locale "${code}".` : `This type is not localized: use the default locale "${defaultLocale}".` });
+          continue;
+        }
+        for (const issue of validateLocaleData(type, data, `values.${code}`, {}).issues) ctx.addIssue({ code: 'custom', path: at('values', code, ...issue.path.split('.').slice(2)), message: issue.message });
+      }
+      if (entry.status === 'published') {
+        const missing = type.fields.filter((field) => field.required && isBlankValue(entry.values[defaultLocale]?.[field.name]));
+        for (const field of missing) ctx.addIssue({ code: 'custom', path: at('values', defaultLocale, field.name), message: 'Required to publish.' });
+      }
+    });
+  });
+  if (def.contentTypes.length === 0) return;
+  const mountParts = pathSegments(mount);
+  def.endpoints.forEach((endpoint, index) => {
+    for (const path of [endpoint.path, ...(endpoint.aliases ?? [])]) {
+      const parts = pathSegments(path);
+      if (mountParts.every((part, i) => parts[i] === part)) {
+        ctx.addIssue({ code: 'custom', path: ['endpoints', index, 'path'], message: `${path} is inside the content mount "${mount}". Move the endpoint, or change content.mount.` });
+      }
+    }
+  });
+}
+
 export const BackendSchema = z
   .strictObject({
     $schema: z.string().optional(),
@@ -207,7 +326,8 @@ export const BackendSchema = z
     media: z.strictObject({ maxBytes: z.number().int().positive().default(104_857_600) }).default({ maxBytes: 104_857_600 }),
     collections: z.array(CollectionSchema).default([]),
     endpoints: z.array(EndpointSchema).default([]),
-    contentTypes: z.array(ContentTypeStub).default([]),
+    content: ContentConfig.default(() => ContentConfig.parse({})),
+    contentTypes: z.array(ContentTypeSchema).default([]),
   })
   .superRefine((def, ctx) => {
     const collections = new Map<string, (typeof def.collections)[number]>();
@@ -224,6 +344,7 @@ export const BackendSchema = z
         }
       });
     });
+    checkContent(def, ctx);
     const ids = new Set<string>();
     const routes = new Set<string>();
     def.endpoints.forEach((endpoint, index) => {
@@ -288,6 +409,9 @@ export const BackendSchema = z
   })
   .meta({ title: 'backend.json', description: 'A Tempo Local Backend definition.' });
 
+export type ContentField = z.infer<typeof ContentFieldSchema>;
+export type ContentType = z.infer<typeof ContentTypeSchema>;
+export type ContentConfigValue = z.infer<typeof ContentConfig>;
 export type Backend = z.infer<typeof BackendSchema>;
 export type BackendInput = z.input<typeof BackendSchema>;
 export type Field = z.infer<typeof FieldSchema>;

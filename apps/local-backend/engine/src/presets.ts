@@ -14,7 +14,7 @@ export const presets: readonly PresetInfo[] = [
     id: 'tempo-template',
     name: 'Tempo template',
     description:
-      'Everything the Tempo template app calls (contract C13): sign-in, refresh, profile, users, 100 products, OTP and app-config, plus media upload and a stats handler. Sign in as emilys / emilyspass.',
+      'Everything the Tempo template app calls (contract C13): sign-in, refresh, profile, users, 100 products, OTP and app-config, plus media upload, a stats handler and an announcement content type (What\'s new). Sign in as emilys / emilyspass.',
   },
 ];
 
@@ -86,6 +86,42 @@ function tempoTemplate(name: string): { definition: BackendInput; files: PresetF
         },
       ],
     },
+    content: { locales: ['en', 'ar'], defaultLocale: 'en' },
+    contentTypes: [
+      {
+        name: 'announcement',
+        label: 'Announcement',
+        localized: true,
+        fields: [
+          { name: 'title', type: 'string', label: 'Title', required: true },
+          { name: 'body', type: 'richText', label: 'Body (Markdown)' },
+          { name: 'image', type: 'media', label: 'Image' },
+          { name: 'ctaLabel', type: 'string', label: 'Button label' },
+          { name: 'ctaUrl', type: 'string', label: 'Button link' },
+        ],
+        // The "What's new" screen of the template (WS16) reads these through GET /content/announcement?locale=.
+        seed: [
+          {
+            slug: 'welcome',
+            status: 'published',
+            values: {
+              en: {
+                title: 'Welcome to Tempo',
+                body: 'This is a **local announcement** served by your Tempo Local Backend.\n\n- Edit it in the Content tab\n- Publish, schedule or unpublish it',
+                ctaLabel: 'Learn more',
+                ctaUrl: 'https://example.com/whats-new',
+              },
+              ar: {
+                title: 'مرحبًا بك في Tempo',
+                body: 'هذا **إعلان محلي** يقدّمه Tempo Local Backend.\n\n- عدّله من تبويب المحتوى\n- انشره أو جدوِله أو ألغِ نشره',
+                ctaLabel: 'اعرف المزيد',
+                ctaUrl: 'https://example.com/whats-new',
+              },
+            },
+          },
+        ],
+      },
+    ],
     collections: [
       {
         name: 'products',

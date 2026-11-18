@@ -4,6 +4,7 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import type { FieldIssue } from '@rn-tempo/api-contract';
 
 import { adminAuthRoutes } from './admin-users.ts';
+import { adminContentRoutes, contentErrorReply } from './admin-content.ts';
 import { adminMediaRoutes } from './admin-media.ts';
 import { jsonReply, problemReply, readJson, type Reply, type RequestCtx } from './http.ts';
 import { Manager, NotFoundError } from './manager.ts';
@@ -55,6 +56,8 @@ const planReply = (plan: Plan): unknown => ({ ok: true, ops: plan.ops.map((op) =
 
 /** Turns what the manager and store throw into problem+json. */
 export function errorReply(error: unknown): Reply {
+  const content = contentErrorReply(error);
+  if (content !== undefined) return content;
   if (error instanceof DefinitionError) return problemReply(400, { detail: error.message.split('\n')[0] ?? 'Invalid definition.', errors: error.issues.map((issue): FieldIssue => ({ path: issue.path, message: issue.message })) });
   if (error instanceof MigrationConfirmError) return problemReply(409, { detail: error.message, extra: { confirmRequired: true, lost: error.lost } });
   if (error instanceof MigrationError) return problemReply(409, { detail: error.message });
@@ -291,6 +294,7 @@ export function createAdminServer(manager: Manager, extras: AdminExtras = {}, to
     { method: 'GET', pattern: '/requests', handler: (ctx) => jsonReply(200, engine.requests.snapshot(Number(ctx.query.get('after') ?? 0) || 0)) },
     ...adminAuthRoutes(engine),
     ...adminMediaRoutes(engine),
+    ...adminContentRoutes(engine, manager, errorReply),
     ...(extras.routes ?? []),
   ];
 
@@ -360,6 +364,10 @@ export function adminRouteList(extras: AdminExtras = {}): string[] {
     'DELETE /scenarios/x', 'DELETE /scenarios', 'GET /requests', 'GET /events',
     'GET /users', 'POST /users', 'GET /users/1', 'PUT /users/1', 'PATCH /users/1', 'DELETE /users/1', 'POST /users/1/password', 'POST /users/1/disable',
     'POST /users/1/enable', 'POST /users/1/revoke', 'POST /users/1/token', 'GET /sessions', 'DELETE /sessions/1',
-    'GET /media', 'POST /media', 'GET /media/usage', 'GET /media/1', 'GET /media/1/file', 'DELETE /media/1', ...(extras.routes ?? []).map((route) => `${route.method} ${route.pattern}`),
+    'GET /media', 'POST /media', 'GET /media/usage', 'GET /media/1', 'GET /media/1/file', 'DELETE /media/1',
+    'GET /content/config', 'GET /content/types', 'POST /content/types', 'GET /content/types/x', 'PUT /content/types/x', 'DELETE /content/types/x', 'POST /content/types/x/fields',
+    'DELETE /content/types/x/fields/y', 'POST /content/types/x/fields/y/rename', 'GET /content/entries', 'POST /content/entries', 'GET /content/entries/1', 'PUT /content/entries/1',
+    'DELETE /content/entries/1', 'POST /content/entries/1/publish', 'POST /content/entries/1/unpublish', 'POST /content/entries/1/schedule', 'GET /content/entries/1/versions',
+    'GET /content/entries/1/versions/1', 'POST /content/entries/1/revert', ...(extras.routes ?? []).map((route) => `${route.method} ${route.pattern}`),
   ].map((entry) => entry.replace(' /', ` ${ADMIN_PREFIX}/`));
 }

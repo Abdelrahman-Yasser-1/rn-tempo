@@ -32,8 +32,16 @@ describe('contract check against the template openapi.json (AC-LB-8)', () => {
     expect(report.methodMismatches).toEqual([]);
     expect(report.ok).toBe(true);
     expect(report.counts).toMatchObject({ fileEndpoints: 13, matched: 13 });
-    // Extras are information only: the REST path of create, the media routes and the stats handler.
-    expect(report.extra.map((ref) => `${ref.method} ${ref.path}`)).toEqual(['GET /media/{id}', 'POST /media/upload', 'POST /products', 'GET /stats/summary']);
+    // Extras are information only: the public content API, the REST path of create, the media routes and the stats handler.
+    expect(report.extra.map((ref) => `${ref.method} ${ref.path}`)).toEqual([
+      'GET /content',
+      'GET /content/announcement',
+      'GET /content/announcement/{idOrSlug}',
+      'GET /media/{id}',
+      'POST /media/upload',
+      'POST /products',
+      'GET /stats/summary',
+    ]);
     expect(formatReport(report)).toMatch(/^No differences\./);
   });
 
