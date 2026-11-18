@@ -6,6 +6,6 @@
     "index",
     "dev-api",
     "local-https",
-    "desktop-app"
+    "local-backend"
   ]
 }
