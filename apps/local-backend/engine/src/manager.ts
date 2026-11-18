@@ -4,7 +4,7 @@ import { basename } from 'node:path';
 import type { Engine } from './engine.ts';
 import { DEFINITION_FILE, readDefinitionText, serializeDefinition, writeFileAtomic } from './folder.ts';
 import { DefinitionError, parseBackend, type BackendInput } from './schema.ts';
-import { MigrationConfirmError, type Plan, type RenameHints } from './store.ts';
+import { describeLoss, MigrationConfirmError, type Plan, type RenameHints } from './store.ts';
 
 export type RawDefinition = BackendInput;
 type Collections = NonNullable<RawDefinition['collections']>;
@@ -12,6 +12,9 @@ type Endpoints = NonNullable<RawDefinition['endpoints']>;
 type RawCollection = Collections[number];
 type RawField = NonNullable<RawCollection['fields']>[number];
 type RawEndpoint = Endpoints[number];
+type ContentTypes = NonNullable<RawDefinition['contentTypes']>;
+type RawContentType = ContentTypes[number];
+type RawContentField = NonNullable<RawContentType['fields']>[number];
 
 export class NotFoundError extends Error {
   constructor(message: string) {
@@ -103,7 +106,7 @@ export class Manager {
   private refuse(error: unknown): void {
     const message =
       error instanceof MigrationConfirmError
-        ? `backend.json would delete data (${error.lost.map((loss) => `${loss.collection}${loss.field === undefined ? '' : `.${loss.field}`}`).join(', ')}). Apply it from the app with confirm.`
+        ? `backend.json would delete data (${error.lost.map(describeLoss).join(', ')}). Apply it from the app with confirm.`
         : error instanceof Error
           ? error.message
           : String(error);
@@ -202,6 +205,60 @@ export class Manager {
         }
       }
       return { hints: { fields: [{ collection: collectionName, from: fieldName, to }] } };
+    }, change);
+  }
+
+  // ---- content types
+
+  private static contentType(draft: RawDefinition, name: string): RawContentType {
+    const found = (draft.contentTypes ?? []).find((type) => type.name === name);
+    if (found === undefined) throw new NotFoundError(`No content type "${name}".`);
+    return found;
+  }
+
+  addContentType(type: RawContentType, change: DefinitionChange = {}): Promise<Plan> {
+    return this.edit((draft) => void (draft.contentTypes = [...(draft.contentTypes ?? []), type]), change);
+  }
+
+  /** Replaces a type's settings and fields (the name stays). Removed or retyped fields lose their values, which needs `confirm`. */
+  replaceContentType(name: string, type: RawContentType, change: DefinitionChange = {}): Promise<Plan> {
+    return this.edit((draft) => {
+      const types = draft.contentTypes ?? [];
+      const index = types.findIndex((candidate) => candidate.name === name);
+      if (index < 0) throw new NotFoundError(`No content type "${name}".`);
+      const seed = types[index]?.seed;
+      types[index] = { ...type, name, ...(type.seed === undefined && seed !== undefined ? { seed } : {}) };
+    }, change);
+  }
+
+  removeContentType(name: string, change: DefinitionChange = {}): Promise<Plan> {
+    return this.edit((draft) => {
+      Manager.contentType(draft, name);
+      draft.contentTypes = (draft.contentTypes ?? []).filter((type) => type.name !== name);
+    }, change);
+  }
+
+  addContentField(typeName: string, field: RawContentField, change: DefinitionChange = {}): Promise<Plan> {
+    return this.edit((draft) => {
+      const type = Manager.contentType(draft, typeName);
+      type.fields = [...(type.fields ?? []), field];
+    }, change);
+  }
+
+  removeContentField(typeName: string, fieldName: string, change: DefinitionChange = {}): Promise<Plan> {
+    return this.edit((draft) => {
+      const type = Manager.contentType(draft, typeName);
+      if (!(type.fields ?? []).some((field) => field.name === fieldName)) throw new NotFoundError(`No field "${fieldName}" in "${typeName}".`);
+      type.fields = (type.fields ?? []).filter((field) => field.name !== fieldName);
+    }, change);
+  }
+
+  renameContentField(typeName: string, fieldName: string, to: string, change: DefinitionChange = {}): Promise<Plan> {
+    return this.edit((draft) => {
+      const field = (Manager.contentType(draft, typeName).fields ?? []).find((candidate) => candidate.name === fieldName);
+      if (field === undefined) throw new NotFoundError(`No field "${fieldName}" in "${typeName}".`);
+      field.name = to;
+      return { hints: { contentFields: [{ type: typeName, from: fieldName, to }] } };
     }, change);
   }
 

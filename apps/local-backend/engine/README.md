@@ -155,6 +155,95 @@ export default async function (ctx) {
 - **Hot reload**: `handlers/` is watched, and every file is also checked by its modification time per request;
   after a change the workers are replaced, so the next request runs the new code (helpers included).
 
+## Content (CMS)
+
+Content types with typed fields and per-locale entries, with draft, published and scheduled states. It is the
+data behind the WS16 `tempo` CMS adapter and the template's "What's new" screen.
+
+**In `backend.json`:**
+
+```json
+{
+  "content": { "mount": "/content", "locales": ["en", "ar"], "defaultLocale": "en" },
+  "contentTypes": [
+    {
+      "name": "announcement", "label": "Announcement", "localized": true,
+      "fields": [
+        { "name": "title", "type": "string", "required": true },
+        { "name": "body", "type": "richText" },
+        { "name": "image", "type": "media" }
+      ],
+      "seed": [{ "slug": "welcome", "status": "published", "values": { "en": { "title": "Hello" } } }]
+    }
+  ]
+}
+```
+
+- `content.locales` defaults to the template's languages (`template/src/locales`: `en`, `ar`); `defaultLocale` must be
+  one of them. `content.mount` (default `/content`) goes after `basePath`. No endpoint path (or alias) may sit
+  under the mount once there is a content type: the schema refuses it, naming the endpoint.
+- A type has `name`, `label`, `fields[]`, `localized` and optional `singleton` (at most one entry) and `seed`
+  (entries made once, when the type is first added; each has `slug`, `status` and `values` per locale).
+- **Field types**: `string`, `text` (long), `richText` (**Markdown text, stored as written, never HTML**: render it
+  with HTML disabled), `number`, `boolean`, `date` (ISO 8601), `enum` (`enumValues`), `media` (a media id that must
+  exist), `json`, `list` (a list of strings). Each field has `required` and `default`. A draft may leave a required
+  field empty; **publishing needs the required fields in the default locale**.
+- A type that is not localized keeps its one set of values under the default locale.
+
+**Storage** (the same SQLite file, so a snapshot carries it): `_content_entries` (`id`, `type`, `slug`, `status`
+`draft|published|scheduled`, `publishAt`, `createdAt`, `updatedAt`, `version`), `_content_values` (`entryId`, `locale`,
+`data` JSON checked against the fields) and `_content_versions` (the last **10** versions of each entry: the slug and
+all locales' values after each create, save or revert). `version` counts every change of the content. Published
+entries are served from the entry's current values, so saving a published entry changes what clients see; **revert**
+puts an older version back (as a new version) and keeps the status. **Unpublish** only hides the entry (back to
+`draft`), its content stays.
+
+**Scheduling**: `schedule` needs a future time and sets `status: "scheduled"` with `publishAt`. Entries whose time has
+come become `published` on **every public read** and on a **30 second timer** (`SCHEDULE_TICK_MS`); both use the
+engine's injectable clock, so the tests run without waiting.
+
+**Public API** (no sign-in, `GET` only, published entries only; `HEAD` works, other methods answer 405 with
+`Allow: GET`). Where `WS16` fixes no field-level shape, this is it, so the `tempo` adapter reads exactly this:
+
+| Request | Answer |
+|---|---|
+| `GET <mount>` | `{ locales, defaultLocale, types: [{ name, label, localized, singleton, fields: [{ name, type }] }] }` |
+| `GET <mount>/<type>?locale=ar&limit=20&skip=0&cursor=&sort=-publishedAt` | `{ items: Entry[], total, limit, skip, nextCursor }` |
+| `GET <mount>/<type>` (a singleton type) | one `Entry` (404 until published) |
+| `GET <mount>/<type>/<idOrSlug>?locale=ar` | one `Entry` (a numeric value is the id, so a slug is never only digits) |
+
+```json
+{
+  "id": 1, "type": "announcement", "slug": "welcome", "locale": "ar",
+  "availableLocales": ["en", "ar"], "fallbackFields": ["image"],
+  "publishedAt": "2026-11-18T10:00:00.000Z", "updatedAt": "2026-11-18T10:00:00.000Z",
+  "fields": { "title": "...", "body": "Markdown", "image": { "id": "…", "url": "https://…/media/…", "name": "a.png", "mime": "image/png", "size": 1234 }, "ctaLabel": null, "ctaUrl": null }
+}
+```
+
+- Values sit under `fields`, so a field can have any name. `media` fields are `{ id, url, name, mime, size }` (the
+  URL is absolute, from the request's host) or `null`; an empty field is `null`.
+- **Locale fallback is per field**: a field the requested locale leaves empty (or never filled) shows the default
+  locale's value and is named in `fallbackFields`. An unknown `locale` is a 400. `availableLocales` are the locales
+  with real values.
+- `limit` is 1 to 100 (default 20); `cursor` is the `nextCursor` of the previous page (`null` on the last), `skip`
+  does the same by number. `sort` is `publishedAt` or `updatedAt`, `-` for newest first (default `-publishedAt`); the
+  admin's name `publishAt` also works.
+- Every answer has a weak `ETag` (`Cache-Control: no-cache`); a matching `If-None-Match` answers 304.
+- The content routes are in the OpenAPI document and Swagger UI; the contract check lists them as **extra**.
+
+**Admin routes** (`/__admin/content/...`, token only; the public port answers 404 for all of them):
+`config`; `types` (`GET`, `POST`, `GET/PUT/DELETE /:name`, `POST /:name/fields`, `DELETE /:name/fields/:field`,
+`POST /:name/fields/:field/rename`); `entries` (`GET ?type&status&q`, `POST`, `GET/PUT/DELETE /:id`,
+`POST /:id/publish`, `/unpublish`, `/schedule {publishAt}`, `/revert {version}`, `GET /:id/versions`,
+`GET /:id/versions/:version`). A `PUT` of an entry replaces the values of each locale it names (`null` removes a
+locale). Field changes migrate the stored JSON with the definition: values of a removed or retyped field go, a
+renamed field's values move, a new field's `default` fills existing values, a type that stops being localized keeps
+only the default locale, and a locale removed from `content.locales` loses its values. **Anything that deletes
+data answers 409 with `lost`** (kinds `contentField`, `contentType`, `contentLocale`) until `?confirm=true`, like a
+collection; a `backend.json` edit that would do it is refused. A type cannot become a singleton while it has
+several entries.
+
 ## Presets
 
 `create <dir> --preset empty|products|tempo-template`. The engine exports `presets` (`{ id, name, description }[]`)
@@ -176,6 +265,7 @@ so the desktop app can list them. A preset is plain data written at create time:
 | `GET /app-config` | `static` | see below |
 | `POST /media/upload`, `GET /media/:id` | `upload`, `download` | addition |
 | `GET /stats/summary` | `handler` | addition: `handlers/stats-summary.js` counts products and users with `ctx.db.count` and `ctx.users.count` |
+| `GET /content/announcement` | content | addition: a localized `announcement` type (`title`, `body` Markdown, `image`, `ctaLabel`, `ctaUrl`) with one published entry in English and Arabic, for the WS16 "What's new" screen |
 
 The 100 products are `seed/products.json` (`Product N`, price `5 + N`, four categories in turn, the
 `dummyjson.com/image` thumbnails, rating and stock from `N`). A new product gets id 101, like the mock.
@@ -269,7 +359,7 @@ old definition keeps running.
 
 The public listener answers 404 for every `/__admin` route (tested). The admin listener also rejects a
 non-loopback `Host`. Admin routes: `definition` (get/put), `endpoints`, `collections` and field ops
-(`rename` included), `data` (row browser), `scenarios`, `requests`, `events` (SSE), `stats`, `openapi`, `reload`,
+(`rename` included), `data` (row browser), `content` (types, entries, publishing), `scenarios`, `requests`, `events` (SSE), `stats`, `openapi`, `reload`,
 `info`.
 
 ## Hot reload, logs, docs
