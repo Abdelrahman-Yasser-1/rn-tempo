@@ -1,17 +1,24 @@
 //! Tempo Dev API: a small Tauri shell. The UI holds no API logic. This side runs the `tempo-api` CLI,
 //! reads the files it writes, and proxies control-API calls so the project CA is trusted.
 
+mod backends;
+mod cli;
 mod commands;
+mod engine;
+mod files;
+mod fleet;
 mod http;
 mod node;
 mod project;
+mod proxy;
 mod recents;
+mod registry;
 mod simulators;
 mod state;
 mod tempo;
 mod tray;
 
-use tauri::{Manager, RunEvent, WindowEvent};
+use tauri::{Emitter, Manager, RunEvent, WindowEvent};
 
 pub fn run() {
     let app = tauri::Builder::default()
@@ -33,6 +40,34 @@ pub fn run() {
             commands::read_workspace,
             commands::write_workspace,
             commands::open_target,
+            backends::list_backends,
+            backends::backend_status,
+            backends::pick_new_folder,
+            backends::create_backend,
+            backends::open_backend,
+            backends::remove_backend,
+            backends::start_backend,
+            backends::stop_backend,
+            backends::admin,
+            backends::try_it,
+            backends::cert_info,
+            backends::engine_cli,
+            backends::check_openapi,
+            backends::export_snapshot,
+            backends::restore_snapshot,
+            backends::list_simulators,
+            backends::reveal,
+            backends::open_docs,
+            backends::create_handler,
+            backends::engine_log,
+            backends::pick_import_file,
+            backends::save_export,
+            backends::upload_media,
+            backends::upload_dropped,
+            backends::media_preview,
+            backends::download_media,
+            backends::subscribe_requests,
+            backends::unsubscribe_requests,
         ])
         .setup(|app| {
             tray::build(app.handle())?;
@@ -40,6 +75,12 @@ pub fn run() {
         })
         .on_window_event(|window, event| {
             // Closing the window keeps the app (and its tray item) running; Quit stops everything.
+            if let WindowEvent::DragDrop(tauri::DragDropEvent::Drop { paths, .. }) = event {
+                // The paths stay on this side; the UI only learns how many files arrived.
+                let handle = window.app_handle();
+                handle.state::<state::AppState>().set_dropped(paths.clone());
+                let _ = handle.emit("lb://dropped", paths.len());
+            }
             if let WindowEvent::CloseRequested { api, .. } = event {
                 let state = window.app_handle().state::<state::AppState>();
                 if !state.quitting.load(std::sync::atomic::Ordering::SeqCst) {
@@ -57,6 +98,7 @@ pub fn run() {
             state
                 .quitting
                 .store(true, std::sync::atomic::Ordering::SeqCst);
+            state.fleet.stop_all();
             state::shutdown(handle, &state);
         }
         #[cfg(target_os = "macos")]
