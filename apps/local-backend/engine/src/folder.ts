@@ -146,13 +146,13 @@ export function crudEndpoints(collection: string, options: { basePath: string; a
 }
 
 /** Writes a minimal `backend.json` (and `.data`). Refuses to overwrite an existing backend. */
-export function createBackend(dir: string, options: { name: string; preset?: Preset }): BackendFolder {
+export function createBackend(dir: string, options: { name: string; preset?: Preset; port?: number }): BackendFolder {
   const root = resolve(dir);
   mkdirSync(root, { recursive: true });
   ensureRealDir(root, 'The backend folder', false);
   const definitionPath = join(root, DEFINITION_FILE);
   if (existsSync(definitionPath)) throw new DefinitionError(`${DEFINITION_FILE} already exists in ${root}.`);
-  const input = presetDefinition(options.name, options.preset ?? 'empty');
+  const input = { ...presetDefinition(options.name, options.preset ?? 'empty'), ...(options.port === undefined ? {} : { port: options.port }) };
   parseBackend(input, 'The new definition');
   // Preset files (seed data, handlers) have fixed names; they never overwrite anything (`wx`).
   for (const file of presetBundle(options.preset ?? 'empty', options.name)?.files ?? []) {

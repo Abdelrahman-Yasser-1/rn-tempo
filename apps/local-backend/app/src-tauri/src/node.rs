@@ -7,8 +7,8 @@ use std::time::Duration;
 
 use serde::Serialize;
 
-/// The dev API needs Node 22 or newer.
-pub const MIN_NODE_MAJOR: u32 = 22;
+/// The engine uses `node:sqlite`, which needs Node 24 or newer.
+pub const MIN_NODE_MAJOR: u32 = 24;
 const NODE_MARK: &str = "__TEMPO_NODE__";
 const PATH_MARK: &str = "__TEMPO_PATH__";
 const SHELL_TIMEOUT: Duration = Duration::from_secs(10);
@@ -112,7 +112,7 @@ pub fn evaluate(probe: Option<&str>, version_of: impl Fn(&str) -> Option<String>
             ok: false,
             path: Some(node),
             message: Some(format!(
-                "Node {version} is too old. The dev API needs Node {MIN_NODE_MAJOR} or newer."
+                "Node {version} is too old. The engine needs Node {MIN_NODE_MAJOR} or newer."
             )),
             version: Some(version),
             login_path,
@@ -162,9 +162,9 @@ mod tests {
     }
 
     #[test]
-    fn accepts_node_22_and_newer() {
+    fn accepts_node_24_and_newer() {
         let info = evaluate(Some("__TEMPO_NODE__/n/node\n__TEMPO_PATH__/n\n"), |_| {
-            Some("v22.0.0".into())
+            Some("v24.3.0".into())
         });
         assert!(info.ok);
         assert_eq!(info.path.as_deref(), Some("/n/node"));
@@ -173,11 +173,11 @@ mod tests {
 
     #[test]
     fn rejects_an_old_node_with_a_message() {
-        let info = evaluate(Some("__TEMPO_NODE__/n/node\n"), |_| Some("v20.11.1".into()));
+        let info = evaluate(Some("__TEMPO_NODE__/n/node\n"), |_| Some("v22.11.1".into()));
         assert!(!info.ok);
         assert!(info
             .message
-            .is_some_and(|m| m.contains("too old") && m.contains("22")));
+            .is_some_and(|m| m.contains("too old") && m.contains("24")));
     }
 
     #[test]
