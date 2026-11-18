@@ -5,6 +5,7 @@ import { Dashboard } from '../tabs/Dashboard';
 import { Data } from '../tabs/Data';
 import { Endpoints } from '../tabs/Endpoints';
 import { Media } from '../tabs/Media';
+import { Users } from '../tabs/Users';
 import { StatusDot } from '../ui/bits';
 
 export const TABS = ['Dashboard', 'Endpoints', 'Data', 'Media', 'Users', 'Content', 'Logs', 'Settings'] as const;
@@ -41,6 +42,7 @@ export function BackendView({ backend, render }: { backend: BackendStatus; rende
     Dashboard: (b) => <Dashboard backend={b} />,
     Data: (b) => <BackendOnly backend={b} show={(path) => <Data backend={path} />} />,
     Media: (b) => <BackendOnly backend={b} show={() => <Media backend={b} />} />,
+    Users: (b) => <BackendOnly backend={b} show={(path) => <Users backend={path} />} />,
     Endpoints: (b) => <BackendOnly backend={b} show={(path) => <Endpoints backend={path} />} />,
     ...render,
   };
