@@ -257,9 +257,12 @@ export interface Scenarios {
 }
 
 export interface Loss {
-  kind: 'collection' | 'field';
+  kind: 'collection' | 'field' | 'contentType' | 'contentField' | 'contentLocale';
+  /** The collection, or the content type for the `content*` kinds (empty when a whole locale goes). */
   collection: string;
   field?: string;
+  /** A locale removed from the backend (`contentLocale`). */
+  locale?: string;
   rows: number;
 }
 
@@ -312,4 +315,81 @@ export interface ContractReport {
   differences: ContractDifference[];
   unchecked: (EndpointRef & { status: string; reason: string })[];
   counts: { fileEndpoints: number; backendEndpoints: number; matched: number };
+}
+
+// ---- content (CMS)
+
+export const CONTENT_FIELD_TYPES = ['string', 'text', 'richText', 'number', 'boolean', 'date', 'enum', 'media', 'json', 'list'] as const;
+export type ContentFieldType = (typeof CONTENT_FIELD_TYPES)[number];
+
+export interface ContentFieldDef {
+  name: string;
+  type: ContentFieldType;
+  label?: string;
+  required?: boolean;
+  default?: unknown;
+  enumValues?: string[];
+}
+
+export interface ContentTypeDef {
+  name: string;
+  label?: string;
+  fields: ContentFieldDef[];
+  localized?: boolean;
+  singleton?: boolean;
+  /** How many entries it has (a count the engine adds when listing). */
+  entries?: number;
+}
+
+export interface ContentConfig {
+  mount: string;
+  locales: string[];
+  defaultLocale: string;
+  versionsKept: number;
+}
+
+export type EntryStatus = 'draft' | 'published' | 'scheduled';
+
+export interface EntrySummary {
+  id: number;
+  type: string;
+  slug: string | null;
+  status: EntryStatus;
+  publishAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  version: number;
+  title: string | null;
+  /** The locales that have values. */
+  locales: string[];
+}
+
+export interface EntryPage {
+  items: EntrySummary[];
+  total: number;
+  skip: number;
+  limit: number;
+}
+
+/** Per locale, the field values of an entry. */
+export type EntryValues = Record<string, Record<string, unknown>>;
+
+export interface EntryDetail {
+  id: number;
+  type: string;
+  slug: string | null;
+  status: EntryStatus;
+  publishAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  version: number;
+  values: EntryValues;
+}
+
+export interface EntryVersion {
+  version: number;
+  reason: 'create' | 'save' | 'revert';
+  savedAt: string;
+  slug: string | null;
+  locales: string[];
 }

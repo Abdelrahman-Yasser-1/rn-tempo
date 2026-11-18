@@ -1,6 +1,7 @@
 import { useRef, useState, type KeyboardEvent } from 'react';
 
 import type { BackendStatus } from '../api/types';
+import { Content } from '../tabs/Content';
 import { Dashboard } from '../tabs/Dashboard';
 import { Data } from '../tabs/Data';
 import { Endpoints } from '../tabs/Endpoints';
@@ -43,7 +44,7 @@ export function BackendView({ backend, onOpen, render }: { backend: BackendStatu
     Users: (b) => <BackendOnly backend={b} show={(path) => <Users backend={path} />} />,
     Logs: (b) => <BackendOnly backend={b} show={() => <Logs backend={b} />} />,
     Settings: (b) => <Settings backend={b} onOpen={onOpen} />,
-    Content: () => <p className="empty">Coming in the next update.</p>,
+    Content: (b) => <BackendOnly backend={b} show={(path) => <Content backend={path} />} />,
     Endpoints: (b) => <BackendOnly backend={b} show={(path) => <Endpoints backend={path} />} />,
     ...render,
   };
