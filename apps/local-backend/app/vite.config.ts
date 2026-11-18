@@ -6,7 +6,7 @@ import { defineConfig } from 'vite';
 // The workspace schema is the dev API's own Zod schema (one source of truth). The file imports only
 // `zod`, so the browser bundle takes it straight from the package source.
 const workspaceSchema = fileURLToPath(
-  new URL('../../packages/dev-api/src/workspace/schema.ts', import.meta.url),
+  new URL('../../../packages/dev-api/src/workspace/schema.ts', import.meta.url),
 );
 
 // Tauri expects a fixed dev port and must not watch its own Rust output.
