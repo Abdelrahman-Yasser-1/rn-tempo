@@ -1,6 +1,7 @@
 import { openApiPath, sortKeys, type Json } from '@rn-tempo/dev-api';
 
-import type { Backend, Collection, CrudEndpoint, Endpoint, Field } from './schema.ts';
+import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from './content-public.ts';
+import type { Backend, Collection, ContentField, CrudEndpoint, Endpoint, Field } from './schema.ts';
 
 type JsonObject = { [key: string]: Json };
 
@@ -325,6 +326,101 @@ function operation(endpoint: Endpoint, collections: Map<string, Collection>): Js
   };
 }
 
+function contentFieldSchema(field: ContentField): JsonObject {
+  switch (field.type) {
+    case 'number':
+      return { type: 'number' };
+    case 'boolean':
+      return { type: 'boolean' };
+    case 'enum':
+      return { type: 'string', enum: field.enumValues ?? [] };
+    case 'date':
+      return { type: 'string', description: 'ISO 8601 date or date-time.' };
+    case 'media':
+      return ref('MediaFile') as JsonObject;
+    case 'json':
+      return { description: 'Any JSON value.' };
+    case 'list':
+      return { type: 'array', items: str };
+    case 'richText':
+      return { type: 'string', description: 'Markdown text. It is never HTML: render it with HTML disabled.' };
+    default:
+      return { type: 'string' };
+  }
+}
+
+/** The public content API: per type, `GET <mount>/<type>` and `GET <mount>/<type>/{idOrSlug}`. */
+function contentPaths(definition: Backend, schemas: JsonObject, paths: JsonObject, tags: Set<string>): void {
+  const { mount, locales, defaultLocale } = definition.content;
+  schemas.MediaFile ??= BUILTIN_SCHEMAS.MediaFile as JsonObject;
+  const locale: JsonObject = { name: 'locale', in: 'query', required: false, schema: { type: 'string', enum: locales, default: defaultLocale }, description: 'A field this locale leaves empty shows the default locale\'s value (see `fallbackFields`).' };
+  const sort: JsonObject = { name: 'sort', in: 'query', required: false, schema: { type: 'string', enum: ['-publishedAt', 'publishedAt', '-updatedAt', 'updatedAt'], default: '-publishedAt' } };
+  const listParams: Json[] = [
+    locale,
+    { name: 'limit', in: 'query', required: false, schema: { type: 'integer', minimum: 1, maximum: MAX_PAGE_SIZE, default: DEFAULT_PAGE_SIZE } },
+    { name: 'skip', in: 'query', required: false, schema: { type: 'integer', minimum: 0 } },
+    { name: 'cursor', in: 'query', required: false, schema: { type: 'string' }, description: 'The `nextCursor` of the previous page.' },
+    sort,
+  ];
+  const nullable = (schema: JsonObject): JsonObject => ({ oneOf: [schema, { type: 'null' }] });
+  tags.add('content');
+  paths[mount] = {
+    get: {
+      operationId: 'content_types',
+      summary: 'The content types, the locales and the default locale',
+      tags: ['content'],
+      responses: { '200': answer(200, object({ locales: { type: 'array', items: str }, defaultLocale: str, types: { type: 'array', items: { type: 'object' } } }, ['locales', 'defaultLocale', 'types'])) },
+    },
+  };
+  for (const type of definition.contentTypes) {
+    const name = `Content${pascal(type.name)}`;
+    const fields: JsonObject = {};
+    for (const field of type.fields) fields[field.name] = nullable(contentFieldSchema(field));
+    schemas[name] = object(
+      {
+        id: { type: 'integer' },
+        type: str,
+        slug: nullable(str),
+        locale: str,
+        availableLocales: { type: 'array', items: str },
+        fallbackFields: { type: 'array', items: str },
+        publishedAt: nullable(str),
+        updatedAt: str,
+        fields: object(fields, type.fields.map((field) => field.name)),
+      },
+      ['id', 'type', 'slug', 'locale', 'availableLocales', 'fallbackFields', 'publishedAt', 'updatedAt', 'fields'],
+    );
+    const label = type.label ?? type.name;
+    const notFound = problem('No published entry.');
+    const listAnswer: JsonObject =
+      type.singleton === true
+        ? { '200': answer(200, ref(name)), '404': notFound }
+        : {
+            '200': answer(200, object({ items: { type: 'array', items: ref(name) }, total: { type: 'integer' }, limit: { type: 'integer' }, skip: { type: 'integer' }, nextCursor: nullable(str) }, ['items', 'total', 'limit', 'skip', 'nextCursor'])),
+            '400': problem('A query parameter is invalid.'),
+          };
+    paths[`${mount}/${type.name}`] = {
+      get: {
+        operationId: `content_${type.name}`,
+        summary: type.singleton === true ? `The published ${label}` : `Published ${label} entries`,
+        description: 'Public and read-only: only published entries. No sign-in needed.',
+        tags: ['content'],
+        parameters: type.singleton === true ? [locale] : listParams,
+        responses: listAnswer,
+      },
+    };
+    paths[`${mount}/${type.name}/{idOrSlug}`] = {
+      get: {
+        operationId: `content_${type.name}_get`,
+        summary: `One published ${label} entry, by id or slug`,
+        tags: ['content'],
+        parameters: [{ name: 'idOrSlug', in: 'path', required: true, schema: { type: 'string' } }, locale],
+        responses: { '200': answer(200, ref(name)), '404': notFound },
+      },
+    };
+  }
+}
+
 /** The OpenAPI 3.1 document of a definition: every endpoint, with schemas built from its collections. */
 export function buildOpenApi(definition: Backend): JsonObject {
   const collections = new Map(definition.collections.map((collection) => [collection.name, collection]));
@@ -354,6 +450,7 @@ export function buildOpenApi(definition: Backend): JsonObject {
     }
     for (const tag of endpoint.tags ?? []) tags.add(tag);
   }
+  if (definition.contentTypes.length > 0) contentPaths(definition, schemas, paths, tags);
   const document: JsonObject = {
     openapi: '3.1.0',
     info: {

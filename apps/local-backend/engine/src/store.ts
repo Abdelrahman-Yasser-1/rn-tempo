@@ -3,6 +3,7 @@ import { lstatSync } from 'node:fs';
 import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
 
 import { migrateBuiltins } from './accounts.ts';
+import { migrateContentTables } from './content.ts';
 import { quoteIdent, uniqueIndexName } from './names.ts';
 import type { Collection, Field, FieldType } from './schema.ts';
 import { decodeValue, encodeValue, validateRecord } from './values.ts';
@@ -31,11 +32,30 @@ export type Op =
 
 /** What a destructive change would delete. */
 export interface Loss {
-  kind: 'collection' | 'field';
+  kind: 'collection' | 'field' | 'contentType' | 'contentField' | 'contentLocale';
+  /** The collection, or for the `content*` kinds the content type name (empty when a whole locale goes). */
   collection: string;
   field?: string;
-  /** Rows that would go (a collection) or values that would go (a field with data). */
+  /** A removed locale (`contentLocale`). Without it, a `contentLocale` loss is the translations of `collection`. */
+  locale?: string;
+  /** Rows that would go (a collection), entries (a content type) or values that would go (a field with data). */
   rows: number;
+}
+
+/** A loss in words, for a log line or a refused reload. */
+export function describeLoss(loss: Loss): string {
+  switch (loss.kind) {
+    case 'collection':
+      return `collection ${loss.collection} (${String(loss.rows)} rows)`;
+    case 'field':
+      return `${loss.collection}.${loss.field ?? ''} (${String(loss.rows)} values)`;
+    case 'contentType':
+      return `content type ${loss.collection} (${String(loss.rows)} entries)`;
+    case 'contentField':
+      return `content ${loss.collection}.${loss.field ?? ''} (${String(loss.rows)} values)`;
+    case 'contentLocale':
+      return loss.locale === undefined ? `translations of content ${loss.collection} (${String(loss.rows)})` : `locale ${loss.locale} of all content (${String(loss.rows)} translations)`;
+  }
 }
 
 export interface Plan {
@@ -48,6 +68,8 @@ export interface RenameHints {
   collections?: { from: string; to: string }[];
   /** `collection` is the collection's new name. */
   fields?: { collection: string; from: string; to: string }[];
+  /** Content fields renamed on purpose. */
+  contentFields?: { type: string; from: string; to: string }[];
 }
 
 export class MigrationConfirmError extends Error {
@@ -126,6 +148,7 @@ export class Store {
     db.exec('PRAGMA journal_mode = WAL; PRAGMA synchronous = NORMAL; PRAGMA foreign_keys = ON;');
     db.exec('CREATE TABLE IF NOT EXISTS _meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)');
     migrateBuiltins(db);
+    migrateContentTables(db);
     const row = db.prepare("SELECT value FROM _meta WHERE key = 'schema'").get();
     const applied = row === undefined ? [] : (JSON.parse(String(row.value)) as Collection[]);
     return new Store(db, applied);
@@ -236,10 +259,19 @@ export class Store {
    */
   migrate(
     target: readonly Collection[],
-    options: { hints?: RenameHints; confirm?: boolean; seedRows?: (collection: Collection) => Record<string, unknown>[] } = {},
+    options: {
+      hints?: RenameHints;
+      confirm?: boolean;
+      seedRows?: (collection: Collection) => Record<string, unknown>[];
+      /** Content losses of the same change: they need the same confirm. */
+      extraLost?: Loss[];
+      /** Runs inside the transaction, after the collections changed (the content migration). */
+      within?: () => void;
+    } = {},
   ): Plan {
     const plan = this.plan(target, options.hints);
-    if (plan.lost.length > 0 && options.confirm !== true) throw new MigrationConfirmError(plan.lost);
+    const lost = [...plan.lost, ...(options.extraLost ?? [])];
+    if (lost.length > 0 && options.confirm !== true) throw new MigrationConfirmError(lost);
     this.db.exec('BEGIN IMMEDIATE');
     this.pendingTarget = target;
     try {
@@ -251,6 +283,7 @@ export class Store {
         rows.forEach((row, index) => this.insertSeed(op.collection, row, index));
       }
       this.db.prepare("INSERT INTO _meta (key, value) VALUES ('schema', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").run(JSON.stringify(target));
+      options.within?.();
       this.db.exec('COMMIT');
     } catch (error) {
       this.db.exec('ROLLBACK');
