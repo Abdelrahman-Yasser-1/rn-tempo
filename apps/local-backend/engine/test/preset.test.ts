@@ -79,6 +79,21 @@ describe('Tempo template preset', () => {
     expect(new Set(all.products.map((product) => product.category))).toEqual(new Set(['beauty', 'fragrances', 'furniture', 'groceries']));
   });
 
+  it('seeds a published announcement in English and Arabic for the What\'s new screen (AC-LB-7)', async () => {
+    const dir = create();
+    const { url, backend } = await open(dir);
+    const ar = (await (await send(`${url}/content/announcement?locale=ar`)).json()) as { items: { slug: string; locale: string; availableLocales: string[]; fallbackFields: string[]; fields: Record<string, unknown> }[]; total: number };
+    expect(ar.total).toBe(1);
+    expect(ar.items[0]).toMatchObject({ slug: 'welcome', locale: 'ar', availableLocales: ['en', 'ar'], fallbackFields: [] });
+    expect(ar.items[0]?.fields.title).toBe('مرحبًا بك في Tempo');
+    expect(Object.keys(ar.items[0]?.fields ?? {})).toEqual(['title', 'body', 'image', 'ctaLabel', 'ctaUrl']);
+    const en = (await (await send(`${url}/content/announcement?locale=en`)).json()) as { items: { fields: Record<string, unknown> }[] };
+    expect(en.items[0]?.fields).toMatchObject({ title: 'Welcome to Tempo', ctaLabel: 'Learn more', image: null });
+    expect(String(en.items[0]?.fields.body)).toContain('**local announcement**');
+    // Content is not an endpoint of the template contract: it is only extra in the contract check.
+    expect(backend.engine.definition.contentTypes.map((type) => [type.name, type.localized])).toEqual([['announcement', true]]);
+  });
+
   it('answers every endpoint in the shape the template parses', async () => {
     const dir = create();
     const { url } = await open(dir);
