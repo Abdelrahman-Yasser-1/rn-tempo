@@ -303,7 +303,7 @@ export class ContentService {
     const added = next.types.filter((type) => !beforeByName.has(type.name));
     for (const type of added) {
       for (const entry of type.seed ?? []) {
-        const issues = this.checkSeed(next, type, entry.values);
+        const issues = this.checkSeed(next, type, entry);
         if (issues.length > 0) throw new MigrationError(`Seed entry of "${type.name}" is invalid: ${issues.map((issue) => `${issue.path} ${issue.message}`).join('; ')}`);
       }
     }
@@ -322,8 +322,11 @@ export class ContentService {
     };
   }
 
-  private checkSeed(model: ContentModel, type: ContentType, values: LocaleValues): ContentIssue[] {
-    return this.checkValues(model, type, values, {}).issues;
+  /** Seed entries are checked when their type is added, not when the definition is read, so an old seed that no longer fits a changed type does not block the definition. */
+  private checkSeed(model: ContentModel, type: ContentType, entry: { status?: string; values: LocaleValues }): ContentIssue[] {
+    const checked = this.checkValues(model, type, entry.values, {});
+    if (checked.issues.length > 0 || entry.status === 'draft') return checked.issues;
+    return missingRequired(type, entry.values[model.defaultLocale]).map((name) => ({ path: `values.${model.defaultLocale}.${name}`, message: 'Required to publish.' }));
   }
 
   // ---- reading
