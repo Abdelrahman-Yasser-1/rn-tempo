@@ -1092,6 +1092,45 @@
         ]
       }
     },
+    "content": {
+      "default": {
+        "mount": "/content",
+        "locales": [
+          "en",
+          "ar"
+        ],
+        "defaultLocale": "en"
+      },
+      "type": "object",
+      "properties": {
+        "mount": {
+          "default": "/content",
+          "description": "Where the public content API lives, after `basePath`: `GET <mount>/<type>`.",
+          "type": "string",
+          "pattern": "^(\\/[A-Za-z0-9._~-]+)+$"
+        },
+        "locales": {
+          "default": [
+            "en",
+            "ar"
+          ],
+          "description": "The languages of localized content. The default is the template's (`template/src/locales`).",
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
+          }
+        },
+        "defaultLocale": {
+          "default": "en",
+          "description": "The language a missing translation falls back to. It must be one of `locales`.",
+          "type": "string",
+          "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
+        }
+      },
+      "additionalProperties": false
+    },
     "contentTypes": {
       "default": [],
       "type": "array",
@@ -1100,13 +1139,121 @@
         "properties": {
           "name": {
             "type": "string"
+          },
+          "label": {
+            "description": "The name shown in the app. Defaults to the type name.",
+            "type": "string",
+            "maxLength": 100
+          },
+          "fields": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "string",
+                    "text",
+                    "richText",
+                    "number",
+                    "boolean",
+                    "date",
+                    "enum",
+                    "media",
+                    "json",
+                    "list"
+                  ],
+                  "description": "`string` (one line), `text` (long text), `richText` (Markdown text: stored as written, never HTML), `number`, `boolean`, `date` (ISO 8601), `enum`, `media` (a media id), `json`, `list` (a list of strings)."
+                },
+                "label": {
+                  "description": "The name shown in the app. Defaults to the field name.",
+                  "type": "string",
+                  "maxLength": 100
+                },
+                "required": {
+                  "default": false,
+                  "description": "Needed to publish (in the default locale). A draft may leave it empty.",
+                  "type": "boolean"
+                },
+                "default": {
+                  "description": "Put in existing entries when the field is added."
+                },
+                "enumValues": {
+                  "description": "The allowed values of an `enum` field.",
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "type"
+              ],
+              "additionalProperties": false,
+              "title": "ContentField"
+            }
+          },
+          "localized": {
+            "default": false,
+            "description": "Entries hold one set of values per locale (a missing field falls back to the default locale).",
+            "type": "boolean"
+          },
+          "singleton": {
+            "description": "At most one entry; `GET <mount>/<type>` answers that one object.",
+            "type": "boolean"
+          },
+          "seed": {
+            "description": "Entries to create when the type is first added.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "slug": {
+                  "type": "string"
+                },
+                "status": {
+                  "default": "published",
+                  "type": "string",
+                  "enum": [
+                    "draft",
+                    "published"
+                  ]
+                },
+                "values": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
+                  },
+                  "description": "Per locale, the field values: `{ \"en\": { \"title\": \"Hello\" }, \"ar\": { \"title\": \"...\" } }`. A type that is not localized uses the default locale."
+                }
+              },
+              "required": [
+                "values"
+              ],
+              "additionalProperties": false,
+              "title": "ContentSeedEntry"
+            }
           }
         },
         "required": [
           "name"
         ],
-        "additionalProperties": {},
-        "description": "Content types arrive in a later phase; only the name is checked."
+        "additionalProperties": false,
+        "title": "ContentType"
       }
     }
   },
