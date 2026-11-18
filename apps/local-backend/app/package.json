@@ -9,7 +9,6 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "standalone": "yarn workspace @rn-tempo/dev-api build && node scripts/prepare-standalone.mjs",
     "tauri": "tauri",
     "lint": "eslint .",
     "test": "vitest run --passWithNoTests",

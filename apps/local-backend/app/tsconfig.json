@@ -14,10 +14,7 @@
     "noEmit": true,
     "allowImportingTsExtensions": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "paths": {
-      "@dev-api/workspace-schema": ["../../../packages/dev-api/src/workspace/schema.ts"]
-    }
+    "noUnusedParameters": true
   },
   "include": ["src", "vite.config.ts", "vitest.config.ts"]
 }
