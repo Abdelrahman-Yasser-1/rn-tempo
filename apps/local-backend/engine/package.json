@@ -17,7 +17,9 @@
     "lint": "tsc --noEmit --noUnusedLocals --noUnusedParameters",
     "test": "vitest run",
     "schema": "node scripts/write-schema.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:sea": "node scripts/build-sea.ts",
+    "smoke:sea": "node scripts/smoke-sea.ts"
   },
   "dependencies": {
     "@rn-tempo/api-contract": "workspace:*",
