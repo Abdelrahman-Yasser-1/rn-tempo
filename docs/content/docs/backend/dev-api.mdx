@@ -173,7 +173,7 @@ Logs are JSON lines written with `pino`. Each request logs its method, path, sta
 | `GET /__tempo/endpoints` | A list of endpoints: id, method, path, auth, tags and scenario names. |
 | `GET /__tempo/info` | No token (it holds nothing secret). `{ service, version, project, scheme, port, urls: { local, lan?, androidEmulator, iosSimulator }, cert: { present, notAfter?, coversLanIp? }, startedAt }`. The process that starts the server fills in the scheme, port, LAN address and certificate status. |
 | `GET /__tempo/events` | A server-sent event stream of the request log. Needs the control token. See [Request stream](#request-stream). |
-| `GET /__tempo/data` | The stored `resource()` records, read-only, as `{ collections: [{ name, total, items }] }` (at most 500 items each), redacted like the request log. Needs the control token. The [desktop app](/docs/backend/desktop-app)'s Data screen reads it. |
+| `GET /__tempo/data` | The stored `resource()` records, read-only, as `{ collections: [{ name, total, items }] }` (at most 500 items each), redacted like the request log. Needs the control token. |
 | `GET /__tempo/ca.pem` | The **public** root CA (`.tempo-api/certs/rootCA.pem`), as `application/x-pem-file`, so a phone can download it. 404 when `tempo-api certs` has not run. It reads that one file only, never a key, and refuses a file that holds a private key block. |
 | `POST /__tempo/scenario`, `POST /__tempo/reset` | Used by the CLI. They need the control token (header `x-tempo-token`). |
 
@@ -226,7 +226,7 @@ Every command takes `--config <file>` (default `api/tempo-api.config.ts`) and `-
 node tempo-api.mjs up --cwd /path/to/project
 ```
 
-The project's own config still imports `@rn-tempo/api-contract` and `zod` from the project's `node_modules`. The desktop app bundles this build for projects that have no `@rn-tempo/dev-api`. It is not part of the npm package (`files` lists only the small build), because it is about 50 times larger.
+The project's own config still imports `@rn-tempo/api-contract` and `zod` from the project's `node_modules`. It is not part of the npm package (`files` lists only the small build), because it is about 50 times larger.
 
 ### Config file
 
