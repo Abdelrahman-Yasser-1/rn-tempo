@@ -359,7 +359,7 @@ export function adminRouteList(extras: AdminExtras = {}): string[] {
     'GET /data/x', 'GET /data/x/1', 'POST /data/x', 'PUT /data/x/1', 'PATCH /data/x/1', 'DELETE /data/x/1', 'GET /scenarios', 'PUT /scenarios/x',
     'DELETE /scenarios/x', 'DELETE /scenarios', 'GET /requests', 'GET /events',
     'GET /users', 'POST /users', 'GET /users/1', 'PUT /users/1', 'PATCH /users/1', 'DELETE /users/1', 'POST /users/1/password', 'POST /users/1/disable',
-    'POST /users/1/enable', 'POST /users/1/revoke', 'GET /sessions', 'DELETE /sessions/1',
+    'POST /users/1/enable', 'POST /users/1/revoke', 'POST /users/1/token', 'GET /sessions', 'DELETE /sessions/1',
     'GET /media', 'POST /media', 'GET /media/usage', 'GET /media/1', 'GET /media/1/file', 'DELETE /media/1', ...(extras.routes ?? []).map((route) => `${route.method} ${route.pattern}`),
   ].map((entry) => entry.replace(' /', ` ${ADMIN_PREFIX}/`));
 }

@@ -319,6 +319,8 @@ describe('the password hash never leaks', () => {
   });
 });
 
+const meStatus = async (url: string, token: string): Promise<number> => (await fetch(`${url}/auth/me`, { headers: bearer(token) })).status;
+
 describe('admin: users and sessions', () => {
   it('lists, searches, creates, edits, resets the password, revokes and deletes', async () => {
     const { url, login, admin } = await start();
@@ -344,6 +346,18 @@ describe('admin: users and sessions', () => {
     expect((await admin('GET', `/users/${dana.id}`)).status).toBe(404);
   });
 
+  it('hands out an access token for "Log in as…" without making a session, and refuses a disabled user', async () => {
+    const { url, admin } = await start();
+    const answer = await json(await admin('POST', '/users/1/token'));
+    expect(answer).toMatchObject({ expiresInMins: 30 });
+    expect(await meStatus(url, answer.accessToken as string)).toBe(200);
+    expect(((await json(await admin('GET', '/sessions'))).sessions as unknown[]).length).toBe(0);
+    expect((await admin('POST', '/users/99/token')).status).toBe(404);
+    await admin('POST', '/users/1/disable');
+    expect((await admin('POST', '/users/1/token')).status).toBe(403);
+    expect(await meStatus(url, answer.accessToken as string)).toBe(401); // disabling signs out every token
+  });
+
   it('seeds users once: a deleted seed user is not brought back by a reload', async () => {
     const { admin } = await start();
     expect((await json(await admin('GET', '/users'))).total).toBe(1);
@@ -354,8 +368,6 @@ describe('admin: users and sessions', () => {
 });
 
 describe('access tokens die with the user\'s tokenVersion', () => {
-  const meStatus = async (url: string, token: string): Promise<number> => (await fetch(`${url}/auth/me`, { headers: bearer(token) })).status;
-
   it('changing the password in updateMe signs out every other session and hands the caller a fresh pair', async () => {
     const { url, login } = await start();
     const here = await login();

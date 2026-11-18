@@ -2,6 +2,7 @@ import { useRef, useState, type KeyboardEvent } from 'react';
 
 import type { BackendStatus } from '../api/types';
 import { Dashboard } from '../tabs/Dashboard';
+import { Endpoints } from '../tabs/Endpoints';
 import { StatusDot } from '../ui/bits';
 
 export const TABS = ['Dashboard', 'Endpoints', 'Data', 'Media', 'Users', 'Content', 'Logs', 'Settings'] as const;
@@ -9,6 +10,12 @@ export type TabName = (typeof TABS)[number];
 
 function Soon({ name }: { name: string }) {
   return <p className="empty">The {name} tab arrives in the next step.</p>;
+}
+
+/** The tabs that read the engine's admin API need a running backend; a stopped one gets one sentence. */
+function BackendOnly({ backend, show }: { backend: BackendStatus; show: (path: string) => React.ReactNode }) {
+  if (backend.state !== 'running') return <p className="empty">Start the backend on the Dashboard tab to use this one.</p>;
+  return <>{show(backend.path)}</>;
 }
 
 /** The 8 tabs of one backend. */
@@ -30,6 +37,7 @@ export function BackendView({ backend, render }: { backend: BackendStatus; rende
 
   const renderers: Partial<Record<TabName, (backend: BackendStatus) => React.ReactNode>> = {
     Dashboard: (b) => <Dashboard backend={b} />,
+    Endpoints: (b) => <BackendOnly backend={b} show={(path) => <Endpoints backend={path} />} />,
     ...render,
   };
   const draw = renderers[tab];
