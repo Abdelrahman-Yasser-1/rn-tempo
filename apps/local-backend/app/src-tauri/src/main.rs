@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    dev_api_desktop_lib::run();
+    local_backend_app_lib::run();
 }

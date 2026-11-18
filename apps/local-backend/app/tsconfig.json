@@ -16,7 +16,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "paths": {
-      "@dev-api/workspace-schema": ["../../packages/dev-api/src/workspace/schema.ts"]
+      "@dev-api/workspace-schema": ["../../../packages/dev-api/src/workspace/schema.ts"]
     }
   },
   "include": ["src", "vite.config.ts", "vitest.config.ts"]

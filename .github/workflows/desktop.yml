@@ -5,13 +5,13 @@ name: Desktop app
 on:
   pull_request:
     paths:
-      - 'apps/dev-api-desktop/**'
+      - 'apps/local-backend/app/**'
       - 'packages/dev-api/**'
       - '.github/workflows/desktop.yml'
   push:
     branches: [main]
     paths:
-      - 'apps/dev-api-desktop/**'
+      - 'apps/local-backend/app/**'
       - 'packages/dev-api/**'
       - '.github/workflows/desktop.yml'
   workflow_dispatch:
@@ -41,27 +41,27 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            apps/dev-api-desktop/src-tauri/target
-          key: cargo-${{ runner.os }}-${{ hashFiles('apps/dev-api-desktop/src-tauri/Cargo.lock') }}
+            apps/local-backend/app/src-tauri/target
+          key: cargo-${{ runner.os }}-${{ hashFiles('apps/local-backend/app/src-tauri/Cargo.lock') }}
           restore-keys: cargo-${{ runner.os }}-
       - name: UI lint, types and tests
         run: |
-          yarn workspace @rn-tempo/dev-api-desktop lint
-          yarn workspace @rn-tempo/dev-api-desktop typecheck
-          yarn workspace @rn-tempo/dev-api-desktop test
+          yarn workspace @rn-tempo/local-backend-app lint
+          yarn workspace @rn-tempo/local-backend-app typecheck
+          yarn workspace @rn-tempo/local-backend-app test
       # Tauri bundles the standalone dev API as a resource, so it must exist before cargo builds.
       - name: Build the standalone dev API
-        run: yarn workspace @rn-tempo/dev-api-desktop standalone
+        run: yarn workspace @rn-tempo/local-backend-app standalone
       - name: Rust tests and lints
-        working-directory: apps/dev-api-desktop/src-tauri
+        working-directory: apps/local-backend/app/src-tauri
         run: |
           rustup component add clippy
           cargo test
           cargo clippy --all-targets -- -D warnings
       - name: Build the app and the dmg (unsigned)
-        run: yarn workspace @rn-tempo/dev-api-desktop tauri build --bundles app,dmg
+        run: yarn workspace @rn-tempo/local-backend-app tauri build --bundles app,dmg
       - uses: actions/upload-artifact@v7
         with:
-          name: tempo-dev-api-dmg
-          path: apps/dev-api-desktop/src-tauri/target/release/bundle/dmg/*.dmg
+          name: tempo-local-backend-dmg
+          path: apps/local-backend/app/src-tauri/target/release/bundle/dmg/*.dmg
           if-no-files-found: error

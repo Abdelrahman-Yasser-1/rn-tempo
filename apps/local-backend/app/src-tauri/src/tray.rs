@@ -138,7 +138,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<TrayIcon> {
     let mut builder = TrayIconBuilder::with_id(TRAY_ID)
         .menu(&menu)
         .show_menu_on_left_click(true)
-        .tooltip("Tempo Dev API")
+        .tooltip("Tempo Local Backend")
         .on_menu_event(|app, event| {
             let id = event.id.as_ref();
             if let Some(index) = id
