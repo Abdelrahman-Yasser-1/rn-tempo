@@ -1,8 +1,8 @@
 {
-  "name": "@rn-tempo/dev-api-desktop",
+  "name": "@rn-tempo/local-backend-app",
   "version": "0.0.0",
   "private": true,
-  "description": "Tempo Dev API: a desktop app (Tauri 2) that starts, inspects and controls the RN-TEMPO dev API.",
+  "description": "Tempo Local Backend: a desktop app (Tauri 2) that runs and manages local backends (JSON definitions, SQLite, HTTPS).",
   "license": "MIT",
   "type": "module",
   "prettier": "@rn-tempo/prettier-config",

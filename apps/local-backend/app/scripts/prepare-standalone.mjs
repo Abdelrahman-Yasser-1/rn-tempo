@@ -6,7 +6,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const from = join(here, '../../../packages/dev-api/dist/standalone');
+const from = join(here, '../../../../packages/dev-api/dist/standalone');
 const to = join(here, '../src-tauri/resources/standalone');
 
 if (!existsSync(join(from, 'tempo-api.mjs'))) {
