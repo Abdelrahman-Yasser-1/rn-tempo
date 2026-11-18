@@ -2711,41 +2711,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@rn-tempo/dev-api-desktop@workspace:apps/dev-api-desktop":
-  version: 0.0.0-use.local
-  resolution: "@rn-tempo/dev-api-desktop@workspace:apps/dev-api-desktop"
-  dependencies:
-    "@eslint/js": "npm:10.0.1"
-    "@rn-tempo/prettier-config": "workspace:*"
-    "@rn-tempo/tsconfig": "workspace:*"
-    "@tanstack/react-query": "npm:5.107.1"
-    "@tauri-apps/api": "npm:2.12.4"
-    "@tauri-apps/cli": "npm:2.12.4"
-    "@tauri-apps/plugin-dialog": "npm:2.8.4"
-    "@testing-library/dom": "npm:10.4.2"
-    "@testing-library/jest-dom": "npm:7.0.1"
-    "@testing-library/react": "npm:16.3.3"
-    "@testing-library/user-event": "npm:14.6.12"
-    "@types/node": "npm:24.19.2"
-    "@types/react": "npm:19.3.0"
-    "@types/react-dom": "npm:19.3.0"
-    "@vitejs/plugin-react": "npm:6.3.0"
-    eslint: "npm:10.13.0"
-    eslint-plugin-react-hooks: "npm:7.1.1"
-    globals: "npm:17.13.0"
-    jsdom: "npm:31.0.1"
-    prettier: "npm:3.9.10"
-    qrcode-generator: "npm:2.0.4"
-    react: "npm:19.3.1"
-    react-dom: "npm:19.3.1"
-    typescript: "npm:6.0.3"
-    typescript-eslint: "npm:8.72.0"
-    vite: "npm:8.3.8"
-    vitest: "npm:5.0.5"
-    zod: "npm:4.6.7"
-  languageName: unknown
-  linkType: soft
-
 "@rn-tempo/dev-api@workspace:*, @rn-tempo/dev-api@workspace:packages/dev-api":
   version: 0.0.0-use.local
   resolution: "@rn-tempo/dev-api@workspace:packages/dev-api"
@@ -2814,6 +2779,41 @@ __metadata:
   peerDependencies:
     eslint: ">=10"
     typescript: ">=6"
+  languageName: unknown
+  linkType: soft
+
+"@rn-tempo/local-backend-app@workspace:apps/local-backend/app":
+  version: 0.0.0-use.local
+  resolution: "@rn-tempo/local-backend-app@workspace:apps/local-backend/app"
+  dependencies:
+    "@eslint/js": "npm:10.0.1"
+    "@rn-tempo/prettier-config": "workspace:*"
+    "@rn-tempo/tsconfig": "workspace:*"
+    "@tanstack/react-query": "npm:5.107.1"
+    "@tauri-apps/api": "npm:2.12.4"
+    "@tauri-apps/cli": "npm:2.12.4"
+    "@tauri-apps/plugin-dialog": "npm:2.8.4"
+    "@testing-library/dom": "npm:10.4.2"
+    "@testing-library/jest-dom": "npm:7.0.1"
+    "@testing-library/react": "npm:16.3.3"
+    "@testing-library/user-event": "npm:14.6.12"
+    "@types/node": "npm:24.19.2"
+    "@types/react": "npm:19.3.0"
+    "@types/react-dom": "npm:19.3.0"
+    "@vitejs/plugin-react": "npm:6.3.0"
+    eslint: "npm:10.13.0"
+    eslint-plugin-react-hooks: "npm:7.1.1"
+    globals: "npm:17.13.0"
+    jsdom: "npm:31.0.1"
+    prettier: "npm:3.9.10"
+    qrcode-generator: "npm:2.0.4"
+    react: "npm:19.3.1"
+    react-dom: "npm:19.3.1"
+    typescript: "npm:6.0.3"
+    typescript-eslint: "npm:8.72.0"
+    vite: "npm:8.3.8"
+    vitest: "npm:5.0.5"
+    zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
 

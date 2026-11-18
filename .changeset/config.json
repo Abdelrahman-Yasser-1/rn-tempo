@@ -7,5 +7,5 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@rn-tempo/dev-api-desktop"]
+  "ignore": ["@rn-tempo/local-backend-app"]
 }

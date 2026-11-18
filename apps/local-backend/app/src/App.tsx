@@ -42,7 +42,7 @@ export function App() {
       <main>
         {selected === null ? (
           <div className="centered">
-            <h1>Tempo Dev API</h1>
+            <h1>Tempo Local Backend</h1>
             <p className="muted">Pick a project on the left, add a folder, or make a new workspace.</p>
             <p className="muted">Node {node.data.version}</p>
           </div>
