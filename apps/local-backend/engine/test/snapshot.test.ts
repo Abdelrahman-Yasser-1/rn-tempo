@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { crc32, deflateRawSync } from 'node:zlib';
@@ -271,6 +271,62 @@ describe('import refusals', () => {
     writeFileSync(text, 'this is not a zip file at all, just text.');
     await expect(importSnapshot(text, target())).rejects.toThrow(/not a usable snapshot/);
     await expect(importSnapshot(join(tempDir(), 'missing.zip'), target())).rejects.toThrow(/not found/);
+  });
+});
+
+describe('the export reads only inside the backend folder', () => {
+  const secretFolder = (): string => {
+    const outside = tempDir();
+    writeFileSync(join(outside, 'stolen.txt'), 'OUTSIDE-SECRET');
+    return outside;
+  };
+
+  it.each([
+    ['handlers', 'handlers'],
+    ['seed', 'seed'],
+    ['.data', '.data'],
+    ['.data/media', '.data/media'],
+  ])('refuses a symlinked %s folder and exports nothing', async (_name, relative) => {
+    const dir = join(tempDir(), 'src');
+    createBackend(dir, { name: 'Tempo template', preset: 'tempo-template' });
+    const outside = secretFolder();
+    const at = join(dir, relative);
+    if (relative === '.data/media') mkdirSync(join(dir, '.data'), { recursive: true });
+    else rmSync(at, { recursive: true, force: true });
+    symlinkSync(outside, at);
+    const zip = join(tempDir(), 'x.zip');
+    await expect(exportSnapshot({ dir }, zip)).rejects.toThrow(/symbolic link/);
+    expect(existsSync(zip) ? readFileSync(zip).includes(Buffer.from('OUTSIDE-SECRET')) : false).toBe(false);
+  });
+
+  it('skips symlinked files and folders inside the walked folders, and a symlinked backend.json is refused', async () => {
+    const dir = join(tempDir(), 'src');
+    createBackend(dir, { name: 'Tempo template', preset: 'tempo-template' });
+    const outside = secretFolder();
+    symlinkSync(join(outside, 'stolen.txt'), join(dir, 'seed/link.json'));
+    symlinkSync(outside, join(dir, 'handlers/linked-dir'));
+    mkdirSync(join(dir, '.data/media/aa'), { recursive: true });
+    symlinkSync(join(outside, 'stolen.txt'), join(dir, '.data/media/aa/stolen'));
+    const zip = join(tempDir(), 'x.zip');
+    await exportSnapshot({ dir }, zip);
+    const bytes = readFileSync(zip);
+    for (const text of ['OUTSIDE-SECRET', 'stolen', 'linked-dir', 'link.json']) expect(bytes.includes(Buffer.from(text))).toBe(false);
+    const swapped = join(tempDir(), 'src2');
+    createBackend(swapped, { name: 'x' });
+    rmSync(join(swapped, 'backend.json'));
+    symlinkSync(join(outside, 'stolen.txt'), join(swapped, 'backend.json'));
+    await expect(exportSnapshot({ dir: swapped }, join(tempDir(), 'y.zip'))).rejects.toThrow();
+  });
+
+  it('refuses the admin export too when a root is a link', async () => {
+    const dir = join(tempDir(), 'src');
+    createBackend(dir, { name: 'Tempo template', preset: 'tempo-template' });
+    const { backend } = await open(dir);
+    rmSync(join(dir, 'seed'), { recursive: true, force: true });
+    symlinkSync(secretFolder(), join(dir, 'seed'));
+    const response = await fetch(`http://127.0.0.1:${backend.admin.port}/__admin/snapshot`, { headers: { authorization: `Bearer ${backend.admin.token}` } });
+    expect(response.status).toBe(400);
+    expect(await response.text()).not.toContain('OUTSIDE-SECRET');
   });
 });
 
