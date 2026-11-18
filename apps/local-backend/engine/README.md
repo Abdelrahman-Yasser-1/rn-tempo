@@ -230,6 +230,10 @@ first time it is served (every old access token is refused) and **no sessions** 
 needs **new certificates**: the CLI runs mkcert for them (`--no-certs` skips it; nothing is added to a trust store).
 App users and their password hashes are in the database, so the same logins work.
 
+**Export reads only inside the backend folder**: `handlers/`, `seed/`, `.data` and `.data/media` must be real folders
+(a symbolic link or a real path outside the backend folder is refused), `backend.json` must be a regular file, and
+symbolic links or special files found while walking are skipped, never followed.
+
 **Import checks**, all before anything is written unless noted:
 - names: no absolute path, drive letter, `..`, `.`, empty part, backslash or control character; no duplicate (case
   and Unicode folded); only `backend.json`, `manifest.json`, `handlers/`, `seed/`, `data/db.sqlite` and `media/`
