@@ -71,9 +71,9 @@ describe('Dashboard', () => {
   });
 
   it('a start that fails in Rust shows the message', async () => {
-    const api = makeApi({ startBackend: () => Promise.reject(new Error('Node.js was not found.')) });
+    const api = makeApi({ startBackend: () => Promise.reject(new Error('The bundled engine is missing from the app.')) });
     renderWithApi(<Dashboard backend={STOPPED} />, api);
     await userEvent.click(screen.getByRole('button', { name: 'Start' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Node.js was not found.');
+    expect(await screen.findByRole('alert')).toHaveTextContent('The bundled engine is missing from the app.');
   });
 });
