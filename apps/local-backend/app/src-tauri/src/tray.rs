@@ -126,9 +126,7 @@ fn toggle(app: &AppHandle, index: usize) {
         state.remember_backend(&path);
         if matches!(state.fleet.status(&path).state, RunState::Running) {
             state.fleet.stop(&path);
-        } else if let Ok(launch) =
-            engine::engine_launch(&state.node(false), &engine::dev_engine_script())
-        {
+        } else if let Ok(launch) = engine::engine_launch(state.login_path()) {
             state.fleet.start(&launch, &path, None);
         }
         apply(&handle, entries(&handle));

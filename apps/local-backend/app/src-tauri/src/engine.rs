@@ -13,16 +13,14 @@ use std::time::{Duration, Instant};
 
 use serde::Deserialize;
 
-use crate::node::NodeInfo;
-
 const READY_TIMEOUT: Duration = Duration::from_secs(30);
 const STOP_GRACE: Duration = Duration::from_secs(5);
 const TAIL_LINES: usize = 200;
 const MAX_LINE: usize = 600;
 
 /// How to start the engine: a program and the arguments that come before the engine's own command.
-/// Y4 runs `node <repo>/apps/local-backend/engine/dist/cli.mjs`; Y6 swaps `engine_launch` for the bundled
-/// single-executable sidecar. Everything else (serve, create, trust...) goes through this one function.
+/// The program is the bundled single executable (`tempo-engine`); everything else (serve, create, trust...)
+/// goes through `engine_launch`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Launch {
     pub program: PathBuf,
@@ -31,29 +29,73 @@ pub struct Launch {
     pub path_env: Option<String>,
 }
 
-/// The engine script of this source tree. A development build only: the packaged app gets the sidecar in Y6.
+/// The file name of the bundled engine. Tauri strips the target triple from `binaries/tempo-engine-<triple>`
+/// when it puts the sidecar into the app (`Contents/MacOS` on macOS).
+const SIDECAR_NAME: &str = if cfg!(windows) {
+    "tempo-engine.exe"
+} else {
+    "tempo-engine"
+};
+
+/// Where the bundled engine is: next to this app's own executable. `tauri dev` copies it there too.
+pub fn sidecar_path() -> Option<PathBuf> {
+    Some(std::env::current_exe().ok()?.parent()?.join(SIDECAR_NAME))
+}
+
+/// The empty file `build.rs` leaves in a development build counts as missing.
+fn is_built(path: &Path) -> bool {
+    std::fs::metadata(path).is_ok_and(|meta| meta.is_file() && meta.len() > 0)
+}
+
+/// The engine script of this source tree. A development build only (`tauri dev` without `yarn build:sea`).
+#[cfg(debug_assertions)]
 pub fn dev_engine_script() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../engine/dist/cli.mjs")
 }
 
-/// The one place that decides how the engine is started.
-pub fn engine_launch(node: &NodeInfo, script: &Path) -> Result<Launch, String> {
-    let program = node.path.as_deref().filter(|_| node.ok).ok_or_else(|| {
-        node.message
-            .clone()
-            .unwrap_or_else(|| "Node.js was not found.".to_string())
-    })?;
+/// Development only: `node <repo>/apps/local-backend/engine/dist/cli.mjs`, for when the sidecar is not built.
+#[cfg(debug_assertions)]
+fn dev_fallback(script: &Path, login_path: Option<String>) -> Result<Launch, String> {
+    let node = crate::node::find_node()?;
     if !script.is_file() {
-        return Err(
-            "The engine is not built. Run `yarn workspace @rn-tempo/local-backend-engine build`."
-                .to_string(),
-        );
+        return Err("The engine is not built. Run `yarn workspace @rn-tempo/local-backend-engine build:sea` (or `build` to use Node).".to_string());
     }
     Ok(Launch {
-        program: PathBuf::from(program),
+        program: PathBuf::from(node),
         args: vec![script.as_os_str().to_owned()],
-        path_env: node.login_path.clone(),
+        path_env: login_path,
     })
+}
+
+/// Decides how to start the engine from a sidecar path. Separate from `engine_launch` so it is tested with temp files.
+pub(crate) fn launch_from(
+    sidecar: Option<&Path>,
+    login_path: Option<String>,
+) -> Result<Launch, String> {
+    if let Some(sidecar) = sidecar.filter(|path| is_built(path)) {
+        return Ok(Launch {
+            program: sidecar.to_path_buf(),
+            args: Vec::new(),
+            path_env: login_path,
+        });
+    }
+    #[cfg(debug_assertions)]
+    {
+        dev_fallback(&dev_engine_script(), login_path)
+    }
+    #[cfg(not(debug_assertions))]
+    {
+        Err(
+            "The bundled engine is missing from the app. Reinstall Tempo Local Backend."
+                .to_string(),
+        )
+    }
+}
+
+/// The one place that decides how the engine is started. A release build needs no Node.js: it runs the bundled
+/// single executable and nothing else.
+pub fn engine_launch(login_path: Option<String>) -> Result<Launch, String> {
+    launch_from(sidecar_path().as_deref(), login_path)
 }
 
 impl Launch {
@@ -337,17 +379,6 @@ mod tests {
     use super::*;
     use tempfile::tempdir;
 
-    fn node(ok: bool) -> NodeInfo {
-        NodeInfo {
-            ok,
-            path: ok.then(|| "/usr/bin/node".to_string()),
-            version: Some("v24.3.0".into()),
-            login_path: Some("/opt/bin:/usr/bin".into()),
-            message: (!ok).then(|| "Node.js was not found.".to_string()),
-            docs_url: String::new(),
-        }
-    }
-
     const READY: &str = r#"{"event":"ready","name":"shop","scheme":"https","port":8556,"admin":{"host":"127.0.0.1","port":50123,"token":"fake-admin-token-for-tests"}}"#;
 
     #[test]
@@ -384,42 +415,43 @@ mod tests {
     }
 
     #[test]
-    fn the_start_function_builds_node_plus_the_script() {
+    fn the_start_function_runs_the_sidecar_with_no_node() {
         let dir = tempdir().unwrap();
-        let script = dir.path().join("cli.mjs");
-        std::fs::write(&script, "// engine").unwrap();
-        let launch = engine_launch(&node(true), &script).unwrap();
-        assert_eq!(launch.program, PathBuf::from("/usr/bin/node"));
-        assert_eq!(launch.args, vec![script.as_os_str().to_owned()]);
+        let sidecar = dir.path().join("tempo-engine");
+        std::fs::write(&sidecar, "binary").unwrap();
+        let launch = launch_from(Some(&sidecar), Some("/opt/bin:/usr/bin".into())).unwrap();
+        assert_eq!(launch.program, sidecar);
+        assert!(launch.args.is_empty());
         assert_eq!(launch.path_env.as_deref(), Some("/opt/bin:/usr/bin"));
         let command = launch.command(&serve_args(Path::new("/work/shop"), Some(8556)));
+        assert_eq!(command.get_program(), sidecar.as_os_str());
         let args: Vec<_> = command
             .get_args()
             .map(|a| a.to_string_lossy().into_owned())
             .collect();
         assert_eq!(
             args,
-            [
-                &*script.to_string_lossy(),
-                "serve",
-                "/work/shop",
-                "--port",
-                "8556",
-                "--parent-stdin"
-            ]
+            ["serve", "/work/shop", "--port", "8556", "--parent-stdin"]
         );
     }
 
     #[test]
-    fn the_start_function_explains_a_missing_node_or_build() {
+    fn an_empty_or_missing_sidecar_is_not_used() {
         let dir = tempdir().unwrap();
-        let script = dir.path().join("cli.mjs");
-        assert!(engine_launch(&node(false), &script)
-            .unwrap_err()
-            .contains("Node.js"));
-        assert!(engine_launch(&node(true), &script)
-            .unwrap_err()
-            .contains("not built"));
+        let empty = dir.path().join("tempo-engine");
+        std::fs::write(&empty, "").unwrap();
+        assert!(!is_built(&empty));
+        assert!(!is_built(&dir.path().join("nothing")));
+        let real = dir.path().join("real");
+        std::fs::write(&real, "x").unwrap();
+        assert!(is_built(&real));
+        // A development build falls back to Node (which may or may not be installed here); it never panics.
+        // A release build says the engine is missing.
+        let result = launch_from(Some(&empty), None);
+        #[cfg(not(debug_assertions))]
+        assert!(result.unwrap_err().contains("bundled engine is missing"));
+        #[cfg(debug_assertions)]
+        drop(result);
     }
 
     #[test]

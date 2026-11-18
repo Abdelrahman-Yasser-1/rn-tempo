@@ -2,17 +2,11 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
-import { makeApi, NODE_OK, renderWithApi, RUNNING, STOPPED } from '../test/fakeApi';
+import { makeApi, renderWithApi, RUNNING, STOPPED } from '../test/fakeApi';
 
 import { App } from './App';
 
 describe('App', () => {
-  it('asks for Node when it is missing', async () => {
-    const api = makeApi({ nodeInfo: () => Promise.resolve({ ...NODE_OK, ok: false, message: 'Node.js was not found.' }) });
-    renderWithApi(<App />, api);
-    expect(await screen.findByRole('alert')).toHaveTextContent('Node.js is needed');
-  });
-
   it('explains the empty list and lists backends with a status dot', async () => {
     renderWithApi(<App />, makeApi());
     expect(await screen.findByText(/No backends yet/)).toBeInTheDocument();
