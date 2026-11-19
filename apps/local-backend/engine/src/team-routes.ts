@@ -106,7 +106,8 @@ export function teamRoutes(services: TeamServices): TeamRoute[] {
     if (account.owner) return no('The server owner is managed with the CLI.', 403);
     if (who.role !== 'owner') {
       if (account.id === who.account.id) return no('Ask another admin to change your own access.', 403);
-      if (member.role === 'admin') return no('Only the server owner can change another admin.', 403);
+      // An admin of any backend is out of reach for other admins, whatever backend this call names: only the owner can change them.
+      if (member.role === 'admin' || store.memberships(account.id).some((other) => other.role === 'admin')) return no('Only the server owner can change an admin.', 403);
     }
     return { account };
   };
