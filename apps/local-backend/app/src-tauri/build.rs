@@ -22,7 +22,7 @@ fn ensure_sidecar() {
     if release {
         assert!(
             file.is_file() && !empty,
-            "The bundled engine is missing. Run `yarn workspace @rn-tempo/local-backend-engine build:sea` first ({}).",
+            "The bundled engine is missing. Run `yarn workspace @rn-tempo/local-backend build:sea` first ({}).",
             file.display()
         );
     } else if !file.exists() {
