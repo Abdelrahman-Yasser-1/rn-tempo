@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { Backend } from './client';
 import { createTauriTransport, type TauriDeps } from './tauri';
 import type { BackendStatus, RequestEntry } from './types';
-import { CSRF_HEADER, createWebTransport, type WebDeps } from './web';
+import { adminUrl, checkAdminRoute, CSRF_HEADER, createWebTransport, type WebDeps } from './web';
 
 const STATUS: BackendStatus = { path: 'shop', name: 'shop', state: 'running', scheme: 'http', port: 8556, notice: null, error: null, logTail: [] };
 const ENTRY: RequestEntry = { id: 1, at: '2026-01-01T00:00:00.000Z', method: 'GET', url: '/products', status: 200, ms: 3, req: {}, res: {} };
@@ -107,6 +107,7 @@ function webHarness(options: { onExpired?: boolean } = {}): Harness & { calls: S
       return Promise.resolve({ status: 201, body: '{}' });
     },
     openTab: () => undefined,
+    origin: () => 'http://127.0.0.1:8555',
     now: (() => {
       let tick = 0;
       return () => (tick += 4);
@@ -243,5 +244,46 @@ describe('the web transport (AC-LP-1)', () => {
     expect(await harness.backend.uploadMedia('shop')).toBeNull();
     expect(await harness.backend.restoreSnapshot()).toBeNull();
     expect(await harness.backend.pickImportFile()).toBeNull();
+  });
+});
+
+describe('admin routes cannot leave their backend (AC-LP-1)', () => {
+  const origin = 'http://127.0.0.1:8555';
+
+  it.each(['/data/x', '/data/products?limit=5&q=a%20b', '/media/abc/file', '/content/entries/1/versions'])('accepts %s', (route) => {
+    expect(adminUrl('shop', route, origin)).toBe(`/__admin/b/shop${route}`);
+  });
+
+  it.each([
+    ['no leading slash', 'data/x'],
+    ['a protocol-relative start', '//evil.test/x'],
+    ['a dot-dot segment', '/../other/info'],
+    ['a dot-dot after a name', '/data/../../b/other/definition'],
+    ['a single-dot segment', '/./info'],
+    ['an encoded dot', '/%2e%2e/other'],
+    ['an upper case encoded dot', '/%2E%2E/other'],
+    ['an encoded slash', '/data%2f..%2fx'],
+    ['an encoded backslash', '/data%5c..%5cx'],
+    ['a backslash', '/data\\..\\x'],
+    ['a fragment', '/data/x#/../../y'],
+    ['a doubled slash', '/data//x'],
+    ['a NUL', '/data/x%00'],
+    ['a control character', '/data/x\n'],
+  ])('refuses %s', (_what, route) => {
+    expect(() => checkAdminRoute(route)).toThrow('not a valid admin route');
+    expect(() => adminUrl('shop', route, origin)).toThrow('not a valid admin route');
+  });
+
+  it('keeps a backend name with odd characters inside its own prefix', () => {
+    expect(adminUrl('a/../b', '/info', origin)).toBe('/__admin/b/a%2F..%2Fb/info');
+  });
+
+  it('never sends a request for a refused route', async () => {
+    const harness = webHarness();
+    await harness.backend.session?.login('x');
+    const before = harness.calls.length;
+    await expect(harness.backend.admin('shop', { method: 'DELETE', path: '/../../b/other/definition' })).rejects.toThrow('not a valid admin route');
+    await expect(harness.backend.exportSnapshot('shop/../other')).rejects.toThrow('Not found');
+    expect(harness.calls.slice(before).every((call) => call.url.startsWith('/__admin/b/shop%2F..%2Fother/'))).toBe(true);
   });
 });

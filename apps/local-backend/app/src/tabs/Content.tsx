@@ -29,7 +29,7 @@ function Entries({ backend, type, config }: { backend: string; type: ContentType
   const route = `/content/entries?type=${encodeURIComponent(type.name)}&limit=200${status === '' ? '' : `&status=${status}`}${q === '' ? '' : `&q=${encodeURIComponent(q)}`}`;
   const page = useAdminQuery<EntryPage>(backend, route, { refetchInterval: REFRESH_MS });
   const dropType = useLossFlow(
-    (confirm) => adminSend(api, backend, 'DELETE', `/content/types/${type.name}${confirm ? '?confirm=true' : ''}`),
+    (confirm) => adminSend(api, backend, 'DELETE', `/content/types/${encodeURIComponent(type.name)}${confirm ? '?confirm=true' : ''}`),
     () => {
       setDropping(false);
       void refresh();
