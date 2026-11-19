@@ -51,6 +51,35 @@ function startServing(dir: string, args: string[], env: NodeJS.ProcessEnv): Prom
   });
 }
 
+/** Starts `web` from the executable and checks the dashboard page and one of its hashed files come out of the SEA assets. */
+async function checkDashboard(work: string, env: NodeJS.ProcessEnv): Promise<void> {
+  const adminPort = await freePort();
+  const child = spawn(binary, ['web', '--backends-dir', join(work, 'web-backends'), '--admin-port', String(adminPort), '--no-open'], { stdio: ['ignore', 'pipe', 'pipe'], env });
+  children.push(child);
+  await new Promise<void>((done, fail) => {
+    const timer = setTimeout(() => fail(new Error('web printed no dashboard address in 30 seconds')), 30_000);
+    let buffer = '';
+    child.once('exit', (code) => fail(new Error(`web exited (${String(code)}) early`)));
+    child.stdout?.on('data', (chunk: Buffer) => {
+      buffer += chunk.toString('utf8');
+      // The login code is on a line of its own and is never printed here.
+      if (buffer.includes('Login code:')) {
+        clearTimeout(timer);
+        done();
+      }
+    });
+  });
+  const base = `http://127.0.0.1:${String(adminPort)}`;
+  const page = await fetch(`${base}/`);
+  const html = await page.text();
+  check(page.status === 200 && html.includes('<div id="root">') && (page.headers.get('content-security-policy') ?? '').includes("connect-src 'self'"), 'the dashboard index is served from the SEA, with its CSP');
+  const script = /src="(\/assets\/[^"]+\.js)"/.exec(html)?.[1];
+  const asset = script === undefined ? undefined : await fetch(`${base}${script}`);
+  check(asset?.status === 200 && (asset.headers.get('cache-control') ?? '').includes('immutable'), 'a hashed dashboard file is served with immutable caching');
+  check((await fetch(`${base}/__hub/backends`)).status === 401, 'the admin routes need a session');
+  child.kill('SIGTERM');
+}
+
 async function stopAll(): Promise<void> {
   await Promise.all(
     children.splice(0).map(
@@ -99,6 +128,8 @@ async function main(): Promise<void> {
   check(css.status === 200 && (await css.text()).length > 1000, 'Swagger UI asset is served (SEA asset)');
   const stats = await fetch(`${base}/stats/summary`);
   check(stats.status === 200 && ((await stats.json()) as { products?: number }).products === 100, 'a handler runs in a worker and the database answers');
+  await stopAll();
+  await checkDashboard(work, env);
   await stopAll();
 
   let mkcert = true;
