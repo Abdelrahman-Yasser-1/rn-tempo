@@ -10,7 +10,7 @@ export { createLogger } from './server/logger.ts';
 export { BUILTIN_SCENARIOS, CONTROL_HEADER, SCENARIO_HEADER } from './runtime/scenarios.ts';
 export { DB_FILE, Store } from './server/store.ts';
 // Pieces other tools reuse (the Tempo Local Backend engine): redaction, the request ring, certificates, docs helpers.
-export { isSensitiveKey, REDACTED, redactDeep, redactUrl } from './server/redact.ts';
+export { isSensitiveKey, REDACTED, redactDeep, redactUrl, scrubKeys } from './server/redact.ts';
 export { MAX_BODY_CHARS, RequestLog, RING_SIZE, viewBody } from './server/events.ts';
 export type { BodyView, EntryInput, RequestEntry } from './server/events.ts';
 export { swaggerDir } from './server/docs.ts';
