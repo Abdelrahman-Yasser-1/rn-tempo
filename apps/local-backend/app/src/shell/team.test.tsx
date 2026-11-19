@@ -333,3 +333,24 @@ describe('team server: signing in (AC-LP-2)', () => {
     expect(await screen.findByLabelText('Login code')).toBeInTheDocument();
   });
 });
+
+describe('team server: public access setting (AC-LP-2)', () => {
+  it('AC-LP-2 saves the public access mode with the definition, for admins', async () => {
+    const puts: unknown[] = [];
+    const team = makeTeam({}, { account: account(), memberships: [{ backendId: 'shop', role: 'admin' }] });
+    const api = teamApi(team, {
+      admin: adminRoutes({
+        'GET /definition': () => ({ name: 'shop', port: 8556, https: false, endpoints: [], collections: [] }),
+        'PUT /definition': (request) => (puts.push(JSON.parse(request.body ?? '{}')), { ok: true, ops: [] }),
+      }),
+    });
+    renderWithApi(<BackendView backend={SHOP} onOpen={vi.fn()} />, api);
+    await userEvent.click(await screen.findByRole('tab', { name: 'Settings' }));
+    await userEvent.selectOptions(await screen.findByLabelText(/Public API access/), 'key');
+    await userEvent.click(screen.getByRole('button', { name: 'Save settings' }));
+    await waitFor(() => {
+      expect(puts).toHaveLength(1);
+    });
+    expect(puts[0]).toMatchObject({ publicAccess: 'key' });
+  });
+});
