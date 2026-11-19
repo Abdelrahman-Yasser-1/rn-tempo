@@ -39,6 +39,12 @@ export interface TeamOptions {
   idleMs?: number;
   /** Passed to every backend (tests). */
   registry?: Pick<RegistryOptions, 'start' | 'firstPort'>;
+  /**
+   * A separate origin for the public APIs, such as `https://api.example.com`. Requests for that host serve `/b/<id>/...`
+   * and nothing else; the dashboard host serves no `/b`. Scripts a backend answers with then never run on the dashboard's
+   * origin. Without it the public APIs share the dashboard's origin and are answered sandboxed and as downloads.
+   */
+  publicOrigin?: string;
   /** Start the backends found in the backends directory (default true). */
   autostart?: boolean;
 }
@@ -70,7 +76,9 @@ export async function startTeam(options: TeamOptions): Promise<RunningTeam> {
   const sessions = new Sessions({ clock, maxSessions: 1000, ...(options.idleMs === undefined ? {} : { idleMs: options.idleMs }) });
   const trust = new ProxyTrust(options.trustProxy ?? []);
   const registry = new BackendRegistry(options.backendsDir, { ...(options.registry ?? {}), mounted: true, accessKey: (id, key) => keys.allows(key, id, 'public') });
-  const services: TeamServices = { store, auth, keys, registry, sessions, audit, now: clock };
+  const publicOrigin = options.publicOrigin === undefined ? null : new URL(options.publicOrigin).origin;
+  const publicHost = publicOrigin === null ? null : new URL(publicOrigin).host;
+  const services: TeamServices = { store, auth, keys, registry, sessions, audit, now: clock, publicOrigin };
 
   const replaced = new Set(['GET /info', 'GET /backends', 'POST /backends', 'POST /backends/open', 'POST /restore', 'DELETE /backends/:id']);
   const own = teamRoutes(services);
@@ -296,6 +304,7 @@ export async function startTeam(options: TeamOptions): Promise<RunningTeam> {
     if (running === undefined) return reply(res, problemReply(503, { detail: `${id} is not running.` }));
     // The engine sees the path without the prefix, like on its own port.
     req.url = `${found[2] ?? '/'}${found[3] ?? ''}`;
+    hardenPublic(res, (found[2] ?? '/').startsWith('/__docs'));
     running.handlePublic(req, res, { scheme: https ? 'https' : 'http' });
   }
 
@@ -304,7 +313,10 @@ export async function startTeam(options: TeamOptions): Promise<RunningTeam> {
       const client = trust.client(req);
       const pathname = new URL(req.url ?? '/', 'http://local').pathname;
       if (pathname === '/__health') return reply(res, jsonReply(200, { ok: true, service: 'tempo-local-backend', mode: 'team' }), req.method === 'HEAD');
-      if (pathname === '/b' || pathname.startsWith('/b/')) return publicRoute(req, res, client.https);
+      const onPublicHost = publicHost !== null && String(req.headers.host ?? '').toLowerCase() === publicHost.toLowerCase();
+      const isPublicPath = pathname === '/b' || pathname.startsWith('/b/');
+      if (publicHost !== null && isPublicPath !== onPublicHost) return reply(res, problemReply(404, { detail: isPublicPath ? `The public APIs are at ${publicOrigin ?? ''}.` : 'Not found.' }));
+      if (isPublicPath) return publicRoute(req, res, client.https);
       if (pathname === '/__session') return sessionRoute(req, res, client.https, client.ip);
       if (pathname === '/__setup') return setupRoute(req, res, client.https, client.ip);
       if (pathname.startsWith('/__hub/')) return hubRoute(req, res, pathname, client.https);
@@ -350,6 +362,36 @@ export async function startTeam(options: TeamOptions): Promise<RunningTeam> {
       return stopping;
     },
   };
+}
+
+/** Types a browser runs or renders as a page; a backend's answer with one of these is sent as a download. */
+const ACTIVE_TYPES = /^(text\/html|application\/xhtml\+xml|image\/svg\+xml|text\/xml|application\/xml)\b/i;
+
+/**
+ * What a backend says in `/b/<id>` answers is untrusted by the dashboard that shares the origin: an endpoint, handler or
+ * media file can return HTML or script. Every answer is sandboxed (`Content-Security-Policy: sandbox`, so the page has
+ * an opaque origin and no cookies or storage of the dashboard), sniffing is off, pages and SVG are downloads, and a
+ * backend can never set a cookie. The engine's own Swagger UI keeps its policy (it needs its scripts) but no cookie.
+ */
+function hardenPublic(res: ServerResponse, engineOwned: boolean): void {
+  const write = res.writeHead.bind(res) as (status: number, ...rest: unknown[]) => ServerResponse;
+  res.writeHead = ((status: number, ...rest: unknown[]) => {
+    const given = rest.find((item) => typeof item === 'object' && item !== null && !Array.isArray(item)) as Record<string, string | number | string[]> | undefined;
+    const headers: Record<string, string | number | string[]> = {};
+    for (const [name, value] of Object.entries({ ...res.getHeaders(), ...(given ?? {}) })) if (value !== undefined) headers[name.toLowerCase()] = value as string | number | string[];
+    delete headers['set-cookie'];
+    delete headers['set-cookie2'];
+    headers['x-content-type-options'] = 'nosniff';
+    headers['cross-origin-resource-policy'] = 'same-site';
+    headers['referrer-policy'] = 'no-referrer';
+    if (!engineOwned) {
+      headers['content-security-policy'] = "sandbox; default-src 'none'";
+      if (ACTIVE_TYPES.test(String(headers['content-type'] ?? ''))) headers['content-disposition'] = 'attachment';
+    }
+    for (const name of res.getHeaderNames()) res.removeHeader(name);
+    const text = rest.find((item) => typeof item === 'string');
+    return text === undefined ? write(status, headers) : write(status, text, headers);
+  }) as typeof res.writeHead;
 }
 
 function readBodyJson(text: string): unknown {

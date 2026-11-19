@@ -27,6 +27,8 @@ export interface Member extends TeamAccount {
 }
 
 export interface Me {
+  /** The separate origin of the public APIs (`--public-origin`), or `null` when they share the dashboard's. */
+  publicOrigin: string | null;
   account: TeamAccount;
   memberships: { backendId: string; role: MemberRole }[];
 }
