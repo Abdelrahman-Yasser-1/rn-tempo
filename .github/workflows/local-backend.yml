@@ -57,14 +57,15 @@ jobs:
       - name: Engine tests, types and build
         run: |
           yarn workspace @rn-tempo/dev-api build
-          yarn workspace @rn-tempo/local-backend-engine lint
-          yarn workspace @rn-tempo/local-backend-engine typecheck
-          yarn workspace @rn-tempo/local-backend-engine test
-          yarn workspace @rn-tempo/local-backend-engine build
+          yarn workspace @rn-tempo/local-backend lint
+          yarn workspace @rn-tempo/local-backend typecheck
+          yarn workspace @rn-tempo/local-backend test
+          yarn workspace @rn-tempo/local-backend build
       - name: Bundle the engine as a single executable and smoke test it
         run: |
-          yarn workspace @rn-tempo/local-backend-engine build:sea
-          yarn workspace @rn-tempo/local-backend-engine smoke:sea --require-https
+          yarn workspace @rn-tempo/local-backend build:dashboard
+          yarn workspace @rn-tempo/local-backend build:sea
+          yarn workspace @rn-tempo/local-backend smoke:sea --require-https
       - name: App UI lint, types and tests
         run: |
           yarn workspace @rn-tempo/local-backend-app lint

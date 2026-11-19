@@ -27,7 +27,7 @@ pub fn evaluate(
 ) -> Result<String, String> {
     let Some(node) = probe.and_then(|text| mark_value(text, NODE_MARK)) else {
         return Err(format!(
-            "Node.js was not found in your login shell. Install Node {MIN_NODE_MAJOR} or newer, or build the bundled engine with `yarn workspace @rn-tempo/local-backend-engine build:sea`."
+            "Node.js was not found in your login shell. Install Node {MIN_NODE_MAJOR} or newer, or build the bundled engine with `yarn workspace @rn-tempo/local-backend build:sea`."
         ));
     };
     let Some(version) = version_of(&node) else {

@@ -2,7 +2,7 @@
 //! certificate in a throwaway CA, serve it over HTTPS, and go through the same proxies the tabs use.
 //!
 //! It needs mkcert, an engine and free ports, so it is ignored by default. By default the engine is
-//! `node dist/cli.mjs` (Node 24 and `yarn workspace @rn-tempo/local-backend-engine build`). With `E2E_SIDECAR` set to
+//! `node dist/cli.mjs` (Node 24 and `yarn workspace @rn-tempo/local-backend build`). With `E2E_SIDECAR` set to
 //! the bundled `tempo-engine` executable it runs that instead, and then Node must NOT be on `PATH`: the run proves the
 //! packaged engine needs no Node. Run it with `cargo test e2e -- --ignored --nocapture --test-threads=1`. Nothing is added to a trust store: the CA lives in a
 //! temporary folder, and the Rust client trusts only that CA.

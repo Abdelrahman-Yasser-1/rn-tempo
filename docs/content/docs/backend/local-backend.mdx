@@ -28,11 +28,11 @@ You need Node 26 or newer (it builds the engine into one file), Rust 1.85 or new
 
 ```sh
 yarn install
-yarn workspace @rn-tempo/local-backend-engine build:sea        # the engine, as one executable
+yarn workspace @rn-tempo/local-backend build:sea        # the engine, as one executable
 yarn workspace @rn-tempo/local-backend-app tauri build --bundles app,dmg
 ```
 
-The `.app` and `.dmg` are in `apps/local-backend/app/src-tauri/target/release/bundle/`. For the window with hot reload, run `yarn workspace @rn-tempo/local-backend-app tauri dev`. Without `build:sea`, `tauri dev` falls back to `node apps/local-backend/engine/dist/cli.mjs` (run `yarn workspace @rn-tempo/local-backend-engine build` first, and have Node 24 or newer).
+The `.app` and `.dmg` are in `apps/local-backend/app/src-tauri/target/release/bundle/`. For the window with hot reload, run `yarn workspace @rn-tempo/local-backend-app tauri dev`. Without `build:sea`, `tauri dev` falls back to `node apps/local-backend/engine/dist/cli.mjs` (run `yarn workspace @rn-tempo/local-backend build` first, and have Node 24 or newer).
 
 The same engine runs without the app. See `apps/local-backend/engine/README.md` for `create`, `serve`, `check`, `snapshot` and the rest.
 
