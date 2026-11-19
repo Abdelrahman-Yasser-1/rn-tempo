@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { readSwaggerAsset, swaggerAssetKey, type AssetSources } from '../src/assets.ts';
+import { dashboardAssetKey, readDashboardAsset, readSwaggerAsset, swaggerAssetKey, type AssetSources } from '../src/assets.ts';
 
 const bytes = (text: string): ArrayBuffer => new TextEncoder().encode(text).buffer as ArrayBuffer;
 
@@ -35,5 +35,23 @@ describe('readSwaggerAsset', () => {
 
   it('finds the real Swagger UI files when not a single executable', () => {
     expect(readSwaggerAsset('swagger-ui.css').length).toBeGreaterThan(1000);
+  });
+});
+
+describe('readDashboardAsset (AC-LP-1)', () => {
+  it('reads from the executable under dashboard/<path> when running as one', () => {
+    const asked: string[] = [];
+    const sources: AssetSources = { isSea: () => true, getAsset: (key) => (asked.push(key), bytes('page')), fromDisk: () => Buffer.alloc(0) };
+    expect(readDashboardAsset('assets/app.js', sources)?.toString('utf8')).toBe('page');
+    expect(asked).toEqual([dashboardAssetKey('assets/app.js')]);
+    expect(dashboardAssetKey('index.html')).toBe('dashboard/index.html');
+  });
+
+  it('returns undefined, not an error, when the file or the whole dashboard is missing', () => {
+    const sea: AssetSources = { isSea: () => true, getAsset: () => { throw new Error('no such asset'); }, fromDisk: () => Buffer.alloc(0) };
+    expect(readDashboardAsset('nope.js', sea)).toBeUndefined();
+    const disk: AssetSources = { isSea: () => false, getAsset: () => bytes(''), fromDisk: () => Buffer.alloc(0), dashboardFromDisk: () => { throw new Error('ENOENT'); } };
+    expect(readDashboardAsset('index.html', disk)).toBeUndefined();
+    expect(readDashboardAsset('index.html', { isSea: () => false, getAsset: () => bytes(''), fromDisk: () => Buffer.alloc(0) })).toBeUndefined();
   });
 });

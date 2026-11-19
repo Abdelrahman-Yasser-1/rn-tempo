@@ -1,4 +1,4 @@
-import type { Server } from 'node:http';
+import type { IncomingMessage, Server, ServerResponse } from 'node:http';
 import { join } from 'node:path';
 
 import { snapshotStream } from './snapshot.ts';
@@ -22,6 +22,11 @@ export interface StartOptions extends EngineOptions {
   https?: boolean;
   /** Port of the admin listener on 127.0.0.1. Defaults to a random free one. */
   adminPort?: number;
+  /**
+   * Open the admin listener on 127.0.0.1 (default true). The web hub passes `false`: it serves the admin API itself,
+   * behind its own sign-in, through `handleAdmin`, so the backend opens no second port.
+   */
+  adminListener?: boolean;
   /** Watch backend.json for edits (default true). */
   watch?: boolean;
   /** Request log file limits (tests lower them). */
@@ -33,8 +38,10 @@ export interface StartOptions extends EngineOptions {
 export interface RunningBackend {
   readonly engine: Engine;
   readonly manager: Manager;
-  /** The admin listener, loopback only. The token is for the app that started this process. */
+  /** The admin listener, loopback only. The token is for the app that started this process. `port` is 0 without a listener. */
   readonly admin: { host: '127.0.0.1'; port: number; token: string };
+  /** Serves one already authenticated admin request (`/__admin/...`). For the web hub, which does its own sign-in. */
+  readonly handleAdmin: (req: IncomingMessage, res: ServerResponse) => Promise<void>;
   readonly publicServer: Server;
   readonly scheme: 'http' | 'https';
   readonly port: number;
@@ -109,13 +116,14 @@ export async function startBackend(dir: string, options: StartOptions = {}): Pro
   });
   try {
     const port = await listenOn(publicServer, options.port ?? engine.definition.port, options.host ?? '0.0.0.0');
-    const adminPort = await listenOn(adminServer.server, options.adminPort ?? 0, '127.0.0.1');
+    const adminPort = options.adminListener === false ? 0 : await listenOn(adminServer.server, options.adminPort ?? 0, '127.0.0.1');
     manager.startWatching();
     let stopping: Promise<void> | undefined;
     return {
       engine,
       manager,
       admin: { host: '127.0.0.1', port: adminPort, token: adminServer.token },
+      handleAdmin: adminServer.handle,
       publicServer,
       scheme: tls === undefined ? 'http' : 'https',
       port,
