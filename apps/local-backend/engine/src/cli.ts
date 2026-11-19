@@ -13,6 +13,7 @@ import { readDefinitionText, createBackend, PRESETS, prepareDataDir, type Preset
 import { DefinitionError } from './schema.ts';
 import { trustAndroid, trustIos, trustMac } from './trust.ts';
 import { BackendRegistry } from './hub-backends.ts';
+import { ownerCommand, serverCommand, type ServerArgs } from './team-cli.ts';
 import { defaultBackendsDir, startWeb } from './web.ts';
 
 const USAGE = `local-backend-engine: serve a Tempo Local Backend folder
@@ -24,6 +25,10 @@ const USAGE = `local-backend-engine: serve a Tempo Local Backend folder
   local-backend-engine snapshot import <file.zip> <dir> [--no-certs]   into a new or empty folder
   local-backend-engine trust  mac | ios [--device <udid>] | android [--serial <id>]   add the mkcert CA to a trust store (explicit)
   local-backend-engine web    [--backends-dir <dir>] [--admin-port <n>] [--no-open]   the dashboard in a browser, for several backends
+  local-backend-engine server [--data-dir <dir>] [--backends-dir <dir>] [--port <n>] [--trust-proxy [private|<cidr,...>]] [--audit-days <n>]
+                              the team server: accounts, roles, API keys and an audit log, for Docker behind Caddy
+  local-backend-engine server owner create --email <email> [--name <name>] [--password-stdin]
+  local-backend-engine server owner reset-password --email <email> [--password-stdin] [--reset-totp]
   local-backend-engine serve  <dir> [--port <n>] [--http] [--admin-port <n>] [--no-watch] [--parent-stdin]
 
 With no command (for example \`npx @rn-tempo/local-backend\`) the engine runs \`web\`: it prints a one-time login code, opens
@@ -96,8 +101,14 @@ async function web(values: { 'backends-dir'?: string | undefined; 'admin-port'?:
   process.once('SIGTERM', stop);
 }
 
+/** `--trust-proxy` alone means `--trust-proxy private` (the loopback and private ranges: a proxy on the Docker network). */
+function withProxyDefault(args: string[]): string[] {
+  return args.flatMap((arg, index) => (arg === '--trust-proxy' && (args[index + 1] === undefined || args[index + 1]?.startsWith('-') === true) ? [arg, 'private'] : [arg]));
+}
+
 async function main(): Promise<void> {
   const { positionals, values } = parseArgs({
+    args: withProxyDefault(process.argv.slice(2)),
     allowPositionals: true,
     options: {
       name: { type: 'string' },
@@ -112,6 +123,13 @@ async function main(): Promise<void> {
       'parent-stdin': { type: 'boolean' },
       'backends-dir': { type: 'string' },
       'no-open': { type: 'boolean' },
+      'data-dir': { type: 'string' },
+      host: { type: 'string' },
+      'trust-proxy': { type: 'string' },
+      'audit-days': { type: 'string' },
+      email: { type: 'string' },
+      'password-stdin': { type: 'boolean' },
+      'reset-totp': { type: 'boolean' },
       device: { type: 'string' },
       serial: { type: 'string' },
       help: { type: 'boolean', short: 'h' },
@@ -119,6 +137,7 @@ async function main(): Promise<void> {
   });
   const [command = 'web', dir] = positionals;
   if (values.help !== true && command === 'web') return web(values);
+  if (values.help !== true && command === 'server') return dir === 'owner' ? ownerCommand(positionals[2], values as ServerArgs) : serverCommand(values as ServerArgs);
   if (values.help === true || dir === undefined) {
     process.stdout.write(USAGE);
     process.exit(values.help === true ? 0 : 1);

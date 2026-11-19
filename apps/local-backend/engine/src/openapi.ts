@@ -422,7 +422,7 @@ function contentPaths(definition: Backend, schemas: JsonObject, paths: JsonObjec
 }
 
 /** The OpenAPI 3.1 document of a definition: every endpoint, with schemas built from its collections. */
-export function buildOpenApi(definition: Backend): JsonObject {
+export function buildOpenApi(definition: Backend, options: { prefix?: string } = {}): JsonObject {
   const collections = new Map(definition.collections.map((collection) => [collection.name, collection]));
   const schemas: JsonObject = { Problem: PROBLEM };
   const builtins = new Set<string>();
@@ -458,10 +458,17 @@ export function buildOpenApi(definition: Backend): JsonObject {
       version: '1.0.0',
       description: 'Generated from backend.json by Tempo Local Backend. A local development server: do not use its data or credentials anywhere else.',
     },
-    servers: [{ url: definition.basePath ?? '/' }],
+    servers: [{ url: `${options.prefix ?? ''}${definition.basePath ?? ''}` || '/' }],
     tags: [...tags].sort().map((name) => ({ name })),
     paths,
-    components: { schemas, securitySchemes: { bearerAuth: { type: 'http', scheme: 'bearer' } } },
+    components: {
+      schemas,
+      securitySchemes: {
+        bearerAuth: { type: 'http', scheme: 'bearer' },
+        ...(definition.publicAccess === 'key' ? { accessKey: { type: 'apiKey', in: 'header', name: 'x-tempo-access-key' } } : {}),
+      },
+    },
+    ...(definition.publicAccess === 'key' ? { security: [{ accessKey: [] }] } : {}),
   };
   return sortKeys(document) as JsonObject;
 }

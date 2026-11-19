@@ -74,6 +74,13 @@ export interface RegistryOptions {
   start?: StartOptions;
   /** The first port tried for a new backend (default 8443). */
   firstPort?: number;
+  /**
+   * Team server: no backend gets a port. Each one is mounted at `/b/<id>` on the server's own port, started when the
+   * server starts, and "Try it" calls the engine in process.
+   */
+  mounted?: boolean;
+  /** Team server: checks the `x-tempo-access-key` of a backend with `publicAccess: "key"`. */
+  accessKey?: (id: string, key: string | undefined) => boolean;
 }
 
 /**
@@ -188,6 +195,7 @@ export class BackendRegistry implements BackendHost {
         // A broken definition holds no port.
       }
     }
+    if (this.options.mounted === true) return this.options.firstPort ?? FIRST_PORT;
     for (let port = this.options.firstPort ?? FIRST_PORT; port < 65_535; port += 1) {
       if (!used.has(port) && (await portFree(port))) return port;
     }
@@ -244,7 +252,16 @@ export class BackendRegistry implements BackendHost {
     const entry = this.entry(id);
     if (entry.running !== undefined) return this.status(id);
     if (port !== null && !(Number.isInteger(port) && port >= 1 && port <= 65_535)) throw new DefinitionError('The port must be a number from 1 to 65535.');
-    entry.starting ??= startBackend(folder, { host: '0.0.0.0', ...(this.options.start ?? {}), ...(port === null ? {} : { port }), adminListener: false });
+    const mounted = this.options.mounted === true;
+    const accessKey = this.options.accessKey;
+    entry.starting ??= startBackend(folder, {
+      host: '0.0.0.0',
+      ...(this.options.start ?? {}),
+      ...(port === null ? {} : { port }),
+      adminListener: false,
+      ...(mounted ? { mounted: { prefix: `/b/${id}` }, https: false } : {}),
+      ...(accessKey === undefined ? {} : { accessKey: (key: string | undefined): boolean => accessKey(id, key) }),
+    });
     try {
       entry.running = await entry.starting;
       delete entry.error;
@@ -269,6 +286,22 @@ export class BackendRegistry implements BackendHost {
     }
     await running?.stop();
     return this.status(id);
+  }
+
+  /** Starts every listed backend that is not running (the team server does this at boot). Failures stay in the status. */
+  async startAll(): Promise<void> {
+    for (const id of this.listedIds()) {
+      try {
+        await this.start(id, null);
+      } catch {
+        // The reason is in `status(id).error`.
+      }
+    }
+  }
+
+  /** The running backend, if any (the team server reads its engine and handlers). */
+  running(id: string): RunningBackend | undefined {
+    return this.entries.get(id)?.running;
   }
 
   /** Stops every backend (the server is closing). */
@@ -352,6 +385,7 @@ export class BackendRegistry implements BackendHost {
         if (Array.isArray(pair) && typeof pair[0] === 'string' && typeof pair[1] === 'string' && PUBLIC_HEADERS.has(pair[0].toLowerCase()) && !/[\r\n]/.test(pair[1])) headers[pair[0].toLowerCase()] = pair[1];
       }
     }
+    if (this.options.mounted === true) return this.tryInProcess(running, { method, path, headers, ...(typeof body.body === 'string' && method !== 'GET' ? { body: body.body } : {}) });
     const secure = running.scheme === 'https';
     let ca: Buffer | undefined;
     if (secure) {
@@ -382,6 +416,29 @@ export class BackendRegistry implements BackendHost {
       req.on('error', (error) => done(problemReply(502, { detail: firstLine(error, 'The backend could not be reached.') })));
       req.end(payload);
     });
+  }
+
+  /** Team server "Try it": the engine answers in process (no port to call, and the access key is not needed by a signed-in member). */
+  private async tryInProcess(running: RunningBackend, call: { method: string; path: string; headers: Record<string, string>; body?: string }): Promise<Reply> {
+    const started = Date.now();
+    const url = new URL(call.path, 'http://local');
+    const reply = await running.engine.handle({
+      method: call.method,
+      path: url.pathname,
+      url: call.path,
+      query: url.searchParams,
+      headers: call.headers,
+      bodyText: call.body ?? '',
+    });
+    let text = '';
+    if (reply.raw !== undefined) text = typeof reply.raw === 'string' ? reply.raw : Buffer.from(reply.raw).toString('utf8');
+    else if (reply.body !== undefined) text = JSON.stringify(reply.body);
+    else if (reply.file !== undefined) text = `[a stored file, ${String(reply.file.end - reply.file.start + 1)} bytes]`;
+    else if (reply.stream !== undefined) {
+      reply.stream.destroy();
+      text = '[a stream]';
+    }
+    return jsonReply(200, { status: reply.status, body: text.slice(0, MAX_REPLY_BYTES), ms: Date.now() - started, contentType: reply.headers['content-type'] ?? null });
   }
 
   /** A backup zip (as a stream) becomes a new backend folder, never overwriting one. */
@@ -502,5 +559,5 @@ export function publicPathOk(path: string): boolean {
   return !route.startsWith('/__admin');
 }
 
-class ConflictError extends Error {}
-class NotListedError extends Error {}
+export class ConflictError extends Error {}
+export class NotListedError extends Error {}

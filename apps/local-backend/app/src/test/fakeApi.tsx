@@ -48,6 +48,7 @@ export function makeApi(overrides: Partial<Api> = {}): Api {
   const defaults: Api = {
     capabilities: DESKTOP_CAPABILITIES,
     session: null,
+    team: null,
     listUnlisted: vi.fn(() => Promise.resolve([])),
     openNamed: vi.fn(unexpected('openNamed')),
     listBackends: vi.fn(() => Promise.resolve([])),
@@ -84,9 +85,9 @@ export function makeApi(overrides: Partial<Api> = {}): Api {
     onDropped: vi.fn(() => Promise.resolve(() => undefined)),
   };
   // Every override becomes a spy too, so tests can assert on calls without wrapping each one.
-  const { capabilities, session, ...calls } = overrides;
+  const { capabilities, session, team, ...calls } = overrides;
   const wrapped = Object.fromEntries(Object.entries(calls).map(([name, fn]) => [name, vi.isMockFunction(fn) ? fn : vi.fn(fn as (...args: never[]) => unknown)]));
-  return { ...defaults, ...wrapped, ...(capabilities === undefined ? {} : { capabilities }), ...(session === undefined ? {} : { session }) };
+  return { ...defaults, ...wrapped, ...(capabilities === undefined ? {} : { capabilities }), ...(session === undefined ? {} : { session }), ...(team === undefined ? {} : { team }) };
 }
 
 export function renderWithApi(ui: ReactElement, api: Api) {

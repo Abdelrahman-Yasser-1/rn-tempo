@@ -30,6 +30,8 @@ export interface EngineOptions {
   authorize?: (ctx: RequestCtx, endpoint: Endpoint) => boolean;
   /** Where engine problems go (`.data/logs/engine.log` when started through `startBackend`). */
   logger?: EngineLogger;
+  /** The path the public API is served under when a server mounts it (`/b/<id>`), for the URLs and OpenAPI it hands out. */
+  publicPrefix?: string;
   /** Called with every request log entry, after redaction. */
   onRequest?: (entry: ReturnType<RequestLog['record']>, endpointId: string | undefined) => void;
 }
@@ -55,6 +57,8 @@ export class Engine {
   readonly requests = new RequestLog();
   readonly stats = new Stats();
   readonly startedAt = new Date().toISOString();
+  /** `/b/<id>` when the team server mounts this backend, else empty. */
+  readonly publicPrefix: string;
   /** App users, tokens and the JWT checks. */
   readonly auth: AuthService;
   /** Stored files (`.data/media`). */
@@ -73,6 +77,7 @@ export class Engine {
     this.folder = folder;
     this.store = store;
     this.state = state;
+    this.publicPrefix = options.publicPrefix ?? '';
     const now = options.now ?? ((): Date => new Date());
     this.auth = new AuthService(new Accounts(store.db, now), loadJwtSecret(folder.dataDir), () => this.state.definition.auth, now);
     this.media = new MediaService(folder.dataDir, store.db, now);
@@ -142,7 +147,7 @@ export class Engine {
   mediaUrl(id: string, origin?: string): string {
     const download = this.state.definition.endpoints.find((endpoint) => endpoint.type === 'download');
     const path = download === undefined ? '/media/:id' : download.path;
-    return `${origin ?? ''}${mountPath(this.state.definition.basePath, path).replace(':id', id)}`;
+    return `${origin ?? ''}${this.publicPrefix}${mountPath(this.state.definition.basePath, path).replace(':id', id)}`;
   }
 
   get definition(): Backend {

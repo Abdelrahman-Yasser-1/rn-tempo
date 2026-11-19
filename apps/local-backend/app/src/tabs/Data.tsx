@@ -15,6 +15,7 @@ import { EmptyState, ErrorNote, Hint } from '../ui/bits';
 
 import { FieldsDialog } from './FieldsDialog';
 import { RowDialog } from './RowDialog';
+import { Write } from '../hooks/team';
 
 const PAGE = 25;
 
@@ -146,12 +147,12 @@ function Rows({ backend, collection, all }: { backend: string; collection: Colle
       <div className="row">
         <h2>{collection.name}</h2>
         <span className="spacer" />
-        <button type="button" onClick={() => { setFields(true); }}>
+        <Write><button type="button" onClick={() => { setFields(true); }}>
           Edit fields
-        </button>
-        <button type="button" className="primary" disabled={collection.fields.length === 0} onClick={() => { setEditing('new'); }}>
+        </button></Write>
+        <Write><button type="button" className="primary" disabled={collection.fields.length === 0} onClick={() => { setEditing('new'); }}>
           Add record
-        </button>
+        </button></Write>
       </div>
       <div className="row">
         <label className="grow">
@@ -172,9 +173,9 @@ function Rows({ backend, collection, all }: { backend: string; collection: Colle
         <button type="button" onClick={() => { exportAs.mutate('csv'); }} disabled={exportAs.isPending}>
           Export CSV
         </button>
-        <button type="button" onClick={() => { importRows.mutate(); }} disabled={importRows.isPending || collection.fields.length === 0}>
+        <Write><button type="button" onClick={() => { importRows.mutate(); }} disabled={importRows.isPending || collection.fields.length === 0}>
           Import…
-        </button>
+        </button></Write>
         {canReveal ? (
           <button type="button" onClick={() => { reveal.mutate(); }}>
             Show database file
@@ -208,12 +209,12 @@ function Rows({ backend, collection, all }: { backend: string; collection: Colle
                   <td key={name}>{show(row[name])}</td>
                 ))}
                 <td className="actions-cell">
-                  <button type="button" className="ghost" aria-label={`Edit record ${String(row.id)}`} onClick={() => { setEditing(row); }}>
+                  <Write><button type="button" className="ghost" aria-label={`Edit record ${String(row.id)}`} onClick={() => { setEditing(row); }}>
                     Edit
-                  </button>
-                  <button type="button" className="ghost bad" aria-label={`Delete record ${String(row.id)}`} onClick={() => { setDeleting(row); }}>
+                  </button></Write>
+                  <Write><button type="button" className="ghost bad" aria-label={`Delete record ${String(row.id)}`} onClick={() => { setDeleting(row); }}>
                     Delete
-                  </button>
+                  </button></Write>
                 </td>
               </tr>
             ))}
@@ -234,9 +235,9 @@ function Rows({ backend, collection, all }: { backend: string; collection: Colle
         </div>
       ) : null}
       <div className="row end">
-        <button type="button" className="ghost bad" onClick={() => { setDropping(true); }}>
+        <Write><button type="button" className="ghost bad" onClick={() => { setDropping(true); }}>
           Delete this collection
-        </button>
+        </button></Write>
       </div>
 
       {editing === null ? null : (
@@ -312,9 +313,9 @@ export function Data({ backend }: { backend: string }) {
             </li>
           ))}
         </ul>
-        <button type="button" onClick={() => { setAdding(true); }}>
+        <Write><button type="button" onClick={() => { setAdding(true); }}>
           New collection
-        </button>
+        </button></Write>
       </aside>
       <section>{current === undefined ? null : <Rows key={current.name} backend={backend} collection={current} all={list.map((item) => item.name)} />}</section>
       {adding ? (
