@@ -185,7 +185,7 @@ describe('the web listener sign-in (AC-LP-1)', () => {
   it('does not take the code from a URL or a query string', async () => {
     const site = await web();
     const viaUrl = await call(site.port, { method: 'GET', path: `/__session?code=${site.loginCode}` });
-    expect(JSON.parse(viaUrl.body)).toEqual({ authenticated: false });
+    expect(JSON.parse(viaUrl.body)).toEqual({ authenticated: false, login: 'code' });
     const viaLogin = await call(site.port, { path: `/login?code=${site.loginCode}` });
     expect(viaLogin.headers['set-cookie']).toBeUndefined();
     expect((await call(site.port, { method: 'POST', path: '/__session', body: JSON.stringify({ code: site.loginCode }) })).status).toBe(200);
@@ -286,7 +286,7 @@ describe('admin routes behind the session (AC-LP-1)', () => {
     expect(out.status).toBe(200);
     expect(String(out.headers['set-cookie'])).toContain('Max-Age=0');
     expect((await call(site.port, { path: '/__hub/backends', headers: { cookie } })).status).toBe(401);
-    expect(JSON.parse((await call(site.port, { path: '/__session', headers: { cookie } })).body)).toEqual({ authenticated: false });
+    expect(JSON.parse((await call(site.port, { path: '/__session', headers: { cookie } })).body)).toEqual({ authenticated: false, login: 'code' });
   });
 
   it('end the session after 12 hours idle', async () => {

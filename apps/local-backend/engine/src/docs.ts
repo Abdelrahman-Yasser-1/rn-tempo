@@ -8,23 +8,23 @@ import type { RequestCtx } from './http.ts';
 import { buildOpenApi } from './openapi.ts';
 import { certsDirOf } from './server.ts';
 
-const PAGE = `<!doctype html>
+const page = (prefix: string): string => `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Tempo Local Backend docs</title>
-    <link rel="stylesheet" href="/__docs/swagger-ui.css" />
+    <link rel="stylesheet" href="${prefix}/__docs/swagger-ui.css" />
   </head>
   <body>
     <div id="swagger-ui"></div>
-    <script src="/__docs/swagger-ui-bundle.js"></script>
-    <script src="/__docs/swagger-initializer.js"></script>
+    <script src="${prefix}/__docs/swagger-ui-bundle.js"></script>
+    <script src="${prefix}/__docs/swagger-initializer.js"></script>
   </body>
 </html>
 `;
 
-const INITIALIZER = `window.ui = SwaggerUIBundle({ url: '/__docs/openapi.json', dom_id: '#swagger-ui', deepLinking: true, persistAuthorization: false });
+const initializer = (prefix: string): string => `window.ui = SwaggerUIBundle({ url: '${prefix}/__docs/openapi.json', dom_id: '#swagger-ui', deepLinking: true, persistAuthorization: false });
 `;
 
 /** The only Swagger UI files that are served, by fixed name; nothing is read from a path in the request. */
@@ -51,8 +51,8 @@ export function docsHandler(engine: Engine): (ctx: RequestCtx, res: ServerRespon
     if (ctx.method !== 'GET' && ctx.method !== 'HEAD') return false;
     const head = ctx.method === 'HEAD';
     const path = ctx.path.replace(/\/+$/, '');
-    if (path === '/__docs' || path === '/__docs/index.html') return send(res, 'text/html; charset=utf-8', PAGE, head);
-    if (path === '/__docs/openapi.json') return send(res, 'application/json; charset=utf-8', `${JSON.stringify(buildOpenApi(engine.definition), null, 2)}\n`, head);
+    if (path === '/__docs' || path === '/__docs/index.html') return send(res, 'text/html; charset=utf-8', page(engine.publicPrefix), head);
+    if (path === '/__docs/openapi.json') return send(res, 'application/json; charset=utf-8', `${JSON.stringify(buildOpenApi(engine.definition, { prefix: engine.publicPrefix }), null, 2)}\n`, head);
     if (path === '/__ca.pem') {
       // The PUBLIC half of the local CA, so a phone can install it. The file is read by fixed name and must be a plain file.
       try {
@@ -63,7 +63,7 @@ export function docsHandler(engine: Engine): (ctx: RequestCtx, res: ServerRespon
         return false;
       }
     }
-    if (path === '/__docs/swagger-initializer.js') return send(res, 'text/javascript', INITIALIZER, head);
+    if (path === '/__docs/swagger-initializer.js') return send(res, 'text/javascript', initializer(engine.publicPrefix), head);
     const name = path.startsWith('/__docs/') ? path.slice('/__docs/'.length) : undefined;
     const type = name === undefined ? undefined : ASSETS[name];
     if (name === undefined || type === undefined) return false;

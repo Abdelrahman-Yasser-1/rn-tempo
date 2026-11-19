@@ -12,6 +12,7 @@ import { EmptyState, ErrorNote } from '../ui/bits';
 
 import { EndpointDialog } from './EndpointDialog';
 import { TryIt } from './TryIt';
+import { Write } from '../hooks/team';
 
 const typeLabel = (type: EndpointDef['type']): string => ENDPOINT_TYPES.find((item) => item.value === type)?.label.split(' (')[0] ?? type;
 
@@ -78,7 +79,7 @@ export function Endpoints({ backend }: { backend: string }) {
       <div className="row">
         <h2>Endpoints</h2>
         <span className="spacer" />
-        <button
+        <Write><button
           type="button"
           className="primary"
           onClick={() => {
@@ -86,7 +87,7 @@ export function Endpoints({ backend }: { backend: string }) {
           }}
         >
           Add endpoint
-        </button>
+        </button></Write>
       </div>
       {endpoints.length === 0 ? (
         <EmptyState>No endpoints yet. Choose Add endpoint to make the first one.</EmptyState>
@@ -117,7 +118,7 @@ export function Endpoints({ backend }: { backend: string }) {
                 <td>{typeLabel(endpoint.type)}</td>
                 <td>{endpoint.auth === 'bearer' ? 'Needed' : '–'}</td>
                 <td className="summary">{endpoint.summary ?? ''}</td>
-                <td>{scenarios.data === undefined ? null : <ScenarioPicker backend={backend} endpoint={endpoint} scenarios={scenarios.data} />}</td>
+                <td>{scenarios.data === undefined ? null : <Write><ScenarioPicker backend={backend} endpoint={endpoint} scenarios={scenarios.data} /></Write>}</td>
                 <td className="actions-cell">
                   <button
                     type="button"
@@ -129,7 +130,7 @@ export function Endpoints({ backend }: { backend: string }) {
                   >
                     Try
                   </button>
-                  <button
+                  <Write><button
                     type="button"
                     className="ghost"
                     aria-label={`Edit ${endpoint.method} ${endpoint.path}`}
@@ -138,8 +139,8 @@ export function Endpoints({ backend }: { backend: string }) {
                     }}
                   >
                     Edit
-                  </button>
-                  <button
+                  </button></Write>
+                  <Write><button
                     type="button"
                     className="ghost"
                     aria-label={`Duplicate ${endpoint.method} ${endpoint.path}`}
@@ -148,8 +149,8 @@ export function Endpoints({ backend }: { backend: string }) {
                     }}
                   >
                     Duplicate
-                  </button>
-                  <button
+                  </button></Write>
+                  <Write><button
                     type="button"
                     className="ghost bad"
                     aria-label={`Delete ${endpoint.method} ${endpoint.path}`}
@@ -158,7 +159,7 @@ export function Endpoints({ backend }: { backend: string }) {
                     }}
                   >
                     Delete
-                  </button>
+                  </button></Write>
                 </td>
               </tr>
             ))}

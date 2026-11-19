@@ -75,6 +75,8 @@ export class LoginCodes {
 
 export interface Session {
   readonly csrf: string;
+  /** The team server's account this session belongs to; the local web login has none. */
+  readonly accountId?: number;
   readonly createdAt: number;
   lastSeen: number;
 }
@@ -95,7 +97,7 @@ export class Sessions {
   /** The key is a hash, so the map never holds a usable cookie value. */
   private key = (id: string): string => sha256(id).toString('hex');
 
-  create(): { id: string; session: Session } {
+  create(accountId?: number): { id: string; session: Session } {
     this.sweep();
     while (this.byId.size >= this.maxSessions) {
       const oldest = this.byId.keys().next();
@@ -104,7 +106,7 @@ export class Sessions {
     }
     const id = randomBytes(32).toString('base64url');
     const now = this.clock();
-    const session: Session = { csrf: randomBytes(32).toString('base64url'), createdAt: now, lastSeen: now };
+    const session: Session = { csrf: randomBytes(32).toString('base64url'), createdAt: now, lastSeen: now, ...(accountId === undefined ? {} : { accountId }) };
     this.byId.set(this.key(id), session);
     return { id, session };
   }
@@ -125,6 +127,12 @@ export class Sessions {
 
   destroy(id: string | undefined): void {
     if (id !== undefined) this.byId.delete(this.key(id));
+  }
+
+  /** Ends every session of an account (it was disabled, or its password or TOTP changed), except the one named. */
+  destroyAccount(accountId: number, keepId?: string): void {
+    const keep = keepId === undefined ? undefined : this.key(keepId);
+    for (const [key, session] of this.byId) if (session.accountId === accountId && key !== keep) this.byId.delete(key);
   }
 
   get size(): number {

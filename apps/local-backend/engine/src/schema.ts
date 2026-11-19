@@ -309,6 +309,10 @@ export const BackendSchema = z
       .refine((path) => !path.startsWith('/__'), { message: 'Paths starting with "/__" are reserved for the engine.' })
       .optional()
       .meta({ description: 'Mounted in front of every endpoint path.' }),
+    publicAccess: z
+      .enum(['open', 'key'])
+      .default('open')
+      .meta({ description: '`open`: the public API answers anyone. `key`: every public request needs an `x-tempo-access-key` header with a key of scope `public` (team server only).' }),
     certsDir: z.string().optional().meta({ description: 'Folder with cert.pem and key.pem. Defaults to `.data/certs`.' }),
     auth: AuthConfig.default(() => AuthConfig.parse({})),
     media: z.strictObject({ maxBytes: z.number().int().positive().default(104_857_600) }).default({ maxBytes: 104_857_600 }),

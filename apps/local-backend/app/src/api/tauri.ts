@@ -17,6 +17,7 @@ export function createTauriTransport({ invoke, listen }: TauriDeps): Backend {
   return {
     capabilities: DESKTOP_CAPABILITIES,
     session: null,
+    team: null,
     listUnlisted: () => Promise.resolve([]),
     openNamed: () => Promise.reject(new Error('Backends are opened from a folder in the desktop app.')),
     listBackends: () => invoke('list_backends'),
