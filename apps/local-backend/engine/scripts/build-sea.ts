@@ -3,7 +3,7 @@
 //   apps/local-backend/app/src-tauri/binaries/tempo-engine-<target-triple>
 // Needs Node 25.5 or newer (`node --build-sea`) and runs on the machine it builds for (no cross builds).
 import { execFileSync } from 'node:child_process';
-import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -28,7 +28,15 @@ run('npx', ['tsdown', '-c', 'tsdown.sea.config.ts']);
 
 // 2. The SEA config. Paths are absolute because the config is read from the working directory.
 const swagger = dirname(createRequire(import.meta.url).resolve('swagger-ui-dist/package.json'));
-const assets = Object.fromEntries(SWAGGER_FILES.map((file) => [`swagger-ui/${file}`, join(swagger, file)]));
+// The web dashboard (`yarn build:dashboard` copies the Vite web build into `dashboard/`) goes in as `dashboard/<path>`.
+const dashboardDir = join(engineDir, 'dashboard');
+if (!existsSync(join(dashboardDir, 'index.html'))) throw new Error('The web dashboard is not built. Run `yarn workspace @rn-tempo/local-backend build:dashboard` first.');
+const dashboardFiles = (dir: string, prefix = ''): string[] =>
+  readdirSync(dir, { withFileTypes: true }).flatMap((entry) => (entry.isDirectory() ? dashboardFiles(join(dir, entry.name), `${prefix}${entry.name}/`) : [`${prefix}${entry.name}`]));
+const assets = {
+  ...Object.fromEntries(SWAGGER_FILES.map((file) => [`swagger-ui/${file}`, join(swagger, file)])),
+  ...Object.fromEntries(dashboardFiles(dashboardDir).map((file) => [`dashboard/${file}`, join(dashboardDir, file)])),
+};
 const triple = targetTriple();
 mkdirSync(binariesDir, { recursive: true });
 const output = join(binariesDir, `tempo-engine-${triple}`);

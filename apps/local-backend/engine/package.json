@@ -18,6 +18,7 @@
     "test": "vitest run",
     "schema": "node scripts/write-schema.ts",
     "typecheck": "tsc --noEmit",
+    "build:dashboard": "node scripts/build-dashboard.ts",
     "build:sea": "node scripts/build-sea.ts",
     "smoke:sea": "node scripts/smoke-sea.ts"
   },
