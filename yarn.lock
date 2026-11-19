@@ -2815,9 +2815,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@rn-tempo/local-backend-engine@workspace:apps/local-backend/engine":
+"@rn-tempo/local-backend@workspace:apps/local-backend/engine":
   version: 0.0.0-use.local
-  resolution: "@rn-tempo/local-backend-engine@workspace:apps/local-backend/engine"
+  resolution: "@rn-tempo/local-backend@workspace:apps/local-backend/engine"
   dependencies:
     "@rn-tempo/api-contract": "workspace:*"
     "@rn-tempo/dev-api": "workspace:*"
@@ -2825,13 +2825,14 @@ __metadata:
     "@types/busboy": "npm:1.5.5"
     "@types/node": "npm:24.19.2"
     busboy: "npm:1.6.0"
+    swagger-ui-dist: "npm:5.34.1"
     tsdown: "npm:0.23.2"
     typescript: "npm:6.0.3"
     vite: "npm:8.3.5"
     vitest: "npm:5.0.5"
     zod: "npm:4.6.7"
   bin:
-    local-backend-engine: dist/cli.mjs
+    tempo-local-backend: dist/cli.mjs
   languageName: unknown
   linkType: soft
 

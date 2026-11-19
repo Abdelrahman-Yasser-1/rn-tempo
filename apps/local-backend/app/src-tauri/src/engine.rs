@@ -58,7 +58,7 @@ pub fn dev_engine_script() -> PathBuf {
 fn dev_fallback(script: &Path, login_path: Option<String>) -> Result<Launch, String> {
     let node = crate::node::find_node()?;
     if !script.is_file() {
-        return Err("The engine is not built. Run `yarn workspace @rn-tempo/local-backend-engine build:sea` (or `build` to use Node).".to_string());
+        return Err("The engine is not built. Run `yarn workspace @rn-tempo/local-backend build:sea` (or `build` to use Node).".to_string());
     }
     Ok(Launch {
         program: PathBuf::from(node),
