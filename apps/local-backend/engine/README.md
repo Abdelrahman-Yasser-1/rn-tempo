@@ -21,6 +21,7 @@ node src/cli.ts check  <dir> --openapi <file> [--json]   # exit 1 when the backe
 node src/cli.ts snapshot export <dir> <file.zip>
 node src/cli.ts snapshot import <file.zip> <dir> [--no-certs]   # into a new or empty folder
 node src/cli.ts trust  mac | ios [--device UDID] | android [--serial ID]   # explicit; mac runs `mkcert -install`
+node src/cli.ts web    [--backends-dir <dir>] [--admin-port 8555] [--no-open]   # the dashboard in a browser, several backends
 node src/cli.ts serve  <dir> [--port 8443] [--http] [--admin-port N] [--no-watch] [--parent-stdin]
 ```
 
@@ -374,8 +375,15 @@ non-loopback `Host`. Admin routes: `definition` (get/put), `endpoints`, `collect
 ## Development
 
 ```sh
-yarn workspace @rn-tempo/local-backend-engine test
-yarn workspace @rn-tempo/local-backend-engine typecheck
-yarn workspace @rn-tempo/local-backend-engine lint
-yarn workspace @rn-tempo/local-backend-engine build   # dist/cli.mjs
+yarn workspace @rn-tempo/local-backend test
+yarn workspace @rn-tempo/local-backend typecheck
+yarn workspace @rn-tempo/local-backend lint
+yarn workspace @rn-tempo/local-backend build   # dist/cli.mjs
 ```
+
+## Web dashboard and npx (Z1)
+
+`npx @rn-tempo/local-backend` (no arguments) is `web`: it prints a one-time login code, opens
+`http://127.0.0.1:<port>/login` and serves the dashboard on `127.0.0.1` only. Backends live in `--backends-dir`
+(default `~/.tempo-local-backend/backends`), each on its own public port. `yarn build:dashboard` builds the web
+dashboard into `dashboard/` (it is shipped in the package and embedded in the single executable).
