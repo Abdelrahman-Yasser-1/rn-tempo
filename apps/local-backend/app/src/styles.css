@@ -871,3 +871,8 @@ fieldset.plain-fieldset legend {
   flex-direction: column;
   gap: 4px;
 }
+
+/* Web sign-in and sign-out (the browser shell). */
+.login { max-width: 28rem; margin: 6rem auto; text-align: left; }
+.login h1 { text-align: center; }
+.signout { margin-top: auto; align-self: flex-start; }
