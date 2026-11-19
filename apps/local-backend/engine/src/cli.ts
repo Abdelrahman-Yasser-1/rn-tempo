@@ -12,6 +12,7 @@ import { readFileSync } from 'node:fs';
 import { readDefinitionText, createBackend, PRESETS, prepareDataDir, type Preset } from './folder.ts';
 import { DefinitionError } from './schema.ts';
 import { trustAndroid, trustIos, trustMac } from './trust.ts';
+import { BackendRegistry } from './hub-backends.ts';
 import { defaultBackendsDir, startWeb } from './web.ts';
 
 const USAGE = `local-backend-engine: serve a Tempo Local Backend folder
@@ -81,7 +82,8 @@ async function web(values: { 'backends-dir'?: string | undefined; 'admin-port'?:
   const backendsDir = resolve(values['backends-dir'] ?? defaultBackendsDir());
   const adminPort = values['admin-port'] === undefined ? undefined : Number(values['admin-port']);
   if (adminPort !== undefined && !(Number.isInteger(adminPort) && adminPort >= 0 && adminPort <= 65_535)) throw new DefinitionError('--admin-port must be a number from 0 to 65535.');
-  const running = await startWeb({ ...(adminPort === undefined ? {} : { adminPort }) });
+  const registry = new BackendRegistry(backendsDir);
+  const running = await startWeb({ host: registry, ...(adminPort === undefined ? {} : { adminPort }) });
   const say = (line = ''): void => void process.stdout.write(`${line}\n`);
   say('Tempo Local Backend (web)');
   say(`  Dashboard:   ${running.url}`);
@@ -89,7 +91,7 @@ async function web(values: { 'backends-dir'?: string | undefined; 'admin-port'?:
   say(`  Backends in: ${backendsDir}`);
   say('  The dashboard listens on 127.0.0.1 only. Stop with Ctrl+C.');
   if (values['no-open'] !== true) openBrowser(running.url);
-  const stop = (): void => void running.stop().then(() => process.exit(0));
+  const stop = (): void => void Promise.all([running.stop(), registry.stopAll()]).then(() => process.exit(0));
   process.once('SIGINT', stop);
   process.once('SIGTERM', stop);
 }
