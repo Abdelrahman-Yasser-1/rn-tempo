@@ -42,10 +42,14 @@ export function readBody(req: IncomingMessage, max = MAX_BODY_BYTES): Promise<{ 
   });
 }
 
-export function toCtx(req: IncomingMessage, bodyText: string): RequestCtx {
+/**
+ * The request as the engine sees it. `scheme` is the one the client used when a trusted proxy terminated TLS in front
+ * (the team server decides that); otherwise it follows the socket.
+ */
+export function toCtx(req: IncomingMessage, bodyText: string, scheme?: 'http' | 'https'): RequestCtx {
   const url = req.url ?? '/';
   const parsed = new URL(url, 'http://local');
-  const encrypted = (req.socket as { encrypted?: boolean }).encrypted === true;
+  const encrypted = scheme === undefined ? (req.socket as { encrypted?: boolean }).encrypted === true : scheme === 'https';
   const host = typeof req.headers.host === 'string' && /^[A-Za-z0-9.:[\]-]+$/.test(req.headers.host) ? req.headers.host : undefined;
   return {
     method: req.method ?? 'GET',
@@ -103,16 +107,35 @@ export interface PublicListenOptions {
   tls?: { cert: Buffer; key: Buffer };
 }
 
-/** The public listener. Only the API, `/__health` and the docs live here; there is no admin route. */
-export function createPublicServer(
-  engine: Engine,
-  extra: (ctx: RequestCtx, res: ServerResponse) => boolean,
-  tls: PublicListenOptions['tls'],
-): Server {
-  const handler = (req: IncomingMessage, res: ServerResponse): void => {
+export const ACCESS_KEY_HEADER = 'x-tempo-access-key';
+
+export interface PublicOptions {
+  /**
+   * Checks the `x-tempo-access-key` header of a backend with `publicAccess: "key"`. Only the team server provides one;
+   * without it such a backend refuses every request (it never falls back to open).
+   */
+  accessKey?: (key: string | undefined) => boolean;
+}
+
+export type PublicHandler = (req: IncomingMessage, res: ServerResponse, meta?: { scheme?: 'http' | 'https' }) => void;
+
+/** The public API of one backend as a request handler: the API, `/__health` and the docs. There is no admin route. */
+export function createPublicHandler(engine: Engine, extra: (ctx: RequestCtx, res: ServerResponse) => boolean, options: PublicOptions = {}): PublicHandler {
+  return (req, res, meta) => {
     void (async (): Promise<void> => {
       // An upload streams its own body; every other request is read up front, with a small limit.
       const path = new URL(req.url ?? '/', 'http://local').pathname;
+      if (engine.definition.publicAccess === 'key' && path !== '/__health') {
+        if (options.accessKey === undefined) {
+          sendReply(res, problemReply(401, { detail: 'This backend needs an access key, which only the team server manages.' }));
+          return;
+        }
+        const given = req.headers[ACCESS_KEY_HEADER];
+        if (!options.accessKey(typeof given === 'string' ? given : undefined)) {
+          sendReply(res, problemReply(401, { detail: `This API needs a valid access key in the ${ACCESS_KEY_HEADER} header.` }));
+          return;
+        }
+      }
       const streaming = engine.streamsBody(req.method === 'HEAD' ? 'GET' : (req.method ?? 'GET'), path);
       const body = streaming ? { ok: true as const, text: '' } : await readBody(req);
       if (!body.ok) {
@@ -120,7 +143,7 @@ export function createPublicServer(
         return;
       }
       const head = req.method === 'HEAD';
-      const ctx = toCtx(req, body.text);
+      const ctx = toCtx(req, body.text, meta?.scheme);
       if (streaming) ctx.stream = req;
       if (head) ctx.method = 'GET';
       if (ctx.path === '/__health') {
@@ -135,7 +158,17 @@ export function createPublicServer(
       sendReply(res, await engine.handle(ctx), head);
     })();
   };
-  return tls === undefined ? createHttpServer(handler) : createHttpsServer(tls, handler);
+}
+
+/** The public listener (one port per backend: desktop and local use). */
+export function createPublicServer(
+  engine: Engine,
+  extra: (ctx: RequestCtx, res: ServerResponse) => boolean,
+  tls: PublicListenOptions['tls'],
+  options: PublicOptions = {},
+): Server {
+  const handler = createPublicHandler(engine, extra, options);
+  return tls === undefined ? createHttpServer((req, res) => handler(req, res)) : createHttpsServer(tls, (req, res) => handler(req, res));
 }
 
 export function listenOn(server: Server, port: number, host: string): Promise<number> {

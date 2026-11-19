@@ -1,3 +1,4 @@
+import type { TeamApi } from './team';
 import type {
   BackendStatus,
   CertInfo,
@@ -41,6 +42,15 @@ export interface WebSession {
   check: () => Promise<boolean>;
   /** Exchanges the one-time code printed by the server for a session. */
   login: (code: string) => Promise<void>;
+  /**
+   * `code`: the local web mode (a one-time code). `password`: the team server (email, password, optional TOTP). Known
+   * after `check()`. A fake may leave it out, which means `code`.
+   */
+  mode?: () => 'code' | 'password';
+  /** Team server: email and password, then the TOTP or a recovery code when asked. `totp` says the code is needed. */
+  loginPassword?: (input: { email: string; password: string; code?: string }) => Promise<'signedIn' | 'totp'>;
+  /** Team server: chooses a password with the one-time link from an invitation. */
+  setup?: (token: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   /** Called when the server says the session is gone (it expired or was ended). Returns an unsubscribe function. */
   onExpired: (handler: () => void) => () => void;
@@ -59,6 +69,8 @@ export interface Backend {
   capabilities: Capabilities;
   /** `null` in the desktop shell. */
   session: WebSession | null;
+  /** The team server's accounts, keys and audit routes. `null` everywhere else (desktop, local web). */
+  team: TeamApi | null;
   /** Web only: folders in the server's backends directory that are not in the list yet (they can be opened). */
   listUnlisted: () => Promise<string[]>;
   /** Web only: puts a folder of the backends directory back in the list. */

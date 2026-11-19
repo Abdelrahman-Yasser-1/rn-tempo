@@ -1,4 +1,5 @@
 import { WEB_CAPABILITIES, problemMessage, type Backend, type WebSession } from './client';
+import type { ApiKeyInfo, AuditEntry, AuditFilter, KeyScope, Me, Member, MemberRole, SetupLink, TeamAccount, TeamApi } from './team';
 import type { BackendStatus, CertInfo, CliOutput, EventsState, HttpReply, HttpRequest, ImportFile, RequestEntry, RequestEvent, UploadProgress, UploadSummary } from './types';
 
 /** Header the server requires on every mutating request made with the session cookie. */
@@ -25,6 +26,19 @@ export interface WebDeps {
 }
 
 const enc = encodeURIComponent;
+
+/** Waits for a call and drops its answer. */
+const done = async (call: Promise<unknown>): Promise<void> => {
+  await call;
+};
+
+function parseJson(text: string): unknown {
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return undefined;
+  }
+}
 
 /**
  * A route inside one backend's admin API, as the tabs write it (`/data/products?limit=5`). It is appended to
@@ -81,6 +95,7 @@ export function slugify(text: string): string {
  */
 export function createWebTransport(deps: WebDeps): Backend {
   let csrf: string | null = null;
+  let loginMode: 'code' | 'password' = 'code';
   const expiredHandlers = new Set<() => void>();
   const requestHandlers = new Set<(event: RequestEvent) => void>();
   const stateHandlers = new Set<(event: EventsState) => void>();
@@ -134,9 +149,26 @@ export function createWebTransport(deps: WebDeps): Backend {
     async check() {
       const response = await deps.fetch('/__session', { credentials: 'same-origin' });
       if (!response.ok) return false;
-      const body = (await response.json()) as { authenticated?: boolean; csrf?: string };
+      const body = (await response.json()) as { authenticated?: boolean; csrf?: string; login?: string };
+      loginMode = body.login === 'password' ? 'password' : 'code';
       csrf = body.authenticated === true && typeof body.csrf === 'string' ? body.csrf : null;
       return csrf !== null;
+    },
+    mode: () => loginMode,
+    async loginPassword(input) {
+      const response = await deps.fetch('/__session', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify(input) });
+      const text = await response.text();
+      if (response.status === 401 && (parseJson(text) as { totpRequired?: boolean } | undefined)?.totpRequired === true) return 'totp';
+      if (!response.ok) throw new Error(problemMessage(response.status, text));
+      const body = JSON.parse(text) as { csrf?: string };
+      if (typeof body.csrf !== 'string') throw new Error('The server did not start a session.');
+      csrf = body.csrf;
+      return 'signedIn';
+    },
+    async setup(token, password) {
+      const response = await deps.fetch('/__setup', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token, password }) });
+      const text = await response.text();
+      if (!response.ok) throw new Error(problemMessage(response.status, text));
     },
     async login(code) {
       const response = await deps.fetch('/__session', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code }) });
@@ -157,6 +189,34 @@ export function createWebTransport(deps: WebDeps): Backend {
     },
   };
 
+  const members = (backend: string): string => `/backends/${enc(backend)}/members`;
+  const teamApi: TeamApi = {
+    me: () => hub<Me>('GET', '/me'),
+    changePassword: (currentPassword, newPassword) => done(hub<unknown>('POST', '/me/password', { currentPassword, newPassword })),
+    totpSetup: () => hub<{ secret: string; uri: string }>('POST', '/me/totp/setup', {}),
+    totpEnable: async (code) => (await hub<{ recoveryCodes: string[] }>('POST', '/me/totp/enable', { code })).recoveryCodes,
+    totpDisable: (password) => done(hub<unknown>('POST', '/me/totp/disable', { password })),
+    newRecoveryCodes: async (password) => (await hub<{ recoveryCodes: string[] }>('POST', '/me/recovery-codes', { password })).recoveryCodes,
+    members: (backend) => hub<Member[]>('GET', members(backend)),
+    invite: async (backend, input) => {
+      const answer = await hub<{ member: Member; setup?: SetupLink }>('POST', members(backend), input);
+      return { member: answer.member, setup: answer.setup ?? null };
+    },
+    setRole: (backend, accountId, role: MemberRole) => done(hub<unknown>('PUT', `${members(backend)}/${String(accountId)}`, { role })),
+    removeMember: (backend, accountId) => done(hub<unknown>('DELETE', `${members(backend)}/${String(accountId)}`)),
+    resetTotp: (backend, accountId) => done(hub<unknown>('POST', `${members(backend)}/${String(accountId)}/reset-totp`, {})),
+    resetLink: async (backend, accountId) => (await hub<{ setup: SetupLink }>('POST', `${members(backend)}/${String(accountId)}/reset-link`, {})).setup,
+    accounts: () => hub<(TeamAccount & { memberships: { backendId: string; role: MemberRole }[] })[]>('GET', '/team/accounts'),
+    setDisabled: (accountId, disabled) => done(hub<unknown>('POST', `/team/accounts/${String(accountId)}/${disabled ? 'disable' : 'enable'}`, {})),
+    apiKeys: (backend) => hub<ApiKeyInfo[]>('GET', `/backends/${enc(backend)}/api-keys`),
+    createApiKey: (backend, input: { name: string; scope: KeyScope }) => hub<{ key: string; record: ApiKeyInfo }>('POST', `/backends/${enc(backend)}/api-keys`, input),
+    revokeApiKey: (backend, id) => done(hub<unknown>('DELETE', `/backends/${enc(backend)}/api-keys/${String(id)}`)),
+    audit: (backend, filter: AuditFilter) => {
+      const query = new URLSearchParams(Object.entries(filter).filter(([, value]) => value !== undefined && value !== '').map(([key, value]) => [key, String(value)]));
+      return hub<{ entries: AuditEntry[]; total: number }>('GET', `/backends/${enc(backend)}/audit${query.size === 0 ? '' : `?${query.toString()}`}`);
+    },
+  };
+
   const subscribe =
     <T>(set: Set<(event: T) => void>) =>
     (handler: (event: T) => void): Promise<() => void> => {
@@ -167,6 +227,9 @@ export function createWebTransport(deps: WebDeps): Backend {
   return {
     capabilities: WEB_CAPABILITIES,
     session,
+    get team() {
+      return loginMode === 'password' ? teamApi : null;
+    },
     listUnlisted: () => hub<string[]>('GET', '/unlisted'),
     openNamed: (name) => hub<BackendStatus>('POST', '/backends/open', { name }),
     listBackends: () => hub<BackendStatus[]>('GET', '/backends'),
@@ -218,6 +281,11 @@ export function createWebTransport(deps: WebDeps): Backend {
     openDocs: async (path, target) => {
       const found = (await hub<BackendStatus[]>('GET', '/backends')).find((backend) => backend.path === path);
       if (found?.state !== 'running' || found.port === null || found.scheme === null) throw new Error('Start the backend first.');
+      // The team server has no port per backend: the docs live under /b/<id> on the dashboard's own address.
+      if (found.port === 0) {
+        deps.openTab(`${deps.origin()}/b/${enc(path)}${target === 'swagger' ? '/__docs' : '/__docs/openapi.json'}`);
+        return;
+      }
       deps.openTab(`${found.scheme}://localhost:${String(found.port)}${target === 'swagger' ? '/__docs' : '/__docs/openapi.json'}`);
     },
     createHandler: async (path, name) => (await hub<{ file: string }>('POST', `/backends/${enc(path)}/handlers`, { name })).file,

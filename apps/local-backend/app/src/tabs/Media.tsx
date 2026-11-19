@@ -11,6 +11,7 @@ import { iconLabel, MEDIA_FILTERS, previewKind } from '../lib/media';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { CopyButton } from '../ui/CopyButton';
 import { EmptyState, ErrorNote } from '../ui/bits';
+import { Write } from '../hooks/team';
 
 /**
  * A preview made only from bytes Rust sent for an image, video or audio file, shown through a `blob:` URL.
@@ -147,7 +148,7 @@ export function Media({ backend }: { backend: BackendStatus }) {
         <h2>Media</h2>
         <span className="muted">{usage.data === undefined ? '' : `${formatBytes(usage.data.bytes)} in ${String(usage.data.files)} ${usage.data.files === 1 ? 'file' : 'files'}`}</span>
         <span className="spacer" />
-        <button
+        <Write><button
           type="button"
           className="primary"
           disabled={upload.isPending}
@@ -156,7 +157,7 @@ export function Media({ backend }: { backend: BackendStatus }) {
           }}
         >
           Upload files…
-        </button>
+        </button></Write>
       </div>
       <div className="row">
         <label>
@@ -226,7 +227,7 @@ export function Media({ backend }: { backend: BackendStatus }) {
                 >
                   Download
                 </button>
-                <button
+                <Write><button
                   type="button"
                   className="ghost bad"
                   aria-label={`Delete ${item.originalName}`}
@@ -235,7 +236,7 @@ export function Media({ backend }: { backend: BackendStatus }) {
                   }}
                 >
                   Delete
-                </button>
+                </button></Write>
               </div>
             </li>
           ))}

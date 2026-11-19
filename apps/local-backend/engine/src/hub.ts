@@ -46,15 +46,35 @@ export interface Hub {
   token: string;
 }
 
+/**
+ * `/__admin/b/<id>/<rest>` -> the backend's own `/__admin/<rest>`. The raw path is used: `new URL` would quietly
+ * resolve `..`, and nothing here may climb out of the backend. Returns the backend id and the rewritten URL, or the
+ * answer to give.
+ */
+export function parseAdminTarget(req: IncomingMessage, pathname: string): { id: string; url: string } | Reply {
+  const rawPath = (req.url ?? '').split('?', 1)[0] ?? '';
+  if (/(^|\/)\.\.?(\/|$)|%2e|%2f|%5c|%00|\\|\/\//i.test(rawPath.slice('/__admin/b/'.length))) return problemReply(400, { detail: 'That path is not allowed.' });
+  const rest = /^\/__admin\/b\/([^/]+)(\/.*)$/.exec(rawPath);
+  if (rest === null || pathname !== rawPath) return problemReply(404, { detail: 'Not found.' });
+  let id: string;
+  try {
+    id = decodeURIComponent(rest[1] ?? '');
+  } catch {
+    return problemReply(400, { detail: 'Bad backend name.' });
+  }
+  const query = (req.url ?? '').includes('?') ? `?${(req.url ?? '').split('?').slice(1).join('?')}` : '';
+  return { id, url: `/__admin${rest[2] ?? ''}${query}` };
+}
+
 /** Origins a page on the same host may send: `http://<host>` (or https) with the `Host` the request used. */
-function originOk(req: IncomingMessage, secure: boolean): boolean {
+export function originOk(req: IncomingMessage, secure: boolean): boolean {
   const origin = req.headers.origin;
   if (origin === undefined) return true;
   const encrypted = secure || (req.socket as { encrypted?: boolean }).encrypted === true;
   return origin === `${encrypted ? 'https' : 'http'}://${String(req.headers.host ?? '')}` && req.headers['sec-fetch-site'] !== 'cross-site';
 }
 
-const isMutating = (method: string | undefined): boolean => !['GET', 'HEAD', 'OPTIONS'].includes(method ?? 'GET');
+export const isMutating = (method: string | undefined): boolean => !['GET', 'HEAD', 'OPTIONS'].includes(method ?? 'GET');
 
 /**
  * The web listener (`127.0.0.1` only): the dashboard, the sign-in, and the admin API of every backend.
@@ -86,7 +106,7 @@ export function createHub(options: HubOptions = {}): Hub {
     const method = req.method ?? 'GET';
     const current = sessionOf(req);
     if (method === 'GET') {
-      return reply(res, jsonReply(200, current === undefined ? { authenticated: false } : { authenticated: true, csrf: current.session.csrf }));
+      return reply(res, jsonReply(200, current === undefined ? { authenticated: false, login: 'code' } : { authenticated: true, csrf: current.session.csrf, login: 'code' }));
     }
     if (!originOk(req, secure)) return reply(res, problemReply(403, { detail: 'That request came from another origin.' }));
     if (method === 'DELETE') {
@@ -129,22 +149,12 @@ export function createHub(options: HubOptions = {}): Hub {
   async function adminRoute(req: IncomingMessage, res: ServerResponse, pathname: string): Promise<void> {
     const denied = authorize(req);
     if (denied !== undefined) return reply(res, denied);
-    // /__admin/b/<id>/<rest>  ->  the backend's own /__admin/<rest>
-    // The raw path is used: `new URL` would quietly resolve `..`, and nothing here may climb out of the backend.
-    const rawPath = (req.url ?? '').split('?', 1)[0] ?? '';
-    if (/(^|\/)\.\.?(\/|$)|%2e|%2f|%5c|%00|\\|\/\//i.test(rawPath.slice('/__admin/b/'.length))) return reply(res, problemReply(400, { detail: 'That path is not allowed.' }));
-    const rest = /^\/__admin\/b\/([^/]+)(\/.*)$/.exec(rawPath);
-    if (rest === null || pathname !== rawPath) return reply(res, problemReply(404, { detail: 'Not found.' }));
-    let id: string;
-    try {
-      id = decodeURIComponent(rest[1] ?? '');
-    } catch {
-      return reply(res, problemReply(400, { detail: 'Bad backend name.' }));
-    }
+    const parsed = parseAdminTarget(req, pathname);
+    if ('status' in parsed) return reply(res, parsed);
+    const { id } = parsed;
     const target = host.admin(id);
     if (typeof target !== 'function') return reply(res, target);
-    const query = (req.url ?? '').includes('?') ? `?${(req.url ?? '').split('?').slice(1).join('?')}` : '';
-    req.url = `/__admin${rest[2] ?? ''}${query}`;
+    req.url = parsed.url;
     // The backend's SSE and file answers write to `res` themselves; give them the same hardening headers first.
     for (const [name, value] of Object.entries(SECURITY_HEADERS)) res.setHeader(name, value);
     res.setHeader('cache-control', 'no-store');
