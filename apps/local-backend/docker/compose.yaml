@@ -1,0 +1,60 @@
+# Tempo Local Backend team server behind Caddy (automatic HTTPS).
+#
+#   1. Point two DNS names at this machine: one for the dashboard, one for the public APIs.
+#   2. cp .env.example .env   and fill in the two names .
+#   3. docker compose up -d
+#   4. docker compose exec tempo tempo-local-backend server owner create --email you@example.com
+#
+# For a LAN or a machine without public DNS use the internal CA instead:
+#   docker compose -f compose.yaml -f compose.lan.yaml up -d
+#
+# Only Caddy publishes ports (80 and 443). The server listens on plain HTTP inside the network.
+name: tempo-team
+
+services:
+  tempo:
+    # Build it here (from the repository root) or pull the published image: TEMPO_IMAGE=ghcr.io/<owner>/tempo-local-backend:<tag>
+    image: ${TEMPO_IMAGE:-tempo-local-backend:local}
+    build:
+      context: ../..
+      dockerfile: apps/local-backend/docker/Dockerfile
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      # Caddy is on this network, so its X-Forwarded-* headers are believed (and nobody else's).
+      TEMPO_TRUST_PROXY: private
+      # The public APIs have their own origin, so a script a backend answers with never runs on the dashboard's origin.
+      TEMPO_PUBLIC_ORIGIN: https://${TEMPO_API_DOMAIN:?set TEMPO_API_DOMAIN in .env}
+      TEMPO_AUDIT_DAYS: ${TEMPO_AUDIT_DAYS:-90}
+    volumes:
+      - tempo-data:/data
+    expose:
+      - '8080'
+
+  caddy:
+    image: caddy:2.11.9-alpine
+    restart: unless-stopped
+    depends_on:
+      tempo:
+        condition: service_healthy
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    environment:
+      TEMPO_DOMAIN: ${TEMPO_DOMAIN:?set TEMPO_DOMAIN in .env}
+      TEMPO_API_DOMAIN: ${TEMPO_API_DOMAIN:?set TEMPO_API_DOMAIN in .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  tempo-data:
+  caddy-data:
+  caddy-config:

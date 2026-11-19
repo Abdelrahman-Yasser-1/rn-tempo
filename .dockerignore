@@ -1,0 +1,25 @@
+# The build context is the repository root (see apps/local-backend/docker/Dockerfile). Only the engine, the
+# dashboard app and the packages they use are needed.
+.git
+.github
+.ai
+.claude
+.changeset
+**/node_modules
+**/dist
+**/dist-web
+**/dist-sea
+**/.next
+**/.source
+**/coverage
+**/target
+apps/local-backend/engine/dashboard
+apps/local-backend/app/src-tauri
+template
+docs
+specs
+scripts
+**/.env
+**/.env.*
+**/*.log
+**/.DS_Store
