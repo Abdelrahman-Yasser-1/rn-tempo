@@ -2380,3 +2380,10 @@ Recorded by the integrator during WS0. Where this list and the plan disagree, **
     - The app's code-project mode is dropped; code mocks stay in the CLI and Jest.
     - Phases D/E (Express + Postgres + Docker + portal) stay as the deployable backend and are done later.
     - Spec: "Tier 1c" in `specs/ws15-backend/spec.md`.
+
+59. **WS15 Phase Z: Tempo Local Backend platform (owner, 2026-11-19).**
+    - **Run modes:** the same engine runs as the desktop app, as a local web dashboard (`npx @rn-tempo/local-backend`), and as a team server (Docker + Caddy, accounts, roles, API keys, audit log). The team server absorbs the Phase D/E portal admin scope.
+    - **Mocks:** projects keep only a URL. Jest uses the test kit, which runs the engine in memory from the server's definitions, in test mode by default (no delays, fixed data, developer can opt in). CI E2E uses temporary isolated sessions.
+    - **Features:** OpenAPI/Swagger import and sync; delays, network presets, shared base response, dynamic values and a Monaco JSON editor; SSE, WebSocket, GraphQL, webhooks and an inbox, a push test sender, and fault/limit simulation with an OAuth2 mock.
+    - **Old mocks:** they stay until the owner confirms, marked deprecated in the docs, and are then removed together with `api-contract` and `dev-api`.
+    - Spec: "Tier 1d" in `specs/ws15-backend/spec.md`.
