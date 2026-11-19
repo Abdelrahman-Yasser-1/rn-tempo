@@ -21,6 +21,7 @@ export function SettingsServer({ backend, definition, certs }: { backend: Backen
   const [refreshDays, setRefreshDays] = useState(String(definition.auth?.refreshTtlDays ?? 30));
   const [maxMb, setMaxMb] = useState(String(Math.round((definition.media?.maxBytes ?? 104_857_600) / 1024 / 1024)));
   const [restart, setRestart] = useState(false);
+  const [publicAccess, setPublicAccess] = useState<'open' | 'key'>(definition.publicAccess ?? 'open');
 
   const values = { port: whole(port, 1, 65535), access: whole(access, 1, 525_600), refresh: whole(refreshDays, 1, 3650), mb: whole(maxMb, 1, 100_000) };
   const valid = Object.values(values).every((value) => value !== null);
@@ -31,6 +32,7 @@ export function SettingsServer({ backend, definition, certs }: { backend: Backen
         ...definition,
         port: values.port ?? 8443,
         https,
+        ...(api.team === null ? {} : { publicAccess }),
         auth: { ...definition.auth, accessTtlMin: values.access ?? 30, refreshTtlDays: values.refresh ?? 30 },
         media: { ...definition.media, maxBytes: (values.mb ?? 100) * 1024 * 1024 },
       };
@@ -90,6 +92,17 @@ export function SettingsServer({ backend, definition, certs }: { backend: Backen
             <input className="short" inputMode="numeric" value={maxMb} aria-invalid={values.mb === null} onChange={(event) => { setMaxMb(event.target.value); }} />
           </label>
         </div>
+        {api.team === null ? null : (
+          <div className="row">
+            <label>
+              Public API access <Hint text="Open: anyone who can reach the server can call this backend's public API. Key: every request needs an x-tempo-access-key header with a key of scope public (make one under Team, API keys)." />
+              <select value={publicAccess} onChange={(event) => { setPublicAccess(event.target.value as 'open' | 'key'); }}>
+                <option value="open">Open</option>
+                <option value="key">Needs an access key</option>
+              </select>
+            </label>
+          </div>
+        )}
         <ErrorNote error={save.error === null ? null : errorMessage(save.error)} />
         <div className="row">
           <button type="submit" className="primary" disabled={!valid || save.isPending}>

@@ -153,6 +153,8 @@ export interface Definition {
   name: string;
   port?: number;
   https?: boolean;
+  /** Team server: `key` makes the public API need an access key. */
+  publicAccess?: 'open' | 'key';
   auth?: {
     accessTtlMin?: number;
     maxAccessTtlMin?: number;
