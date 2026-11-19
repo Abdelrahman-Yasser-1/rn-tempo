@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import { adminGet, adminSend } from '../api/client';
-import { useApi } from '../api/context';
+import { useApi, useCapabilities } from '../api/context';
 import type { CollectionDef, DataPage } from '../api/types';
 import { useAdminQuery, useRefresh } from '../hooks/lb';
 import { useLossFlow } from '../hooks/useLossFlow';
@@ -69,6 +69,7 @@ function NewCollection({ backend, onClose, onCreated }: { backend: string; onClo
 
 function Rows({ backend, collection, all }: { backend: string; collection: CollectionDef; all: string[] }) {
   const api = useApi();
+  const { reveal: canReveal } = useCapabilities();
   const refresh = useRefresh(backend);
   const [skip, setSkip] = useState(0);
   const [q, setQ] = useState('');
@@ -174,9 +175,11 @@ function Rows({ backend, collection, all }: { backend: string; collection: Colle
         <button type="button" onClick={() => { importRows.mutate(); }} disabled={importRows.isPending || collection.fields.length === 0}>
           Import…
         </button>
-        <button type="button" onClick={() => { reveal.mutate(); }}>
-          Show database file
-        </button>
+        {canReveal ? (
+          <button type="button" onClick={() => { reveal.mutate(); }}>
+            Show database file
+          </button>
+        ) : null}
       </div>
       {note === null ? null : <p className="ok" role="status">{note}</p>}
       <ErrorNote error={[exportAs.error, importRows.error, reveal.error, page.error].find((item) => item !== null) ?? null} />

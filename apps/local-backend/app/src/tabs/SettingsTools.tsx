@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 
-import { useApi } from '../api/context';
+import { useApi, useCapabilities } from '../api/context';
 import type { BackendStatus, ContractReport } from '../api/types';
 import { errorMessage } from '../lib/errors';
 import { ErrorNote } from '../ui/bits';
@@ -83,6 +83,7 @@ function ReportView({ report }: { report: ContractReport }) {
 /** Backup, restore, the OpenAPI check and Open folder. */
 export function SettingsTools({ backend, onOpen }: { backend: BackendStatus; onOpen: (path: string) => void }) {
   const api = useApi();
+  const { reveal: canReveal } = useCapabilities();
   const [note, setNote] = useState<string | null>(null);
   const [report, setReport] = useState<ContractReport | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
@@ -144,15 +145,23 @@ export function SettingsTools({ backend, onOpen }: { backend: BackendStatus; onO
       </section>
       <section className="card" aria-label="Folder">
         <h2>Folder</h2>
-        <p className="muted">
-          <code>{backend.path}</code>
-        </p>
-        <div className="row">
-          <button type="button" onClick={() => { reveal.mutate(); }}>
-            Open folder
-          </button>
-        </div>
-        <ErrorNote error={reveal.error} />
+        {canReveal ? (
+          <>
+            <p className="muted">
+              <code>{backend.path}</code>
+            </p>
+            <div className="row">
+              <button type="button" onClick={() => { reveal.mutate(); }}>
+                Open folder
+              </button>
+            </div>
+            <ErrorNote error={reveal.error} />
+          </>
+        ) : (
+          <p className="muted">
+            This backend is the folder <code>{backend.path}</code> in the backends directory of the machine that runs the server. A browser cannot open it in a file manager; use Export backup to get its files.
+          </p>
+        )}
       </section>
     </>
   );
