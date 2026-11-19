@@ -1,0 +1,7 @@
+# Override for a LAN: Caddy makes its own certificates (`tls internal`). Install Caddy's root CA on the devices that
+# open the dashboard (docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt .), and point both names
+# (for example tempo.lan and api.tempo.lan) at this machine in your router or /etc/hosts.
+services:
+  caddy:
+    volumes:
+      - ./Caddyfile.lan:/etc/caddy/Caddyfile:ro

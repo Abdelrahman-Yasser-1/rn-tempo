@@ -1,0 +1,22 @@
+# The same two sites with Caddy's own certificate authority, for a LAN.
+{
+	local_certs
+}
+
+(secure_headers) {
+	header {
+		-Server
+	}
+}
+
+{$TEMPO_DOMAIN} {
+	tls internal
+	import secure_headers
+	reverse_proxy tempo:8080
+}
+
+{$TEMPO_API_DOMAIN} {
+	tls internal
+	import secure_headers
+	reverse_proxy tempo:8080
+}

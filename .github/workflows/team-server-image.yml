@@ -1,0 +1,88 @@
+name: Team server image
+
+# Builds the Tempo Local Backend team server image, smoke tests a container (start, create the owner with
+# `docker exec ... --password-stdin`, sign in with curl, create a backend, hit its public API, roles, audit, API key),
+# checks the compose and Caddy files and scans the image with Trivy. The image is pushed to GHCR only on main.
+# Pushing needs `packages: write` (below) and the repository's Actions setting "Read and write permissions" for the
+# GITHUB_TOKEN; the first push creates the package as private, so make it public in the package settings if wanted.
+on:
+  pull_request:
+    paths:
+      - 'apps/local-backend/**'
+      - 'packages/dev-api/**'
+      - 'packages/api-contract/**'
+      - '.dockerignore'
+      - '.github/workflows/team-server-image.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/local-backend/**'
+      - 'packages/dev-api/**'
+      - 'packages/api-contract/**'
+      - '.dockerignore'
+      - '.github/workflows/team-server-image.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: team-server-image-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/tempo-local-backend
+
+jobs:
+  image:
+    name: Build, smoke test, scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+      - name: Image name in lower case (registries require it)
+        run: echo "IMAGE_LC=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
+      - name: Build the image
+        run: docker build -f apps/local-backend/docker/Dockerfile -t "$IMAGE_LC:ci" .
+      - name: Image size
+        run: docker image ls "$IMAGE_LC:ci" --format 'size {{.Size}}'
+      - name: Check the compose and Caddy files
+        working-directory: apps/local-backend/docker
+        run: |
+          TEMPO_DOMAIN=tempo.example.com TEMPO_API_DOMAIN=api.example.com docker compose -f compose.yaml config --quiet
+          TEMPO_DOMAIN=tempo.example.com TEMPO_API_DOMAIN=api.example.com docker compose -f compose.yaml -f compose.lan.yaml config --quiet
+          docker run --rm -e TEMPO_DOMAIN=tempo.example.com -e TEMPO_API_DOMAIN=api.example.com -v "$PWD/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2.11.9-alpine caddy validate --config /etc/caddy/Caddyfile
+          docker run --rm -e TEMPO_DOMAIN=tempo.lan -e TEMPO_API_DOMAIN=api.tempo.lan -v "$PWD/Caddyfile.lan:/etc/caddy/Caddyfile:ro" caddy:2.11.9-alpine caddy validate --config /etc/caddy/Caddyfile
+      - name: Smoke test a container (read-only root file system, as in the compose file)
+        run: |
+          docker run -d --name tempo --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges:true -v tempo-data:/data -p 8080:8080 "$IMAGE_LC:ci"
+          BASE_URL=http://127.0.0.1:8080 \
+          OWNER_CMD="docker exec -i tempo tempo-local-backend server owner create --email owner@example.com --password-stdin" \
+          apps/local-backend/docker/smoke.sh
+          test "$(docker inspect --format '{{.State.Health.Status}}' tempo)" = healthy || (sleep 20; test "$(docker inspect --format '{{.State.Health.Status}}' tempo)" = healthy)
+      - name: Container log (no secrets are logged)
+        if: failure()
+        run: docker logs tempo | tail -50
+      - name: Scan the image with Trivy
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ env.IMAGE_LC }}:ci
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: '1'
+      - name: Log in to GHCR (main only)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Push (main only)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          docker tag "$IMAGE_LC:ci" "$IMAGE_LC:latest"
+          docker tag "$IMAGE_LC:ci" "$IMAGE_LC:sha-${GITHUB_SHA::12}"
+          docker push "$IMAGE_LC:latest"
+          docker push "$IMAGE_LC:sha-${GITHUB_SHA::12}"
+      - name: Clean up
+        if: always()
+        run: docker rm -f tempo || true
