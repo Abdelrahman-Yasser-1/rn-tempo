@@ -1,4 +1,4 @@
-import { createWriteStream, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { closeSync, constants, createWriteStream, existsSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { request as httpRequest, type IncomingMessage, type ServerResponse } from 'node:http';
 import { request as httpsRequest } from 'node:https';
 import { createServer as createNetServer } from 'node:net';
@@ -396,21 +396,29 @@ export class BackendRegistry implements BackendHost {
     if (existsSync(folder)) return problemReply(409, { detail: `A folder named "${id}" already exists. Restoring always goes into a new folder.` });
     const stream = ctx.stream;
     if (stream === undefined) return problemReply(400, { detail: 'Send the zip as the request body.' });
-    const temp = join(tmpdir(), `tempo-restore-${String(process.pid)}-${String(Date.now())}-${id}.zip`);
+    // A private (0700) folder of our own, and a file created with O_EXCL | O_NOFOLLOW inside it: nothing planted in
+    // the shared temp folder can be followed or reused.
+    const scratch = mkdtempSync(join(tmpdir(), 'tempo-restore-'));
+    const temp = join(scratch, 'backup.zip');
     let size = 0;
     stream.on('data', (chunk: Buffer) => {
       size += chunk.length;
       if (size > MAX_UPLOAD) stream.destroy(new Error('too large'));
     });
     try {
-      await pipeline(stream, createWriteStream(temp, { mode: 0o600 }));
+      const fd = openSync(temp, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW, 0o600);
+      try {
+        await pipeline(stream, createWriteStream(temp, { fd, autoClose: false }));
+      } finally {
+        closeSync(fd);
+      }
       await importSnapshot(temp, folder);
       prepareDataDir(folder);
     } catch (error) {
       rmSync(folder, { recursive: true, force: true });
       return problemReply(size > MAX_UPLOAD ? 413 : 400, { detail: size > MAX_UPLOAD ? 'The backup is larger than 512 MB.' : firstLine(error, 'The backup could not be restored.') });
     } finally {
-      rmSync(temp, { force: true });
+      rmSync(scratch, { recursive: true, force: true });
     }
     this.unremove(id);
     return jsonReply(200, this.status(id));
