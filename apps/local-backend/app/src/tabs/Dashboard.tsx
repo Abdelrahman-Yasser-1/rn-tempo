@@ -10,7 +10,7 @@ import { formatBytes, formatMs, formatPercent } from '../lib/format';
 import { CopyButton } from '../ui/CopyButton';
 import { QrCode } from '../ui/QrCode';
 import { EmptyState, ErrorNote, Hint } from '../ui/bits';
-import { Write } from '../hooks/team';
+import { useMe, Write } from '../hooks/team';
 
 const STATE_LINE: Record<BackendStatus['state'], string> = {
   stopped: 'Stopped',
@@ -89,9 +89,10 @@ function Stats({ backend }: { backend: BackendStatus }) {
 
 function Addresses({ backend }: { backend: BackendStatus }) {
   const api = useApi();
+  const me = useMe();
   const certs = useQuery({ queryKey: keys.admin(backend.path, 'certs'), queryFn: () => api.certInfo(backend.path) });
   // The team server has one address for everybody: its own, with the backend under /b/<id>.
-  const rows: AddressRow[] = api.team === null ? addressRows(backend, certs.data?.lan ?? null) : [{ label: 'Public API', url: `${window.location.origin}/b/${backend.path}` }];
+  const rows: AddressRow[] = api.team === null ? addressRows(backend, certs.data?.lan ?? null) : [{ label: 'Public API', url: `${me.data?.publicOrigin ?? window.location.origin}/b/${backend.path}` }];
   const phone = rows.find((row) => row.label === 'Phone on Wi-Fi')?.url ?? null;
   const open = useMutation({ mutationFn: () => api.openDocs(backend.path, 'swagger') });
   return (
