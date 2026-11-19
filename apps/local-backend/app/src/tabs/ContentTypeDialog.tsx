@@ -61,7 +61,7 @@ export function ContentTypeDialog({ backend, type, onClose, onSaved }: { backend
         fields: rows.map(fieldOf),
       };
       const suffix = confirm ? '?confirm=true' : '';
-      if (editing) await adminSend(api, backend, 'PUT', `/content/types/${type.name}${suffix}`, body);
+      if (editing) await adminSend(api, backend, 'PUT', `/content/types/${encodeURIComponent(type.name)}${suffix}`, body);
       else await adminSend(api, backend, 'POST', `/content/types${suffix}`, body);
     },
     () => {
