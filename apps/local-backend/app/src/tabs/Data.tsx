@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import { adminGet, adminSend } from '../api/client';
-import { useApi } from '../api/context';
+import { useApi, useCapabilities } from '../api/context';
 import type { CollectionDef, DataPage } from '../api/types';
 import { useAdminQuery, useRefresh } from '../hooks/lb';
 import { useLossFlow } from '../hooks/useLossFlow';
@@ -15,6 +15,7 @@ import { EmptyState, ErrorNote, Hint } from '../ui/bits';
 
 import { FieldsDialog } from './FieldsDialog';
 import { RowDialog } from './RowDialog';
+import { Write } from '../hooks/team';
 
 const PAGE = 25;
 
@@ -69,6 +70,7 @@ function NewCollection({ backend, onClose, onCreated }: { backend: string; onClo
 
 function Rows({ backend, collection, all }: { backend: string; collection: CollectionDef; all: string[] }) {
   const api = useApi();
+  const { reveal: canReveal } = useCapabilities();
   const refresh = useRefresh(backend);
   const [skip, setSkip] = useState(0);
   const [q, setQ] = useState('');
@@ -77,19 +79,19 @@ function Rows({ backend, collection, all }: { backend: string; collection: Colle
   const [fields, setFields] = useState(false);
   const [dropping, setDropping] = useState(false);
   const [note, setNote] = useState<string | null>(null);
-  const route = `/data/${collection.name}?limit=${String(PAGE)}&skip=${String(skip)}${q === '' ? '' : `&q=${encodeURIComponent(q)}`}`;
+  const route = `/data/${encodeURIComponent(collection.name)}?limit=${String(PAGE)}&skip=${String(skip)}${q === '' ? '' : `&q=${encodeURIComponent(q)}`}`;
   const page = useAdminQuery<DataPage>(backend, route);
   const names = ['id', ...collection.fields.map((field) => field.name)];
 
   const removeRow = useMutation({
-    mutationFn: (row: Record<string, unknown>) => adminSend(api, backend, 'DELETE', `/data/${collection.name}/${String(row.id)}`),
+    mutationFn: (row: Record<string, unknown>) => adminSend(api, backend, 'DELETE', `/data/${encodeURIComponent(collection.name)}/${encodeURIComponent(String(row.id))}`),
     onSuccess: async () => {
       setDeleting(null);
       await refresh();
     },
   });
   const dropCollection = useLossFlow(
-    (confirm) => adminSend(api, backend, 'DELETE', `/collections/${collection.name}${confirm ? '?confirm=true' : ''}`),
+    (confirm) => adminSend(api, backend, 'DELETE', `/collections/${encodeURIComponent(collection.name)}${confirm ? '?confirm=true' : ''}`),
     () => {
       setDropping(false);
       void refresh();
@@ -100,7 +102,7 @@ function Rows({ backend, collection, all }: { backend: string; collection: Colle
     mutationFn: async (kind: 'json' | 'csv') => {
       const rows: Record<string, unknown>[] = [];
       for (let at = 0; at < 100_000; at += 1000) {
-        const chunk = await adminGet<DataPage>(api, backend, `/data/${collection.name}?limit=1000&skip=${String(at)}`);
+        const chunk = await adminGet<DataPage>(api, backend, `/data/${encodeURIComponent(collection.name)}?limit=1000&skip=${String(at)}`);
         rows.push(...chunk.rows);
         if (rows.length >= chunk.total || chunk.rows.length === 0) break;
       }
@@ -121,7 +123,7 @@ function Rows({ backend, collection, all }: { backend: string; collection: Colle
       const failed: string[] = [];
       for (const [index, row] of parsed.rows.entries()) {
         try {
-          await adminSend(api, backend, 'POST', `/data/${collection.name}`, row);
+          await adminSend(api, backend, 'POST', `/data/${encodeURIComponent(collection.name)}`, row);
           added += 1;
         } catch (failure) {
           if (failed.length < 3) failed.push(`Row ${String(index + 1)}: ${errorMessage(failure)}`);
@@ -145,12 +147,12 @@ function Rows({ backend, collection, all }: { backend: string; collection: Colle
       <div className="row">
         <h2>{collection.name}</h2>
         <span className="spacer" />
-        <button type="button" onClick={() => { setFields(true); }}>
+        <Write><button type="button" onClick={() => { setFields(true); }}>
           Edit fields
-        </button>
-        <button type="button" className="primary" disabled={collection.fields.length === 0} onClick={() => { setEditing('new'); }}>
+        </button></Write>
+        <Write><button type="button" className="primary" disabled={collection.fields.length === 0} onClick={() => { setEditing('new'); }}>
           Add record
-        </button>
+        </button></Write>
       </div>
       <div className="row">
         <label className="grow">
@@ -171,12 +173,14 @@ function Rows({ backend, collection, all }: { backend: string; collection: Colle
         <button type="button" onClick={() => { exportAs.mutate('csv'); }} disabled={exportAs.isPending}>
           Export CSV
         </button>
-        <button type="button" onClick={() => { importRows.mutate(); }} disabled={importRows.isPending || collection.fields.length === 0}>
+        <Write><button type="button" onClick={() => { importRows.mutate(); }} disabled={importRows.isPending || collection.fields.length === 0}>
           Import…
-        </button>
-        <button type="button" onClick={() => { reveal.mutate(); }}>
-          Show database file
-        </button>
+        </button></Write>
+        {canReveal ? (
+          <button type="button" onClick={() => { reveal.mutate(); }}>
+            Show database file
+          </button>
+        ) : null}
       </div>
       {note === null ? null : <p className="ok" role="status">{note}</p>}
       <ErrorNote error={[exportAs.error, importRows.error, reveal.error, page.error].find((item) => item !== null) ?? null} />
@@ -205,12 +209,12 @@ function Rows({ backend, collection, all }: { backend: string; collection: Colle
                   <td key={name}>{show(row[name])}</td>
                 ))}
                 <td className="actions-cell">
-                  <button type="button" className="ghost" aria-label={`Edit record ${String(row.id)}`} onClick={() => { setEditing(row); }}>
+                  <Write><button type="button" className="ghost" aria-label={`Edit record ${String(row.id)}`} onClick={() => { setEditing(row); }}>
                     Edit
-                  </button>
-                  <button type="button" className="ghost bad" aria-label={`Delete record ${String(row.id)}`} onClick={() => { setDeleting(row); }}>
+                  </button></Write>
+                  <Write><button type="button" className="ghost bad" aria-label={`Delete record ${String(row.id)}`} onClick={() => { setDeleting(row); }}>
                     Delete
-                  </button>
+                  </button></Write>
                 </td>
               </tr>
             ))}
@@ -231,9 +235,9 @@ function Rows({ backend, collection, all }: { backend: string; collection: Colle
         </div>
       ) : null}
       <div className="row end">
-        <button type="button" className="ghost bad" onClick={() => { setDropping(true); }}>
+        <Write><button type="button" className="ghost bad" onClick={() => { setDropping(true); }}>
           Delete this collection
-        </button>
+        </button></Write>
       </div>
 
       {editing === null ? null : (
@@ -309,9 +313,9 @@ export function Data({ backend }: { backend: string }) {
             </li>
           ))}
         </ul>
-        <button type="button" onClick={() => { setAdding(true); }}>
+        <Write><button type="button" onClick={() => { setAdding(true); }}>
           New collection
-        </button>
+        </button></Write>
       </aside>
       <section>{current === undefined ? null : <Rows key={current.name} backend={backend} collection={current} all={list.map((item) => item.name)} />}</section>
       {adding ? (

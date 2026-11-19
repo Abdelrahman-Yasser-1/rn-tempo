@@ -1,3 +1,4 @@
+import type { TeamApi } from './team';
 import type {
   BackendStatus,
   CertInfo,
@@ -18,11 +19,62 @@ import type {
   UploadSummary,
 } from './types';
 
+/** What the current shell can do. The UI hides or explains what a shell cannot (see `useCapabilities`). */
+export interface Capabilities {
+  /** `desktop`: the Tauri app on the user's machine. `web`: a browser talking to `local-backend-engine web`. */
+  mode: 'desktop' | 'web';
+  /** Open a backend's folder or database in the file manager. */
+  reveal: boolean;
+  /** Add the local CA to this machine, an iOS simulator or an Android emulator. */
+  trustLocalDevices: boolean;
+  /** Pick any folder on disk for a new or existing backend. Without it, backends live in the server's backends directory. */
+  folderPicker: boolean;
+  /** Files dropped on the window are uploaded (the desktop shell keeps their paths). */
+  dropFiles: boolean;
+}
+
+export const DESKTOP_CAPABILITIES: Capabilities = { mode: 'desktop', reveal: true, trustLocalDevices: true, folderPicker: true, dropFiles: true };
+export const WEB_CAPABILITIES: Capabilities = { mode: 'web', reveal: false, trustLocalDevices: false, folderPicker: false, dropFiles: false };
+
+/** The sign-in of the web shell. The desktop shell has none (its Rust side holds the admin token). */
+export interface WebSession {
+  /** Asks the server whether this browser is signed in. */
+  check: () => Promise<boolean>;
+  /** Exchanges the one-time code printed by the server for a session. */
+  login: (code: string) => Promise<void>;
+  /**
+   * `code`: the local web mode (a one-time code). `password`: the team server (email, password, optional TOTP). Known
+   * after `check()`. A fake may leave it out, which means `code`.
+   */
+  mode?: () => 'code' | 'password';
+  /** Team server: email and password, then the TOTP or a recovery code when asked. `totp` says the code is needed. */
+  loginPassword?: (input: { email: string; password: string; code?: string }) => Promise<'signedIn' | 'totp'>;
+  /** Team server: chooses a password with the one-time link from an invitation. */
+  setup?: (token: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  /** Called when the server says the session is gone (it expired or was ended). Returns an unsubscribe function. */
+  onExpired: (handler: () => void) => () => void;
+}
+
 /**
- * Everything the UI asks of the app shell. The real implementation (`tauri.ts`) calls Rust commands; tests pass
- * a fake. The admin token and every path outside a backend folder stay on the Rust side.
+ * The one typed interface between the dashboard and the engine. Two implementations: `tauri.ts` (Rust commands over
+ * IPC) and `web.ts` (`fetch` with a session cookie and a CSRF header, `EventSource` for logs). Tests pass a fake.
+ * In the desktop shell the admin token and every path outside a backend folder stay on the Rust side; in the web
+ * shell the token never reaches the browser at all.
+ *
+ * In every method `path` names a backend: its folder on the desktop, its name inside the server's backends
+ * directory on the web.
  */
-export interface Api {
+export interface Backend {
+  capabilities: Capabilities;
+  /** `null` in the desktop shell. */
+  session: WebSession | null;
+  /** The team server's accounts, keys and audit routes. `null` everywhere else (desktop, local web). */
+  team: TeamApi | null;
+  /** Web only: folders in the server's backends directory that are not in the list yet (they can be opened). */
+  listUnlisted: () => Promise<string[]>;
+  /** Web only: puts a folder of the backends directory back in the list. */
+  openNamed: (name: string) => Promise<BackendStatus>;
   listBackends: () => Promise<BackendStatus[]>;
   backendStatus: (path: string) => Promise<BackendStatus>;
   /** Step 1 of New backend: a folder dialog. `null` when cancelled. */
@@ -61,6 +113,9 @@ export interface Api {
   onUpload: (handler: (event: UploadProgress) => void) => Promise<() => void>;
   onDropped: (handler: (count: number) => void) => Promise<() => void>;
 }
+
+/** The name the rest of the UI uses for the interface. */
+export type Api = Backend;
 
 /** An error answer of the engine, with its plain message and what the engine said about a 409. */
 export class AdminError extends Error {

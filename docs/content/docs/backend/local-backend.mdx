@@ -28,11 +28,11 @@ You need Node 26 or newer (it builds the engine into one file), Rust 1.85 or new
 
 ```sh
 yarn install
-yarn workspace @rn-tempo/local-backend-engine build:sea        # the engine, as one executable
+yarn workspace @rn-tempo/local-backend build:sea        # the engine, as one executable
 yarn workspace @rn-tempo/local-backend-app tauri build --bundles app,dmg
 ```
 
-The `.app` and `.dmg` are in `apps/local-backend/app/src-tauri/target/release/bundle/`. For the window with hot reload, run `yarn workspace @rn-tempo/local-backend-app tauri dev`. Without `build:sea`, `tauri dev` falls back to `node apps/local-backend/engine/dist/cli.mjs` (run `yarn workspace @rn-tempo/local-backend-engine build` first, and have Node 24 or newer).
+The `.app` and `.dmg` are in `apps/local-backend/app/src-tauri/target/release/bundle/`. For the window with hot reload, run `yarn workspace @rn-tempo/local-backend-app tauri dev`. Without `build:sea`, `tauri dev` falls back to `node apps/local-backend/engine/dist/cli.mjs` (run `yarn workspace @rn-tempo/local-backend build` first, and have Node 24 or newer).
 
 The same engine runs without the app. See `apps/local-backend/engine/README.md` for `create`, `serve`, `check`, `snapshot` and the rest.
 
@@ -251,3 +251,50 @@ To test with a throwaway certificate authority, start the app with `CAROOT` set 
 - **A strict content security policy.** Scripts and styles only from the app itself, no remote content and no telemetry. Media previews come from `blob:` URLs made from bytes Rust fetched after it checked the type.
 - **Handlers are trusted code.** See step 11.
 - **Secrets stay out of the folder you commit.** See step 12.
+
+## 15. Run in a browser
+
+The same dashboard runs in a browser, served by the engine. You need Node.js 24 or newer and no desktop app. It works on any operating system.
+
+```sh
+npx @rn-tempo/local-backend
+```
+
+With no arguments this is the `web` command. It prints a one-time login code and opens `http://127.0.0.1:8555/login` (a free port is used when 8555 is taken):
+
+```text
+Tempo Local Backend (web)
+  Dashboard:   http://127.0.0.1:8555/login
+  Login code:  ABCDE-FGHJK   (works once, valid for 10 minutes; paste it on the page)
+  Backends in: ~/.tempo-local-backend/backends
+```
+
+Paste the code on the page. Stop the server with Ctrl+C. If the code expired, stop and start it again for a new one.
+
+| Option | Meaning |
+|---|---|
+| `--backends-dir <dir>` | The folder that holds your backends. Default `~/.tempo-local-backend/backends`. |
+| `--admin-port <n>` | The dashboard's port on `127.0.0.1`. Default 8555. |
+| `--no-open` | Do not open the browser. |
+
+### Several backends in one server
+
+Every folder of the backends directory with a `backend.json` is a backend. Each one runs on its own public port, as in the desktop app, with its own database, media and logs. In the dashboard you can create a backend (you give it a name, and its folder is created in the backends directory), open a folder that you removed from the list, start and stop backends, and remove one from the list. Removing never deletes the folder. A new backend gets the first free port from 8443 up; change it in Settings.
+
+### What is different from the desktop app
+
+These actions change files or trust stores outside the backends directory, so the browser does not offer them. The page says so where it hides them.
+
+- **Open folder / Show database file.** Use Export backup to get the files.
+- **Trust on this Mac, an iOS simulator or an Android emulator.** Run `tempo-local-backend trust mac` (or `trust ios`, `trust android`) in a terminal on the machine that runs the server. Creating the certificate is available in the browser; it never changes a trust store.
+- **Choose any folder.** Backends live in the backends directory.
+- **Drop files on the window.** Use Upload files.
+
+### Security
+
+- **Local only.** The dashboard listens on `127.0.0.1`. A request with another `Host` name is refused, so a web page that rebinds its DNS name to your machine gets nothing. Backends' public APIs still listen on all interfaces so a phone can reach them.
+- **The login code is not a token.** It is random, works once, expires after 10 minutes, and wrong tries are rate limited (5 per minute). It is never put in a URL. The page sends it in the body of `POST /__session`.
+- **The session is a cookie.** It is `HttpOnly` (scripts cannot read it) and `SameSite=Strict`. On `http://127.0.0.1` the browser accepts it without `Secure`, so this setup is for your own machine only; a server behind HTTPS sets `Secure`. A session ends after 12 hours without a request, when you press Sign out, or when the server restarts.
+- **CSRF.** Every change must send the CSRF token (a header, kept in the page's memory) and an `Origin` of the same host. Without both the server answers 403.
+- **The admin token stays on the server.** The desktop app's per-launch token is never sent to a browser.
+- **A strict content security policy.** Scripts and styles only from the server itself, no inline scripts, and the page can only call the server it came from. "Try it" calls go through the server, which trusts only that backend's own certificate.

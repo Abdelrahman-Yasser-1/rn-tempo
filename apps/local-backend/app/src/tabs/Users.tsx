@@ -9,6 +9,7 @@ import { errorMessage } from '../lib/errors';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { Modal } from '../ui/Modal';
 import { EmptyState, ErrorNote, Hint } from '../ui/bits';
+import { Write } from '../hooks/team';
 
 const when = (iso: string): string => iso.replace('T', ' ').replace(/\..*$/, '').replace('Z', ' UTC');
 
@@ -58,9 +59,9 @@ function AddUser({ backend, onClose, onSaved }: { backend: string; onClose: () =
           <button type="button" onClick={onClose}>
             Cancel
           </button>
-          <button type="submit" className="primary" disabled={form.username.trim() === '' || form.password === '' || save.isPending}>
+          <Write><button type="submit" className="primary" disabled={form.username.trim() === '' || form.password === '' || save.isPending}>
             Add user
-          </button>
+          </button></Write>
         </div>
       </form>
     </Modal>
@@ -70,7 +71,7 @@ function AddUser({ backend, onClose, onSaved }: { backend: string; onClose: () =
 function ResetPassword({ backend, user, onClose, onSaved }: { backend: string; user: AppUser; onClose: () => void; onSaved: () => void }) {
   const api = useApi();
   const [password, setPassword] = useState('');
-  const save = useMutation({ mutationFn: () => adminSend(api, backend, 'POST', `/users/${String(user.id)}/password`, { password }), onSuccess: onSaved });
+  const save = useMutation({ mutationFn: () => adminSend(api, backend, 'POST', `/users/${encodeURIComponent(String(user.id))}/password`, { password }), onSuccess: onSaved });
   return (
     <Modal title={`Reset the password of ${user.username}`} onClose={onClose}>
       <form
@@ -90,9 +91,9 @@ function ResetPassword({ backend, user, onClose, onSaved }: { backend: string; u
           <button type="button" onClick={onClose}>
             Cancel
           </button>
-          <button type="submit" className="primary" disabled={password === '' || save.isPending}>
+          <Write><button type="submit" className="primary" disabled={password === '' || save.isPending}>
             Reset password
-          </button>
+          </button></Write>
         </div>
       </form>
     </Modal>
@@ -117,14 +118,14 @@ export function Users({ backend }: { backend: string }) {
     mutationFn: async (item: Pending) => {
       const id = String(item.user.id);
       if (item.kind === 'signout') {
-        const answer = await adminSend<{ revoked: number }>(api, backend, 'POST', `/users/${id}/revoke`);
+        const answer = await adminSend<{ revoked: number }>(api, backend, 'POST', `/users/${encodeURIComponent(id)}/revoke`);
         return `${item.user.username} was signed out of ${String(answer.revoked)} ${answer.revoked === 1 ? 'session' : 'sessions'}. Their access tokens stopped working at once.`;
       }
       if (item.kind === 'delete') {
-        await adminSend(api, backend, 'DELETE', `/users/${id}`);
+        await adminSend(api, backend, 'DELETE', `/users/${encodeURIComponent(id)}`);
         return `${item.user.username} was deleted.`;
       }
-      await adminSend(api, backend, 'POST', `/users/${id}/${item.user.disabled ? 'enable' : 'disable'}`);
+      await adminSend(api, backend, 'POST', `/users/${encodeURIComponent(id)}/${item.user.disabled ? 'enable' : 'disable'}`);
       return item.user.disabled ? `${item.user.username} can log in again.` : `${item.user.username} is disabled and signed out.`;
     },
     onSuccess: async (message) => {
@@ -133,7 +134,7 @@ export function Users({ backend }: { backend: string }) {
       await refresh();
     },
   });
-  const endSession = useMutation({ mutationFn: (session: Session) => adminSend(api, backend, 'DELETE', `/sessions/${String(session.id)}`), onSuccess: refresh });
+  const endSession = useMutation({ mutationFn: (session: Session) => adminSend(api, backend, 'DELETE', `/sessions/${encodeURIComponent(String(session.id))}`), onSuccess: refresh });
 
   const list = users.data?.users ?? [];
   const active = sessions.data?.sessions ?? [];
@@ -163,9 +164,9 @@ export function Users({ backend }: { backend: string }) {
           <span className="sr-only">Search users</span>
           <input type="search" placeholder="Search users" value={q} onChange={(event) => { setQ(event.target.value); }} />
         </label>
-        <button type="button" className="primary" onClick={() => { setAdding(true); }}>
+        <Write><button type="button" className="primary" onClick={() => { setAdding(true); }}>
           Add user
-        </button>
+        </button></Write>
       </div>
       {note === null ? null : (
         <p className="ok" role="status">
@@ -198,10 +199,10 @@ export function Users({ backend }: { backend: string }) {
                 <td>{user.email}</td>
                 <td>{user.disabled ? 'Disabled' : 'Active'}</td>
                 <td className="actions-cell">
-                  <button type="button" className="ghost" aria-label={`Reset password of ${user.username}`} onClick={() => { setResetting(user); }}>
+                  <Write><button type="button" className="ghost" aria-label={`Reset password of ${user.username}`} onClick={() => { setResetting(user); }}>
                     Reset password
-                  </button>
-                  <button
+                  </button></Write>
+                  <Write><button
                     type="button"
                     className="ghost"
                     aria-label={`${user.disabled ? 'Enable' : 'Disable'} ${user.username}`}
@@ -211,13 +212,13 @@ export function Users({ backend }: { backend: string }) {
                     }}
                   >
                     {user.disabled ? 'Enable' : 'Disable'}
-                  </button>
-                  <button type="button" className="ghost" aria-label={`Sign out ${user.username} everywhere`} onClick={() => { setPending({ kind: 'signout', user }); }}>
+                  </button></Write>
+                  <Write><button type="button" className="ghost" aria-label={`Sign out ${user.username} everywhere`} onClick={() => { setPending({ kind: 'signout', user }); }}>
                     Sign out everywhere
-                  </button>
-                  <button type="button" className="ghost bad" aria-label={`Delete ${user.username}`} onClick={() => { setPending({ kind: 'delete', user }); }}>
+                  </button></Write>
+                  <Write><button type="button" className="ghost bad" aria-label={`Delete ${user.username}`} onClick={() => { setPending({ kind: 'delete', user }); }}>
                     Delete
-                  </button>
+                  </button></Write>
                 </td>
               </tr>
             ))}
@@ -235,9 +236,9 @@ export function Users({ backend }: { backend: string }) {
                 <span>
                   <strong>{session.username}</strong> <span className="muted">since {when(session.createdAt)}, until {when(session.expiresAt)}</span>
                 </span>
-                <button type="button" className="ghost" aria-label={`End the session of ${session.username} (${String(session.id)})`} onClick={() => { endSession.mutate(session); }}>
+                <Write><button type="button" className="ghost" aria-label={`End the session of ${session.username} (${String(session.id)})`} onClick={() => { endSession.mutate(session); }}>
                   End session
-                </button>
+                </button></Write>
               </li>
             ))}
           </ul>

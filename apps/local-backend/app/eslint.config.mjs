@@ -5,7 +5,7 @@ import tseslint from 'typescript-eslint';
 
 // A small flat config for a React web app. `@rn-tempo/eslint-config` targets React Native.
 export default tseslint.config(
-  { ignores: ['dist', 'src-tauri', 'node_modules'] },
+  { ignores: ['dist', 'dist-web', 'src-tauri', 'node_modules'] },
   js.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
   reactHooks.configs.flat.recommended,

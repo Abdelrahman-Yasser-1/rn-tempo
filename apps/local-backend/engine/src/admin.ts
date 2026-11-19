@@ -8,6 +8,7 @@ import { adminContentRoutes, contentErrorReply } from './admin-content.ts';
 import { adminMediaRoutes } from './admin-media.ts';
 import { jsonReply, problemReply, readJson, type Reply, type RequestCtx } from './http.ts';
 import { Manager, NotFoundError } from './manager.ts';
+import { atLeast, decide, settingsChanged, type AdminAccess } from './roles.ts';
 import { DefinitionError, type Collection } from './schema.ts';
 import { readBody, sendReply, toCtx } from './server.ts';
 import { MigrationConfirmError, MigrationError, UniqueViolationError, type Plan } from './store.ts';
@@ -31,14 +32,14 @@ export interface AdminRoute {
   handler: AdminHandler;
 }
 
-function sameToken(given: string | undefined, expected: string): boolean {
+export function sameToken(given: string | undefined, expected: string): boolean {
   if (given === undefined) return false;
   const a = Buffer.from(given);
   const b = Buffer.from(expected);
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
-function tokenOf(req: IncomingMessage): string | undefined {
+export function tokenOf(req: IncomingMessage): string | undefined {
   const header = req.headers.authorization;
   if (typeof header === 'string' && /^Bearer /i.test(header)) return header.slice(7).trim();
   const custom = req.headers['x-tempo-token'];
@@ -46,10 +47,19 @@ function tokenOf(req: IncomingMessage): string | undefined {
 }
 
 /** Only loopback host names: a page on another origin that rebinds its DNS name to 127.0.0.1 still sends its own. */
-function loopbackHost(req: IncomingMessage): boolean {
+export function loopbackHost(req: IncomingMessage): boolean {
   const host = String(req.headers.host ?? '');
   const name = host.startsWith('[') ? host.slice(0, host.indexOf(']') + 1) : host.split(':')[0];
   return name === '127.0.0.1' || name === 'localhost' || name === '[::1]';
+}
+
+function parseJsonOr(text: string): unknown {
+  if (text === '') return undefined;
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return undefined;
+  }
 }
 
 const planReply = (plan: Plan): unknown => ({ ok: true, ops: plan.ops.map((op) => op.op === 'createCollection' ? { op: op.op, collection: op.collection.name } : op) });
@@ -67,7 +77,7 @@ export function errorReply(error: unknown): Reply {
   return problemReply(500, { detail: 'Unexpected server error.' });
 }
 
-function match(pattern: string, path: string): Record<string, string> | undefined {
+export function match(pattern: string, path: string): Record<string, string> | undefined {
   const want = pattern.split('/').filter(Boolean);
   const got = path.split('/').filter(Boolean);
   if (want.length !== got.length) return undefined;
@@ -89,6 +99,14 @@ function match(pattern: string, path: string): Record<string, string> | undefine
 export interface AdminServer {
   server: Server;
   token: string;
+  /** Every route, for the role table check (`GET /events` is answered before the table is read). */
+  routes: readonly AdminRoute[];
+  /**
+   * Serves one request that the caller has authenticated (see `createAdminServer`). The team server also passes
+   * `access`: who the caller is and what role they hold on this backend. The role is then checked against the
+   * route table (`roles.ts`) before the handler runs, and every write is reported to `access.onWrite`.
+   */
+  handle: (req: IncomingMessage, res: ServerResponse, access?: AdminAccess) => Promise<void>;
 }
 
 /**
@@ -323,35 +341,83 @@ export function createAdminServer(manager: Manager, extras: AdminExtras = {}, to
     });
   }
 
+  /**
+   * Answers one request that is already authenticated and has a loopback `Host`. The URL must be `/__admin/...`.
+   * The per-backend listener below and the web hub (which authenticates with a session cookie) both call this.
+   */
+  const handle = async (req: IncomingMessage, res: ServerResponse, access?: AdminAccess): Promise<void> => {
+    // The media upload streams its own (large) body; every other admin body is small and read up front.
+    const streaming = req.method === 'POST' && new URL(req.url ?? '/', 'http://local').pathname === `${ADMIN_PREFIX}/media`;
+    const read = streaming ? { ok: true as const, text: '' } : await readBody(req, MAX_ADMIN_BODY);
+    if (!read.ok) return sendReply(res, problemReply(413, { title: 'Payload Too Large' }));
+    const ctx = toCtx(req, read.text);
+    if (streaming) ctx.stream = req;
+    if (!ctx.path.startsWith(`${ADMIN_PREFIX}/`)) return sendReply(res, problemReply(404, { detail: 'Not found.' }));
+    const path = ctx.path.slice(ADMIN_PREFIX.length);
+    if (ctx.method === 'GET' && path === '/events') {
+      if (access !== undefined) {
+        const decision = decide(access, 'GET /events');
+        if (!decision.ok) return sendReply(res, problemReply(403, { detail: decision.detail }));
+      }
+      return events(req, res);
+    }
+    let known = false;
+    for (const route of routes) {
+      const params = match(route.pattern, path);
+      if (params === undefined) continue;
+      known = true;
+      if (route.method !== ctx.method) continue;
+      const key = `${route.method} ${route.pattern}`;
+      const writing = access !== undefined && route.method !== 'GET';
+      const report = (status: number, denied: boolean, before: unknown): void => {
+        if (!writing) return;
+        const length = Number(req.headers['content-length']);
+        access?.onWrite?.({ route: key, params, status, body: streaming ? undefined : parseJsonOr(ctx.bodyText), before, denied, uploadBytes: streaming && Number.isFinite(length) ? length : undefined });
+      };
+      if (access !== undefined) {
+        let decision = decide(access, key);
+        // Settings that live in backend.json (public access, port, certificates) are an admin's, even through PUT /definition.
+        if (decision.ok && key === 'PUT /definition' && !atLeast(access.role, 'admin') && access.keyScope === undefined && settingsChanged(manager.definition(), parseJsonOr(ctx.bodyText))) {
+          decision = { ok: false, detail: 'Changing settings (public access, port, certificates) needs the admin role on this backend.' };
+        }
+        if (!decision.ok) {
+          report(403, true, undefined);
+          return sendReply(res, problemReply(403, { detail: decision.detail }));
+        }
+      }
+      const before = writing && route.method !== 'POST' ? await readBefore(route, params, ctx) : undefined;
+      let answer: Reply;
+      try {
+        answer = await route.handler(ctx, params);
+      } catch (error) {
+        answer = errorReply(error);
+      }
+      report(answer.status, false, before);
+      return sendReply(res, answer);
+    }
+    sendReply(res, known ? problemReply(405, { detail: 'Method not allowed.' }) : problemReply(404, { detail: 'Not found.' }));
+  };
+
+  /** What an item looked like before a change: the answer of the GET route with the same pattern, when there is one. */
+  async function readBefore(route: AdminRoute, params: Record<string, string>, ctx: RequestCtx): Promise<unknown> {
+    const reader = routes.find((candidate) => candidate.method === 'GET' && candidate.pattern === route.pattern);
+    if (reader === undefined) return undefined;
+    try {
+      const answer = await reader.handler({ ...ctx, method: 'GET', bodyText: '', query: new URLSearchParams() }, params);
+      return answer.status === 200 ? answer.body : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
   const server = createServer((req, res) => {
     void (async (): Promise<void> => {
       if (!loopbackHost(req)) return sendReply(res, problemReply(403, { detail: 'The admin API answers on 127.0.0.1 only.' }));
       if (!sameToken(tokenOf(req), token)) return sendReply(res, problemReply(401, { detail: 'Missing or wrong admin token.' }));
-      // The media upload streams its own (large) body; every other admin body is small and read up front.
-      const streaming = req.method === 'POST' && new URL(req.url ?? '/', 'http://local').pathname === `${ADMIN_PREFIX}/media`;
-      const read = streaming ? { ok: true as const, text: '' } : await readBody(req, MAX_ADMIN_BODY);
-      if (!read.ok) return sendReply(res, problemReply(413, { title: 'Payload Too Large' }));
-      const ctx = toCtx(req, read.text);
-      if (streaming) ctx.stream = req;
-      if (!ctx.path.startsWith(`${ADMIN_PREFIX}/`)) return sendReply(res, problemReply(404, { detail: 'Not found.' }));
-      const path = ctx.path.slice(ADMIN_PREFIX.length);
-      if (ctx.method === 'GET' && path === '/events') return events(req, res);
-      let known = false;
-      for (const route of routes) {
-        const params = match(route.pattern, path);
-        if (params === undefined) continue;
-        known = true;
-        if (route.method !== ctx.method) continue;
-        try {
-          return sendReply(res, await route.handler(ctx, params));
-        } catch (error) {
-          return sendReply(res, errorReply(error));
-        }
-      }
-      sendReply(res, known ? problemReply(405, { detail: 'Method not allowed.' }) : problemReply(404, { detail: 'Not found.' }));
+      await handle(req, res);
     })();
   });
-  return { server, token };
+  return { server, token, routes, handle };
 }
 
 /** Every admin route as `METHOD /__admin/...`, for tests that check the public port never answers them. */

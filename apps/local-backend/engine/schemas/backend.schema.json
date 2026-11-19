@@ -25,6 +25,15 @@
       "type": "string",
       "pattern": "^(\\/[A-Za-z0-9._~-]+)*$"
     },
+    "publicAccess": {
+      "default": "open",
+      "description": "`open`: the public API answers anyone. `key`: every public request needs an `x-tempo-access-key` header with a key of scope `public` (team server only).",
+      "type": "string",
+      "enum": [
+        "open",
+        "key"
+      ]
+    },
     "certsDir": {
       "description": "Folder with cert.pem and key.pem. Defaults to `.data/certs`.",
       "type": "string"

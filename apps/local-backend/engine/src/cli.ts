@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { spawn } from 'node:child_process';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 
@@ -11,6 +12,9 @@ import { readFileSync } from 'node:fs';
 import { readDefinitionText, createBackend, PRESETS, prepareDataDir, type Preset } from './folder.ts';
 import { DefinitionError } from './schema.ts';
 import { trustAndroid, trustIos, trustMac } from './trust.ts';
+import { BackendRegistry } from './hub-backends.ts';
+import { ownerCommand, serverCommand, type ServerArgs } from './team-cli.ts';
+import { defaultBackendsDir, startWeb } from './web.ts';
 
 const USAGE = `local-backend-engine: serve a Tempo Local Backend folder
 
@@ -20,7 +24,16 @@ const USAGE = `local-backend-engine: serve a Tempo Local Backend folder
   local-backend-engine snapshot export <dir> <file.zip>
   local-backend-engine snapshot import <file.zip> <dir> [--no-certs]   into a new or empty folder
   local-backend-engine trust  mac | ios [--device <udid>] | android [--serial <id>]   add the mkcert CA to a trust store (explicit)
+  local-backend-engine web    [--backends-dir <dir>] [--admin-port <n>] [--no-open]   the dashboard in a browser, for several backends
+  local-backend-engine server [--data-dir <dir>] [--backends-dir <dir>] [--port <n>] [--trust-proxy [private|<cidr,...>]] [--audit-days <n>] [--public-origin <origin>]
+                              the team server: accounts, roles, API keys and an audit log, for Docker behind Caddy
+  local-backend-engine server owner create --email <email> [--name <name>] [--password-stdin]
+  local-backend-engine server owner reset-password --email <email> [--password-stdin] [--reset-totp]
   local-backend-engine serve  <dir> [--port <n>] [--http] [--admin-port <n>] [--no-watch] [--parent-stdin]
+
+With no command (for example \`npx @rn-tempo/local-backend\`) the engine runs \`web\`: it prints a one-time login code, opens
+http://127.0.0.1:<port>/login and serves the dashboard on 127.0.0.1 only. Backends live in --backends-dir
+(default ~/.tempo-local-backend/backends).
 
 serve prints one JSON line on stdout when it is ready, with the admin port and its token.
 That line is the only place the token appears.
@@ -58,8 +71,44 @@ async function serve(dir: string, values: { port?: string | undefined; http?: bo
   process.once('SIGTERM', stop);
 }
 
+/** Opens an address in the default browser. Best effort: when it fails the printed address still works. */
+function openBrowser(url: string): void {
+  const [command, args]: [string, string[]] = process.platform === 'darwin' ? ['open', [url]] : process.platform === 'win32' ? ['cmd', ['/c', 'start', '', url]] : ['xdg-open', [url]];
+  try {
+    const child = spawn(command, args, { stdio: 'ignore', detached: true });
+    child.on('error', () => undefined);
+    child.unref();
+  } catch {
+    // No browser to open.
+  }
+}
+
+async function web(values: { 'backends-dir'?: string | undefined; 'admin-port'?: string | undefined; 'no-open'?: boolean | undefined }): Promise<void> {
+  const backendsDir = resolve(values['backends-dir'] ?? defaultBackendsDir());
+  const adminPort = values['admin-port'] === undefined ? undefined : Number(values['admin-port']);
+  if (adminPort !== undefined && !(Number.isInteger(adminPort) && adminPort >= 0 && adminPort <= 65_535)) throw new DefinitionError('--admin-port must be a number from 0 to 65535.');
+  const registry = new BackendRegistry(backendsDir);
+  const running = await startWeb({ host: registry, ...(adminPort === undefined ? {} : { adminPort }) });
+  const say = (line = ''): void => void process.stdout.write(`${line}\n`);
+  say('Tempo Local Backend (web)');
+  say(`  Dashboard:   ${running.url}`);
+  say(`  Login code:  ${running.loginCode}   (works once, valid for 10 minutes; paste it on the page)`);
+  say(`  Backends in: ${backendsDir}`);
+  say('  The dashboard listens on 127.0.0.1 only. Stop with Ctrl+C.');
+  if (values['no-open'] !== true) openBrowser(running.url);
+  const stop = (): void => void Promise.all([running.stop(), registry.stopAll()]).then(() => process.exit(0));
+  process.once('SIGINT', stop);
+  process.once('SIGTERM', stop);
+}
+
+/** `--trust-proxy` alone means `--trust-proxy private` (the loopback and private ranges: a proxy on the Docker network). */
+function withProxyDefault(args: string[]): string[] {
+  return args.flatMap((arg, index) => (arg === '--trust-proxy' && (args[index + 1] === undefined || args[index + 1]?.startsWith('-') === true) ? [arg, 'private'] : [arg]));
+}
+
 async function main(): Promise<void> {
   const { positionals, values } = parseArgs({
+    args: withProxyDefault(process.argv.slice(2)),
     allowPositionals: true,
     options: {
       name: { type: 'string' },
@@ -72,13 +121,25 @@ async function main(): Promise<void> {
       http: { type: 'boolean' },
       'no-watch': { type: 'boolean' },
       'parent-stdin': { type: 'boolean' },
+      'backends-dir': { type: 'string' },
+      'no-open': { type: 'boolean' },
+      'data-dir': { type: 'string' },
+      host: { type: 'string' },
+      'trust-proxy': { type: 'string' },
+      'audit-days': { type: 'string' },
+      'public-origin': { type: 'string' },
+      email: { type: 'string' },
+      'password-stdin': { type: 'boolean' },
+      'reset-totp': { type: 'boolean' },
       device: { type: 'string' },
       serial: { type: 'string' },
       help: { type: 'boolean', short: 'h' },
     },
   });
-  const [command, dir] = positionals;
-  if (values.help === true || command === undefined || dir === undefined) {
+  const [command = 'web', dir] = positionals;
+  if (values.help !== true && command === 'web') return web(values);
+  if (values.help !== true && command === 'server') return dir === 'owner' ? ownerCommand(positionals[2], values as ServerArgs) : serverCommand(values as ServerArgs);
+  if (values.help === true || dir === undefined) {
     process.stdout.write(USAGE);
     process.exit(values.help === true ? 0 : 1);
   }

@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 
 import { adminSend } from '../api/client';
-import { useApi } from '../api/context';
+import { useApi, useCapabilities } from '../api/context';
 import type { BackendStatus, MediaItem, MediaPage, MediaUsage, UploadProgress, UploadSummary } from '../api/types';
 import { useAdminQuery, useRefresh } from '../hooks/lb';
 import { errorMessage } from '../lib/errors';
@@ -11,6 +11,7 @@ import { iconLabel, MEDIA_FILTERS, previewKind } from '../lib/media';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { CopyButton } from '../ui/CopyButton';
 import { EmptyState, ErrorNote } from '../ui/bits';
+import { Write } from '../hooks/team';
 
 /**
  * A preview made only from bytes Rust sent for an image, video or audio file, shown through a `blob:` URL.
@@ -75,6 +76,7 @@ export function Thumb({ backend, item }: { backend: string; item: MediaItem }) {
 /** Files stored by the backend: a grid with previews, upload, download, delete and copy URL. */
 export function Media({ backend }: { backend: BackendStatus }) {
   const api = useApi();
+  const { dropFiles } = useCapabilities();
   const refresh = useRefresh(backend.path);
   const [filter, setFilter] = useState('');
   const [q, setQ] = useState('');
@@ -125,7 +127,7 @@ export function Media({ backend }: { backend: BackendStatus }) {
   }, [api]);
 
   const remove = useMutation({
-    mutationFn: (item: MediaItem) => adminSend(api, backend.path, 'DELETE', `/media/${item.id}`),
+    mutationFn: (item: MediaItem) => adminSend(api, backend.path, 'DELETE', `/media/${encodeURIComponent(item.id)}`),
     onSuccess: async () => {
       setDeleting(null);
       await refresh();
@@ -146,7 +148,7 @@ export function Media({ backend }: { backend: BackendStatus }) {
         <h2>Media</h2>
         <span className="muted">{usage.data === undefined ? '' : `${formatBytes(usage.data.bytes)} in ${String(usage.data.files)} ${usage.data.files === 1 ? 'file' : 'files'}`}</span>
         <span className="spacer" />
-        <button
+        <Write><button
           type="button"
           className="primary"
           disabled={upload.isPending}
@@ -155,7 +157,7 @@ export function Media({ backend }: { backend: BackendStatus }) {
           }}
         >
           Upload files…
-        </button>
+        </button></Write>
       </div>
       <div className="row">
         <label>
@@ -186,7 +188,7 @@ export function Media({ backend }: { backend: BackendStatus }) {
           />
         </label>
       </div>
-      <p className="dropzone muted">Drop files anywhere in this window to upload them.</p>
+      {dropFiles ? <p className="dropzone muted">Drop files anywhere in this window to upload them.</p> : <p className="muted">Choose Upload files to pick them from this computer.</p>}
       {progress === null ? null : (
         <div role="status" aria-label="Upload progress">
           <progress max={progress.total} value={progress.sent} aria-label={`Uploading ${progress.name}`} /> {progress.name} ({progress.index + 1} of {progress.count})
@@ -225,7 +227,7 @@ export function Media({ backend }: { backend: BackendStatus }) {
                 >
                   Download
                 </button>
-                <button
+                <Write><button
                   type="button"
                   className="ghost bad"
                   aria-label={`Delete ${item.originalName}`}
@@ -234,7 +236,7 @@ export function Media({ backend }: { backend: BackendStatus }) {
                   }}
                 >
                   Delete
-                </button>
+                </button></Write>
               </div>
             </li>
           ))}

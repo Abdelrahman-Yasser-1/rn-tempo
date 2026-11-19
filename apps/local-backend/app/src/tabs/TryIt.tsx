@@ -32,7 +32,7 @@ export function TryIt({ backend, endpoint }: { backend: string; endpoint: Endpoi
   const login = useMutation({
     mutationFn: async (id: string) => {
       if (id === '') return '';
-      const answer = await adminSend<{ accessToken: string }>(api, backend, 'POST', `/users/${id}/token`);
+      const answer = await adminSend<{ accessToken: string }>(api, backend, 'POST', `/users/${encodeURIComponent(id)}/token`);
       return answer.accessToken;
     },
     onSuccess: (value) => {

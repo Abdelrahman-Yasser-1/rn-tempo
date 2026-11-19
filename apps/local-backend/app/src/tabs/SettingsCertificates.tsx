@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
-import { useApi } from '../api/context';
+import { useApi, useCapabilities } from '../api/context';
 import type { BackendStatus, CertInfo, CliAction, CliOutput } from '../api/types';
 import { keys } from '../hooks/lb';
 import { errorMessage } from '../lib/errors';
@@ -24,10 +24,11 @@ function summary(output: CliOutput): string {
 /** Certificate status, create, and trust on this Mac, an iOS simulator or an Android emulator, plus the phone QR code. */
 export function SettingsCertificates({ backend, certs }: { backend: BackendStatus; certs: CertInfo | undefined }) {
   const api = useApi();
+  const { trustLocalDevices } = useCapabilities();
   const queryClient = useQueryClient();
   const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
   const [confirmMac, setConfirmMac] = useState(false);
-  const simulators = useQuery({ queryKey: keys.admin(backend.path, 'simulators'), queryFn: () => api.listSimulators(), retry: false });
+  const simulators = useQuery({ queryKey: keys.admin(backend.path, 'simulators'), queryFn: () => api.listSimulators(), retry: false, enabled: trustLocalDevices });
 
   const run = useMutation({
     mutationFn: (action: CliAction) => api.engineCli(backend.path, action),
@@ -53,15 +54,25 @@ export function SettingsCertificates({ backend, certs }: { backend: BackendStatu
         <button type="button" className={certs?.hasCert === true ? undefined : 'primary'} disabled={run.isPending} onClick={() => { go({ kind: 'certs' }); }}>
           {certs?.hasCert === true ? 'Create a new certificate' : 'Create certificate'}
         </button>
-        <button type="button" disabled={run.isPending || certs?.hasCa !== true} onClick={() => { setConfirmMac(true); }}>
-          Trust on this Mac…
-        </button>
-        <button type="button" disabled={run.isPending || certs?.hasCa !== true} onClick={() => { go({ kind: 'pushAndroid', serial: null }); }}>
-          Send to Android emulator
-        </button>
+        {trustLocalDevices ? (
+          <>
+            <button type="button" disabled={run.isPending || certs?.hasCa !== true} onClick={() => { setConfirmMac(true); }}>
+              Trust on this Mac…
+            </button>
+            <button type="button" disabled={run.isPending || certs?.hasCa !== true} onClick={() => { go({ kind: 'pushAndroid', serial: null }); }}>
+              Send to Android emulator
+            </button>
+          </>
+        ) : null}
       </div>
-      <h3>iOS simulator</h3>
-      {simulators.data === undefined ? (
+      {trustLocalDevices ? null : (
+        <p className="muted">
+          Trusting the certificate on this computer, a simulator or an emulator changes a trust store, so it is not done from the browser. Use the desktop app, or run <code>tempo-local-backend trust mac</code> (or <code>trust ios</code>, <code>trust android</code>) in a terminal on the machine
+          that runs the server.
+        </p>
+      )}
+      {trustLocalDevices ? <h3>iOS simulator</h3> : null}
+      {!trustLocalDevices ? null : simulators.data === undefined ? (
         <p className="muted">{simulators.isError ? errorMessage(simulators.error) : 'Looking for simulators…'}</p>
       ) : simulators.data.length === 0 ? (
         <p className="muted">No simulator is running. Start one, then reopen this tab.</p>

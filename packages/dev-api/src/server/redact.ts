@@ -17,6 +17,13 @@ const SENSITIVE_KEYS = new Set([
   'xtempotoken',
   'secret',
   'apikey',
+  'accesskey',
+  'xtempoaccesskey',
+  'totpsecret',
+  'recoverycode',
+  'recoverycodes',
+  'setuptoken',
+  'keyhash',
   'otp',
   'code',
   'email',
@@ -25,6 +32,12 @@ const SENSITIVE_KEYS = new Set([
 ]);
 
 export const REDACTED = '[REDACTED]';
+
+/** A Tempo API key (`tlb_...`) wherever it shows up in a text: a log line, a URL, a body value. */
+const KEY_IN_TEXT = /\btlb_[A-Za-z0-9_-]{8,}/g;
+
+/** Replaces any API key inside a text. */
+export const scrubKeys = (text: string): string => text.replace(KEY_IN_TEXT, REDACTED);
 
 const normalize = (key: string): string => key.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
 
@@ -45,14 +58,14 @@ export function redactDeep(value: unknown, depth = 0): unknown {
       Object.entries(value).map(([key, child]) => [key, isSensitiveKey(key) ? REDACTED : redactDeep(child, depth + 1)]),
     );
   }
-  return value;
+  return typeof value === 'string' ? scrubKeys(value) : value;
 }
 
 /** Keeps the path of a URL and redacts the values of sensitive query parameters. */
 export function redactUrl(url: string): string {
   const index = url.indexOf('?');
-  if (index < 0) return url;
+  if (index < 0) return scrubKeys(url);
   const params = new URLSearchParams(url.slice(index + 1));
   for (const key of [...params.keys()]) if (isSensitiveKey(key)) params.set(key, REDACTED);
-  return `${url.slice(0, index)}?${params.toString()}`;
+  return scrubKeys(`${url.slice(0, index)}?${params.toString()}`);
 }

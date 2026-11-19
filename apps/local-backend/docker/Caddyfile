@@ -1,0 +1,19 @@
+# Automatic HTTPS for two public names (Caddy gets certificates from Let's Encrypt; ports 80 and 443 must reach it).
+(secure_headers) {
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+}
+
+# The dashboard and the admin API.
+{$TEMPO_DOMAIN} {
+	import secure_headers
+	reverse_proxy tempo:8080
+}
+
+# The public APIs of the backends (/b/<id>/...). A separate host, so what a backend answers never shares the dashboard's origin.
+{$TEMPO_API_DOMAIN} {
+	import secure_headers
+	reverse_proxy tempo:8080
+}

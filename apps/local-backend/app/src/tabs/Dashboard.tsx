@@ -4,12 +4,13 @@ import { useState } from 'react';
 import { useApi } from '../api/context';
 import type { BackendStatus, MediaUsage, Stats } from '../api/types';
 import { keys, useAdminQuery } from '../hooks/lb';
-import { addressRows } from '../lib/addresses';
+import { addressRows, type AddressRow } from '../lib/addresses';
 import { errorMessage } from '../lib/errors';
 import { formatBytes, formatMs, formatPercent } from '../lib/format';
 import { CopyButton } from '../ui/CopyButton';
 import { QrCode } from '../ui/QrCode';
 import { EmptyState, ErrorNote, Hint } from '../ui/bits';
+import { useMe, Write } from '../hooks/team';
 
 const STATE_LINE: Record<BackendStatus['state'], string> = {
   stopped: 'Stopped',
@@ -88,8 +89,10 @@ function Stats({ backend }: { backend: BackendStatus }) {
 
 function Addresses({ backend }: { backend: BackendStatus }) {
   const api = useApi();
+  const me = useMe();
   const certs = useQuery({ queryKey: keys.admin(backend.path, 'certs'), queryFn: () => api.certInfo(backend.path) });
-  const rows = addressRows(backend, certs.data?.lan ?? null);
+  // The team server has one address for everybody: its own, with the backend under /b/<id>.
+  const rows: AddressRow[] = api.team === null ? addressRows(backend, certs.data?.lan ?? null) : [{ label: 'Public API', url: `${me.data?.publicOrigin ?? window.location.origin}/b/${backend.path}` }];
   const phone = rows.find((row) => row.label === 'Phone on Wi-Fi')?.url ?? null;
   const open = useMutation({ mutationFn: () => api.openDocs(backend.path, 'swagger') });
   return (
@@ -165,7 +168,7 @@ export function Dashboard({ backend }: { backend: BackendStatus }) {
           {backend.notice === null ? null : <p className="warning">{backend.notice}</p>}
         </div>
         {running ? (
-          <button
+          <Write need="admin"><button
             type="button"
             className="big"
             disabled={busy}
@@ -174,9 +177,9 @@ export function Dashboard({ backend }: { backend: BackendStatus }) {
             }}
           >
             Stop
-          </button>
+          </button></Write>
         ) : (
-          <button
+          <Write need="admin"><button
             type="button"
             className="big primary"
             disabled={busy}
@@ -185,7 +188,7 @@ export function Dashboard({ backend }: { backend: BackendStatus }) {
             }}
           >
             {backend.state === 'error' ? 'Restart' : 'Start'}
-          </button>
+          </button></Write>
         )}
       </section>
       <ErrorNote error={start.error === null ? null : errorMessage(start.error)} />
@@ -213,9 +216,9 @@ export function Dashboard({ backend }: { backend: BackendStatus }) {
                 aria-invalid={port !== '' && portNumber === null}
               />
             </label>
-            <button type="submit" disabled={portNumber === null || busy}>
+            <Write need="admin"><button type="submit" disabled={portNumber === null || busy}>
               Start on this port
-            </button>
+            </button></Write>
           </form>
         </section>
       )}

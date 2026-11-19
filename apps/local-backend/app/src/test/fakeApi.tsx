@@ -4,6 +4,7 @@ import type { ReactElement } from 'react';
 import { vi } from 'vitest';
 
 import type { Api } from '../api/client';
+import { DESKTOP_CAPABILITIES } from '../api/client';
 import { ApiProvider } from '../api/context';
 import type { BackendStatus, HttpReply, HttpRequest } from '../api/types';
 
@@ -45,6 +46,11 @@ const unexpected = (name: string) => () => Promise.reject(new Error(`unexpected 
 /** An `Api` where every call fails unless the test provides it. Calls are `vi.fn`, so tests can assert on them. */
 export function makeApi(overrides: Partial<Api> = {}): Api {
   const defaults: Api = {
+    capabilities: DESKTOP_CAPABILITIES,
+    session: null,
+    team: null,
+    listUnlisted: vi.fn(() => Promise.resolve([])),
+    openNamed: vi.fn(unexpected('openNamed')),
     listBackends: vi.fn(() => Promise.resolve([])),
     backendStatus: vi.fn(unexpected('backendStatus')),
     pickNewFolder: vi.fn(() => Promise.resolve(null)),
@@ -79,8 +85,9 @@ export function makeApi(overrides: Partial<Api> = {}): Api {
     onDropped: vi.fn(() => Promise.resolve(() => undefined)),
   };
   // Every override becomes a spy too, so tests can assert on calls without wrapping each one.
-  const wrapped = Object.fromEntries(Object.entries(overrides).map(([name, fn]) => [name, vi.isMockFunction(fn) ? fn : vi.fn(fn as (...args: never[]) => unknown)]));
-  return { ...defaults, ...wrapped };
+  const { capabilities, session, team, ...calls } = overrides;
+  const wrapped = Object.fromEntries(Object.entries(calls).map(([name, fn]) => [name, vi.isMockFunction(fn) ? fn : vi.fn(fn as (...args: never[]) => unknown)]));
+  return { ...defaults, ...wrapped, ...(capabilities === undefined ? {} : { capabilities }), ...(session === undefined ? {} : { session }), ...(team === undefined ? {} : { team }) };
 }
 
 export function renderWithApi(ui: ReactElement, api: Api) {

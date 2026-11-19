@@ -1,8 +1,9 @@
-import type { Server } from 'node:http';
+import type { IncomingMessage, Server, ServerResponse } from 'node:http';
 import { join } from 'node:path';
 
 import { snapshotStream } from './snapshot.ts';
 import { createAdminServer, errorReply } from './admin.ts';
+import type { AdminAccess } from './roles.ts';
 import { docsHandler } from './docs.ts';
 import { Engine, type EngineOptions } from './engine.ts';
 import { openBackend } from './folder.ts';
@@ -11,7 +12,7 @@ import { jsonReply, problemReply, readJson } from './http.ts';
 import { createEngineLog, RequestFiles } from './logs.ts';
 import { Manager } from './manager.ts';
 import { buildOpenApi } from './openapi.ts';
-import { certsDirOf, closeServer, createPublicServer, listenOn, readTls } from './server.ts';
+import { certsDirOf, closeServer, createPublicHandler, createPublicServer, listenOn, readTls, type PublicHandler } from './server.ts';
 
 export interface StartOptions extends EngineOptions {
   /** Overrides `port` of backend.json. `0` picks a free port (tests). */
@@ -22,6 +23,18 @@ export interface StartOptions extends EngineOptions {
   https?: boolean;
   /** Port of the admin listener on 127.0.0.1. Defaults to a random free one. */
   adminPort?: number;
+  /**
+   * Open the admin listener on 127.0.0.1 (default true). The web hub passes `false`: it serves the admin API itself,
+   * behind its own sign-in, through `handleAdmin`, so the backend opens no second port.
+   */
+  adminListener?: boolean;
+  /**
+   * Team server: no public port. The server routes `/b/<id>/...` to `handlePublic` and the URLs and OpenAPI the backend
+   * hands out carry that prefix.
+   */
+  mounted?: { prefix: string };
+  /** Checks the access key of a backend with `publicAccess: "key"` (the team server passes its key store). */
+  accessKey?: (key: string | undefined) => boolean;
   /** Watch backend.json for edits (default true). */
   watch?: boolean;
   /** Request log file limits (tests lower them). */
@@ -33,9 +46,15 @@ export interface StartOptions extends EngineOptions {
 export interface RunningBackend {
   readonly engine: Engine;
   readonly manager: Manager;
-  /** The admin listener, loopback only. The token is for the app that started this process. */
+  /** The admin listener, loopback only. The token is for the app that started this process. `port` is 0 without a listener. */
   readonly admin: { host: '127.0.0.1'; port: number; token: string };
+  /** Serves one already authenticated admin request (`/__admin/...`). For the web hub, which does its own sign-in. */
+  readonly handleAdmin: (req: IncomingMessage, res: ServerResponse, access?: AdminAccess) => Promise<void>;
+  /** Every admin route as `METHOD pattern` (and `GET /events`), for the role table check. */
+  readonly adminRoutes: string[];
   readonly publicServer: Server;
+  /** Answers one public request (the same code the public server runs); the team server calls it for `/b/<id>`. */
+  readonly handlePublic: PublicHandler;
   readonly scheme: 'http' | 'https';
   readonly port: number;
   /** Set when HTTPS was wanted but there is no certificate, so the server fell back to HTTP. */
@@ -50,6 +69,7 @@ export async function startBackend(dir: string, options: StartOptions = {}): Pro
   const files = new RequestFiles({ dir: join(folder.dataDir, 'logs'), ...(options.logLimits ?? {}) });
   const engine = Engine.start(folder, {
     ...options,
+    ...(options.mounted === undefined ? {} : { publicPrefix: options.mounted.prefix }),
     logger: engineLog.logger,
     onRequest: (entry, endpointId) => {
       files.append(entry);
@@ -65,7 +85,9 @@ export async function startBackend(dir: string, options: StartOptions = {}): Pro
     ...(options.debounceMs === undefined ? {} : { debounceMs: options.debounceMs }),
     onProblem: (message, fields) => engineLog.logger.warn(fields ?? {}, message),
   });
-  const publicServer = createPublicServer(engine, docsHandler(engine), tls);
+  const publicOptions = options.accessKey === undefined ? {} : { accessKey: options.accessKey };
+  const publicServer = createPublicServer(engine, docsHandler(engine), tls, publicOptions);
+  const handlePublic = createPublicHandler(engine, docsHandler(engine), publicOptions);
   const adminServer = createAdminServer(manager, {
     routes: [
       {
@@ -104,19 +126,22 @@ export async function startBackend(dir: string, options: StartOptions = {}): Pro
           stream: snapshotStream({ dir: engine.folder.dir, db: engine.store.db }),
         }),
       },
-      { method: 'GET', pattern: '/openapi', handler: () => jsonReply(200, buildOpenApi(engine.definition)) },
+      { method: 'GET', pattern: '/openapi', handler: () => jsonReply(200, buildOpenApi(engine.definition, { prefix: engine.publicPrefix })) },
     ],
   });
   try {
-    const port = await listenOn(publicServer, options.port ?? engine.definition.port, options.host ?? '0.0.0.0');
-    const adminPort = await listenOn(adminServer.server, options.adminPort ?? 0, '127.0.0.1');
+    const port = options.mounted === undefined ? await listenOn(publicServer, options.port ?? engine.definition.port, options.host ?? '0.0.0.0') : 0;
+    const adminPort = options.adminListener === false ? 0 : await listenOn(adminServer.server, options.adminPort ?? 0, '127.0.0.1');
     manager.startWatching();
     let stopping: Promise<void> | undefined;
     return {
       engine,
       manager,
       admin: { host: '127.0.0.1', port: adminPort, token: adminServer.token },
+      handleAdmin: adminServer.handle,
+      adminRoutes: ['GET /events', ...adminServer.routes.map((route) => `${route.method} ${route.pattern}`)],
       publicServer,
+      handlePublic,
       scheme: tls === undefined ? 'http' : 'https',
       port,
       ...(notice === undefined ? {} : { notice }),

@@ -12,6 +12,7 @@ import { EmptyState, ErrorNote, Hint } from '../ui/bits';
 
 import { ContentTypeDialog } from './ContentTypeDialog';
 import { EntryEditor } from './EntryEditor';
+import { Write } from '../hooks/team';
 
 /** How often the list is read again, so a scheduled entry turns Published on its own. */
 const REFRESH_MS = 5000;
@@ -29,7 +30,7 @@ function Entries({ backend, type, config }: { backend: string; type: ContentType
   const route = `/content/entries?type=${encodeURIComponent(type.name)}&limit=200${status === '' ? '' : `&status=${status}`}${q === '' ? '' : `&q=${encodeURIComponent(q)}`}`;
   const page = useAdminQuery<EntryPage>(backend, route, { refetchInterval: REFRESH_MS });
   const dropType = useLossFlow(
-    (confirm) => adminSend(api, backend, 'DELETE', `/content/types/${type.name}${confirm ? '?confirm=true' : ''}`),
+    (confirm) => adminSend(api, backend, 'DELETE', `/content/types/${encodeURIComponent(type.name)}${confirm ? '?confirm=true' : ''}`),
     () => {
       setDropping(false);
       void refresh();
@@ -45,15 +46,15 @@ function Entries({ backend, type, config }: { backend: string; type: ContentType
         <h2>{labelOf(type)}</h2>
         <code className="muted">/{config.mount.replace(/^\//, '')}/{type.name}</code>
         <span className="spacer" />
-        <button
+        <Write><button
           type="button"
           onClick={() => {
             setEditingType(true);
           }}
         >
           Edit type
-        </button>
-        <button
+        </button></Write>
+        <Write><button
           type="button"
           className="primary"
           disabled={full}
@@ -62,7 +63,7 @@ function Entries({ backend, type, config }: { backend: string; type: ContentType
           }}
         >
           Add entry
-        </button>
+        </button></Write>
       </div>
       <div className="row">
         <label>
@@ -125,7 +126,7 @@ function Entries({ backend, type, config }: { backend: string; type: ContentType
                 </td>
                 <td>{whenText(entry.updatedAt)}</td>
                 <td className="actions-cell">
-                  <button
+                  <Write><button
                     type="button"
                     className="ghost"
                     aria-label={`Edit ${nameOf(entry)}`}
@@ -134,7 +135,7 @@ function Entries({ backend, type, config }: { backend: string; type: ContentType
                     }}
                   >
                     Edit
-                  </button>
+                  </button></Write>
                 </td>
               </tr>
             ))}
@@ -142,7 +143,7 @@ function Entries({ backend, type, config }: { backend: string; type: ContentType
         </table>
       )}
       <div className="row end">
-        <button
+        <Write><button
           type="button"
           className="ghost bad"
           onClick={() => {
@@ -150,7 +151,7 @@ function Entries({ backend, type, config }: { backend: string; type: ContentType
           }}
         >
           Delete this type
-        </button>
+        </button></Write>
       </div>
 
       {editing === null ? null : (
@@ -250,14 +251,14 @@ export function Content({ backend }: { backend: string }) {
             </li>
           ))}
         </ul>
-        <button
+        <Write><button
           type="button"
           onClick={() => {
             setAdding(true);
           }}
         >
           Add type
-        </button>
+        </button></Write>
       </aside>
       <section>{current === undefined ? null : <Entries key={current.name} backend={backend} type={current} config={config.data} />}</section>
       {adding ? (

@@ -74,6 +74,19 @@ Spec: "Tier 1c" in `spec.md`. It builds on Phase X (X1–X3 kept; the X4–X6 sh
 - [x] **T15.Y6** (AC-LB-1) Packaging: the Node SEA sidecar, the CI `.dmg`, the user guide `backend/local-backend` and the device run on the iOS simulator.
   - [ ] owner device run on the iOS simulator (the packaging and the guide are done).
 
+## Phase Z: local backend platform (`ws15/z<n>-<slug>`)
+Spec: "Tier 1d" in `spec.md`. Stacked on Phase Y. One PR per step.
+- [x] **T15.Z0** Spec and plan amendment 59.
+- [x] **T15.Z1** (AC-LP-1) Web dashboard served by the engine: transport layer (IPC/HTTPS), web sessions, `npx` entry, local login code.
+- [x] **T15.Z2** (AC-LP-2) Team server: multiple backends, accounts, roles, TOTP, API keys, audit log, Docker image, compose with Caddy.
+- [ ] **T15.Z3** (AC-LP-5) OpenAPI 3.x and Swagger 2.0 import, response scenarios, generated examples, sync diff.
+- [ ] **T15.Z4** (AC-LP-6) Delays and network presets, shared base response and templates, dynamic values, the Monaco editor with Form/JSON tabs.
+- [ ] **T15.Z5** (AC-LP-3, AC-LP-4) Test kit (in-memory engine, test mode, helpers, cache) and CI sessions.
+- [ ] **T15.Z6** (AC-LP-7) SSE, WebSocket and GraphQL.
+- [ ] **T15.Z7** (AC-LP-8, AC-LP-9, AC-LP-10) Webhooks and inbox, the push test sender, fault and limit simulation, the OAuth2 mock.
+- [ ] **T15.Z8** The template uses the test kit and a URL (old mocks kept and marked deprecated in the docs); full verification; user guide update.
+- [ ] **T15.Z9** (after owner confirmation) Remove the old mocks, `packages/api-contract` and `packages/dev-api`.
+
 ## Phase D: backend API foundation (`ws15/d-api`)
 - [ ] **T15.D1** (AC-B-8) `backend/api` skeleton.
   - env for dev, staging and prod; `pino` with redaction; helmet, CORS and limits; problem+json; `/api/v1/health`.
