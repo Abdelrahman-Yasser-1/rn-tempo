@@ -20,8 +20,8 @@ export function RowDialog({ backend, collection, row, onClose, onSaved }: { back
       const result = formToRow(collection.fields, form, editing ? 'edit' : 'create');
       setProblems(result.problems);
       if (Object.keys(result.problems).length > 0) return false;
-      if (row === undefined) await adminSend(api, backend, 'POST', `/data/${collection.name}`, result.values);
-      else await adminSend(api, backend, 'PUT', `/data/${collection.name}/${String(row.id)}`, result.values);
+      if (row === undefined) await adminSend(api, backend, 'POST', `/data/${encodeURIComponent(collection.name)}`, result.values);
+      else await adminSend(api, backend, 'PUT', `/data/${encodeURIComponent(collection.name)}/${encodeURIComponent(String(row.id))}`, result.values);
       return true;
     },
     onSuccess: (saved) => {

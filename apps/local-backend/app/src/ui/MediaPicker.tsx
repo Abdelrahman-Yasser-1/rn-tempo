@@ -67,7 +67,7 @@ function PickDialog({ backend, onPick, onClose }: { backend: string; onPick: (it
 /** A media field: the chosen file (a thumbnail and its name), Choose and Clear. The value is the media id. */
 export function MediaPicker({ backend, label, value, onChange }: { backend: string; label: string; value: string; onChange: (id: string) => void }) {
   const [open, setOpen] = useState(false);
-  const chosen = useAdminQuery<MediaItem>(backend, `/media/${value}`, { enabled: value !== '' });
+  const chosen = useAdminQuery<MediaItem>(backend, `/media/${encodeURIComponent(value)}`, { enabled: value !== '' });
   return (
     <div className="media-picker" role="group" aria-label={label}>
       {value === '' ? (
