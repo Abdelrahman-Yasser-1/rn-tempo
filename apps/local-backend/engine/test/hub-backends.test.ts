@@ -221,7 +221,9 @@ describe('several backends in one process (AC-LP-1)', () => {
     expect(publicPathOk('/products/1?x=1')).toBe(true);
   });
 
-  it('restores a backup into a new folder, never over an existing one', async () => {
+  it('restores a backup into a new folder, never over an existing one, and leaves no temp files behind', async () => {
+    const leftovers = (): string[] => readdirSync(tmpdir()).filter((name) => name.startsWith('tempo-restore-'));
+    const before = leftovers();
     const { send, dir } = await open();
     await send('POST', '/__hub/backends', { body: { id: 'src', name: 'Source', preset: 'tempo-template', port: null } });
     await send('POST', '/__hub/backends/src/start', { body: {} });
@@ -244,5 +246,7 @@ describe('several backends in one process (AC-LP-1)', () => {
     expect((await send('POST', '/__hub/restore?name=../bad', { raw: snapshot })).status).toBe(400);
     expect((await send('POST', '/__hub/restore?name=junk', { raw: Buffer.from('not a zip') })).status).toBe(400);
     expect(existsSync(join(dir, 'junk'))).toBe(false);
+    // The upload goes to a private mkdtemp folder (never a predictable name in the shared temp folder), removed on success and on failure.
+    expect(leftovers()).toEqual(before);
   });
 });
