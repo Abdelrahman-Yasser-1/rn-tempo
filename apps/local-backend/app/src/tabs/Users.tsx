@@ -70,7 +70,7 @@ function AddUser({ backend, onClose, onSaved }: { backend: string; onClose: () =
 function ResetPassword({ backend, user, onClose, onSaved }: { backend: string; user: AppUser; onClose: () => void; onSaved: () => void }) {
   const api = useApi();
   const [password, setPassword] = useState('');
-  const save = useMutation({ mutationFn: () => adminSend(api, backend, 'POST', `/users/${String(user.id)}/password`, { password }), onSuccess: onSaved });
+  const save = useMutation({ mutationFn: () => adminSend(api, backend, 'POST', `/users/${encodeURIComponent(String(user.id))}/password`, { password }), onSuccess: onSaved });
   return (
     <Modal title={`Reset the password of ${user.username}`} onClose={onClose}>
       <form
@@ -117,14 +117,14 @@ export function Users({ backend }: { backend: string }) {
     mutationFn: async (item: Pending) => {
       const id = String(item.user.id);
       if (item.kind === 'signout') {
-        const answer = await adminSend<{ revoked: number }>(api, backend, 'POST', `/users/${id}/revoke`);
+        const answer = await adminSend<{ revoked: number }>(api, backend, 'POST', `/users/${encodeURIComponent(id)}/revoke`);
         return `${item.user.username} was signed out of ${String(answer.revoked)} ${answer.revoked === 1 ? 'session' : 'sessions'}. Their access tokens stopped working at once.`;
       }
       if (item.kind === 'delete') {
-        await adminSend(api, backend, 'DELETE', `/users/${id}`);
+        await adminSend(api, backend, 'DELETE', `/users/${encodeURIComponent(id)}`);
         return `${item.user.username} was deleted.`;
       }
-      await adminSend(api, backend, 'POST', `/users/${id}/${item.user.disabled ? 'enable' : 'disable'}`);
+      await adminSend(api, backend, 'POST', `/users/${encodeURIComponent(id)}/${item.user.disabled ? 'enable' : 'disable'}`);
       return item.user.disabled ? `${item.user.username} can log in again.` : `${item.user.username} is disabled and signed out.`;
     },
     onSuccess: async (message) => {
@@ -133,7 +133,7 @@ export function Users({ backend }: { backend: string }) {
       await refresh();
     },
   });
-  const endSession = useMutation({ mutationFn: (session: Session) => adminSend(api, backend, 'DELETE', `/sessions/${String(session.id)}`), onSuccess: refresh });
+  const endSession = useMutation({ mutationFn: (session: Session) => adminSend(api, backend, 'DELETE', `/sessions/${encodeURIComponent(String(session.id))}`), onSuccess: refresh });
 
   const list = users.data?.users ?? [];
   const active = sessions.data?.sessions ?? [];

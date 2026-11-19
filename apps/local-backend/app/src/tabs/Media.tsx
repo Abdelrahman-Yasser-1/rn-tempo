@@ -126,7 +126,7 @@ export function Media({ backend }: { backend: BackendStatus }) {
   }, [api]);
 
   const remove = useMutation({
-    mutationFn: (item: MediaItem) => adminSend(api, backend.path, 'DELETE', `/media/${item.id}`),
+    mutationFn: (item: MediaItem) => adminSend(api, backend.path, 'DELETE', `/media/${encodeURIComponent(item.id)}`),
     onSuccess: async () => {
       setDeleting(null);
       await refresh();

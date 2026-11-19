@@ -78,19 +78,19 @@ function Rows({ backend, collection, all }: { backend: string; collection: Colle
   const [fields, setFields] = useState(false);
   const [dropping, setDropping] = useState(false);
   const [note, setNote] = useState<string | null>(null);
-  const route = `/data/${collection.name}?limit=${String(PAGE)}&skip=${String(skip)}${q === '' ? '' : `&q=${encodeURIComponent(q)}`}`;
+  const route = `/data/${encodeURIComponent(collection.name)}?limit=${String(PAGE)}&skip=${String(skip)}${q === '' ? '' : `&q=${encodeURIComponent(q)}`}`;
   const page = useAdminQuery<DataPage>(backend, route);
   const names = ['id', ...collection.fields.map((field) => field.name)];
 
   const removeRow = useMutation({
-    mutationFn: (row: Record<string, unknown>) => adminSend(api, backend, 'DELETE', `/data/${collection.name}/${String(row.id)}`),
+    mutationFn: (row: Record<string, unknown>) => adminSend(api, backend, 'DELETE', `/data/${encodeURIComponent(collection.name)}/${encodeURIComponent(String(row.id))}`),
     onSuccess: async () => {
       setDeleting(null);
       await refresh();
     },
   });
   const dropCollection = useLossFlow(
-    (confirm) => adminSend(api, backend, 'DELETE', `/collections/${collection.name}${confirm ? '?confirm=true' : ''}`),
+    (confirm) => adminSend(api, backend, 'DELETE', `/collections/${encodeURIComponent(collection.name)}${confirm ? '?confirm=true' : ''}`),
     () => {
       setDropping(false);
       void refresh();
@@ -101,7 +101,7 @@ function Rows({ backend, collection, all }: { backend: string; collection: Colle
     mutationFn: async (kind: 'json' | 'csv') => {
       const rows: Record<string, unknown>[] = [];
       for (let at = 0; at < 100_000; at += 1000) {
-        const chunk = await adminGet<DataPage>(api, backend, `/data/${collection.name}?limit=1000&skip=${String(at)}`);
+        const chunk = await adminGet<DataPage>(api, backend, `/data/${encodeURIComponent(collection.name)}?limit=1000&skip=${String(at)}`);
         rows.push(...chunk.rows);
         if (rows.length >= chunk.total || chunk.rows.length === 0) break;
       }
@@ -122,7 +122,7 @@ function Rows({ backend, collection, all }: { backend: string; collection: Colle
       const failed: string[] = [];
       for (const [index, row] of parsed.rows.entries()) {
         try {
-          await adminSend(api, backend, 'POST', `/data/${collection.name}`, row);
+          await adminSend(api, backend, 'POST', `/data/${encodeURIComponent(collection.name)}`, row);
           added += 1;
         } catch (failure) {
           if (failed.length < 3) failed.push(`Row ${String(index + 1)}: ${errorMessage(failure)}`);

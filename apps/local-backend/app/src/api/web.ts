@@ -20,9 +20,41 @@ export interface WebDeps {
   /** Opens an address in a new tab. */
   openTab: (url: string) => void;
   now: () => number;
+  /** The origin of the page (`location.origin`). */
+  origin: () => string;
 }
 
 const enc = encodeURIComponent;
+
+/**
+ * A route inside one backend's admin API, as the tabs write it (`/data/products?limit=5`). It is appended to
+ * `/__admin/b/<backend>`, so anything that could climb out of that (a `..` segment, an encoded dot, slash or
+ * backslash, `#`, a doubled slash, a missing leading slash) is refused before a request with the CSRF header is sent.
+ */
+export function checkAdminRoute(route: string): void {
+  const [pathPart = ''] = route.split('?', 1);
+  const lower = route.toLowerCase();
+  const bad =
+    !route.startsWith('/') ||
+    route.startsWith('//') ||
+    route.includes('\\') ||
+    route.includes('#') ||
+    [...route].some((char) => char.charCodeAt(0) < 0x20 || char.charCodeAt(0) === 0x7f) ||
+    pathPart.includes('//') ||
+    pathPart.split('/').some((segment) => segment === '..' || segment === '.') ||
+    /%2e|%2f|%5c|%00/.test(lower);
+  if (bad) throw new Error('That is not a valid admin route.');
+}
+
+/** `/__admin/b/<backend><route>`, checked to stay on this origin and inside that backend's admin prefix. */
+export function adminUrl(path: string, route: string, origin: string): string {
+  checkAdminRoute(route);
+  const prefix = `${ADMIN}/${enc(path)}/`;
+  const url = `${ADMIN}/${enc(path)}${route}`;
+  const parsed = new URL(url, origin);
+  if (parsed.origin !== new URL(origin).origin || !parsed.pathname.startsWith(prefix)) throw new Error('That is not a valid admin route.');
+  return url;
+}
 
 /** A folder name for a backend: lower case letters, digits, dash and underscore. */
 export function slugify(text: string): string {
@@ -72,13 +104,13 @@ export function createWebTransport(deps: WebDeps): Backend {
     const headers: Record<string, string> = Object.fromEntries(request.headers ?? []);
     const hasBody = request.body !== undefined && request.body !== null;
     if (hasBody && !Object.keys(headers).some((name) => name.toLowerCase() === 'content-type')) headers['content-type'] = 'application/json';
-    const response = await call(request.method, `${ADMIN}/${enc(path)}${request.path}`, { headers, ...(hasBody ? { body: request.body as string } : {}) });
+    const response = await call(request.method, adminUrl(path, request.path, deps.origin()), { headers, ...(hasBody ? { body: request.body as string } : {}) });
     const body = await response.text();
     return { status: response.status, body, ms: Math.max(0, deps.now() - started), contentType: response.headers.get('content-type') };
   }
 
   async function adminBlob(path: string, route: string): Promise<Blob> {
-    const response = await call('GET', `${ADMIN}/${enc(path)}${route}`);
+    const response = await call('GET', adminUrl(path, route, deps.origin()));
     if (!response.ok) throw new Error(problemMessage(response.status, await response.text()));
     return response.blob();
   }
@@ -307,5 +339,6 @@ export function browserDeps(): WebDeps {
       window.open(url, '_blank', 'noopener,noreferrer');
     },
     now: () => Date.now(),
+    origin: () => window.location.origin,
   };
 }
