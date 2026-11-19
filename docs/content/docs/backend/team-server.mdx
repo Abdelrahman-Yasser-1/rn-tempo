@@ -1,0 +1,162 @@
+---
+title: Team server
+description: Run Tempo Local Backend for a whole team with Docker and Caddy, with accounts, roles, two-step sign-in, API keys for CI and an audit log.
+---
+
+<Callout title="Shared test data" type="warn">
+  The team server is for shared development and test backends. It is not a place for real user data or production traffic. Keep it behind HTTPS, and read the security notes at the end before you open it to the internet.
+</Callout>
+
+The team server is the same engine as the desktop app and the [browser mode](/docs/backend/local-backend), run once for everybody. A team shares its backends, and CI uses them over HTTPS.
+
+- **One port.** The dashboard, the admin API and every backend's public API.
+- **Accounts and roles.** Per backend: viewer, editor, admin. One server owner.
+- **API keys** for CI and tools, an **audit log** of every change, and optional **access keys** for a backend's public API.
+- **Docker and Caddy.** Caddy gets real certificates and sits in front of the server. The server itself speaks plain HTTP inside the Docker network.
+
+## 1. Deploy with compose
+
+You need a Linux machine with Docker (the Compose plugin included), a domain you control, and ports 80 and 443 open to the internet.
+
+1. **DNS.** Point two names at the machine's IP address: one for the dashboard (`tempo.example.com`) and one for the public APIs of the backends (`api.tempo.example.com`). The second name is separate on purpose: a backend can answer with any content, and a separate host keeps that content away from the dashboard's origin.
+2. **Get the files.** Copy the `apps/local-backend/docker` folder of the repository to the machine (`compose.yaml`, `Caddyfile`, `Caddyfile.lan`, `compose.lan.yaml` and `.env.example`).
+3. **Fill in the names.**
+
+   ```sh
+   cp .env.example .env
+   # edit .env: TEMPO_DOMAIN and TEMPO_API_DOMAIN
+   ```
+
+4. **Pick the image.** The compose file builds the image from a checkout of the repository by default (`docker compose build`, run from the `docker` folder of a full checkout). To use the published image instead, set `TEMPO_IMAGE=ghcr.io/<owner>/tempo-local-backend:<tag>` in `.env`. The image is pushed by CI to GitHub Container Registry on the main branch only.
+5. **Start.**
+
+   ```sh
+   docker compose up -d
+   docker compose ps
+   ```
+
+   Caddy asks Let's Encrypt for certificates for both names the first time. Open `https://tempo.example.com` to see the sign-in page.
+
+**On a LAN, without public DNS**, use Caddy's own certificate authority:
+
+```sh
+docker compose -f compose.yaml -f compose.lan.yaml up -d
+docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt .
+```
+
+Install `root.crt` on the devices that open the dashboard, and point both names at the machine in your router or in `/etc/hosts`. Nothing here changes a trust store for you.
+
+The container runs as an unprivileged user with a read-only root file system and keeps everything it writes in the `tempo-data` volume. Only Caddy publishes ports.
+
+## 2. Create the owner
+
+The owner is created from the command line, on the machine, and never from the web. There is no default account or password.
+
+```sh
+docker compose exec tempo tempo-local-backend server owner create --email you@example.com
+```
+
+It asks for the password twice (at least 10 characters) on the terminal. In a script, pipe it in:
+
+```sh
+printf '%s\n' "$OWNER_PASSWORD" | docker compose exec -T tempo tempo-local-backend server owner create --email you@example.com --password-stdin
+```
+
+Sign in on the dashboard with that email and password. Open **Account** in the sidebar to turn on **two-step sign-in**: scan the QR code with an authenticator app, type the six-digit code, and save the ten recovery codes. Each recovery code works once.
+
+If the owner loses the password: `docker compose exec tempo tempo-local-backend server owner reset-password --email you@example.com` (add `--reset-totp` to turn two-step sign-in off).
+
+The owner makes the backends (**New backend**). Open **Account** again whenever you want to change the password.
+
+## 3. Invite the team
+
+Open a backend, then the **Team** tab (it shows for admins and the owner).
+
+1. In **Invite**, type the email, a name and a role, then choose **Invite**.
+2. The page shows a **one-time setup link**. Copy it now and send it yourself (chat, email). No email is sent, and the link is shown only once. It works once and expires after 24 hours.
+3. The person opens the link, chooses a password and signs in. The token sits after the `#` of the address, so it never reaches a server log.
+
+An email that already has an account is added to the backend directly. **New setup link** gives an invitation that was not used yet a fresh link. A person who lost access altogether gets a link from the owner (the owner's list, **All accounts**, shows everyone and can **Disable** an account, which signs it out everywhere).
+
+## 4. Roles
+
+| Role | Can |
+|---|---|
+| viewer | Read everything in the backend, use Try it, see the logs |
+| editor | Also change endpoints, collections, data, media, content and the app users of the backend |
+| admin | Also manage members, API keys, settings (public access, certificates), backups and deleting the backend |
+| owner | Everything on every backend, plus the server's accounts, new backends and restoring a backup |
+
+The dashboard hides what a role cannot do, and the server refuses it anyway (HTTP 403). The rules live in one table in the engine and a test checks that every admin route has an entry; a route without one is open to the owner only. An admin cannot change another admin or the owner, and cannot reset the credentials of someone who has access to a backend they do not administer. Only the owner can.
+
+## 5. API keys for CI
+
+An admin makes keys in **Team**, **API keys**. A key belongs to one backend and has one scope:
+
+| Scope | Allows |
+|---|---|
+| `read-definition` | `GET` of the definition and of the snapshot export, nothing else (the test kit and CI) |
+| `admin` | The backend's admin API, like an admin |
+| `public` | Calling the public API when the backend needs an access key |
+| `sessions` | Reserved for CI sessions |
+
+The key (`tlb_...`) is shown once. Only a hash and the first characters are stored. Revoke it in the same list; it stops working at once.
+
+```sh
+curl -H "Authorization: Bearer $TEMPO_KEY" https://tempo.example.com/__admin/b/shop/definition
+```
+
+Keep the key in your CI's secret store. Keys never appear in logs: the request log and the audit log replace them.
+
+### An access key for the public API
+
+By default a backend's public API answers anyone who can reach it. In **Settings**, an admin can set **Public API access** to **Needs an access key**. Every public request then needs `x-tempo-access-key: tlb_...` with a key of scope `public`. `/__health` stays open.
+
+## 6. Public APIs
+
+Each backend's public API is at `https://api.tempo.example.com/b/<backend>/...`, for example `/b/shop/products`. Its docs are at `/b/<backend>/__docs`, and its OpenAPI document and media links carry the `/b/<backend>` prefix.
+
+The dashboard host does not serve `/b` when a separate public host is set (`TEMPO_PUBLIC_ORIGIN`, which the compose file sets for you). Every public answer is sent sandboxed (`Content-Security-Policy: sandbox`), pages and SVG are downloads, and a backend can never set a cookie. If you run the server without a separate host (`--public-origin` left out), these protections still apply, but a separate host is the safer setup.
+
+## 7. The audit log
+
+Admins and the owner read the audit log in **Team**, **Audit log**, with filters for who and what. Every change is there: who (an account or the first characters of a key), when, the backend, the action, the target and a short before and after. Passwords, tokens, keys, two-step secrets and the bytes of media files are never kept. Refused changes are recorded too.
+
+Entries are deleted after 90 days. Change that with `TEMPO_AUDIT_DAYS` (or `--audit-days`).
+
+## 8. Backups
+
+Two things to keep:
+
+- **The volume.** `tempo-data` holds `server.sqlite` (accounts, keys, the audit log), `server-secret.json` (it encrypts the two-step secrets: without it they cannot be read) and the backends. Back up the whole volume together. For a consistent copy, stop the server first: `docker compose stop tempo`, copy the volume (`docker run --rm -v tempo-team_tempo-data:/data -v "$PWD:/backup" alpine tar czf /backup/tempo-data.tgz -C /data .`), then `docker compose start tempo`.
+- **A snapshot of one backend.** On the backend's **Settings** tab, **Export backup** gives a zip of its definition, handlers, data and media, without secrets. The owner can restore one as a new backend. A restored backend can contain handler code, which runs on the server, so only restore backups you trust. A key with `read-definition` can fetch the same zip from CI.
+
+## 9. Upgrade
+
+```sh
+docker compose pull      # or: docker compose build
+docker compose up -d
+```
+
+The data volume stays. Sessions end when the server restarts, so everyone signs in again. Take a backup before a big version jump.
+
+## 10. Security notes
+
+- **Keep it behind HTTPS.** The server listens on plain HTTP and trusts the proxy in front of it (`TEMPO_TRUST_PROXY=private`, the Docker network) to say whether the browser used HTTPS. Only then are session cookies marked `Secure`. Never publish port 8080 yourself.
+- **Sessions.** The cookie is `HttpOnly` and `SameSite=Strict`, and every change also needs a CSRF token and a same-site `Origin`.
+- **Sign-in.** Passwords use scrypt. A wrong email and a wrong password give the same answer after the same work. Five failures lock an email for 15 minutes, and each address is rate limited. A two-step code works once.
+- **Handlers are code.** A backend's custom handlers run on the server with its permissions. Only the owner can restore a backup, and nobody else can write handler files. Give admin and editor roles to people you would trust with test data, not with the server.
+- **Public APIs are open by default.** Turn on access keys for a private team server.
+- **Back up and rotate.** Rotate API keys when a person leaves. Disable accounts in the owner's list.
+- **No TLS shortcuts.** Nothing in the image or the compose files turns certificate checks off.
+
+## Run without Docker
+
+The engine runs the same way from the command line (Node 24.3 or newer):
+
+```sh
+npx @rn-tempo/local-backend server owner create --email you@example.com
+npx @rn-tempo/local-backend server --data-dir ./team-data --port 8080 --trust-proxy --public-origin https://api.example.com
+```
+
+`--trust-proxy` alone means the loopback and private ranges; pass an address or range (`--trust-proxy 10.0.0.0/8`) to name your proxy. Put a TLS proxy in front.
