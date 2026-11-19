@@ -38,6 +38,8 @@ export interface TeamServices {
   sessions: Sessions;
   audit: AuditLog;
   now: () => number;
+  /** Where the public APIs are served when they have their own origin (`--public-origin`), else `null`. */
+  publicOrigin: string | null;
 }
 
 export const accountJson = (services: TeamServices, account: AccountRow): Record<string, unknown> => ({
@@ -171,7 +173,7 @@ export function teamRoutes(services: TeamServices): TeamRoute[] {
     },
 
     // ---- the signed-in person
-    { method: 'GET', pattern: '/me', handler: (_ctx, _params, who) => jsonReply(200, { account: accountJson(services, who.account), memberships: store.memberships(who.account.id).map(({ backendId, role }) => ({ backendId, role })) }) },
+    { method: 'GET', pattern: '/me', handler: (_ctx, _params, who) => jsonReply(200, { publicOrigin: services.publicOrigin, account: accountJson(services, who.account), memberships: store.memberships(who.account.id).map(({ backendId, role }) => ({ backendId, role })) }) },
     {
       method: 'POST',
       pattern: '/me/password',

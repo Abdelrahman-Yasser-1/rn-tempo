@@ -16,7 +16,7 @@ const SHOP = { ...RUNNING, path: 'shop', name: 'Shop' };
 const account = (over: Partial<Me['account']> = {}): Me['account'] => ({ id: 1, email: 'me@example.com', name: 'Me', owner: false, disabled: false, totp: false, recoveryCodesLeft: 0, invitePending: false, createdAt: '2026-01-01T00:00:00Z', lastLoginAt: null, ...over });
 const member = (id: number, role: MemberRole, over: Partial<Member> = {}): Member => ({ ...account({ id, email: `p${String(id)}@example.com`, name: `Person ${String(id)}` }), role, ...over });
 
-function makeTeam(over: Partial<TeamApi> = {}, me: Me = { account: account(), memberships: [{ backendId: 'shop', role: 'viewer' }] }): TeamApi {
+function makeTeam(over: Partial<TeamApi> = {}, me: Me = { publicOrigin: null, account: account(), memberships: [{ backendId: 'shop', role: 'viewer' }] }): TeamApi {
   return {
     me: vi.fn(() => Promise.resolve(me)),
     changePassword: vi.fn(() => Promise.resolve()),
@@ -75,7 +75,7 @@ describe('team server: role based hiding (AC-LP-2)', () => {
   });
 
   it('AC-LP-2 shows an editor the editing buttons but not Settings, Team or Stop', async () => {
-    const api = teamApi(makeTeam({}, { account: account(), memberships: [{ backendId: 'shop', role: 'editor' }] }));
+    const api = teamApi(makeTeam({}, { publicOrigin: null, account: account(), memberships: [{ backendId: 'shop', role: 'editor' }] }));
     renderWithApi(<BackendView backend={SHOP} onOpen={vi.fn()} />, api);
     await waitFor(() => {
       expect(tabNames()).not.toContain('Settings');
@@ -87,7 +87,7 @@ describe('team server: role based hiding (AC-LP-2)', () => {
   });
 
   it('AC-LP-2 gives an admin the Settings and Team tabs and the Stop button, and the role of another backend does not count', async () => {
-    const api = teamApi(makeTeam({}, { account: account(), memberships: [{ backendId: 'shop', role: 'admin' }, { backendId: 'other', role: 'viewer' }] }));
+    const api = teamApi(makeTeam({}, { publicOrigin: null, account: account(), memberships: [{ backendId: 'shop', role: 'admin' }, { backendId: 'other', role: 'viewer' }] }));
     renderWithApi(<BackendView backend={SHOP} onOpen={vi.fn()} />, api);
     await waitFor(() => {
       expect(tabNames()).toContain('Team');
@@ -103,7 +103,7 @@ describe('team server: role based hiding (AC-LP-2)', () => {
   });
 
   it('AC-LP-2 offers New backend to the owner only', async () => {
-    const api = (owner: boolean) => teamApi(makeTeam({}, { account: account({ owner }), memberships: [] }), { listBackends: () => Promise.resolve([SHOP]) });
+    const api = (owner: boolean) => teamApi(makeTeam({}, { publicOrigin: null, account: account({ owner }), memberships: [] }), { listBackends: () => Promise.resolve([SHOP]) });
     const first = renderWithApi(<Sidebar selected={null} onSelect={vi.fn()} />, api(false));
     expect(await screen.findByText('Shop')).toBeInTheDocument();
     await screen.findByRole('button', { name: /^Account/ });
@@ -121,7 +121,7 @@ describe('team server: the Team area (AC-LP-2)', () => {
     renderWithApi(<BackendView backend={SHOP} onOpen={vi.fn()} />, adminApi(team));
     await userEvent.click(await screen.findByRole('tab', { name: 'Team' }));
   };
-  const adminMe: Me = { account: account(), memberships: [{ backendId: 'shop', role: 'admin' }] };
+  const adminMe: Me = { publicOrigin: null, account: account(), memberships: [{ backendId: 'shop', role: 'admin' }] };
 
   it('AC-LP-2 invites someone and shows the one-time setup link once, with the token after a #', async () => {
     const team = makeTeam({}, adminMe);
@@ -200,7 +200,7 @@ describe('team server: the Team area (AC-LP-2)', () => {
 
   it('AC-LP-2 lists all accounts for the owner only, and lets the owner disable one', async () => {
     const accounts = vi.fn(() => Promise.resolve([{ ...account({ id: 5, email: 'x@example.com', name: 'X' }), memberships: [{ backendId: 'shop', role: 'viewer' as const }] }]));
-    const team = makeTeam({ accounts }, { account: account({ owner: true }), memberships: [] });
+    const team = makeTeam({ accounts }, { publicOrigin: null, account: account({ owner: true }), memberships: [] });
     await renderTeam(team);
     const all = await screen.findByRole('region', { name: 'All accounts' });
     await userEvent.click(await within(all).findByRole('button', { name: 'Disable x@example.com' }));
@@ -256,7 +256,7 @@ describe('team server: your account (AC-LP-2)', () => {
   });
 
   it('AC-LP-2 turns two-step sign-in off only with the password', async () => {
-    const team = makeTeam({}, { account: account({ totp: true, recoveryCodesLeft: 7 }), memberships: [] });
+    const team = makeTeam({}, { publicOrigin: null, account: account({ totp: true, recoveryCodesLeft: 7 }), memberships: [] });
     renderWithApi(<Profile onClose={vi.fn()} />, teamApi(team));
     const section = await screen.findByRole('region', { name: 'Two-step sign-in' });
     expect(await within(section).findByText(/7 recovery codes left/)).toBeInTheDocument();
@@ -337,7 +337,7 @@ describe('team server: signing in (AC-LP-2)', () => {
 describe('team server: public access setting (AC-LP-2)', () => {
   it('AC-LP-2 saves the public access mode with the definition, for admins', async () => {
     const puts: unknown[] = [];
-    const team = makeTeam({}, { account: account(), memberships: [{ backendId: 'shop', role: 'admin' }] });
+    const team = makeTeam({}, { publicOrigin: null, account: account(), memberships: [{ backendId: 'shop', role: 'admin' }] });
     const api = teamApi(team, {
       admin: adminRoutes({
         'GET /definition': () => ({ name: 'shop', port: 8556, https: false, endpoints: [], collections: [] }),

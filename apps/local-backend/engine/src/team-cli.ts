@@ -17,6 +17,7 @@ export interface ServerArgs {
   host?: string | undefined;
   'trust-proxy'?: string | undefined;
   'audit-days'?: string | undefined;
+  'public-origin'?: string | undefined;
   email?: string | undefined;
   name?: string | undefined;
   'password-stdin'?: boolean | undefined;
@@ -116,12 +117,15 @@ export async function serverCommand(args: ServerArgs): Promise<void> {
   const auditDays = intOption(args['audit-days'] ?? process.env.TEMPO_AUDIT_DAYS, '--audit-days', 1, 3650) ?? DEFAULT_AUDIT_DAYS;
   const trustValue = args['trust-proxy'] ?? process.env.TEMPO_TRUST_PROXY;
   const trustProxy = trustValue === undefined || trustValue === '' ? [] : trustValue.split(',').map((item) => item.trim()).filter((item) => item !== '');
-  const running = await startTeam({ dataDir, backendsDir, port, host: args.host ?? '0.0.0.0', trustProxy, auditDays });
+  const publicOrigin = args['public-origin'] ?? process.env.TEMPO_PUBLIC_ORIGIN;
+  if (publicOrigin !== undefined && publicOrigin !== '' && !/^https?:\/\/[^/]+$/.test(publicOrigin)) throw new DefinitionError('--public-origin must be an origin such as https://api.example.com.');
+  const running = await startTeam({ dataDir, backendsDir, port, host: args.host ?? '0.0.0.0', trustProxy, auditDays, ...(publicOrigin === undefined || publicOrigin === '' ? {} : { publicOrigin }) });
   say('Tempo Local Backend (team server)');
   say(`  Listening:   http://${args.host ?? '0.0.0.0'}:${String(running.port)}  (plain HTTP: keep it behind a TLS proxy)`);
   say(`  Data:        ${dataDir}`);
   say(`  Backends:    ${backendsDir}  (public APIs at /b/<id>/...)`);
   say(`  Proxy trust: ${trustProxy.length === 0 ? 'off (cookies are not marked Secure, X-Forwarded-* is ignored)' : trustProxy.join(', ')}`);
+  say(`  Public APIs: ${publicOrigin === undefined || publicOrigin === '' ? 'on the dashboard origin under /b/<id> (answered sandboxed; use --public-origin for a separate host)' : publicOrigin}`);
   say(`  Audit log:   kept ${String(auditDays)} days`);
   if (!running.store.hasOwner()) say('  No owner yet. Create one: tempo-local-backend server owner create --email <you@example.com>');
   const stop = (): void => void running.stop().then(() => process.exit(0));

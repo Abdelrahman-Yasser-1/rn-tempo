@@ -25,7 +25,7 @@ const USAGE = `local-backend-engine: serve a Tempo Local Backend folder
   local-backend-engine snapshot import <file.zip> <dir> [--no-certs]   into a new or empty folder
   local-backend-engine trust  mac | ios [--device <udid>] | android [--serial <id>]   add the mkcert CA to a trust store (explicit)
   local-backend-engine web    [--backends-dir <dir>] [--admin-port <n>] [--no-open]   the dashboard in a browser, for several backends
-  local-backend-engine server [--data-dir <dir>] [--backends-dir <dir>] [--port <n>] [--trust-proxy [private|<cidr,...>]] [--audit-days <n>]
+  local-backend-engine server [--data-dir <dir>] [--backends-dir <dir>] [--port <n>] [--trust-proxy [private|<cidr,...>]] [--audit-days <n>] [--public-origin <origin>]
                               the team server: accounts, roles, API keys and an audit log, for Docker behind Caddy
   local-backend-engine server owner create --email <email> [--name <name>] [--password-stdin]
   local-backend-engine server owner reset-password --email <email> [--password-stdin] [--reset-totp]
@@ -127,6 +127,7 @@ async function main(): Promise<void> {
       host: { type: 'string' },
       'trust-proxy': { type: 'string' },
       'audit-days': { type: 'string' },
+      'public-origin': { type: 'string' },
       email: { type: 'string' },
       'password-stdin': { type: 'boolean' },
       'reset-totp': { type: 'boolean' },
