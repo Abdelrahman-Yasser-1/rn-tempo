@@ -31,6 +31,14 @@ const enc = encodeURIComponent;
  * `/__admin/b/<backend>`, so anything that could climb out of that (a `..` segment, an encoded dot, slash or
  * backslash, `#`, a doubled slash, a missing leading slash) is refused before a request with the CSRF header is sent.
  */
+function hasControlChar(text: string): boolean {
+  for (let i = 0; i < text.length; i += 1) {
+    const code = text.charCodeAt(i);
+    if (code < 0x20 || code === 0x7f) return true;
+  }
+  return false;
+}
+
 export function checkAdminRoute(route: string): void {
   const [pathPart = ''] = route.split('?', 1);
   const lower = route.toLowerCase();
@@ -39,7 +47,7 @@ export function checkAdminRoute(route: string): void {
     route.startsWith('//') ||
     route.includes('\\') ||
     route.includes('#') ||
-    [...route].some((char) => char.charCodeAt(0) < 0x20 || char.charCodeAt(0) === 0x7f) ||
+    hasControlChar(route) ||
     pathPart.includes('//') ||
     pathPart.split('/').some((segment) => segment === '..' || segment === '.') ||
     /%2e|%2f|%5c|%00/.test(lower);
