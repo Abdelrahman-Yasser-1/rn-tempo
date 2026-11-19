@@ -274,6 +274,93 @@ Simple first: one window, a left list of backends, and per backend 8 tabs with p
 - Redaction everywhere logs or the UI show request bodies.
 - Handler code runs only from the backend folder the user opened.
 
+## Tier 1d: Tempo Local Backend as a platform (owner, 2026-11-19)
+One engine runs three ways, and projects need no mock code or mock data. It extends Tier 1c.
+
+### Run modes
+| Mode | Start | Notes |
+|---|---|---|
+| Desktop app | open the app | as Tier 1c; also does certificate trust for simulators/emulators |
+| Local web | `npx @rn-tempo/local-backend` | the engine serves the same React dashboard in the browser; admin on `127.0.0.1` only; any OS |
+| Team server | Docker image `ghcr.io/<owner>/tempo-local-backend` + compose with Caddy | shared by the team and CI over HTTPS with real certificates |
+
+- **One UI codebase.** The dashboard talks to the engine through a transport layer: Tauri IPC (desktop) or HTTPS with a session cookie (web).
+- **Web sessions:**
+  - `HttpOnly` + `Secure` + `SameSite=Strict` cookie, plus a CSRF token.
+  - The local web login is a one-time code printed by the CLI; it is never a token in a URL.
+- **Multiple backends per server** (projects), each with its own folder, database, media and public base path `/b/<backend>/...`.
+
+### Team server security (absorbs the Phase D/E portal admin scope)
+- **Accounts and roles:**
+  - Roles per backend: `owner` (server owner is created from the CLI only), `admin`, `editor`, `viewer`.
+  - argon2id or scrypt hashing, optional TOTP, lockout and rate limits.
+- **API keys:**
+  - Per backend, with scopes `read-definition` (test kit), `sessions` (CI), `admin`.
+  - Shown once and stored hashed; revocable.
+- **Audit log** of every admin write: who, what, before/after summary.
+- **HTTPS:** Caddy with automatic certificates (public domain) or internal CA. The engine listens on HTTP only inside the Docker network.
+- **Public mock APIs** are unauthenticated by default. Each backend can require an access key header for its public API, for private team servers.
+
+### No mock data in projects
+- **Template and generated projects** keep only a URL (`API_BASE_URL`) and, for tests, a backend reference (`TEMPO_BACKEND=<server URL>/b/<name>` + a read-only API key in CI secrets).
+- **Test kit** `@rn-tempo/local-backend/test` (Jest setup, one line):
+  1. Downloads the backend definition + seed + small media (snapshot without secrets or sessions) using the `read-definition` key, and caches it in `node_modules/.cache/tempo-backend/` with an ETag. Offline after the first fetch. A committed folder is also accepted as the source.
+  2. Starts the engine **in memory** inside the Jest process on a random localhost port and points the app's HTTP client at it (real HTTP, no interception). Each test file gets a fresh isolated copy.
+  3. **Test mode is the default:**
+     - no delays
+     - no random faults
+     - fixed clock and seed
+     - deterministic data
+   - Developers can opt into configured delays/faults per suite or test.
+  4. Helpers: `backend.scenario(endpointId, name)`, `backend.time.set(...)`, `backend.data.insert(...)`, `backend.reset()`, and `backend.requests()` to assert calls.
+- **CI E2E sessions:** `POST /b/<name>/__sessions` (`sessions` key) creates a temporary isolated copy with its own URL. It is deleted on `DELETE` or after its TTL. Parallel runs never share data.
+- **Old mocks are kept** (`template/api`, `yarn api`, in-app mock mode, MSW handlers) until the owner confirms the new path. The docs mark them **deprecated** with the migration steps; removal is a later step after confirmation.
+
+### OpenAPI / Swagger import and sync
+- **Import sources:** a file (drag & drop) or a URL. Formats: OpenAPI 3.0/3.1 (JSON/YAML) and Swagger 2.0, which is converted on import.
+- **Per operation, an endpoint is created with:**
+  - path, method, parameters, request body schema (validated, 400 on mismatch) and tags
+  - **each documented response as a scenario**
+  - examples from the file, or deterministic generated data
+  - auth from the security schemes
+- **Sync:** re-import shows a diff (added, changed, removed endpoints) to review. Local customizations are kept unless the user chooses to overwrite them.
+- **Dashboard:** request/response schemas and examples per endpoint.
+
+### Response customization
+- **Delays:** a global default plus a per-endpoint fixed delay or random range. Network presets: Instant, Fast Wi-Fi, 4G, Slow 3G, Timeout. Download/upload throttling.
+- **Shared base response:**
+  - A backend-level success wrapper (e.g. `{ success, data, message, meta }`), error format (problem+json, dummyjson, custom) and common headers.
+  - **Reusable response templates.**
+  - Per-endpoint opt-out and override. The Tempo template preset uses no wrapper (C13).
+- **Editing a response:** Form and JSON tabs edit the same value. The JSON tab is **Monaco** with formatting, validation, schema autocomplete, folding, diff vs last saved, and themes. It runs offline, with the CSP allowing its workers.
+- **Dynamic values in responses:** `{{params.x}}`, `{{query.x}}`, `{{body.x}}`, `{{headers.x}}`, `{{user.id}}`, `{{now}}`, `{{uuid}}`, `{{seq}}`, and seeded fake data helpers. Logic-less (no code execution); handlers remain the place for code.
+
+### Realtime and other protocols
+- **SSE endpoints:** scripted message sequences with delays, broadcasting on data changes (`collection.created`, `updated`, `deleted`), and manual send from the dashboard.
+- **WebSocket endpoints:** echo, scripted replies by message match, broadcast on data changes, manual send, and a connected clients list.
+- **GraphQL:**
+  - An SDL upload or schema built from collections.
+  - Queries and mutations resolved from collections, with handler resolvers allowed.
+  - Subscriptions over WebSocket (graphql-ws protocol).
+  - A GraphiQL page.
+- **Webhooks:**
+  - Outgoing calls on events (data changes, custom triggers from handlers), with delay, retries with backoff, signing secret (HMAC) and a delivery log.
+  - An incoming **inbox** URL that captures and shows any request sent to it.
+- **Push notification test sender:**
+  - Send FCM (HTTP v1, service account) and APNs (token auth .p8) test pushes to a device token from the dashboard.
+  - Credentials are stored in the backend's `.data/secrets` (never exported or committed) and redacted everywhere.
+- **Fault and limit simulation:**
+  - Rate limits (429 + `Retry-After`)
+  - random failure percentage
+  - timeouts, dropped connections, offline (refuse connections)
+  - slow upload/download
+  - CORS settings
+  - cookie/session auth mode
+  - an OAuth2 / social-login mock (authorize, token, userinfo)
+
+### Packaging
+One npm package `@rn-tempo/local-backend` (engine + web dashboard + test kit), the Docker image, and the macOS app. `packages/api-contract` and `packages/dev-api` stay until the old mocks are removed, then they are retired.
+
 ## Tier 2: full backend and portal
 
 ### API (`backend/api`)
@@ -413,6 +500,16 @@ Simple first: one window, a left list of backends, and per backend 8 tabs with p
 - **AC-LB-7** Publishing a content entry in Content makes it appear from `GET /content/:type?locale=ar`; unpublishing hides it.
 - **AC-LB-8** The OpenAPI contract check against the template's `openapi.json` reports no differences for the preset.
 - **AC-LB-9** Snapshot export, then import into a new folder, reproduces definitions, data and media.
+- **AC-LP-1** `npx @rn-tempo/local-backend` opens the dashboard in a browser on Linux/macOS/Windows with the same tabs as the desktop app; the admin API is unreachable from the LAN.
+- **AC-LP-2** On the team server, a viewer cannot change anything (403), an editor can, every write appears in the audit log, and the server runs over HTTPS behind Caddy.
+- **AC-LP-3** A project with only `TEMPO_BACKEND` and a read-only key runs its Jest suite with no mock files. The engine runs in memory in test mode (no delays, fixed data), with isolated data per test file, and works offline after the first run.
+- **AC-LP-4** Two parallel CI runs each create a session, write data, and never see each other's writes; sessions expire after their TTL.
+- **AC-LP-5** Importing a Swagger 2.0 and an OpenAPI 3.1 file creates endpoints whose scenarios match each documented response. Re-importing a changed file shows a diff and keeps local customizations.
+- **AC-LP-6** A per-endpoint random delay range, the shared success wrapper, and `{{params.id}}` in a response all take effect live. Test mode ignores the delays unless opted in.
+- **AC-LP-7** SSE and WebSocket clients receive a message when a record is created. A GraphQL query returns collection data, and a subscription receives the create.
+- **AC-LP-8** A webhook fires on a record create with an HMAC signature and retries on failure. The inbox shows a captured request.
+- **AC-LP-9** A test push is delivered to a real device token (owner check). The credentials never appear in logs, snapshots or exports.
+- **AC-LP-10** The rate limit returns 429 with `Retry-After`. A 50% failure setting fails about half of 200 requests. The OAuth2 mock completes an authorization-code flow.
 
 ### Backend (AC-B-*)
 - **AC-B-1** `docker compose --profile dev up` starts the API, portal, Postgres and Caddy. The health route (`GET /api/v1/health` on host `api.tempo.test`, port 8443) answers 200 with a trusted cert.
