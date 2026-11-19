@@ -185,6 +185,8 @@ export async function startTeam(options: TeamOptions): Promise<RunningTeam> {
       return reply(res, problemReply(400, { detail: error instanceof Error ? error.message : 'Bad password.' }));
     }
     if (account === undefined) return reply(res, problemReply(400, { detail: 'That link is wrong, used or expired. Ask for a new one.' }));
+    // Whoever held a session of this account before the password was chosen is signed out.
+    sessions.destroyAccount(account.id);
     audit.record({ actor: actorOf(account), backend: null, action: 'account.setup', target: '', status: 200 });
     return reply(res, jsonReply(200, { ok: true }));
   }
