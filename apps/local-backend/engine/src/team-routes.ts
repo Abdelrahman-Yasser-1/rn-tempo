@@ -111,6 +111,22 @@ export function teamRoutes(services: TeamServices): TeamRoute[] {
     return { account };
   };
 
+  /**
+   * A member route that resets credentials (a setup link, two-step sign-in). An account is the person's across the
+   * whole server, so an admin may only do this for accounts that belong to backends they administer and to no other,
+   * and only issue a link for an invitation that was not used yet. A password reset of an active account, or of anyone
+   * who also has access elsewhere (or is the owner), goes through the owner's routes (`/team/accounts/...`).
+   */
+  const resettable = (who: Who, backendId: string, raw: string | undefined, action: 'reset-totp' | 'reset-link'): { account: AccountRow } | Reply => {
+    const found = manageable(who, backendId, raw);
+    if ('status' in found) return found;
+    if (who.role === 'owner') return found;
+    const administered = new Set(store.memberships(who.account.id).filter((member) => member.role === 'admin').map((member) => member.backendId));
+    if (store.memberships(found.account.id).some((member) => !administered.has(member.backendId))) return no('That person also has access to backends you do not administer. Ask the server owner.', 403);
+    if (action === 'reset-link' && found.account.passwordHash !== null) return no('A new link is only issued here for an invitation that was not used yet. Ask the server owner to reset a password.', 403);
+    return found;
+  };
+
   const startAfter = async (reply: Reply): Promise<Reply> => {
     const id = typeof reply.body === 'object' && reply.body !== null ? (reply.body as { path?: unknown }).path : undefined;
     if (reply.status < 300 && typeof id === 'string') {
@@ -344,7 +360,7 @@ export function teamRoutes(services: TeamServices): TeamRoute[] {
         method: 'POST',
         pattern: `/backends/:id/members/:accountId/${action}`,
         handler: guard((_ctx, params, who) => {
-          const found = manageable(who, params.id ?? '', params.accountId);
+          const found = resettable(who, params.id ?? '', params.accountId, action);
           if ('status' in found) return found;
           who.note(found.account.email);
           if (action === 'reset-totp') {
