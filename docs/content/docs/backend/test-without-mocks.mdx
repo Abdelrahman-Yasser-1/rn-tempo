@@ -47,7 +47,7 @@ Object.defineProperty(Config, 'API_BASE_URL', { get: () => backend.url });
 Object.defineProperty(Config, 'API_MOCKING', { value: 'false' });
 ```
 
-The base URL must be read lazily (the client reads it on the first request, after `beforeAll`). The Tempo template switches to this in a later step; until then its MSW handlers keep working and are marked deprecated.
+The base URL must be known when modules are imported, which is before the kit's `beforeAll` has started the backend. Either read it lazily, or pick a free port first and pass it as `port` (the Tempo template does this: `yarn test:backend` runs its whole suite this way, while `yarn test` still uses its MSW handlers, which are deprecated).
 
 ### Where the definition comes from
 

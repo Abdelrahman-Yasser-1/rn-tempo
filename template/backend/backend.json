@@ -203,11 +203,20 @@
     },
     {
       "id": "users.add",
-      "type": "users",
-      "action": "add",
+      "type": "static",
       "method": "POST",
       "path": "/users/add",
-      "summary": "Register a user",
+      "status": 201,
+      "body": {
+        "id": 209,
+        "username": "{{body.username}}",
+        "email": "{{body.email}}",
+        "firstName": "{{body.firstName}}",
+        "lastName": "{{body.lastName}}",
+        "gender": "female",
+        "image": "https://dummyjson.com/icon/emilys/128"
+      },
+      "summary": "Register a user (echoes it, stores nothing)",
       "tags": [
         "users"
       ],
