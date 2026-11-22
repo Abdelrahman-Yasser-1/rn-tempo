@@ -451,3 +451,65 @@ describe('webhook views hide what a viewer must not see', () => {
     expect(safeUrl('not a url')).toBe('[invalid address]');
   });
 });
+
+describe('a webhook never signs for a receiver its secret was not made for', () => {
+  it('AC-LP-8 changing the address or the body template rotates the secret and returns the new one once; other edits keep it', async () => {
+    const e = await engine({ webhooks: [] });
+    const other = await receiver();
+    receivers.push(other);
+    const made = (await (await e.admin('/webhooks', 'POST', { id: 'late', url: e.target.url, events: ['*'] })).json()) as { secret: string };
+    // An edit that moves neither the address nor the template keeps the secret and returns none.
+    const same = await e.admin('/webhooks/late', 'PUT', { url: e.target.url, events: ['products.*'], headers: { 'x-a': '1' } });
+    expect(same.status).toBe(200);
+    expect(await same.json()).not.toHaveProperty('secret');
+    await e.admin('/webhooks/late/test', 'POST');
+    await vi.waitFor(() => expect(e.target.received).toHaveLength(1));
+    expect(verifySignature(made.secret, String(e.target.received[0]?.headers['x-tempo-signature']), e.target.received[0]?.body ?? '')).toBe(true);
+    // A new address: a new secret, handed out once to the caller.
+    const moved = (await (await e.admin('/webhooks/late', 'PUT', { url: other.url, events: ['*'] })).json()) as { secret?: string };
+    expect(moved.secret).toMatch(/^whsec_/);
+    expect(moved.secret).not.toBe(made.secret);
+    expect(JSON.stringify(await (await e.admin('/webhooks/late')).json())).not.toContain(moved.secret ?? 'missing');
+    await e.admin('/webhooks/late/test', 'POST');
+    await vi.waitFor(() => expect(other.received).toHaveLength(1));
+    const got = other.received[0];
+    expect(verifySignature(made.secret, String(got?.headers['x-tempo-signature']), got?.body ?? '')).toBe(false);
+    expect(verifySignature(moved.secret ?? '', String(got?.headers['x-tempo-signature']), got?.body ?? '')).toBe(true);
+    // A new body template rotates too.
+    const templated = (await (await e.admin('/webhooks/late', 'PUT', { url: other.url, events: ['*'], body: { kind: '{{event.name}}' } })).json()) as { secret?: string };
+    expect(templated.secret).toMatch(/^whsec_/);
+    expect(templated.secret).not.toBe(moved.secret);
+  });
+
+  it('AC-LP-8 a change made through PUT /definition cannot be signed with the old secret either', async () => {
+    const e = await engine({ webhooks: [] });
+    const other = await receiver();
+    receivers.push(other);
+    const made = (await (await e.admin('/webhooks', 'POST', { id: 'late', url: e.target.url, events: ['*'] })).json()) as { secret: string };
+    const definition = (await (await e.admin('/definition')).json()) as { webhooks: { url: string }[] };
+    const first = definition.webhooks[0];
+    if (first === undefined) throw new Error('missing webhook');
+    first.url = other.url;
+    expect((await e.admin('/definition', 'PUT', definition)).status).toBe(200);
+    await e.admin('/webhooks/late/test', 'POST');
+    await vi.waitFor(() => expect(other.received).toHaveLength(1));
+    const got = other.received[0];
+    expect(verifySignature(made.secret, String(got?.headers['x-tempo-signature']), got?.body ?? '')).toBe(false);
+  });
+
+  it('AC-LP-8 redeliver refuses (409) once the webhook\'s address changed, and sends nothing', async () => {
+    const e = await engine({ webhooks: [] });
+    const other = await receiver();
+    receivers.push(other);
+    await e.admin('/webhooks', 'POST', { id: 'late', url: e.target.url, events: ['*'] });
+    await e.admin('/webhooks/late/test', 'POST');
+    await vi.waitFor(() => expect(e.target.received).toHaveLength(1));
+    const [delivery] = (await (await e.admin('/webhook-deliveries')).json()) as { id: string }[];
+    await e.admin('/webhooks/late', 'PUT', { url: other.url, events: ['*'] });
+    const refused = await e.admin(`/webhook-deliveries/${delivery?.id ?? ''}/redeliver`, 'POST');
+    expect(refused.status).toBe(409);
+    await new Promise((done) => setTimeout(done, 100));
+    expect(other.received).toHaveLength(0);
+    expect(e.target.received).toHaveLength(1);
+  });
+});

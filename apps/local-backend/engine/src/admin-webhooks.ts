@@ -88,7 +88,8 @@ export function adminWebhookRoutes(engine: Engine, manager: Manager, errorReply:
       method: 'PUT',
       pattern: '/webhooks/:id',
       handler: async (ctx, params) => {
-        if (find(params.id) === undefined) return missing(params.id);
+        const existing = find(params.id);
+        if (existing === undefined) return missing(params.id);
         const body = readJson(ctx);
         if (!body.ok) return body.reply;
         const parsed = parse(body.value, params.id ?? '');
@@ -103,7 +104,9 @@ export function adminWebhookRoutes(engine: Engine, manager: Manager, errorReply:
           return errorReply(error);
         }
         const updated = find(params.id);
-        return updated === undefined ? missing(params.id) : jsonReply(200, view(updated));
+        if (updated === undefined) return missing(params.id);
+        // A new address or body template ends the old secret, so a payload is never signed for a receiver the secret was not made for.
+        return jsonReply(200, engine.webhooks.bindingChanged(existing, updated) ? { ...view(updated), secret: engine.webhooks.rotateSecret(updated) } : view(updated));
       },
     },
     {
@@ -160,6 +163,7 @@ export function adminWebhookRoutes(engine: Engine, manager: Manager, errorReply:
       method: 'POST',
       pattern: '/webhook-deliveries/:id/redeliver',
       handler: (_ctx, params) => {
+        if (engine.webhooks.addressChanged(params.id ?? '')) return problemReply(409, { detail: 'The webhook\'s address changed since this delivery, so it is not sent again. Send a test event, or wait for a new event.' });
         const made = engine.webhooks.redeliver(params.id ?? '');
         return made === undefined ? problemReply(404, { detail: `No delivery "${params.id ?? ''}" of an existing webhook.` }) : jsonReply(202, made);
       },

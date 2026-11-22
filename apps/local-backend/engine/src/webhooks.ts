@@ -1,4 +1,4 @@
-import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import type { DatabaseSync } from 'node:sqlite';
 
 import { matchesEvent, type BackendEvent, type EventBus } from './events.ts';
@@ -191,16 +191,38 @@ export class WebhookService {
     return hook.id;
   }
 
-  /** The signing secret of a webhook, made on first use. */
+  /**
+   * What a secret is bound to: the address and the body template. A webhook whose address or template changed must not
+   * be signed with the secret it had before (that would let an editor point it at their own receiver and have payloads
+   * signed with a secret they never held), so the secret is replaced when the binding no longer matches.
+   */
+  private bindingOf(hook: Webhook): string {
+    return createHash('sha256').update(JSON.stringify([hook.url, hook.body ?? null])).digest('hex');
+  }
+
+  /** The signing secret of a webhook, made on first use, and replaced when its address or body template changed since the secret was made. */
   private secretFor(hook: Webhook): string {
     const ref = this.refOf(hook);
     const existing = this.deps.secrets.section('webhooks')[ref];
-    if (typeof existing === 'string' && existing !== '') return existing;
-    const made = newSecret('whsec');
-    this.deps.secrets.setSection('webhooks', (section) => {
-      section[ref] = made;
+    if (typeof existing === 'string' && existing !== '') {
+      const bound = this.deps.secrets.section('webhookBindings')[ref];
+      // A secret made before bindings existed is bound to the webhook as it is now.
+      if (typeof bound !== 'string') this.bind(hook);
+      else if (bound !== this.bindingOf(hook)) return this.rotateSecret(hook);
+      return existing;
+    }
+    return this.rotateSecret(hook);
+  }
+
+  private bind(hook: Webhook): void {
+    this.deps.secrets.setSection('webhookBindings', (section) => {
+      section[this.refOf(hook)] = this.bindingOf(hook);
     });
-    return made;
+  }
+
+  /** True when a change from `before` to `after` moves the address or the body template (so the secret must be rotated). */
+  bindingChanged(before: Webhook, after: Webhook): boolean {
+    return this.bindingOf(before) !== this.bindingOf(after);
   }
 
   /** Makes a new secret (the old one stops working) and returns it. This is the only time it is handed out besides creation. */
@@ -209,6 +231,7 @@ export class WebhookService {
     this.deps.secrets.setSection('webhooks', (section) => {
       section[this.refOf(hook)] = made;
     });
+    this.bind(hook);
     return made;
   }
 
@@ -218,6 +241,9 @@ export class WebhookService {
   }
 
   forgetSecret(hook: Webhook): void {
+    this.deps.secrets.setSection('webhookBindings', (section) => {
+      delete section[this.refOf(hook)];
+    });
     this.deps.secrets.setSection('webhooks', (section) => {
       delete section[this.refOf(hook)];
     });
@@ -384,11 +410,22 @@ export class WebhookService {
     return row === undefined ? undefined : { ...this.toDelivery(row), body: row.body };
   }
 
-  /** Sends a delivery again as a new one (same event, same body). */
+  /** True when a delivery's webhook now has another address than the one the delivery went to (its recorded, redacted address). */
+  addressChanged(id: string): boolean {
+    const row = this.row(id);
+    const hook = row === undefined ? undefined : this.deps.definition().webhooks.find((candidate) => candidate.id === row.webhook_id);
+    return row !== undefined && hook !== undefined && safeUrl(hook.url) !== row.url;
+  }
+
+  /**
+   * Sends a delivery again as a new one (same event, same body). It always goes to the webhook's current address, so
+   * callers check `addressChanged` first and refuse: a redelivery must never carry an old payload to a new receiver.
+   */
   redeliver(id: string): Delivery | undefined {
     const row = this.row(id);
     const hook = row === undefined ? undefined : this.deps.definition().webhooks.find((candidate) => candidate.id === row.webhook_id);
     if (row === undefined || hook === undefined) return undefined;
+    if (safeUrl(hook.url) !== row.url) return undefined;
     return this.enqueue(hook, { name: row.event, at: row.created_at, data: null, id: row.event_id }, { immediate: true, body: row.body });
   }
 
