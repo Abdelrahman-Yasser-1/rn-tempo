@@ -3,6 +3,10 @@ title: Add an endpoint
 description: Define an API endpoint once, then get its mock server, docs, Jest handlers, request function and hook from it.
 ---
 
+<Callout title="Deprecated" type="warn">
+  Defining endpoints in `api/endpoints/*.ts` (and `tempo g endpoint`) is deprecated. The replacement is to edit the endpoint in the Tempo Local Backend app, which writes `backend/backend.json`; see [Migrate from the dev API](/docs/backend/migrate-from-dev-api). The generator and the code-defined mocks keep working and stay the default until the project owner confirms the switch, and only then are they removed.
+</Callout>
+
 An endpoint is defined once, in `api/endpoints/<feature>.ts`, with `@rn-tempo/api-contract`. The dev server, the OpenAPI and Postman files, the Jest handlers and the in-app mock mode all read that one definition. You also write the app side: a Zod schema, a request function and a hook.
 
 The generator does all of it:
