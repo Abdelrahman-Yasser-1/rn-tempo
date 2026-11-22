@@ -102,6 +102,9 @@ describe('AC-LP-6 test mode switches', () => {
     expect(testModeOf({ engine: true, definition: false, headers: headers({}) })).toEqual({ testMode: true, zeroed: true });
     expect(testModeOf({ engine: false, definition: true, headers: headers({}) })).toEqual({ testMode: true, zeroed: true });
     expect(testModeOf({ engine: true, definition: false, headers: headers({ [TEST_DELAYS_HEADER]: '1' }) })).toEqual({ testMode: true, zeroed: false });
+    // A request opts out of engine-level and definition-level test mode (a CI session is in test mode by default).
+    expect(testModeOf({ engine: true, definition: false, headers: headers({ [TEST_MODE_HEADER]: '0' }) })).toEqual({ testMode: false, zeroed: false });
+    expect(testModeOf({ engine: false, definition: true, headers: headers({ [TEST_MODE_HEADER]: '0' }) }).testMode).toBe(false);
     // The opt-in alone does nothing: there is no test mode to opt out of.
     expect(testModeOf({ ...base, headers: headers({ [TEST_DELAYS_HEADER]: '1' }) })).toEqual({ testMode: false, zeroed: false });
   });

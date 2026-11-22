@@ -54,15 +54,17 @@ export interface RequestPlan {
   network: NetworkPlan;
 }
 
+const off = (value: string | string[] | undefined): boolean => (Array.isArray(value) ? value[0] : value)?.trim() === '0';
 const flag = (value: string | string[] | undefined): boolean => (Array.isArray(value) ? value[0] : value)?.trim() === '1';
 
 /**
  * Whether a request runs in test mode: the engine option or the definition turns it on for every request, and the
- * `x-tempo-test-mode: 1` header for one. In test mode every delay, throttle and timeout is 0 unless the request also sends
+ * `x-tempo-test-mode: 1` header for one (`0` turns it off for one). In test mode every delay, throttle and timeout is 0 unless the request also sends
  * `x-tempo-test-delays: 1`.
  */
 export function testModeOf(options: { engine: boolean; definition: boolean; headers: IncomingHttpHeaders }): { testMode: boolean; zeroed: boolean } {
-  const testMode = options.engine || options.definition || flag(options.headers[TEST_MODE_HEADER]);
+  // `x-tempo-test-mode: 0` opts one request out, even when the engine (a test session) or the definition turns test mode on.
+  const testMode = !off(options.headers[TEST_MODE_HEADER]) && (options.engine || options.definition || flag(options.headers[TEST_MODE_HEADER]));
   return { testMode, zeroed: testMode && !flag(options.headers[TEST_DELAYS_HEADER]) };
 }
 

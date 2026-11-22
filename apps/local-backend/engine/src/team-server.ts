@@ -1,4 +1,5 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
+import { join } from 'node:path';
 
 import { match, tokenOf } from './admin.ts';
 import { ApiKeys, looksLikeKey } from './api-keys.ts';
@@ -10,7 +11,8 @@ import { isMutating, originOk, parseAdminTarget } from './hub.ts';
 import { BackendRegistry, BACKEND_ID, type RegistryOptions } from './hub-backends.ts';
 import { jsonReply, problemReply, readJson, type Reply } from './http.ts';
 import { atLeast, HUB_ROLE_TABLE, type AdminAccess, type ApiKeyScope, type Role } from './roles.ts';
-import { buildTestSnapshot, testSnapshotReply } from './test-snapshot.ts';
+import { SESSION_ID, TempSessions, type SessionLimits } from './sessions.ts';
+import { buildTestSnapshot, SnapshotTooLargeError, testSnapshotReply } from './test-snapshot.ts';
 import { closeServer, listenOn, readBody, sendReply, toCtx } from './server.ts';
 import { TeamAuth, type TeamAuthOptions } from './team-auth.ts';
 import { teamRoutes, type TeamRoute, type TeamServices, type Who } from './team-routes.ts';
@@ -53,6 +55,10 @@ export interface TeamOptions {
   allowPrivateImportUrls?: boolean;
   /** Start the backends found in the backends directory (default true). */
   autostart?: boolean;
+  /** Limits of the temporary CI sessions (`POST /b/<id>/__sessions`). */
+  sessionLimits?: SessionLimits;
+  /** How often expired sessions are swept (default one minute; tests lower it). */
+  sessionSweepMs?: number;
   /** Requests per minute a key may make to `__definition` and `__sessions` (default 30). */
   controlRatePerMinute?: number;
 }
@@ -66,6 +72,8 @@ export interface RunningTeam {
   readonly registry: BackendRegistry;
   readonly sessions: Sessions;
   readonly audit: AuditLog;
+  /** The temporary CI sessions. */
+  readonly tempSessions: TempSessions;
   /** Every `/__hub` route as `METHOD pattern`, for the role table check. */
   readonly hubRoutes: string[];
   stop(): Promise<void>;
@@ -86,6 +94,13 @@ export async function startTeam(options: TeamOptions): Promise<RunningTeam> {
   const registry = new BackendRegistry(options.backendsDir, { ...(options.registry ?? {}), start: { ...(options.registry?.start ?? {}), importUrls: { allowPrivate: options.allowPrivateImportUrls === true } }, mounted: true, accessKey: (id, key) => keys.allows(key, id, 'public') });
   const publicOrigin = options.publicOrigin === undefined ? null : new URL(options.publicOrigin).origin;
   const publicHost = publicOrigin === null ? null : new URL(publicOrigin).host;
+  const tempSessions = new TempSessions({
+    dir: join(options.dataDir, 'sessions'),
+    clock,
+    ...(options.sessionLimits === undefined ? {} : { limits: options.sessionLimits }),
+    ...(options.registry?.start === undefined ? {} : { start: options.registry.start }),
+    ...(options.sessionSweepMs === undefined ? {} : { sweepEveryMs: options.sessionSweepMs }),
+  });
   const controlHits = new Map<number, number[]>();
   const controlRate = options.controlRatePerMinute ?? 30;
   /** At most `controlRate` calls per minute and key to the control routes. Returns the seconds to wait, or 0. */
@@ -332,7 +347,7 @@ export async function startTeam(options: TeamOptions): Promise<RunningTeam> {
     return { key };
   }
 
-  async function controlRoute(req: IncomingMessage, res: ServerResponse, id: string, sub: string): Promise<void> {
+  async function controlRoute(req: IncomingMessage, res: ServerResponse, id: string, sub: string, https: boolean): Promise<void> {
     const method = req.method ?? 'GET';
     const head = method === 'HEAD';
     if (sub === '/__definition') {
@@ -344,7 +359,55 @@ export async function startTeam(options: TeamOptions): Promise<RunningTeam> {
       const engine = running.engine;
       return reply(res, testSnapshotReply(() => buildTestSnapshot({ dir: engine.folder.dir, db: engine.store.db, collections: engine.definition.collections.map((collection) => collection.name) }), req.headers['if-none-match']), head);
     }
-    return reply(res, problemReply(404, { detail: 'Not found.' }));
+    const target = /^\/__sessions(?:\/([0-9a-f]{32}))?$/.exec(sub);
+    if (target === null) return reply(res, problemReply(404, { detail: 'Not found.' }));
+    const sessionId = target[1];
+    const who = controlKey(req, id, ['sessions', 'admin']);
+    if ('denied' in who) return reply(res, who.denied);
+    const actor: Actor = { kind: 'key', id: String(who.key.id), label: who.key.prefix };
+    if (sessionId === undefined) {
+      if (method !== 'POST') return reply(res, problemReply(405, { detail: 'Use POST.', headers: { allow: 'POST' } }));
+      const read = await readBody(req, 4096);
+      if (!read.ok) return reply(res, problemReply(413, { title: 'Payload Too Large' }));
+      let ttlMs: number | undefined;
+      if (read.text.trim() !== '') {
+        const parsed = readJson(toCtx(req, read.text, https ? 'https' : 'http'));
+        if (!parsed.ok) return reply(res, parsed.reply);
+        const ttl = typeof parsed.value === 'object' && parsed.value !== null ? (parsed.value as { ttlSeconds?: unknown }).ttlSeconds : undefined;
+        if (ttl !== undefined) {
+          if (typeof ttl !== 'number') return reply(res, problemReply(400, { detail: 'ttlSeconds must be a number.' }));
+          ttlMs = ttl * 1000;
+        }
+      }
+      const running = registry.running(id);
+      if (running === undefined) return reply(res, problemReply(503, { detail: `${id} is not running.` }));
+      const made = await tempSessions.create({ backendId: id, keyId: who.key.id, source: running, ...(ttlMs === undefined ? {} : { ttlMs }), accessKey: (key) => keys.allows(key, id, 'public') });
+      if (!made.ok) {
+        const status = made.reason === 'ttl' ? 400 : 429;
+        audit.record({ actor, backend: id, action: 'session.create', target: '-', status, denied: true });
+        return reply(res, made.reason === 'ttl' ? problemReply(400, { detail: made.detail }) : problemReply(429, { detail: made.detail, headers: { 'retry-after': String(made.retryAfterSec) } }));
+      }
+      const { session } = made;
+      audit.record({ actor, backend: id, action: 'session.create', target: `session ${session.id.slice(0, 8)}`, status: 201, after: { ttlSeconds: Math.round((session.expiresAt - clock()) / 1000) } });
+      const host = typeof req.headers.host === 'string' && /^[A-Za-z0-9.:[\]-]+$/.test(req.headers.host) ? req.headers.host : undefined;
+      const origin = publicOrigin ?? (host === undefined ? '' : `${https ? 'https' : 'http'}://${host}`);
+      return reply(res, jsonReply(201, { id: session.id, url: `${origin}/s/${session.id}/`, expiresAt: new Date(session.expiresAt).toISOString() }));
+    }
+    if (method !== 'DELETE') return reply(res, problemReply(405, { detail: 'Use DELETE.', headers: { allow: 'DELETE' } }));
+    const gone = await tempSessions.delete(id, sessionId);
+    audit.record({ actor, backend: id, action: 'session.delete', target: `session ${sessionId.slice(0, 8)}`, status: gone ? 200 : 404, denied: !gone });
+    return reply(res, gone ? jsonReply(200, { ok: true }) : problemReply(404, { detail: 'No such session.' }));
+  }
+
+  /** A temporary session's public API under /s/<id>: the same sandbox as /b. */
+  async function tempSessionRoute(req: IncomingMessage, res: ServerResponse, https: boolean): Promise<void> {
+    const found = /^\/s\/([^/?]+)(\/[^?]*)?(\?.*)?$/.exec(req.url ?? '/');
+    const id = found?.[1] ?? '';
+    const running = SESSION_ID.test(id) ? await tempSessions.get(id) : undefined;
+    if (found === null || running === undefined) return reply(res, problemReply(404, { detail: 'No such session (it may have expired).' }));
+    req.url = `${found[2] ?? '/'}${found[3] ?? ''}`;
+    hardenPublic(res, (found[2] ?? '/').startsWith('/__docs'));
+    running.handlePublic(req, res, { scheme: https ? 'https' : 'http' });
   }
 
   // ---- a backend's public API under /b/<id>
@@ -357,8 +420,12 @@ export async function startTeam(options: TeamOptions): Promise<RunningTeam> {
     const running = registry.running(id);
     if (running === undefined) return reply(res, problemReply(503, { detail: `${id} is not running.` }));
     const sub = found[2] ?? '/';
-    if (sub === '/__definition') {
-      void controlRoute(req, res, id, sub);
+    if (sub === '/__definition' || sub === '/__sessions' || sub.startsWith('/__sessions/')) {
+      void controlRoute(req, res, id, sub, https).catch((error: unknown) => {
+        if (error instanceof SnapshotTooLargeError) return reply(res, problemReply(413, { detail: error.message }));
+        process.stderr.write(`control route error: ${error instanceof Error ? error.message : String(error)}\n`);
+        return reply(res, problemReply(500, { detail: 'Unexpected server error.' }));
+      });
       return;
     }
     // The engine sees the path without the prefix, like on its own port.
@@ -373,8 +440,10 @@ export async function startTeam(options: TeamOptions): Promise<RunningTeam> {
       const pathname = new URL(req.url ?? '/', 'http://local').pathname;
       if (pathname === '/__health') return reply(res, jsonReply(200, { ok: true, service: 'tempo-local-backend', mode: 'team' }), req.method === 'HEAD');
       const onPublicHost = publicHost !== null && String(req.headers.host ?? '').toLowerCase() === publicHost.toLowerCase();
-      const isPublicPath = pathname === '/b' || pathname.startsWith('/b/');
+      const isSessionPath = pathname.startsWith('/s/');
+      const isPublicPath = pathname === '/b' || pathname.startsWith('/b/') || isSessionPath;
       if (publicHost !== null && isPublicPath !== onPublicHost) return reply(res, problemReply(404, { detail: isPublicPath ? `The public APIs are at ${publicOrigin ?? ''}.` : 'Not found.' }));
+      if (isSessionPath) return tempSessionRoute(req, res, client.https);
       if (isPublicPath) return publicRoute(req, res, client.https);
       if (pathname === '/__session') return sessionRoute(req, res, client.https, client.ip);
       if (pathname === '/__setup') return setupRoute(req, res, client.https, client.ip);
@@ -410,11 +479,13 @@ export async function startTeam(options: TeamOptions): Promise<RunningTeam> {
     registry,
     sessions,
     audit,
+    tempSessions,
     hubRoutes: hubRoutes.map((route) => `${route.method} ${route.pattern}`),
     stop() {
       stopping ??= (async (): Promise<void> => {
         clearInterval(pruneTimer);
         await closeServer(server);
+        await tempSessions.stopAll();
         await registry.stopAll();
         store.close();
       })();
