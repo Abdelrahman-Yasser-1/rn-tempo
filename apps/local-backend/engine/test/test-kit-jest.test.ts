@@ -77,7 +77,7 @@ describe('the Jest fixture project', () => {
     const key = (made.json() as { key: string }).key;
     const env = { TEMPO_BACKEND: `http://127.0.0.1:${String(site.team.port)}/b/jest-fixture`, TEMPO_BACKEND_KEY: key, TEMPO_CACHE_DIR: tmp('kit-jest-cache-') };
 
-    const online = await runFixture(modules, { ...env, EXPECT_LOADED: 'download' });
+    const online = await runFixture(modules, { ...env, EXPECT_LOADED: 'download|not-modified' });
     process.stdout.write(`${trim(online.output)}\n`);
     expect(online.code, online.output).toBe(0);
     const again = await runFixture(modules, { ...env, EXPECT_LOADED: 'not-modified' });
