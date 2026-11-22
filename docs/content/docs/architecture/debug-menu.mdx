@@ -22,9 +22,9 @@ The **API source** section chooses where the app's requests go, with no `.env` e
 | --- | --- |
 | Build default (`env`) | The build's own setting: `ENV.API_MOCKING`, `ENV.API_BASE_URL` and the base URL override below. |
 | In-app mocks (`mocks`) | The in-app mock adapter answers from `api/`, whatever `API_MOCKING` says. |
-| Local dev API (`dev-api`) | The mock adapter is never used and requests go to the URL below, which wins over the base URL override. |
+| Tempo backend (`dev-api`; **Local dev API** in older builds) | The mock adapter is never used and requests go to the URL below, which wins over the base URL override. |
 
-The choice is stored in MMKV (`app.api-source`, with `app.dev-api-url` for the URL) and applies **after an app restart**, like the base URL override. The URL defaults to `https://localhost:8443` on iOS and `https://10.0.2.2:8443` on Android, and can be edited for a phone (use the LAN URL `yarn api up` prints). See [Local HTTPS](/docs/backend/local-https#api-source-switch).
+The choice is stored in MMKV (`app.api-source`, with `app.dev-api-url` for the URL) and applies **after an app restart**, like the base URL override. The URL defaults to `https://localhost:8443` on iOS and `https://10.0.2.2:8443` on Android, and can be edited for a phone (use the LAN URL the backend shows), or for a team server's backend: `https://<host>/b/<name>`. See [Local HTTPS](/docs/backend/local-https#api-source-switch).
 
 The section, the adapter that reads it and both keys exist in dev builds only. `client.ts` loads them through `require` calls inside `if (__DEV__ && !isProd)`, which Metro removes from release bundles, so a staging or prod release has no trace of them (checked by bundling and searching the output). The debug menu has no restart button; close and reopen the app.
 

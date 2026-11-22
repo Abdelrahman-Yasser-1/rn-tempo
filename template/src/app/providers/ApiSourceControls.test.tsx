@@ -27,8 +27,14 @@ describe('DebugMenuScreen API source', () => {
     expect(screen.getByRole('header', { name: 'API source' })).toBeOnTheScreen();
     expect(screen.getByRole('radio', { name: 'Build default (env file)' })).toBeChecked();
     expect(screen.getByRole('radio', { name: 'In-app mocks' })).not.toBeChecked();
-    expect(screen.getByRole('radio', { name: 'Local dev API' })).not.toBeChecked();
-    expect(screen.queryByLabelText('Local dev API URL')).not.toBeOnTheScreen();
+    expect(screen.getByRole('radio', { name: 'Tempo backend' })).not.toBeChecked();
+    expect(screen.queryByLabelText('Tempo backend URL')).not.toBeOnTheScreen();
+  });
+
+  test('the hint names the team server form of the URL', async () => {
+    await renderWithProviders(<DebugMenuScreen />);
+
+    expect(screen.getByText(/https:\/\/<host>\/b\/<name>/)).toBeOnTheScreen();
   });
 
   test('choosing a source stores it, and choosing the build default removes it', async () => {
@@ -48,29 +54,29 @@ describe('DebugMenuScreen API source', () => {
 
     await renderWithProviders(<DebugMenuScreen />);
 
-    expect(screen.getByRole('radio', { name: 'Local dev API' })).toBeChecked();
-    expect(screen.getByLabelText('Local dev API URL')).toBeOnTheScreen();
+    expect(screen.getByRole('radio', { name: 'Tempo backend' })).toBeChecked();
+    expect(screen.getByLabelText('Tempo backend URL')).toBeOnTheScreen();
   });
 
-  test('local dev API shows the platform URL, saves an edited one and resets it', async () => {
+  test('Tempo backend shows the platform URL, saves an edited one and resets it', async () => {
     jest.replaceProperty(Platform, 'OS', 'ios');
     const { user } = await renderWithProviders(<DebugMenuScreen />);
 
-    await user.press(screen.getByRole('radio', { name: 'Local dev API' }));
+    await user.press(screen.getByRole('radio', { name: 'Tempo backend' }));
     expect(storage.getString(API_SOURCE_KEY)).toBe('dev-api');
-    expect(screen.getByLabelText('Local dev API URL')).toHaveDisplayValue('https://localhost:8443');
+    expect(screen.getByLabelText('Tempo backend URL')).toHaveDisplayValue('https://localhost:8443');
 
-    await user.clear(screen.getByLabelText('Local dev API URL'));
-    await user.type(screen.getByLabelText('Local dev API URL'), ' https://192.168.1.20:8443 ');
+    await user.clear(screen.getByLabelText('Tempo backend URL'));
+    await user.type(screen.getByLabelText('Tempo backend URL'), ' https://192.168.1.20:8443 ');
     await user.press(screen.getByRole('button', { name: 'Save URL' }));
     expect(storage.getString(DEV_API_URL_KEY)).toBe('https://192.168.1.20:8443');
-    expect(screen.getByLabelText('Local dev API URL')).toHaveDisplayValue(
+    expect(screen.getByLabelText('Tempo backend URL')).toHaveDisplayValue(
       'https://192.168.1.20:8443',
     );
 
     await user.press(screen.getByRole('button', { name: 'Use default' }));
     expect(storage.getString(DEV_API_URL_KEY)).toBeUndefined();
-    expect(screen.getByLabelText('Local dev API URL')).toHaveDisplayValue('https://localhost:8443');
+    expect(screen.getByLabelText('Tempo backend URL')).toHaveDisplayValue('https://localhost:8443');
   });
 
   test('on Android the default URL is the emulator host alias', async () => {
@@ -79,7 +85,7 @@ describe('DebugMenuScreen API source', () => {
 
     await renderWithProviders(<ApiSourceControls />);
 
-    expect(screen.getByLabelText('Local dev API URL')).toHaveDisplayValue('https://10.0.2.2:8443');
+    expect(screen.getByLabelText('Tempo backend URL')).toHaveDisplayValue('https://10.0.2.2:8443');
   });
 
   test('renders in Arabic', async () => {
