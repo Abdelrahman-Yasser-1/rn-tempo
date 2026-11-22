@@ -55,6 +55,8 @@ export interface GraphqlDeps {
   definition: () => Backend;
   events: EventBus;
   mediaExists: (id: string) => boolean;
+  /** The fields of a collection that must not be read, filtered on or sorted by (hidden by a crud endpoint or by this endpoint). */
+  hidden: (collection: string) => ReadonlySet<string>;
   /** Runs a handler file as a field resolver. */
   callHandler: (file: string, label: string, context: GqlContext, body: unknown) => Promise<RunResult>;
 }
@@ -140,7 +142,7 @@ export function prepare(model: GraphqlModel, limits: GraphqlLimits, payload: { q
   if (size.problem !== undefined) return failure(400, size.problem, 'QUERY_TOO_COMPLEX');
   const problems = validate(model.schema, document, limits.introspection ? specifiedRules : [...specifiedRules, NoSchemaIntrospectionCustomRule]);
   if (problems.length > 0) return { ok: false, status: 400, errors: problems.map((problem) => problem.toJSON() as RequestError) };
-  return { ok: true, prepared: { document, operation, name: operation.name?.value ?? 'anonymous', type: operation.operation, rootFields: size.rootFields } };
+  return { ok: true, prepared: { document, operation, name: (operation.name?.value ?? 'anonymous').slice(0, 100), type: operation.operation, rootFields: size.rootFields } };
 }
 
 /** The root fields of an operation that need a signed-in user, as `Query.x`. */
@@ -248,7 +250,9 @@ export class GraphqlRuntime {
 
   private resolveCollection(collection: Collection, action: 'list' | 'get' | 'create' | 'update' | 'delete', args: Record<string, unknown>): unknown {
     const { store } = this.deps;
-    const names = new Map(collection.fields.map((field) => [field.name, field]));
+    const hidden = this.deps.hidden(collection.name);
+    // A hidden field answers like one that does not exist: ordering or filtering by it would leak its values.
+    const names = new Map(collection.fields.filter((field) => !hidden.has(field.name)).map((field) => [field.name, field]));
     const id = typeof args.id === 'number' && Number.isInteger(args.id) && args.id > 0 ? args.id : undefined;
     try {
       switch (action) {

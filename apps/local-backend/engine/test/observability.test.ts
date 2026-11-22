@@ -223,3 +223,22 @@ describe('OpenAPI and docs', () => {
     expect(Object.keys((await json(await fetch(`${url}/__docs/openapi.json`))).paths as object)).toContain('/extra');
   });
 });
+
+describe('per-operation stats are bounded', () => {
+  it('AC-LP-7 keeps at most 200 operation names per endpoint, cuts long names, and folds the rest into (other)', async () => {
+    const { Stats } = await import('../src/stats.ts');
+    const stats = new Stats();
+    for (let i = 0; i < 500; i += 1) stats.record('post.graphql', 200, 1, `Op${String(i)}`);
+    stats.record('post.graphql', 200, 1, 'x'.repeat(5000));
+    stats.record('other.endpoint', 200, 1, 'Fresh');
+    const operations = stats.snapshot().operations;
+    expect(operations.filter((entry) => entry.id === 'post.graphql')).toHaveLength(201);
+    expect(operations.find((entry) => entry.operation === '(other)')).toMatchObject({ id: 'post.graphql', count: 301 });
+    expect(operations.every((entry) => entry.operation.length <= 100)).toBe(true);
+    // Another endpoint has its own allowance.
+    expect(operations.some((entry) => entry.id === 'other.endpoint' && entry.operation === 'Fresh')).toBe(true);
+    // A name already known keeps counting after the cap.
+    stats.record('post.graphql', 200, 1, 'Op0');
+    expect(stats.snapshot().operations.find((entry) => entry.operation === 'Op0')?.count).toBe(2);
+  });
+});
