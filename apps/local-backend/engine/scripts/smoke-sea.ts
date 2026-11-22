@@ -139,8 +139,11 @@ async function main(): Promise<void> {
 
   // A WebSocket echo and a GraphQL endpoint: `ws` and `graphql` must be inside the single executable and still work.
   const file = join(dir, 'backend.json');
-  const definition = JSON.parse(readFileSync(file, 'utf8')) as { endpoints: unknown[] };
+  const definition = JSON.parse(readFileSync(file, 'utf8')) as { endpoints: unknown[]; oauth?: unknown };
+  definition.oauth = { enabled: true, provider: 'google', clients: [{ clientId: 'smoke', redirectUris: ['myapp://callback'] }] };
   definition.endpoints.push(
+    { id: 'smoke.inbox', type: 'inbox', path: '/smoke-inbox' },
+    { id: 'smoke.limited', type: 'static', method: 'GET', path: '/smoke-limited', body: { ok: true }, faults: { rateLimit: { requests: 1, perSeconds: 60, key: 'global' } } },
     { id: 'smoke.ws', type: 'websocket', method: 'GET', path: '/smoke-ws', behavior: 'echo' },
     { id: 'smoke.graphql', type: 'graphql', method: 'POST', path: '/smoke-graphql' },
   );
@@ -157,6 +160,14 @@ async function main(): Promise<void> {
   const answer = await fetch(`${base}/smoke-graphql`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ query: '{ products(limit: 2) { id title } }' }) });
   const graphql = (await answer.json()) as { data?: { products?: unknown[] } };
   check(answer.status === 200 && graphql.data?.products?.length === 2, 'a GraphQL query lists products (graphql is bundled)');
+  const captured = await fetch(`${base}/smoke-inbox`, { method: 'PUT', body: 'captured text' });
+  check(captured.status === 200 && ((await captured.json()) as { received?: boolean }).received === true, 'an inbox endpoint captures a request');
+  await fetch(`${base}/smoke-limited`);
+  const limited = await fetch(`${base}/smoke-limited`);
+  check(limited.status === 429 && limited.headers.get('retry-after') !== null, 'a rate limit answers 429 with Retry-After');
+  const discovery = await fetch(`${base}/.well-known/openid-configuration`);
+  const jwks = (await (await fetch(`${base}/oauth/jwks`)).json()) as { keys?: { kty?: string }[] };
+  check(discovery.status === 200 && jwks.keys?.[0]?.kty === 'RSA', 'the OAuth mock serves discovery and a JWKS (key generation works in the SEA)');
   await stopAll();
   await checkDashboard(work, env);
   await stopAll();
