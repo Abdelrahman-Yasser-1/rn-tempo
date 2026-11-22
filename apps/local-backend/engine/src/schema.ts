@@ -68,6 +68,8 @@ export const ScenarioSchema = z
     delayMs: z.number().int().min(0).max(60_000).optional().meta({ description: 'Wait this long before answering.' }),
     body: z.unknown().optional().meta({ description: 'Sent as the JSON body instead of the normal response.' }),
     headers: z.record(z.string(), z.string()).optional(),
+    description: z.string().max(500).optional().meta({ description: 'What the response is (from an imported API file).' }),
+    schema: z.record(z.string(), z.unknown()).optional().meta({ description: 'JSON Schema of this response body (from an imported API file). Documentation only.' }),
   })
   .meta({ title: 'Scenario', description: 'A canned response, picked with the x-tempo-scenario header or the admin API.' });
 
@@ -94,6 +96,7 @@ const common = {
   tags: z.array(z.string()).optional(),
   auth: z.enum(['none', 'bearer']).default('none'),
   scenarios: z.record(z.string(), ScenarioSchema).default({}),
+  importedFrom: z.string().max(100).optional().meta({ description: 'Fingerprint of the endpoint as an API file import made it. A different fingerprint now means someone edited it.' }),
 };
 
 const CrudEndpoint = z.strictObject({
@@ -119,9 +122,20 @@ const CrudEndpoint = z.strictObject({
   }),
 });
 
+const JsonSchemaValue = z.record(z.string(), z.unknown());
+export const RequestSchemas = z
+  .strictObject({
+    params: JsonSchemaValue.optional().meta({ description: 'JSON Schema of the path parameters.' }),
+    query: JsonSchemaValue.optional().meta({ description: 'JSON Schema of the query string.' }),
+    body: JsonSchemaValue.optional().meta({ description: 'JSON Schema of the JSON request body.' }),
+    bodyRequired: z.boolean().optional().meta({ description: 'A request without a body is refused with 400.' }),
+  })
+  .meta({ title: 'RequestSchemas', description: 'A request that does not match answers 400 with the names of the wrong fields.' });
+
 const StaticEndpoint = z.strictObject({
   ...common,
   type: z.literal('static'),
+  request: RequestSchemas.optional(),
   status: z.number().int().min(100).max(599).default(200),
   headers: z.record(z.string(), z.string()).default({}),
   body: z.unknown().optional(),
@@ -297,6 +311,15 @@ function checkContent(def: { content: z.infer<typeof ContentConfig>; contentType
   });
 }
 
+export const ImportRecordSchema = z
+  .strictObject({
+    source: z.string().max(2000).meta({ description: 'The file name or URL the API file came from.' }),
+    format: z.enum(['openapi-3.0', 'openapi-3.1', 'swagger-2.0']),
+    importedAt: z.string(),
+    hash: z.string().max(100).meta({ description: 'SHA-256 of the file text.' }),
+  })
+  .meta({ title: 'ImportRecord' });
+
 export const BackendSchema = z
   .strictObject({
     $schema: z.string().optional(),
@@ -320,6 +343,7 @@ export const BackendSchema = z
     endpoints: z.array(EndpointSchema).default([]),
     content: ContentConfig.default(() => ContentConfig.parse({})),
     contentTypes: z.array(ContentTypeSchema).default([]),
+    imports: z.array(ImportRecordSchema).default([]).meta({ description: 'API files imported into this backend, newest last.' }),
   })
   .superRefine((def, ctx) => {
     const collections = new Map<string, (typeof def.collections)[number]>();
@@ -415,6 +439,8 @@ export type UploadEndpoint = Extract<Endpoint, { type: 'upload' }>;
 export type HandlerEndpoint = Extract<Endpoint, { type: 'handler' }>;
 export type CrudEndpoint = Extract<Endpoint, { type: 'crud' }>;
 export type AuthConfigValue = z.infer<typeof AuthConfig>;
+export type ImportRecord = z.infer<typeof ImportRecordSchema>;
+export type RequestSchemasValue = z.infer<typeof RequestSchemas>;
 export type StaticEndpoint = Extract<Endpoint, { type: 'static' }>;
 export type Scenario = z.infer<typeof ScenarioSchema>;
 

@@ -296,14 +296,35 @@ function operation(endpoint: Endpoint, collections: Map<string, Collection>): Js
     const collection = collections.get(endpoint.collection);
     body = collection === undefined ? { responses: {} } : crudOperation(endpoint, collection, pascal(collection.name));
   } else if (endpoint.type === 'static') {
+    const documented = (status: number): Json | undefined => Object.values(endpoint.scenarios).find((scenario) => (scenario.status ?? 200) === status && scenario.schema !== undefined)?.schema as Json | undefined;
+    const schema = documented(endpoint.status) ?? (endpoint.body === undefined ? undefined : inferSchema(endpoint.body));
     const responses: JsonObject = {
       [String(endpoint.status)]: {
         description: STATUS_TEXT[endpoint.status] ?? 'Response',
-        ...(endpoint.body === undefined ? {} : { content: { 'application/json': { schema: inferSchema(endpoint.body), example: endpoint.body as Json } } }),
+        ...(schema === undefined ? {} : { content: { 'application/json': { schema, ...(endpoint.body === undefined ? {} : { example: endpoint.body as Json }) } } }),
       },
     };
+    // A documented response (from an imported file) keeps its own schema and example.
+    for (const scenario of Object.values(endpoint.scenarios)) {
+      const status = String(scenario.status ?? endpoint.status);
+      if (scenario.schema === undefined || responses[status] !== undefined) continue;
+      responses[status] = {
+        description: scenario.description ?? STATUS_TEXT[Number(status)] ?? 'Response',
+        content: { 'application/json': { schema: scenario.schema as Json, ...(scenario.body === undefined ? {} : { example: scenario.body as Json }) } },
+      };
+    }
     scenarioResponses(endpoint, responses, endpoint.status);
-    body = { responses };
+    const parameters: Json[] = [];
+    for (const [place, group] of [['path', endpoint.request?.params], ['query', endpoint.request?.query]] as const) {
+      const properties = (group?.properties ?? {}) as JsonObject;
+      const required = new Set((group?.required ?? []) as string[]);
+      for (const [name, propSchema] of Object.entries(properties)) parameters.push({ name, in: place, required: place === 'path' || required.has(name), schema: propSchema });
+    }
+    body = {
+      ...(parameters.length === 0 ? {} : { parameters }),
+      ...(endpoint.request?.body === undefined ? {} : { requestBody: { required: endpoint.request.bodyRequired === true, content: { 'application/json': { schema: endpoint.request.body as Json } } } }),
+      responses,
+    };
   } else {
     body = builtinOperation(endpoint);
   }

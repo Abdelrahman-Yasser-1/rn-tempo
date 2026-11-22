@@ -1,0 +1,59 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "Shapes", "version": "2.0.0" },
+  "servers": [{ "url": "https://api.shapes.test/api/v1" }],
+  "webhooks": { "newShape": { "post": { "responses": { "200": { "description": "ok" } } } } },
+  "components": {
+    "securitySchemes": { "oauth": { "type": "oauth2", "flows": {} }, "key": { "type": "apiKey", "in": "header", "name": "x-key" } },
+    "schemas": {
+      "Circle": { "type": "object", "required": ["kind", "radius"], "properties": { "kind": { "const": "circle" }, "radius": { "type": "number", "minimum": 1, "maximum": 5 } } },
+      "Square": { "type": "object", "required": ["kind", "side"], "properties": { "kind": { "const": "square" }, "side": { "type": "integer", "minimum": 2, "maximum": 9 } } },
+      "Shape": { "oneOf": [{ "$ref": "#/components/schemas/Circle" }, { "$ref": "#/components/schemas/Square" }] },
+      "Tree": { "type": "object", "properties": { "value": { "type": "string" }, "child": { "$ref": "#/components/schemas/Tree" } } },
+      "Label": { "type": ["string", "null"], "maxLength": 12 }
+    }
+  },
+  "paths": {
+    "/shapes": {
+      "get": {
+        "operationId": "listShapes",
+        "tags": ["shapes"],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1 } },
+          { "name": "kind", "in": "query", "schema": { "type": "string", "enum": ["circle", "square"] } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Shapes",
+            "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Shape" }, "minItems": 2 } } }
+          },
+          "400": { "description": "Bad query", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } }, "examples": { "one": { "value": { "error": "bad page" } } } } } }
+        }
+      },
+      "post": {
+        "operationId": "addShape",
+        "tags": ["shapes"],
+        "security": [{ "oauth": ["write"] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Shape" } } } },
+        "callbacks": { "done": { "{$request.body#/url}": { "post": { "responses": { "200": { "description": "ok" } } } } } },
+        "responses": {
+          "201": { "description": "Created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Shape" }, "example": { "kind": "circle", "radius": 3 } } } },
+          "4XX": { "description": "Client problem", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } } }
+        }
+      }
+    },
+    "/shapes/{shapeId}": {
+      "get": {
+        "operationId": "getShape",
+        "parameters": [{ "name": "shapeId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": { "200": { "description": "A shape", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Shape" } } } }, "404": { "description": "Missing" } }
+      }
+    },
+    "/trees": {
+      "get": { "operationId": "getTree", "security": [{ "key": [] }], "responses": { "200": { "description": "A tree", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Tree" } } } } } }
+    },
+    "/labels": {
+      "get": { "operationId": "getLabel", "responses": { "200": { "description": "A label", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Label" } } } } } }
+    }
+  }
+}
