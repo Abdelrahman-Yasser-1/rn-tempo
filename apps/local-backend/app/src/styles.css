@@ -876,3 +876,54 @@ fieldset.plain-fieldset legend {
 .login { max-width: 28rem; margin: 6rem auto; text-align: left; }
 .login h1 { text-align: center; }
 .signout { margin-top: auto; align-self: flex-start; }
+
+/* Import API file */
+.dropzone.dragging {
+  border-color: var(--accent, currentColor);
+  background: var(--code-bg);
+}
+.import-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.import-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+}
+.import-row ul {
+  flex-basis: 100%;
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+}
+.schema-tree {
+  list-style: none;
+  margin: 0;
+  padding-left: 16px;
+  font-size: 12px;
+}
+.schema-tree.root {
+  padding-left: 0;
+}
+.schema-view {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.scenario-doc {
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+.req {
+  color: var(--warn);
+  font-size: 11px;
+}

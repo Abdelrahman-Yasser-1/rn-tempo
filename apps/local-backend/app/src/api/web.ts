@@ -296,6 +296,12 @@ export function createWebTransport(deps: WebDeps): Backend {
       if (file.size > MAX_IMPORT_BYTES) throw new Error('That file is larger than 8 MB.');
       return { name: file.name, text: await file.text() };
     },
+    pickApiFile: async (): Promise<ImportFile | null> => {
+      const [file] = await deps.chooseFiles('.json,.yaml,.yml,application/json,application/yaml,text/yaml', false);
+      if (file === undefined) return null;
+      if (file.size > MAX_IMPORT_BYTES) throw new Error('That file is larger than 8 MB.');
+      return { name: file.name, text: await file.text() };
+    },
     saveExport: (fileName, extension, text) => {
       const name = `${fileName}.${extension}`;
       deps.saveFile(name, new Blob([text], { type: extension === 'json' ? 'application/json' : 'text/csv' }));

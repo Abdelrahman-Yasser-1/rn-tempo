@@ -103,11 +103,25 @@ export interface CollectionDef {
   rows?: number;
 }
 
+/** A JSON Schema, as plain data. */
+export type JsonSchema = Record<string, unknown>;
+
 export interface Scenario {
   status?: number;
   delayMs?: number;
   body?: unknown;
   headers?: Record<string, string>;
+  /** From an imported API file: what the response is, and the schema of its body. */
+  description?: string;
+  schema?: JsonSchema;
+}
+
+/** What a request must look like (from an imported API file). A request that does not match answers 400. */
+export interface RequestSchemas {
+  params?: JsonSchema;
+  query?: JsonSchema;
+  body?: JsonSchema;
+  bodyRequired?: boolean;
 }
 
 export type HttpMethodName = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -123,6 +137,8 @@ interface EndpointBase {
   aliases?: string[];
   tags?: string[];
   scenarios?: Record<string, Scenario>;
+  /** Fingerprint of the endpoint as an API file import made it. */
+  importedFrom?: string;
 }
 
 export type EndpointDef = EndpointBase &
@@ -141,7 +157,7 @@ export type EndpointDef = EndpointBase &
         successStatus?: number;
         media?: 'id' | 'url' | 'object';
       }
-    | { type: 'static'; status?: number; headers?: Record<string, string>; body?: unknown }
+    | { type: 'static'; status?: number; headers?: Record<string, string>; body?: unknown; request?: RequestSchemas }
     | { type: 'auth'; action: string }
     | { type: 'users'; action: 'add' | 'update' | 'get' }
     | { type: 'upload'; maxBytes?: number; multiple?: boolean }
@@ -166,7 +182,68 @@ export interface Definition {
   media?: { maxBytes?: number };
   collections?: CollectionDef[];
   endpoints?: EndpointDef[];
+  /** API files imported into this backend, newest last. */
+  imports?: ImportRecord[];
   [key: string]: unknown;
+}
+
+export interface ImportRecord {
+  source: string;
+  format: 'openapi-3.0' | 'openapi-3.1' | 'swagger-2.0';
+  importedAt: string;
+  hash: string;
+}
+
+// ---- importing an API file
+
+/** Where an import reads from: the text of a chosen file, or an address the engine downloads. */
+export type ImportSource = { kind: 'file'; name: string; text: string } | { kind: 'url'; url: string };
+
+export type ChangeChoice = 'take-new' | 'keep-mine' | 'merge';
+
+export interface ImportDiffEntry {
+  id: string;
+  method: string;
+  path: string;
+  tags: string[];
+  summary?: string;
+  /** Edited after the import that made it. */
+  customized?: boolean;
+  /** For a changed endpoint: what differs. */
+  changes?: string[];
+}
+
+export interface ImportDiff {
+  added: ImportDiffEntry[];
+  removed: ImportDiffEntry[];
+  changed: ImportDiffEntry[];
+  unchanged: ImportDiffEntry[];
+  skipped: { id: string; method: string; path: string; reason: string }[];
+}
+
+export interface ImportPreview {
+  source: string;
+  format: ImportRecord['format'];
+  hash: string;
+  title: string | null;
+  total: number;
+  byTag: Record<string, number>;
+  warnings: string[];
+  firstImport: boolean;
+  diff: ImportDiff;
+}
+
+export interface ImportChoices {
+  add: Record<string, boolean>;
+  remove: Record<string, boolean>;
+  change: Record<string, ChangeChoice>;
+}
+
+export interface ImportApplied {
+  ok: boolean;
+  applied: { added: string[]; removed: string[]; taken: string[]; kept: string[]; merged: string[] };
+  notes: string[];
+  warnings: string[];
 }
 
 // ---- admin answers

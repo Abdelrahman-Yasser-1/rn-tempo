@@ -100,6 +100,8 @@ export interface Backend {
   createHandler: (path: string, name: string) => Promise<string>;
   engineLog: (path: string) => Promise<string[]>;
   pickImportFile: () => Promise<ImportFile | null>;
+  /** A file dialog for an OpenAPI or Swagger file (JSON or YAML). Rust reads it in the desktop app; the browser sends the chosen file's text. */
+  pickApiFile: () => Promise<ImportFile | null>;
   saveExport: (fileName: string, extension: 'json' | 'csv', text: string) => Promise<string | null>;
   uploadMedia: (path: string) => Promise<UploadSummary | null>;
   uploadDropped: (path: string) => Promise<UploadSummary>;

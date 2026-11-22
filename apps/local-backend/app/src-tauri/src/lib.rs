@@ -46,6 +46,7 @@ pub fn run() {
             backends::create_handler,
             backends::engine_log,
             backends::pick_import_file,
+            backends::pick_api_file,
             backends::save_export,
             backends::upload_media,
             backends::upload_dropped,

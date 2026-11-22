@@ -41,6 +41,7 @@ export function createTauriTransport({ invoke, listen }: TauriDeps): Backend {
     createHandler: (path, name) => invoke('create_handler', { path, name }),
     engineLog: (path) => invoke('engine_log', { path }),
     pickImportFile: () => invoke('pick_import_file'),
+    pickApiFile: () => invoke('pick_api_file'),
     saveExport: (fileName, extension, text) => invoke('save_export', { fileName, extension, text }),
     uploadMedia: (path) => invoke('upload_media', { path }),
     uploadDropped: (path) => invoke('upload_dropped', { path }),

@@ -72,6 +72,7 @@ export function makeApi(overrides: Partial<Api> = {}): Api {
     createHandler: vi.fn(unexpected('createHandler')),
     engineLog: vi.fn(() => Promise.resolve([])),
     pickImportFile: vi.fn(() => Promise.resolve(null)),
+    pickApiFile: vi.fn(() => Promise.resolve(null)),
     saveExport: vi.fn(() => Promise.resolve(null)),
     uploadMedia: vi.fn(() => Promise.resolve(null)),
     uploadDropped: vi.fn(() => Promise.resolve({ uploaded: 0, failed: [] })),
