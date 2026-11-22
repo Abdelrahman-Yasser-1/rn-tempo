@@ -371,6 +371,19 @@ export const WebhookSchema = z
   .meta({ title: 'Webhook', description: 'An outgoing call on events, signed with HMAC-SHA256.' });
 export type Webhook = z.infer<typeof WebhookSchema>;
 
+/** Largest body an inbox keeps (bigger answers 413). */
+export const INBOX_MAX_BODY_BYTES = 1_048_576;
+export const INBOX_MAX_ENTRIES = 500;
+const InboxEndpoint = z.strictObject({
+  ...common,
+  type: z.literal('inbox'),
+  method: z.enum([...HTTP_METHODS, 'ANY']).default('ANY').meta({ description: '`ANY` (the default) captures every method.' }),
+  status: z.number().int().min(100).max(599).default(200).meta({ description: 'What the sender is answered.' }),
+  headers: z.record(z.string(), z.string()).default({}),
+  body: z.unknown().default({ received: true }).meta({ description: 'The JSON answer (default `{ "received": true }`). `{{placeholders}}` are filled.' }),
+  keep: z.number().int().min(1).max(INBOX_MAX_ENTRIES).default(INBOX_MAX_ENTRIES).meta({ description: 'Requests kept (the oldest are dropped). At most 500; 1 MB each; a total size cap applies too.' }),
+});
+
 export const EndpointSchema = z.discriminatedUnion('type', [
   CrudEndpoint,
   StaticEndpoint,
@@ -382,6 +395,7 @@ export const EndpointSchema = z.discriminatedUnion('type', [
   SseEndpoint,
   WebsocketEndpoint,
   GraphqlEndpoint,
+  InboxEndpoint,
 ]);
 
 export const CONTENT_FIELD_TYPES = ['string', 'text', 'richText', 'number', 'boolean', 'date', 'enum', 'media', 'json', 'list'] as const;
@@ -611,9 +625,11 @@ export const BackendSchema = z
       if (ids.has(endpoint.id)) ctx.addIssue({ code: 'custom', path: at('id'), message: `Duplicate endpoint id "${endpoint.id}".` });
       ids.add(endpoint.id);
       for (const path of [endpoint.path, ...(endpoint.aliases ?? [])]) {
-        const key = `${endpoint.method} ${path.replace(/:[A-Za-z0-9_]+/g, ':')}`;
-        if (routes.has(key)) ctx.addIssue({ code: 'custom', path: at('path'), message: `Another endpoint already answers ${endpoint.method} ${path}.` });
-        routes.add(key);
+        for (const method of endpoint.method === 'ANY' ? HTTP_METHODS : [endpoint.method]) {
+          const key = `${method} ${path.replace(/:[A-Za-z0-9_]+/g, ':')}`;
+          if (routes.has(key)) ctx.addIssue({ code: 'custom', path: at('path'), message: `Another endpoint already answers ${method} ${path}.` });
+          routes.add(key);
+        }
       }
       if (endpoint.type === 'users') {
         const needsUserId = endpoint.action !== 'add';
@@ -695,6 +711,9 @@ export type SseEndpoint = Extract<Endpoint, { type: 'sse' }>;
 export type WebsocketEndpoint = Extract<Endpoint, { type: 'websocket' }>;
 export type GraphqlEndpoint = Extract<Endpoint, { type: 'graphql' }>;
 export type CrudEndpoint = Extract<Endpoint, { type: 'crud' }>;
+export type InboxEndpoint = Extract<Endpoint, { type: 'inbox' }>;
+/** The method of an endpoint: an HTTP method, or `ANY` for an inbox. */
+export type EndpointMethod = Endpoint['method'];
 export type AuthConfigValue = z.infer<typeof AuthConfig>;
 export type ImportRecord = z.infer<typeof ImportRecordSchema>;
 export type RequestSchemasValue = z.infer<typeof RequestSchemas>;

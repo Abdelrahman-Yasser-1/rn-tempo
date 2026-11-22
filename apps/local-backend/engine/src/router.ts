@@ -1,4 +1,4 @@
-import type { Endpoint, HttpMethod } from './schema.ts';
+import type { Endpoint, EndpointMethod, HttpMethod } from './schema.ts';
 import type { Reply, RequestCtx } from './http.ts';
 
 export type Params = Record<string, string>;
@@ -11,7 +11,7 @@ interface Segment {
 
 export interface Route {
   endpoint: Endpoint;
-  method: HttpMethod;
+  method: EndpointMethod;
   /** The path as served, with the base path in front. */
   mounted: string;
   segments: Segment[];
@@ -83,7 +83,7 @@ export class Router {
         }
       }
       if (!ok) continue;
-      if (route.method === method) return { kind: 'found', route, params };
+      if (route.method === method || route.method === 'ANY') return { kind: 'found', route, params };
       if (!allowed.includes(route.method)) allowed.push(route.method);
     }
     return allowed.length > 0 ? { kind: 'method', allowed } : { kind: 'none' };

@@ -3300,6 +3300,262 @@
               "type"
             ],
             "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "description": "Stable id, for example `get.products.:id`. Scenarios and stats use it."
+              },
+              "method": {
+                "default": "ANY",
+                "description": "`ANY` (the default) captures every method.",
+                "type": "string",
+                "enum": [
+                  "GET",
+                  "POST",
+                  "PUT",
+                  "PATCH",
+                  "DELETE",
+                  "ANY"
+                ]
+              },
+              "path": {
+                "type": "string",
+                "pattern": "^\\/[^\\s?#]*$",
+                "description": "Express-style path with `:param` segments, for example `/products/:id`."
+              },
+              "aliases": {
+                "description": "Extra paths that serve the same endpoint, for example `/products/add`.",
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^\\/[^\\s?#]*$",
+                  "description": "Express-style path with `:param` segments, for example `/products/:id`."
+                }
+              },
+              "summary": {
+                "type": "string"
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "auth": {
+                "default": "none",
+                "type": "string",
+                "enum": [
+                  "none",
+                  "bearer"
+                ]
+              },
+              "latency": {
+                "description": "A delay for this endpoint, or `\"inherit\"` (the default) for the backend's `latency.default`.",
+                "anyOf": [
+                  {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "fixedMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60000,
+                            "description": "Wait exactly this long before answering."
+                          }
+                        },
+                        "required": [
+                          "fixedMs"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "minMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60000,
+                            "description": "The shortest wait."
+                          },
+                          "maxMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60000,
+                            "description": "The longest wait. A random value from `minMs` to `maxMs` is picked for each request."
+                          }
+                        },
+                        "required": [
+                          "minMs",
+                          "maxMs"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ],
+                    "title": "Latency",
+                    "description": "A fixed delay (`{ \"fixedMs\": 300 }`) or a random one (`{ \"minMs\": 100, \"maxMs\": 900 }`)."
+                  },
+                  {
+                    "type": "string",
+                    "const": "inherit"
+                  }
+                ]
+              },
+              "network": {
+                "description": "A network profile for this endpoint, or `\"inherit\"` (the default) for the backend's `network`.",
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "preset": {
+                        "type": "string",
+                        "enum": [
+                          "instant",
+                          "wifi",
+                          "4g",
+                          "3g-slow",
+                          "timeout",
+                          "custom"
+                        ],
+                        "description": "`instant` (no delay), `wifi` (20 ms, 30 Mbps down), `4g` (60 ms, 9 Mbps down), `3g-slow` (400 ms, 500 kbps), `timeout` (holds the answer, then closes the connection) or `custom` (only the numbers below)."
+                      },
+                      "downloadKbps": {
+                        "description": "Response speed in kilobits per second. Replaces the preset's own.",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 10000000
+                      },
+                      "uploadKbps": {
+                        "description": "Request body speed in kilobits per second. Replaces the preset's own.",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 10000000
+                      },
+                      "timeoutMs": {
+                        "description": "How long the `timeout` preset holds the request before closing the connection (default 30000).",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 120000
+                      }
+                    },
+                    "required": [
+                      "preset"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Network"
+                  },
+                  {
+                    "type": "string",
+                    "const": "inherit"
+                  }
+                ]
+              },
+              "wrap": {
+                "description": "`\"inherit\"` (the default): the backend's success wrapper. `\"none\"`: no wrapper. Or the name of a response template whose body wraps this endpoint's body.",
+                "type": "string"
+              },
+              "headers": {
+                "default": {},
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "scenarios": {
+                "default": {},
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "minimum": 100,
+                      "maximum": 599
+                    },
+                    "delayMs": {
+                      "description": "Wait this long before answering. It wins over every other delay setting.",
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 60000
+                    },
+                    "body": {
+                      "description": "Sent as the JSON body instead of the normal response."
+                    },
+                    "headers": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    },
+                    "description": {
+                      "description": "What the response is (from an imported API file).",
+                      "type": "string",
+                      "maxLength": 500
+                    },
+                    "schema": {
+                      "description": "JSON Schema of this response body (from an imported API file). Documentation only.",
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {}
+                    }
+                  },
+                  "additionalProperties": false,
+                  "title": "Scenario",
+                  "description": "A canned response, picked with the x-tempo-scenario header or the admin API."
+                }
+              },
+              "importedFrom": {
+                "description": "Fingerprint of the endpoint as an API file import made it. A different fingerprint now means someone edited it.",
+                "type": "string",
+                "maxLength": 100
+              },
+              "type": {
+                "type": "string",
+                "const": "inbox"
+              },
+              "status": {
+                "default": 200,
+                "description": "What the sender is answered.",
+                "type": "integer",
+                "minimum": 100,
+                "maximum": 599
+              },
+              "body": {
+                "default": {
+                  "received": true
+                },
+                "description": "The JSON answer (default `{ \"received\": true }`). `{{placeholders}}` are filled."
+              },
+              "keep": {
+                "default": 500,
+                "description": "Requests kept (the oldest are dropped). At most 500; 1 MB each; a total size cap applies too.",
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 500
+              }
+            },
+            "required": [
+              "id",
+              "path",
+              "type"
+            ],
+            "additionalProperties": false
           }
         ]
       }

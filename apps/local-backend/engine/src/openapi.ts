@@ -294,6 +294,11 @@ function builtinOperation(endpoint: Exclude<Endpoint, { type: 'crud' | 'static' 
       responses['413'] = answer(413, object({ errors: { type: 'array', items: { type: 'object', properties: { message: str }, required: ['message'] } } }, ['errors']));
       description = 'A GraphQL endpoint: send `{ "query", "variables", "operationName" }` as JSON. The answer is `{ data, errors }`. Subscriptions use a WebSocket on the same path with the `graphql-transport-ws` subprotocol. Batching is not supported.';
       break;
+    case 'inbox':
+      responses[String(endpoint.status)] = { description: 'The configured answer.', content: { 'application/json': endpoint.body === undefined ? {} : { example: endpoint.body as Json } } };
+      responses['413'] = problem('The body is larger than 1 MB.');
+      description = 'An inbox: captures any method, headers and body (up to 1 MB) so they can be read in the dashboard. Documented as POST; every method works.';
+      break;
     case 'websocket':
       responses['101'] = { description: 'Switching Protocols: the connection becomes a WebSocket (use ws:// or wss://). A plain GET answers 426.' };
       responses['426'] = problem('This is a WebSocket endpoint.');
@@ -549,7 +554,7 @@ export function buildOpenApi(definition: Backend, options: { prefix?: string } =
       const item = (paths[key] ?? {}) as JsonObject;
       const op = operation(endpoint, collections, definition);
       // An alias is the same operation; its id gets a suffix so ids stay unique.
-      item[endpoint.method.toLowerCase()] = path === endpoint.path ? op : { ...op, operationId: `${String(op.operationId)}_alias` };
+      item[(endpoint.method === 'ANY' ? 'post' : endpoint.method).toLowerCase()] = path === endpoint.path ? op : { ...op, operationId: `${String(op.operationId)}_alias` };
       paths[key] = item;
     }
     for (const tag of endpoint.tags ?? []) tags.add(tag);
