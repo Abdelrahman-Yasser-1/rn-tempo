@@ -11,6 +11,7 @@ import { problemReply, type Reply } from './http.ts';
 import { MEDIA_ID } from './media.ts';
 import { quoteIdent } from './names.ts';
 import { DefinitionError } from './schema.ts';
+import { redactWebhookSecrets } from './webhooks.ts';
 import { checkEntryName, checkRoot, walk } from './snapshot.ts';
 
 /**
@@ -27,7 +28,7 @@ import { checkEntryName, checkRoot, walk } from './snapshot.ts';
 export const TEST_SNAPSHOT_FORMAT = 1;
 export const TEST_SNAPSHOT_KIND = 'tempo-test-snapshot';
 /** Always listed in the document, so a reader can see what was left out. */
-export const TEST_SNAPSHOT_EXCLUDED = ['secrets.json', 'certs/', 'logs/', 'app users (_users)', 'sign-in sessions (_refresh_tokens)', 'team accounts, API keys, audit log and sessions'] as const;
+export const TEST_SNAPSHOT_EXCLUDED = ['secrets.json', 'certs/', 'logs/', 'app users (_users)', 'sign-in sessions (_refresh_tokens)', 'webhook header values and address credentials', 'team accounts, API keys, audit log and sessions'] as const;
 
 export const TEST_SNAPSHOT_LIMITS = {
   /** Media files that go in whole (bytes, together). A bigger one becomes a placeholder. */
@@ -121,7 +122,9 @@ export function buildTestSnapshot(options: BuildOptions): TestSnapshot {
     add(size);
     files.push(fileEntry(name, readFileSync(path)));
   };
-  read(definition, DEFINITION_FILE);
+  const definitionBytes = redactedDefinition(readFileSync(definition));
+  add(definitionBytes.length);
+  files.push(fileEntry(DEFINITION_FILE, definitionBytes));
   for (const folder of ['seed', 'handlers']) {
     if (!checkRoot(join(root, folder), root, folder)) continue;
     for (const file of walk(join(root, folder), folder)) read(file.path, file.name);
@@ -161,6 +164,20 @@ export function buildTestSnapshot(options: BuildOptions): TestSnapshot {
   const snapshot: TestSnapshot = { kind: TEST_SNAPSHOT_KIND, format: TEST_SNAPSHOT_FORMAT, backend: readName(definition), engineVersion: pkg.version, excluded: [...TEST_SNAPSHOT_EXCLUDED], placeholders, tables, files };
   add(JSON.stringify(tables).length);
   return snapshot;
+}
+
+/**
+ * `backend.json` for a snapshot. When it has webhooks, their header values and address credentials (a receiver's token,
+ * a query secret) are hidden: a snapshot goes to read-only keys and into CI. Without webhooks the bytes are untouched.
+ */
+function redactedDefinition(bytes: Buffer): Buffer {
+  try {
+    const parsed = JSON.parse(bytes.toString('utf8')) as unknown;
+    if (typeof parsed !== 'object' || parsed === null || !Array.isArray((parsed as { webhooks?: unknown }).webhooks) || (parsed as { webhooks: unknown[] }).webhooks.length === 0) return bytes;
+    return Buffer.from(`${JSON.stringify(redactWebhookSecrets(parsed), null, 2)}\n`);
+  } catch {
+    return bytes;
+  }
 }
 
 function readName(definitionPath: string): string {
