@@ -39,6 +39,7 @@ import type { OutboundPolicy, Transport } from './outbound.ts';
 import { SecretStore } from './secrets.ts';
 import { WebhookService } from './webhooks.ts';
 import { Inbox } from './inbox.ts';
+import { PushService, type PushTransport } from './push.ts';
 import { httpTransport } from './outbound.ts';
 import { INBOX_MAX_BODY_BYTES } from './schema.ts';
 
@@ -65,6 +66,10 @@ export interface EngineOptions {
   outbound?: Partial<OutboundPolicy>;
   /** Sends webhook deliveries (tests pass a fake). Without one, test mode captures deliveries and other modes call out over HTTP. */
   webhookTransport?: Transport;
+  /** Reaches Google and Apple for the push test sender (tests pass fakes: nothing in the suite touches the network). */
+  pushTransport?: PushTransport;
+  /** Where APNs is (tests point it at a local HTTP/2 server). */
+  apnsOrigin?: (sandbox: boolean) => string;
   /** Called with every request log entry, after redaction. */
   onRequest?: (entry: ReturnType<RequestLog['record']>, endpointId: string | undefined) => void;
 }
@@ -114,6 +119,8 @@ export class Engine {
   readonly outbound: OutboundPolicy;
   /** Outgoing webhooks and their delivery log. */
   readonly webhooks: WebhookService;
+  /** The push test sender (FCM and APNs). */
+  readonly push: PushService;
   /** What `inbox` endpoints captured. */
   readonly inbox: Inbox;
   /** Sends the calls people ask for by hand (a replay). Webhooks use the same one. */
@@ -150,6 +157,7 @@ export class Engine {
     this.secrets = new SecretStore(folder.dataDir);
     this.outbound = { allowPrivate: options.outbound?.allowPrivate ?? true, requireHttps: options.outbound?.requireHttps ?? false, ...(options.outbound?.resolve === undefined ? {} : { resolve: options.outbound.resolve }) };
     this.inbox = new Inbox(store.db, now);
+    this.push = new PushService({ db: store.db, secrets: this.secrets, now, ...(options.pushTransport === undefined ? {} : { transport: options.pushTransport }), ...(options.apnsOrigin === undefined ? {} : { apnsOrigin: options.apnsOrigin }) });
     this.outboundTransport = options.webhookTransport ?? httpTransport;
     this.webhooks = new WebhookService({
       db: store.db,
