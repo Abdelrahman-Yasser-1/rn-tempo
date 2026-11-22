@@ -163,6 +163,28 @@ describe('queries and mutations from collections', () => {
   });
 });
 
+describe('hidden fields cannot be probed', () => {
+  it('AC-LP-7 sorting or filtering by a hidden field answers like an unknown field, in generated and SDL schemas', async () => {
+    const built = await start({ schema: { source: 'collections', hiddenFields: ['products.price'] } });
+    // `secret` is hidden by the crud endpoints, `price` by the endpoint: neither can be sorted by through a resolver.
+    for (const field of ['secret', 'price']) {
+      const sorted = await built.query(`{ products(sort: "${field}") { id } }`);
+      expect(sorted.body.errors?.[0]?.message).toBe(`Cannot sort by "${field}".`);
+      expect(sorted.body.errors?.[0]?.message).not.toContain('hidden');
+    }
+    expect((await built.query('{ products(sort: "nonexistent") { id } }')).body.errors?.[0]?.message).toBe('Cannot sort by "nonexistent".');
+    expect((await built.query('{ products(sort: "title") { id } }')).body.errors).toBeUndefined();
+    await stopAll();
+    const sdl = await start({
+      schema: { source: 'sdl', sdl: 'type Query { items(where: JSON, sort: String): [Item!]! } type Item { id: Int! title: String } scalar JSON' },
+      resolvers: { 'Query.items': { collection: 'products', action: 'list' } },
+    });
+    expect((await sdl.query('{ items(where: { secret: "s1" }) { id } }')).body.errors?.[0]?.message).toBe('The collection products has no field "secret".');
+    expect((await sdl.query('{ items(where: { nope: "s1" }) { id } }')).body.errors?.[0]?.message).toBe('The collection products has no field "nope".');
+    expect((await sdl.query('{ items(sort: "-secret") { id } }')).body.errors?.[0]?.message).toBe('Cannot sort by "secret".');
+  });
+});
+
 describe('SDL and resolvers', () => {
   const sdl = `
     type Query {

@@ -339,6 +339,11 @@ export class Engine {
         definition: () => this.state.definition,
         events: this.events,
         mediaExists: (id) => this.media.has(id),
+        hidden: (collection) => {
+          const set = new Set(hiddenFieldsByCollection(this.state.definition).get(collection) ?? []);
+          for (const entry of endpoint.schema.hiddenFields ?? []) if (entry.startsWith(`${collection}.`)) set.add(entry.slice(collection.length + 1));
+          return set;
+        },
         callHandler: (file, label, context, body) => this.callHandlerFile(file, label, context, body),
       },
       endpoint.id,

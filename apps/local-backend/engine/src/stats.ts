@@ -1,5 +1,9 @@
 const WINDOW_MS = 60_000;
 const SAMPLES = 1000;
+/** Distinct GraphQL operation names kept per endpoint; the rest are counted together, so a client cannot grow the map. */
+const MAX_OPERATIONS_PER_ENDPOINT = 200;
+const MAX_OPERATION_NAME = 100;
+export const OTHER_OPERATIONS = '(other)';
 
 export interface EndpointStats {
   id: string;
@@ -65,8 +69,14 @@ export class Stats {
     if (entry.samples.length > SAMPLES) entry.samples.shift();
     this.perEndpoint.set(key, entry);
     if (operation !== undefined) {
-      const id = `${key} ${operation}`;
-      const found = this.perOperation.get(id) ?? { endpoint: key, operation, count: 0, errors: 0, samples: [] };
+      let name = operation.slice(0, MAX_OPERATION_NAME);
+      if (!this.perOperation.has(`${key} ${name}`)) {
+        let known = 0;
+        for (const entry of this.perOperation.values()) if (entry.endpoint === key && entry.operation !== OTHER_OPERATIONS) known += 1;
+        if (known >= MAX_OPERATIONS_PER_ENDPOINT) name = OTHER_OPERATIONS;
+      }
+      const id = `${key} ${name}`;
+      const found = this.perOperation.get(id) ?? { endpoint: key, operation: name, count: 0, errors: 0, samples: [] };
       found.count += 1;
       if (failed) found.errors += 1;
       found.samples.push(ms);
