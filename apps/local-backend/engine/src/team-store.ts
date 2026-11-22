@@ -38,6 +38,8 @@ export interface ApiKeyRow {
   scope: ApiKeyScope;
   prefix: string;
   createdBy: string;
+  /** The account that made the key; `null` for a key made before this was recorded (it is not tied to anyone). */
+  createdByAccountId: number | null;
   createdAt: string;
   lastUsedAt: string | null;
   revokedAt: string | null;
@@ -64,6 +66,7 @@ const toKey = (row: Record<string, unknown>): ApiKeyRow => ({
   scope: String(row.scope) as ApiKeyScope,
   prefix: String(row.prefix),
   createdBy: String(row.createdBy),
+  createdByAccountId: row.createdByAccountId === null || row.createdByAccountId === undefined ? null : Number(row.createdByAccountId),
   createdAt: String(row.createdAt),
   lastUsedAt: row.lastUsedAt === null ? null : String(row.lastUsedAt),
   revokedAt: row.revokedAt === null ? null : String(row.revokedAt),
@@ -110,6 +113,7 @@ const SCHEMA = `
     prefix TEXT NOT NULL,
     hash TEXT NOT NULL UNIQUE,
     createdBy TEXT NOT NULL,
+    createdByAccountId INTEGER,
     createdAt TEXT NOT NULL,
     lastUsedAt TEXT,
     revokedAt TEXT
@@ -159,6 +163,10 @@ export class TeamStore {
     }
     this.db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 5000;');
     this.db.exec(SCHEMA);
+    // A database made before keys were tied to their creator gets the column; old keys keep a null creator.
+    if (!this.db.prepare('PRAGMA table_info(api_keys)').all().some((column) => column.name === 'createdByAccountId')) {
+      this.db.exec('ALTER TABLE api_keys ADD COLUMN createdByAccountId INTEGER');
+    }
   }
 
   close(): void {
@@ -310,29 +318,36 @@ export class TeamStore {
 
   // ---- api keys
 
-  insertKey(input: { backendId: string; name: string; scope: ApiKeyScope; prefix: string; hash: string; createdBy: string; now: string }): ApiKeyRow {
-    const { id } = this.run('INSERT INTO api_keys (backendId, name, scope, prefix, hash, createdBy, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)', input.backendId, input.name, input.scope, input.prefix, input.hash, input.createdBy, input.now);
-    const row = this.one('SELECT id, backendId, name, scope, prefix, createdBy, createdAt, lastUsedAt, revokedAt FROM api_keys WHERE id = ?', id);
+  insertKey(input: { backendId: string; name: string; scope: ApiKeyScope; prefix: string; hash: string; createdBy: string; createdByAccountId?: number; now: string }): ApiKeyRow {
+    const { id } = this.run('INSERT INTO api_keys (backendId, name, scope, prefix, hash, createdBy, createdByAccountId, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', input.backendId, input.name, input.scope, input.prefix, input.hash, input.createdBy, input.createdByAccountId ?? null, input.now);
+    const row = this.one('SELECT id, backendId, name, scope, prefix, createdBy, createdByAccountId, createdAt, lastUsedAt, revokedAt FROM api_keys WHERE id = ?', id);
     if (row === undefined) throw new Error('The key was not saved.');
     return toKey(row);
   }
 
   keyByHash(hash: string): ApiKeyRow | undefined {
-    const row = this.one('SELECT id, backendId, name, scope, prefix, createdBy, createdAt, lastUsedAt, revokedAt FROM api_keys WHERE hash = ?', hash);
+    const row = this.one('SELECT id, backendId, name, scope, prefix, createdBy, createdByAccountId, createdAt, lastUsedAt, revokedAt FROM api_keys WHERE hash = ?', hash);
     return row === undefined ? undefined : toKey(row);
   }
 
   keysOf(backendId: string): ApiKeyRow[] {
-    return this.db.prepare('SELECT id, backendId, name, scope, prefix, createdBy, createdAt, lastUsedAt, revokedAt FROM api_keys WHERE backendId = ? ORDER BY id').all(backendId).map(toKey);
+    return this.db.prepare('SELECT id, backendId, name, scope, prefix, createdBy, createdByAccountId, createdAt, lastUsedAt, revokedAt FROM api_keys WHERE backendId = ? ORDER BY id').all(backendId).map(toKey);
   }
 
   keyById(id: number): ApiKeyRow | undefined {
-    const row = this.one('SELECT id, backendId, name, scope, prefix, createdBy, createdAt, lastUsedAt, revokedAt FROM api_keys WHERE id = ?', id);
+    const row = this.one('SELECT id, backendId, name, scope, prefix, createdBy, createdByAccountId, createdAt, lastUsedAt, revokedAt FROM api_keys WHERE id = ?', id);
     return row === undefined ? undefined : toKey(row);
   }
 
   revokeKey(id: number, now: string): boolean {
     return this.run('UPDATE api_keys SET revokedAt = ? WHERE id = ? AND revokedAt IS NULL', now, id).changes > 0;
+  }
+
+  /** Revokes the live keys an account made, for one backend or (without `backendId`) all of them. Returns how many. */
+  revokeKeysOfCreator(accountId: number, now: string, backendId?: string): number {
+    return backendId === undefined
+      ? this.run('UPDATE api_keys SET revokedAt = ? WHERE createdByAccountId = ? AND revokedAt IS NULL', now, accountId).changes
+      : this.run('UPDATE api_keys SET revokedAt = ? WHERE createdByAccountId = ? AND backendId = ? AND revokedAt IS NULL', now, accountId, backendId).changes;
   }
 
   touchKey(id: number, now: string): void {

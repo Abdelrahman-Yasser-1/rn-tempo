@@ -264,7 +264,10 @@ export function teamRoutes(services: TeamServices): TeamRoute[] {
           who.note(account.email);
           if (action === 'disable' || action === 'enable') {
             store.setDisabled(account.id, action === 'disable');
-            if (action === 'disable') sessions.destroyAccount(account.id);
+            if (action === 'disable') {
+              sessions.destroyAccount(account.id);
+              keys.revokeCreatedBy(account.id);
+            }
             return jsonReply(200, { ok: true });
           }
           if (action === 'reset-totp') {
@@ -286,6 +289,7 @@ export function teamRoutes(services: TeamServices): TeamRoute[] {
         if (account.owner || account.id === who.account.id) return no('That account cannot be deleted here.', 403);
         who.note(account.email);
         sessions.destroyAccount(account.id);
+        keys.revokeCreatedBy(account.id);
         store.deleteAccount(account.id);
         return jsonReply(200, { ok: true });
       }),
@@ -357,6 +361,7 @@ export function teamRoutes(services: TeamServices): TeamRoute[] {
         const found = manageable(who, id, params.accountId);
         if ('status' in found) return found;
         store.removeMembership(found.account.id, id);
+        keys.revokeCreatedBy(found.account.id, id);
         who.note(found.account.email);
         return jsonReply(200, { ok: true });
       }),
@@ -396,7 +401,7 @@ export function teamRoutes(services: TeamServices): TeamRoute[] {
         const name = text(body.name, 80).trim();
         if (name === '') return no('Give the key a name, for example "CI".');
         if (!isKeyScope(body.scope)) return no('Choose a scope: read-definition, sessions, admin or public.');
-        const made = keys.create({ backendId: id, name, scope: body.scope, createdBy: who.actor.label });
+        const made = keys.create({ backendId: id, name, scope: body.scope, createdBy: who.actor.label, createdByAccountId: who.account.id });
         who.note(`${name} (${body.scope}) ${made.record.prefix}`);
         // The whole key is in this answer and nowhere else, ever.
         return jsonReply(201, { key: made.key, record: keyJson(made.record) });
