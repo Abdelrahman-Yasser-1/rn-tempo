@@ -93,13 +93,23 @@ function byName(name: string | undefined, rng: Rng): string | undefined {
   return undefined;
 }
 
-function stringValue(schema: Json, rng: Rng, name: string | undefined): string {
+/** The longest string, and the most items, an import generates, whatever the schema asks for. */
+export const MAX_GENERATED_LENGTH = 1000;
+export const MAX_GENERATED_ITEMS = 3;
+
+function stringValue(schema: Json, rng: Rng, name: string | undefined, state: Walk): string {
   const format = typeof schema.format === 'string' ? schema.format : undefined;
   let value = (format === undefined ? undefined : formatted(format, rng)) ?? byName(name, rng) ?? `${rng.pick(WORDS)} ${rng.pick(WORDS)}`;
-  const min = typeof schema.minLength === 'number' ? schema.minLength : 0;
-  const max = typeof schema.maxLength === 'number' ? schema.maxLength : Infinity;
+  const asked = (key: string, fallback: number): number => {
+    const raw = schema[key];
+    if (typeof raw !== 'number' || !Number.isFinite(raw) || raw < 0) return fallback;
+    if (raw > MAX_GENERATED_LENGTH) state.clamped = true;
+    return Math.min(raw, MAX_GENERATED_LENGTH);
+  };
+  const min = asked('minLength', 0);
+  const max = asked('maxLength', MAX_GENERATED_LENGTH);
   while (value.length < min) value += ` ${rng.pick(WORDS)}`;
-  if (value.length > max) value = value.slice(0, Math.max(0, max));
+  if (value.length > max) value = value.slice(0, max);
   return value;
 }
 
@@ -117,6 +127,8 @@ function numberValue(schema: Json, rng: Rng, integer: boolean): number {
 interface Walk {
   rng: Rng;
   nodes: number;
+  /** A schema asked for more than the limits allow. */
+  clamped: boolean;
 }
 
 function typeOf(schema: Json): string | undefined {
@@ -158,7 +170,7 @@ function walk(schema: unknown, state: Walk, name: string | undefined, depth: num
   }
   switch (typeOf(schema)) {
     case 'string':
-      return stringValue(schema, state.rng, name);
+      return stringValue(schema, state.rng, name, state);
     case 'integer':
       return numberValue(schema, state.rng, true);
     case 'number':
@@ -168,9 +180,12 @@ function walk(schema: unknown, state: Walk, name: string | undefined, depth: num
     case 'null':
       return null;
     case 'array': {
-      const min = Math.max(1, typeof schema.minItems === 'number' ? schema.minItems : 1);
-      const max = Math.min(typeof schema.maxItems === 'number' ? schema.maxItems : 3, 3);
-      const count = state.rng.int(Math.min(min, max), Math.max(min, max));
+      // The count never follows the schema past the cap: `minItems: 1e9` still gives up to 3 items.
+      const asked = typeof schema.minItems === 'number' ? schema.minItems : 1;
+      if (asked > MAX_GENERATED_ITEMS || (typeof schema.maxItems === 'number' && schema.maxItems > MAX_GENERATED_ITEMS && asked > MAX_GENERATED_ITEMS)) state.clamped = true;
+      const floor = schema.minItems === 0 ? 0 : 1;
+      const ceiling = typeof schema.maxItems === 'number' && schema.maxItems >= 0 ? Math.min(schema.maxItems, MAX_GENERATED_ITEMS) : MAX_GENERATED_ITEMS;
+      const count = state.rng.int(Math.min(floor, ceiling), ceiling);
       return Array.from({ length: count }, () => walk(schema.items, state, name, depth + 1));
     }
     case 'object': {
@@ -189,6 +204,9 @@ function walk(schema: unknown, state: Walk, name: string | undefined, depth: num
  * `default`, `enum`, `const`, formats (email, uuid, date-time, uri...), `min`/`max` limits and makes arrays of 1 to 3
  * items. It never uses a clock or `Math.random`, and stops growing after a fixed number of nodes.
  */
-export function generateFromSchema(schema: unknown, seed: string): unknown {
-  return walk(schema, { rng: new Rng(seed), nodes: 0 }, undefined, 0);
+export function generateFromSchema(schema: unknown, seed: string, notes?: string[]): unknown {
+  const state: Walk = { rng: new Rng(seed), nodes: 0, clamped: false };
+  const value = walk(schema, state, undefined, 0);
+  if (state.clamped) notes?.push(`Generated data for ${seed.split('|')[0] ?? seed} was cut to at most ${String(MAX_GENERATED_ITEMS)} items and ${String(MAX_GENERATED_LENGTH)} characters, because the file asked for more.`);
+  return value;
 }

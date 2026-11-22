@@ -6,6 +6,7 @@ import type { FieldIssue } from '@rn-tempo/api-contract';
 import { adminAuthRoutes } from './admin-users.ts';
 import { adminContentRoutes, contentErrorReply } from './admin-content.ts';
 import { adminMediaRoutes } from './admin-media.ts';
+import { importAuditBody } from './import/admin-import.ts';
 import { jsonReply, problemReply, readJson, type Reply, type RequestCtx } from './http.ts';
 import { Manager, NotFoundError } from './manager.ts';
 import { atLeast, decide, settingsChanged, type AdminAccess } from './roles.ts';
@@ -52,6 +53,9 @@ export function loopbackHost(req: IncomingMessage): boolean {
   const name = host.startsWith('[') ? host.slice(0, host.indexOf(']') + 1) : host.split(':')[0];
   return name === '127.0.0.1' || name === 'localhost' || name === '[::1]';
 }
+
+/** Routes whose request body holds a file or an address that may carry a secret: the audit keeps a redacted copy. */
+const auditBodyOf = (route: string, body: unknown): unknown => (route === 'POST /import/preview' || route === 'POST /import/apply' ? importAuditBody(body) : body);
 
 function parseJsonOr(text: string): unknown {
   if (text === '') return undefined;
@@ -372,7 +376,7 @@ export function createAdminServer(manager: Manager, extras: AdminExtras = {}, to
       const report = (status: number, denied: boolean, before: unknown): void => {
         if (!writing) return;
         const length = Number(req.headers['content-length']);
-        access?.onWrite?.({ route: key, params, status, body: streaming ? undefined : parseJsonOr(ctx.bodyText), before, denied, uploadBytes: streaming && Number.isFinite(length) ? length : undefined });
+        access?.onWrite?.({ route: key, params, status, body: streaming ? undefined : auditBodyOf(key, parseJsonOr(ctx.bodyText)), before, denied, uploadBytes: streaming && Number.isFinite(length) ? length : undefined });
       };
       if (access !== undefined) {
         let decision = decide(access, key);

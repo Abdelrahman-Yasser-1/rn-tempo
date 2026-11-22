@@ -43,8 +43,7 @@ async function load(body: Json, options: ImportRouteOptions): Promise<{ imported
   if (typeof body.url === 'string' && body.url !== '') {
     const got = await fetchApiFile(body.url, { allowPrivate: options.allowPrivate });
     // The record keeps the address without its query string, which may hold a token.
-    const shown = new URL(got.url);
-    return { imported: importApiText(got.text, shown.pathname), source: `${shown.origin}${shown.pathname}` };
+    return { imported: importApiText(got.text, new URL(got.url).pathname), source: safeImportUrl(got.url) };
   }
   if (typeof body.text !== 'string' || body.text === '') throw new DefinitionError('Send the file as "text" (with its "name"), or a "url".');
   const name = typeof body.name === 'string' && body.name !== '' ? body.name.slice(0, 200) : 'uploaded file';
@@ -59,6 +58,26 @@ const countByTag = (imported: ImportedApi): Record<string, number> => {
   }
   return counts;
 };
+
+/** An import address as it may be stored or shown: origin and path only, never a user name, password, query or fragment. */
+export function safeImportUrl(raw: string): string {
+  try {
+    const url = new URL(raw);
+    return `${url.origin}${url.pathname}`;
+  } catch {
+    return '[not a valid address]';
+  }
+}
+
+/**
+ * What the audit log may keep of an import request: the file text becomes its length, and the address loses anything that can
+ * hold a secret. Used for `POST /import/preview` and `POST /import/apply` before the body reaches the audit summary.
+ */
+export function importAuditBody(body: unknown): unknown {
+  if (!isObject(body)) return body;
+  const { text, url, ...rest } = body;
+  return { ...rest, ...(typeof text === 'string' ? { text: `[${String(text.length)} characters, not stored]` } : {}), ...(typeof url === 'string' ? { url: safeImportUrl(url) } : {}) };
+}
 
 /** `POST /import/preview` (what would change, nothing is written) and `POST /import/apply` (with the user's choices). */
 export function adminImportRoutes(manager: Manager, options: ImportRouteOptions): AdminRoute[] {
