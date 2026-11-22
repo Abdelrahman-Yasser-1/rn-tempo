@@ -33,6 +33,12 @@ export interface TempoBackendOptions {
    * module that reads its base URL when it is imported) picks a free port itself and passes it here.
    */
   port?: number;
+  /**
+   * Fixed tokens for a suite that asserts exact token strings (a mock used to hand out `mock-access-token`). Signing in as
+   * `username` returns exactly these, the access token signs that user in, and the refresh token trades for the same pair.
+   * They live only in this test process, never in the definition, and stop working when the user's tokens are revoked.
+   */
+  testTokens?: { username: string; accessToken: string; refreshToken: string };
   /** Register `beforeAll`/`afterAll` when Jest's globals exist (default true). Turn it off to call `start()` and `stop()` yourself. */
   hooks?: boolean;
 }

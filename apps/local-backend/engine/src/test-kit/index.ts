@@ -111,6 +111,7 @@ export function setupTempoBackend(options: TempoBackendOptions = {}): TempoBacke
           watch: false,
           memory: true,
           testMode,
+          ...(options.testTokens === undefined ? {} : { testTokens: options.testTokens }),
           seed: 'tempo-test-kit',
           now: () => clock,
         });

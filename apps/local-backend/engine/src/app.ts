@@ -81,8 +81,12 @@ export async function startBackend(dir: string, options: StartOptions = {}): Pro
   const folder = openBackend(dir);
   const engineLog = createEngineLog(join(folder.dataDir, 'logs'));
   const files = new RequestFiles({ dir: join(folder.dataDir, 'logs'), ...(options.logLimits ?? {}) });
+  // Fixed test tokens only for a test-mode engine on a loopback listener that no team server mounts.
+  const loopback = options.host === '127.0.0.1' || options.host === '::1' || options.host === 'localhost';
+  const testTokens = options.testMode === true && options.mounted === undefined && loopback ? options.testTokens : undefined;
   const engine = Engine.start(folder, {
     ...options,
+    ...(testTokens === undefined ? { testTokens: undefined } : { testTokens }),
     // A team server must not be usable to reach the network it runs in (SSRF): the same switch as URL imports.
     outbound: { allowPrivate: options.importUrls?.allowPrivate ?? options.mounted === undefined, requireHttps: !(options.importUrls?.allowPrivate ?? options.mounted === undefined), ...options.outbound },
     ...(options.mounted === undefined ? {} : { publicPrefix: options.mounted.prefix }),
