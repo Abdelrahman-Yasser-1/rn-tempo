@@ -1,4 +1,5 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
+import type { Duplex } from 'node:stream';
 import { join } from 'node:path';
 
 import { match, tokenOf } from './admin.ts';
@@ -14,6 +15,7 @@ import { atLeast, HUB_ROLE_TABLE, type AdminAccess, type ApiKeyScope, type Role 
 import { SESSION_ID, TempSessions, type SessionLimits } from './sessions.ts';
 import { buildTestSnapshot, SnapshotTooLargeError, testSnapshotReply } from './test-snapshot.ts';
 import { closeServer, listenOn, readBody, sendReply, toCtx } from './server.ts';
+import { refuseUpgrade } from './websocket.ts';
 import { TeamAuth, type TeamAuthOptions } from './team-auth.ts';
 import { teamRoutes, type TeamRoute, type TeamServices, type Who } from './team-routes.ts';
 import { loadServerSecret } from './team-secret.ts';
@@ -458,6 +460,45 @@ export async function startTeam(options: TeamOptions): Promise<RunningTeam> {
     })();
   });
 
+  // A WebSocket upgrade for a backend's public API (`/b/<id>` or `/s/<id>`): the same routing as a request, the same sandbox.
+  // Upgraded sockets leave the HTTP server's own list but still keep `server.close()` waiting, so they are tracked here.
+  const upgraded = new Set<Duplex>();
+  async function upgradeRoute(req: IncomingMessage, socket: Duplex, head: Buffer): Promise<void> {
+    socket.on('error', () => undefined);
+    upgraded.add(socket);
+    socket.once('close', () => upgraded.delete(socket));
+    const client = trust.client(req);
+    const pathname = new URL(req.url ?? '/', 'http://local').pathname;
+    const onPublicHost = publicHost !== null && String(req.headers.host ?? '').toLowerCase() === publicHost.toLowerCase();
+    const isSessionPath = pathname.startsWith('/s/');
+    const isPublicPath = pathname === '/b' || pathname.startsWith('/b/') || isSessionPath;
+    if (!isPublicPath || (publicHost !== null && isPublicPath !== onPublicHost)) return refuseUpgrade(socket, 404, 'Not found.');
+    const raw = req.url ?? '/';
+    let running: ReturnType<typeof registry.running>;
+    let rest: string;
+    if (isSessionPath) {
+      const found = /^\/s\/([^/?]+)(\/[^?]*)?(\?.*)?$/.exec(raw);
+      const id = found?.[1] ?? '';
+      running = SESSION_ID.test(id) ? await tempSessions.get(id) : undefined;
+      if (found === null || running === undefined) return refuseUpgrade(socket, 404, 'No such session (it may have expired).');
+      rest = `${found[2] ?? '/'}${found[3] ?? ''}`;
+    } else {
+      const found = /^\/b\/([^/?]+)(\/[^?]*)?(\?.*)?$/.exec(raw);
+      const id = found?.[1] ?? '';
+      if (found === null || !BACKEND_ID.test(id) || !registry.listedIds().includes(id)) return refuseUpgrade(socket, 404, 'No such backend.');
+      running = registry.running(id);
+      if (running === undefined) return refuseUpgrade(socket, 503, `${id} is not running.`);
+      rest = `${found[2] ?? '/'}${found[3] ?? ''}`;
+    }
+    // The engine sees the path without the prefix, like on its own port. The control routes (`/__...`) are not WebSockets.
+    if ((rest.split('?')[0] ?? '').split('/').find((part) => part !== '')?.startsWith('__') === true) return refuseUpgrade(socket, 404, 'Not found.');
+    req.url = rest;
+    running.handleUpgrade(req, socket, head, { scheme: client.https ? 'https' : 'http', ip: client.ip });
+  }
+  server.on('upgrade', (req, socket, head) => {
+    void upgradeRoute(req, socket, head).catch(() => socket.destroy());
+  });
+
   let port: number;
   try {
     port = await listenOn(server, options.port ?? DEFAULT_TEAM_PORT, options.host ?? '0.0.0.0');
@@ -484,6 +525,7 @@ export async function startTeam(options: TeamOptions): Promise<RunningTeam> {
     stop() {
       stopping ??= (async (): Promise<void> => {
         clearInterval(pruneTimer);
+        for (const socket of upgraded) socket.destroy();
         await closeServer(server);
         await tempSessions.stopAll();
         await registry.stopAll();

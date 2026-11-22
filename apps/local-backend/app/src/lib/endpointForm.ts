@@ -12,6 +12,7 @@ export const ENDPOINT_TYPES: { value: EndpointType; label: string; hint: string 
   { value: 'upload', label: 'File upload', hint: 'Accepts a file and stores it in Media.' },
   { value: 'download', label: 'File download', hint: 'Sends back a stored file by its id.' },
   { value: 'handler', label: 'Custom code', hint: 'Runs a JavaScript file you write. Only for backends you trust.' },
+  { value: 'websocket', label: 'Live socket (WebSocket)', hint: 'A WebSocket: echo, or answers chosen by rules, plus the data changes you pick, to every connected app.' },
   { value: 'sse', label: 'Live events (SSE)', hint: 'A stream of server-sent events: a script of messages and the data changes you pick, to every connected app.' },
 ];
 
@@ -85,6 +86,14 @@ export interface EndpointForm {
   on: string;
   retryMs: string;
   heartbeatMs: string;
+  // live socket (WebSocket)
+  behavior: 'echo' | 'rules';
+  /** The rules, as JSON text: a list of `{ match, reply, delayMs?, broadcast? }`. */
+  rules: string;
+  /** The welcome message as JSON text (a quoted string is plain text). Empty sends none. */
+  onConnect: string;
+  subprotocols: string;
+  maxPayloadKb: string;
   // every type: how the answer is shaped and how slow it is
   /** `inherit` (the backend's wrapper), `none`, or the name of a response template. */
   wrap: string;
@@ -117,6 +126,11 @@ export function blankForm(type: EndpointType, collections: CollectionDef[]): End
     on: '',
     retryMs: '3000',
     heartbeatMs: '15000',
+    behavior: 'echo',
+    rules: '[\n  { "match": { "type": "ping" }, "reply": { "type": "pong" } }\n]',
+    onConnect: '',
+    subprotocols: '',
+    maxPayloadKb: '64',
     wrap: 'inherit',
     headers: [],
     latency: blankLatency('inherit'),
@@ -153,6 +167,9 @@ export function suggest(form: EndpointForm, force = false): EndpointForm {
   } else if (form.type === 'sse') {
     next.method = 'GET';
     if (force || form.path === '') next.path = '/events';
+  } else if (form.type === 'websocket') {
+    next.method = 'GET';
+    if (force || form.path === '') next.path = '/ws';
   } else if (form.type === 'upload') {
     next.method = 'POST';
     if (force || form.path === '') next.path = '/media/upload';
@@ -222,6 +239,16 @@ export function formFrom(endpoint: EndpointDef, collections: CollectionDef[]): E
         retryMs: String(endpoint.retryMs ?? 3000),
         heartbeatMs: String(endpoint.heartbeatMs ?? 15_000),
       };
+    case 'websocket':
+      return {
+        ...form,
+        behavior: endpoint.behavior ?? 'echo',
+        rules: JSON.stringify(endpoint.rules ?? [], null, 2),
+        onConnect: endpoint.onConnect === undefined ? '' : JSON.stringify(endpoint.onConnect, null, 2),
+        on: (endpoint.on ?? []).join('\n'),
+        subprotocols: (endpoint.subprotocols ?? []).join(', '),
+        maxPayloadKb: String((endpoint.maxPayloadBytes ?? 65_536) / 1024),
+      };
     case 'download':
       return form;
   }
@@ -265,6 +292,21 @@ export function problemsOf(form: EndpointForm): FormProblem[] {
     if (script !== undefined) found.push({ field: 'script', message: script });
     if (!/^\d{1,6}$/.test(form.retryMs)) found.push({ field: 'retryMs', message: 'The retry time is a number of milliseconds.' });
     if (!/^\d{1,6}$/.test(form.heartbeatMs)) found.push({ field: 'heartbeatMs', message: 'The heartbeat is a number of milliseconds (0 turns it off).' });
+    if (eventsFromText(form.on).some((item) => !/^(?:\*|[A-Za-z][A-Za-z0-9_.:-]{0,63}\*?)$/.test(item))) found.push({ field: 'on', message: 'An event is a name like products.created, a prefix like products.* or *.' });
+  }
+  if (form.type === 'websocket') {
+    if (form.behavior === 'rules') {
+      const rules = listProblem(form.rules, 'The rules');
+      if (rules !== undefined) found.push({ field: 'rules', message: rules });
+    }
+    if (form.onConnect.trim() !== '') {
+      try {
+        JSON.parse(form.onConnect);
+      } catch {
+        found.push({ field: 'onConnect', message: 'The welcome message is not valid JSON (write text in quotes).' });
+      }
+    }
+    if (!(Number(form.maxPayloadKb) > 0 && Number(form.maxPayloadKb) <= 1024)) found.push({ field: 'maxPayloadKb', message: 'The largest message is a number of KB from 1 to 1024.' });
     if (eventsFromText(form.on).some((item) => !/^(?:\*|[A-Za-z][A-Za-z0-9_.:-]{0,63}\*?)$/.test(item))) found.push({ field: 'on', message: 'An event is a name like products.created, a prefix like products.* or *.' });
   }
   if (form.type === 'upload' && form.maxMb !== '' && !(Number(form.maxMb) > 0)) found.push({ field: 'maxMb', message: 'The size limit is a number of megabytes.' });
@@ -375,6 +417,14 @@ export function endpointFrom(form: EndpointForm, id: string, original?: Endpoint
       set('on', eventsFromText(form.on));
       set('retryMs', Number(form.retryMs));
       set('heartbeatMs', Number(form.heartbeatMs));
+      break;
+    case 'websocket':
+      set('behavior', form.behavior);
+      set('rules', form.behavior === 'rules' && listProblem(form.rules, '') === undefined ? (JSON.parse(form.rules) as unknown) : []);
+      set('onConnect', form.onConnect.trim() === '' ? undefined : (JSON.parse(form.onConnect) as unknown));
+      set('on', eventsFromText(form.on));
+      set('subprotocols', form.subprotocols.split(/[\s,]+/).filter((item) => item !== ''));
+      set('maxPayloadBytes', Math.round(Number(form.maxPayloadKb) * 1024));
       break;
     case 'download':
       break;

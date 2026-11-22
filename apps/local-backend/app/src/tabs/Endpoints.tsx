@@ -20,7 +20,7 @@ import { Write } from '../hooks/team';
 const typeLabel = (type: EndpointDef['type']): string => ENDPOINT_TYPES.find((item) => item.value === type)?.label.split(' (')[0] ?? type;
 
 /** Endpoints that hold connections open: they get a Live panel instead of Try it. */
-const isLive = (endpoint: EndpointDef): boolean => endpoint.type === 'sse';
+const isLive = (endpoint: EndpointDef): boolean => endpoint.type === 'sse' || endpoint.type === 'websocket';
 
 type Dialog = { kind: 'add' } | { kind: 'edit'; endpoint: EndpointDef } | { kind: 'copy'; endpoint: EndpointDef };
 

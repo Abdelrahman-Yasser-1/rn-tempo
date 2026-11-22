@@ -94,3 +94,26 @@ describe('live events (SSE) form', () => {
     expect(problemsOf(blankForm('sse', collections))).toEqual([]);
   });
 });
+
+describe('live socket (WebSocket) form', () => {
+  it('AC-LP-7 starts with GET /ws and echo, and builds rules, a welcome message and the limits', () => {
+    const form = blankForm('websocket', collections);
+    expect(form).toMatchObject({ method: 'GET', path: '/ws', behavior: 'echo', maxPayloadKb: '64' });
+    const echo = endpointFrom(form, 'get.ws');
+    expect(echo).toEqual({ id: 'get.ws', type: 'websocket', method: 'GET', path: '/ws', auth: 'none', behavior: 'echo', rules: [], on: [], subprotocols: [], maxPayloadBytes: 65_536 });
+    const rules = endpointFrom({ ...form, behavior: 'rules', rules: '[{"match":{"type":"ping"},"reply":"pong"}]', onConnect: '"hi"', on: 'a.b', subprotocols: 'chat.v1, chat.v2', maxPayloadKb: '1' }, 'get.ws');
+    expect(rules).toMatchObject({ behavior: 'rules', rules: [{ match: { type: 'ping' }, reply: 'pong' }], onConnect: 'hi', on: ['a.b'], subprotocols: ['chat.v1', 'chat.v2'], maxPayloadBytes: 1024 });
+  });
+
+  it('AC-LP-7 reads an endpoint back and names what is wrong', () => {
+    const endpoint: EndpointDef = { id: 'a', type: 'websocket', method: 'GET', path: '/chat', behavior: 'rules', rules: [{ match: { contains: 'x' }, reply: 'y' }], onConnect: { hi: 1 }, subprotocols: ['chat'], maxPayloadBytes: 2048, pingIntervalMs: 99 };
+    const form = formFrom(endpoint, collections);
+    expect(form).toMatchObject({ behavior: 'rules', subprotocols: 'chat', maxPayloadKb: '2' });
+    expect(JSON.parse(form.onConnect)).toEqual({ hi: 1 });
+    expect(endpointFrom(form, 'a', endpoint)).toMatchObject({ pingIntervalMs: 99, maxPayloadBytes: 2048 });
+    const bad = { ...form, rules: '{}', onConnect: 'not json', maxPayloadKb: '0', on: 'bad!' };
+    expect(problemsOf(bad).map((problem) => problem.field).sort()).toEqual(['maxPayloadKb', 'on', 'onConnect', 'rules']);
+    // The rules are only checked when they are used.
+    expect(problemsOf({ ...bad, behavior: 'echo' }).some((problem) => problem.field === 'rules')).toBe(false);
+  });
+});

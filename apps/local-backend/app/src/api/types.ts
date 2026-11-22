@@ -125,7 +125,15 @@ export interface RequestSchemas {
 }
 
 export type HttpMethodName = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-export type EndpointType = 'crud' | 'static' | 'auth' | 'users' | 'upload' | 'download' | 'handler' | 'sse';
+export type EndpointType = 'crud' | 'static' | 'auth' | 'users' | 'upload' | 'download' | 'handler' | 'sse' | 'websocket';
+
+/** One rule of a WebSocket endpoint: the first whose `match` fits the message sends its `reply`. */
+export interface WsRuleDef {
+  match: { type?: string; jsonPath?: string; equals?: unknown; contains?: string; startsWith?: string; endsWith?: string };
+  reply?: unknown;
+  delayMs?: number;
+  broadcast?: boolean;
+}
 
 /** One message of an SSE script. */
 export interface SseMessageDef {
@@ -200,6 +208,7 @@ export type EndpointDef = EndpointBase &
     | { type: 'upload'; maxBytes?: number; multiple?: boolean }
     | { type: 'download' }
     | { type: 'handler'; file: string; timeoutMs?: number }
+    | { type: 'websocket'; behavior?: 'echo' | 'rules'; rules?: WsRuleDef[]; on?: string[]; onConnect?: unknown; subprotocols?: string[]; maxPayloadBytes?: number; maxConnections?: number; maxConnectionsPerIp?: number; pingIntervalMs?: number; maxBufferedBytes?: number }
     | { type: 'sse'; script?: SseMessageDef[]; on?: string[]; retryMs?: number; heartbeatMs?: number; idleTimeoutMs?: number; maxConnections?: number; maxConnectionsPerIp?: number; bufferSize?: number }
   );
 

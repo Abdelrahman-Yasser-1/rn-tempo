@@ -4,9 +4,9 @@ import { sendManual } from './realtime.ts';
 import type { AdminRoute } from './admin.ts';
 import type { Endpoint } from './schema.ts';
 
-type LiveEndpoint = Extract<Endpoint, { type: 'sse' }>;
+type LiveEndpoint = Extract<Endpoint, { type: 'sse' | 'websocket' }>;
 
-const isLive = (endpoint: Endpoint | undefined): endpoint is LiveEndpoint => endpoint !== undefined && endpoint.type === 'sse';
+const isLive = (endpoint: Endpoint | undefined): endpoint is LiveEndpoint => endpoint !== undefined && (endpoint.type === 'sse' || endpoint.type === 'websocket');
 
 /**
  * The dashboard's Live panel: who is connected to an SSE, WebSocket or GraphQL endpoint, what was sent lately, a manual
@@ -17,7 +17,7 @@ export function adminRealtimeRoutes(engine: Engine): AdminRoute[] {
     const found = engine.definition.endpoints.find((candidate) => candidate.id === id);
     return isLive(found) ? found : undefined;
   };
-  const missing = (id: string | undefined) => problemReply(404, { detail: `No sse endpoint "${id ?? ''}".` });
+  const missing = (id: string | undefined) => problemReply(404, { detail: `No sse or websocket endpoint "${id ?? ''}".` });
   return [
     {
       method: 'GET',
@@ -53,7 +53,7 @@ export function adminRealtimeRoutes(engine: Engine): AdminRoute[] {
         if (clientId !== undefined && typeof clientId !== 'string') return problemReply(400, { detail: 'clientId must be text.', errors: [{ path: 'clientId', message: 'Must be text.' }] });
         const hub = engine.realtime.hub(endpoint.id, endpoint.type);
         engine.realtime.track(endpoint);
-        const sent = sendManual(hub, endpoint.bufferSize, { event, data: body.data }, clientId);
+        const sent = sendManual(hub, (endpoint.type === 'sse' ? endpoint.bufferSize : 0), { event, data: body.data }, clientId);
         return jsonReply(200, { sent });
       },
     },

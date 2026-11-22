@@ -1,5 +1,6 @@
 import { randomBytes, randomUUID } from 'node:crypto';
-import type { IncomingHttpHeaders } from 'node:http';
+import type { IncomingHttpHeaders, IncomingMessage } from 'node:http';
+import type { Duplex } from 'node:stream';
 import { join } from 'node:path';
 
 import { BUILTIN_SCENARIOS, redactUrl, RequestLog, SCENARIO_HEADER } from '@rn-tempo/dev-api';
@@ -12,6 +13,7 @@ import { crudHandler } from './crud.ts';
 import { EventBus } from './events.ts';
 import { Realtime } from './realtime.ts';
 import { sseHandler } from './sse.ts';
+import { bearerFrom, protocolsForLog, refuseUpgrade, WebSocketService, type LiveLogEntry } from './websocket.ts';
 import { createHandlerRpc } from './handler-host.ts';
 import { HandlerFileError, handlerFailure, HandlerPool, replyFromHandler, resolveHandlerFile } from './handlers.ts';
 import { readSeedFile, type BackendFolder } from './folder.ts';
@@ -24,6 +26,7 @@ import { TEST_MODE_NOW, TEST_MODE_SEED } from './constants.ts';
 import { fill, PlaceholderError, type PlaceholderContext } from './placeholders.ts';
 import { cleanHeaders, errorBody, expandTemplate, isTemplateRef, wrapBody, wrapperOf } from './responses.ts';
 import { mountPath, Router, type Handler, type Params } from './router.ts';
+import { toCtx } from './server.ts';
 import { buildRequestValidator, invalidRequest } from './import/request-validation.ts';
 import type { Backend, Collection, Endpoint, Scenario, StaticEndpoint } from './schema.ts';
 import { Stats } from './stats.ts';
@@ -88,12 +91,15 @@ export class Engine {
   readonly events: EventBus;
   /** The connected clients of SSE, WebSocket and GraphQL endpoints. */
   readonly realtime: Realtime;
+  /** The `ws` servers of websocket endpoints. */
+  readonly sockets = new WebSocketService();
   private state: State;
   private readonly options: Required<Pick<EngineOptions, 'sleep' | 'now' | 'authorize'>> & Pick<EngineOptions, 'onRequest' | 'logger'>;
   /** Turns delays off for every request (`--test-mode`). */
   readonly testMode: boolean;
   private readonly seed: string;
   private requestCounter = 0;
+  private closed = false;
   /** What `{{now}}` shows in test mode. A test kit can move it. */
   testClock = new Date(TEST_MODE_NOW);
   /** The `{{seq}}` counter of each endpoint (requests that reached it). Test kits reset it per session. */
@@ -194,8 +200,10 @@ export class Engine {
   }
 
   close(): void {
+    this.closed = true;
     clearInterval(this.dueTimer);
     this.realtime.closeAll();
+    this.sockets.close();
     void this.handlers.close();
     this.store.close();
   }
@@ -255,6 +263,8 @@ export class Engine {
       }
       case 'sse':
         return sseHandler(endpoint, { realtime: this.realtime, zeroed: (headers) => this.delaysZeroed(headers), now: this.options.now });
+      case 'websocket':
+        return () => problemReply(426, { title: 'Upgrade Required', detail: 'This is a WebSocket endpoint: connect with ws:// or wss://.', headers: { upgrade: 'websocket' } });
       case 'handler':
         return async (ctx, params) => {
           const label = endpoint.id;
@@ -385,6 +395,59 @@ export class Engine {
   /** Whether delays are 0 for a request with these headers (test mode, unless it asks for its delays back). */
   delaysZeroed(headers: IncomingHttpHeaders): boolean {
     return testModeOf({ engine: this.testMode, definition: this.state.definition.testMode, headers }).zeroed;
+  }
+
+  // ---- live connections (WebSocket upgrades)
+
+  /** Records a connect, a message or a disconnect of a live connection in the request log (method `WS`) and the stats. */
+  recordLive(entry: LiveLogEntry): void {
+    if (this.closed) return;
+    const logged = this.requests.record(
+      { method: 'WS', url: redactUrl(entry.url), status: entry.status, ms: entry.ms, reqHeaders: entry.headers ?? {}, reqBody: entry.reqBody, resBody: entry.resBody },
+      this.options.now(),
+    );
+    this.stats.record(entry.endpointId, entry.status, entry.ms);
+    this.options.onRequest?.(logged, entry.endpointId);
+  }
+
+  /**
+   * An HTTP Upgrade request on the public listener. The path picks a `websocket` endpoint (or a `graphql` one, for
+   * subscriptions); the bearer token, the limits and the endpoint's own rules are checked before the socket becomes a
+   * WebSocket, and a refusal is a plain HTTP answer.
+   */
+  handleUpgrade(req: IncomingMessage, socket: Duplex, head: Buffer, meta: { scheme?: 'http' | 'https'; ip?: string } = {}): void {
+    socket.on('error', () => undefined);
+    const ctx = toCtx(req, '', meta.scheme, meta.ip);
+    const router = this.state.router;
+    const found = router.match('GET', ctx.path);
+    const endpoint = found.kind === 'found' ? found.route.endpoint : undefined;
+    if (found.kind !== 'found' || endpoint?.type !== 'websocket') return refuseUpgrade(socket, found.kind === 'none' ? 404 : 400, found.kind === 'none' ? 'No endpoint for this path.' : 'This endpoint is not a WebSocket endpoint.');
+    const bearer = bearerFrom(req.headers, ctx.query);
+    if (bearer !== undefined && ctx.headers.authorization === undefined) ctx.headers = { ...ctx.headers, authorization: `Bearer ${bearer.token}` };
+    if (endpoint.auth === 'bearer' && !this.options.authorize(ctx, endpoint)) return refuseUpgrade(socket, 401, 'Invalid or expired token', { 'WWW-Authenticate': 'Bearer' });
+    const hub = this.realtime.hub(endpoint.id, 'websocket');
+    this.realtime.track(endpoint);
+    const ipHash = this.realtime.hashIp(ctx.ip);
+    if (hub.refusal(ipHash, endpoint) !== undefined) return refuseUpgrade(socket, 429, 'Too many connections', { 'Retry-After': '5' });
+    ctx.plan = this.planRequest('GET', ctx.path, ctx.headers, router);
+    const values = this.placeholders(ctx, endpoint, found.params);
+    values.user = ctx.user;
+    const logHeaders: Record<string, unknown> = { ...req.headers };
+    if (req.headers['sec-websocket-protocol'] !== undefined) logHeaders['sec-websocket-protocol'] = protocolsForLog(req.headers['sec-websocket-protocol']);
+    this.sockets.accept({
+      req,
+      socket,
+      head,
+      endpoint,
+      hub,
+      ipHash,
+      clientId: this.realtime.newId(),
+      user: ctx.user?.username,
+      values,
+      url: ctx.url,
+      logHeaders,
+      deps: { now: this.options.now, record: (entry) => this.recordLive(entry), zeroed: this.delaysZeroed(req.headers) },
+    });
   }
 
   // ---- requests

@@ -129,3 +129,63 @@ export async function openSse(url: string, headers: Record<string, string> = {})
 }
 
 export const endpoints = (list: unknown[]): NonNullable<BackendInput['endpoints']> => list as NonNullable<BackendInput['endpoints']>;
+
+import { WebSocket, type ClientOptions } from 'ws';
+
+export interface WsClient {
+  ws: WebSocket;
+  protocol: string;
+  /** The next message as text. Rejects after `ms`. */
+  next(ms?: number): Promise<string>;
+  nextJson(ms?: number): Promise<Record<string, unknown>>;
+  /** Resolves with the close code. */
+  closed: Promise<number>;
+  close(): void;
+}
+
+/** Opens a WebSocket and resolves once it is open; rejects with the HTTP status when the upgrade is refused. */
+export function openWs(url: string, protocols: string[] = [], options: ClientOptions = {}): Promise<WsClient> {
+  return new Promise((resolve, reject) => {
+    const ws = new WebSocket(url, protocols, options);
+    const queue: string[] = [];
+    const waiting: ((text: string | undefined) => void)[] = [];
+    let closeCode: (code: number) => void = () => undefined;
+    const closed = new Promise<number>((done) => {
+      closeCode = done;
+    });
+    ws.on('message', (data) => {
+      const text = (Array.isArray(data) ? Buffer.concat(data) : Buffer.from(data as Buffer)).toString('utf8');
+      const waiter = waiting.shift();
+      if (waiter === undefined) queue.push(text);
+      else waiter(text);
+    });
+    ws.on('close', (code) => {
+      closeCode(code);
+      for (const waiter of waiting.splice(0)) waiter(undefined);
+    });
+    ws.on('unexpected-response', (_req, res) => {
+      res.resume();
+      reject(new Error(String(res.statusCode)));
+    });
+    ws.on('error', () => undefined);
+    ws.on('open', () => {
+      const next = (ms = 3000): Promise<string> =>
+        new Promise((done, fail) => {
+          const queued = queue.shift();
+          if (queued !== undefined) return done(queued);
+          const timer = setTimeout(() => {
+            const at = waiting.indexOf(take);
+            if (at >= 0) waiting.splice(at, 1);
+            fail(new Error(`no message within ${String(ms)} ms`));
+          }, ms);
+          const take = (text: string | undefined): void => {
+            clearTimeout(timer);
+            if (text === undefined) fail(new Error('the socket closed'));
+            else done(text);
+          };
+          waiting.push(take);
+        });
+      resolve({ ws, protocol: ws.protocol, next, nextJson: async (ms) => JSON.parse(await next(ms)) as Record<string, unknown>, closed, close: () => ws.close() });
+    });
+  });
+}
