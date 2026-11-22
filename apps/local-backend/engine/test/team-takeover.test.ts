@@ -50,9 +50,9 @@ describe('AC-LP-2 member routes cannot take over an account', () => {
     await member(site, 'victim@example.com', 'admin', 'other');
     const attacker = await member(site, 'attacker@example.com', 'admin');
     const victim = idOf(site, 'victim@example.com');
-    // Adding the account to the attacker's own backend works, but it does not make it theirs.
-    expect((await attacker.hub('POST', '/backends/demo/members', { email: 'victim@example.com', role: 'viewer' })).status).toBe(200);
-    for (const action of ['reset-link', 'reset-totp']) expect((await attacker.hub('POST', `/backends/demo/members/${String(victim)}/${action}`)).status, action).toBe(403);
+    // An admin elsewhere cannot even be added to the attacker's backend, and nothing makes it theirs.
+    expect((await attacker.hub('POST', '/backends/demo/members', { email: 'victim@example.com', role: 'viewer' })).status).toBe(403);
+    for (const action of ['reset-link', 'reset-totp']) expect((await attacker.hub('POST', `/backends/demo/members/${String(victim)}/${action}`)).status, action).toBeGreaterThanOrEqual(403);
     expect((await attacker.hub('POST', `/team/accounts/${String(victim)}/reset-link`)).status).toBe(403);
     // The victim's password still works and no link exists for the account.
     expect((await site.browser().login('victim@example.com')).status).toBe(200);
