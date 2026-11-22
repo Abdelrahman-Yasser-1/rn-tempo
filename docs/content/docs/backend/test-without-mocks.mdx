@@ -18,6 +18,7 @@ export const backend = setupTempoBackend({
   cacheDir: 'node_modules/.cache/tempo-backend',
   testMode: true,                                    // the default
   isolate: 'file',                                   // 'file' (default) or 'test'
+  port: undefined,                                   // a free port by default; pass one when the URL must be known at import time
 });
 ```
 

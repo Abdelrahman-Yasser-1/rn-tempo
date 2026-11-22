@@ -104,7 +104,7 @@ export function setupTempoBackend(options: TempoBackendOptions = {}): TempoBacke
       try {
         writeTestSnapshotFiles(found.snapshot, folder);
         running = await startBackend(folder, {
-          port: 0,
+          port: options.port ?? 0,
           host: '127.0.0.1',
           https: false,
           adminListener: false,

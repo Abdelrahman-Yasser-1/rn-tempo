@@ -28,6 +28,11 @@ export interface TempoBackendOptions {
   isolate?: 'file' | 'test';
   /** Where warnings go (default: a line on stderr). */
   warn?: (message: string) => void;
+  /**
+   * The port to listen on (default 0: a free one). A project that must know the address before the backend starts (a
+   * module that reads its base URL when it is imported) picks a free port itself and passes it here.
+   */
+  port?: number;
   /** Register `beforeAll`/`afterAll` when Jest's globals exist (default true). Turn it off to call `start()` and `stop()` yourself. */
   hooks?: boolean;
 }
