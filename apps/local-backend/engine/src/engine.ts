@@ -52,6 +52,14 @@ export interface EngineOptions {
   memory?: boolean;
   /** Test mode for every request: no delays, throttling or timeouts, a fixed clock and seeded random values. */
   testMode?: boolean;
+  /**
+   * Fixed tokens for a test suite that asserts exact token strings. Programmatic only (never read from `backend.json`):
+   * the test kit passes them, and `startBackend` drops them unless `testMode` is on, the listener is loopback and the
+   * backend is not mounted by a team server. Signing in as `username` returns exactly these tokens; the access token
+   * signs that user in and the refresh token trades for the same pair, until the user's tokens are revoked (a password
+   * change, a revoke, a disable) or the user is gone.
+   */
+  testTokens?: { username: string; accessToken: string; refreshToken: string };
   /** The seed of random delays (and of random values outside test mode). A fresh random one by default. */
   seed?: string;
   now?: () => Date;
@@ -164,7 +172,7 @@ export class Engine {
     this.auth = new AuthService(new Accounts(store.db, now), loadJwtSecret(folder.dataDir), () => this.state.definition.auth, now, () => {
       const origins = this.state.definition.cors?.origins;
       return origins === undefined || origins === '*' ? [] : origins;
-    });
+    }, options.testMode === true ? options.testTokens : undefined);
     this.media = new MediaService(folder.dataDir, store.db, now);
     this.content = content;
     this.handlers = new HandlerPool(options.logger);

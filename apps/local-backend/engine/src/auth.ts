@@ -88,6 +88,13 @@ export const notSignedIn = (ctx: RequestCtx): Reply =>
     ? problemReply(403, { title: 'Forbidden', detail: `This request was signed in by the session cookie but is not proven to come from your app. Send the ${APP_CSRF_HEADER} header (the csrfToken of the login), or an Origin that is this server or one of the cors origins.` })
     : problemReply(401, { detail: NO_TOKEN });
 
+/** Fixed tokens of a test suite (see `EngineOptions.testTokens`). */
+export interface FixedTokens {
+  username: string;
+  accessToken: string;
+  refreshToken: string;
+}
+
 /** App users, tokens and the checks `auth: "bearer"` endpoints use. One per engine. */
 export class AuthService {
   readonly accounts: Accounts;
@@ -95,9 +102,13 @@ export class AuthService {
   private readonly settings: () => AuthConfigValue;
   private readonly now: () => Date;
   private readonly corsOrigins: () => readonly string[];
+  private readonly fixed: FixedTokens | undefined;
+  /** The token version of the fixed tokens' user when they were issued (or first used); a revoke or a password change moves it on. */
+  private fixedVersion: number | undefined;
 
-  constructor(accounts: Accounts, secret: Buffer, settings: () => AuthConfigValue, now: () => Date, corsOrigins: () => readonly string[] = () => []) {
+  constructor(accounts: Accounts, secret: Buffer, settings: () => AuthConfigValue, now: () => Date, corsOrigins: () => readonly string[] = () => [], fixed?: FixedTokens) {
     this.corsOrigins = corsOrigins;
+    this.fixed = fixed;
     this.accounts = accounts;
     this.secret = secret;
     this.settings = settings;
@@ -155,8 +166,21 @@ export class AuthService {
     return origin === ctx.origin && ctx.headers['sec-fetch-site'] !== 'cross-site';
   }
 
+  /** The user the fixed tokens stand for, while they are still good: it exists, is enabled and its tokens were not revoked since they were issued. */
+  private fixedOwner(): UserRecord | undefined {
+    if (this.fixed === undefined) return undefined;
+    const owner = this.accounts.byLogin(this.fixed.username);
+    if (owner === undefined || owner.disabled) return undefined;
+    this.fixedVersion ??= owner.tokenVersion;
+    return owner.tokenVersion === this.fixedVersion ? owner : undefined;
+  }
+
   /** The user an access token belongs to, when it is good (any auth mode). */
   userFromToken(token: string): AuthUser | undefined {
+    if (this.fixed !== undefined && sameText(token, this.fixed.accessToken)) {
+      const owner = this.fixedOwner();
+      return owner === undefined ? undefined : ({ id: owner.id, username: owner.username } satisfies AuthUser);
+    }
     const verified = verifyAccessToken(this.secret, token, this.now().getTime());
     if (!verified.ok) return undefined;
     const id = Number(verified.claims.sub);
@@ -228,10 +252,16 @@ export class AuthService {
     const good = await verifyPassword(passwordText, user?.passwordHash ?? null);
     if (user === undefined || !good) return { ok: false, reply: problemReply(400, { detail: 'Invalid credentials' }) };
     if (user.disabled) return { ok: false, reply: problemReply(403, { detail: 'This account is disabled.' }) };
+    if (this.fixed !== undefined && user.username.toLowerCase() === this.fixed.username.toLowerCase()) {
+      // A new sign-in starts the fixed tokens again from the user's current token version.
+      this.fixedVersion = user.tokenVersion;
+      return { ok: true, user, accessToken: this.fixed.accessToken, refreshToken: this.fixed.refreshToken };
+    }
     return { ok: true, user, ...this.signIn(user, requestedMinutes) };
   }
 
   refresh(token: string, requestedMinutes?: number): { ok: true; accessToken: string; refreshToken: string } | { ok: false; reply: Reply } {
+    if (this.fixed !== undefined && sameText(token, this.fixed.refreshToken) && this.fixedOwner() !== undefined) return { ok: true, accessToken: this.fixed.accessToken, refreshToken: this.fixed.refreshToken };
     const result = this.accounts.rotate(token, this.refreshTtlMs());
     if (!result.ok) {
       return { ok: false, reply: problemReply(result.reason === 'disabled' ? 403 : 401, { detail: result.reason === 'disabled' ? 'This account is disabled.' : 'Invalid refresh token' }) };

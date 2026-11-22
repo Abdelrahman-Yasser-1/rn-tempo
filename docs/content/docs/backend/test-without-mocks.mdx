@@ -19,6 +19,7 @@ export const backend = setupTempoBackend({
   testMode: true,                                    // the default
   isolate: 'file',                                   // 'file' (default) or 'test'
   port: undefined,                                   // a free port by default; pass one when the URL must be known at import time
+  testTokens: undefined,                             // fixed tokens for a suite that asserts them (see below)
 });
 ```
 
@@ -67,6 +68,16 @@ Test mode is the default:
 - a fixed clock (`2025-01-01T00:00:00.000Z`) and a fixed seed, so `{{now}}`, `{{uuid}}` and fake data are the same on every run
 
 Opt back in for one request with the header `x-tempo-test-delays: 1`, or turn the whole thing off with `testMode: false` (a request can then opt in with `x-tempo-test-mode: 1`).
+
+### Fixed tokens for a test suite
+
+Sign-in answers with real, signed tokens, so a suite that asserts exact token strings (an old mock returned `mock-access-token`) cannot compare them. Pass `testTokens` to the kit:
+
+```ts
+setupTempoBackend({ testTokens: { username: 'emilys', accessToken: 'mock-access-token', refreshToken: 'mock-refresh-token' } });
+```
+
+Signing in as that user returns exactly these tokens, the access token signs that user in on every `bearer` endpoint, and the refresh token trades for the same pair. Other users get real tokens. The tokens exist only in the test process: they are never in `backend.json`, a snapshot or the dashboard, and the engine ignores them unless it was started in test mode on a loopback address by the kit (never on a team server). They stop working when the user's tokens are revoked, the password changes or the user is disabled, like real ones; a new sign-in starts them again.
 
 ### Isolation and parallel workers
 
