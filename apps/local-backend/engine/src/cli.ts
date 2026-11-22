@@ -7,6 +7,7 @@ import { createCerts, lanAddress, realRunner } from '@rn-tempo/dev-api';
 
 import { startBackend } from './app.ts';
 import { checkContract, formatReport, parseOpenApi } from './contract.ts';
+import { formatImport, importFromCli } from './import/cli-import.ts';
 import { exportSnapshot, importSnapshot } from './snapshot.ts';
 import { readFileSync } from 'node:fs';
 import { readDefinitionText, createBackend, PRESETS, prepareDataDir, type Preset } from './folder.ts';
@@ -21,11 +22,12 @@ const USAGE = `local-backend-engine: serve a Tempo Local Backend folder
   local-backend-engine create <dir> [--name <name>] [--preset empty|products|tempo-template] [--port <n>]
   local-backend-engine certs  <dir>            create an HTTPS certificate with mkcert (never changes a trust store)
   local-backend-engine check  <dir> --openapi <file> [--json]   compare the backend with an OpenAPI file (exit 1 on differences)
+  local-backend-engine import <dir> --openapi <file|url> [--name <name>] [--preview]   create or update a backend from an OpenAPI 3.x or Swagger 2.0 file (JSON or YAML)
   local-backend-engine snapshot export <dir> <file.zip>
   local-backend-engine snapshot import <file.zip> <dir> [--no-certs]   into a new or empty folder
   local-backend-engine trust  mac | ios [--device <udid>] | android [--serial <id>]   add the mkcert CA to a trust store (explicit)
   local-backend-engine web    [--backends-dir <dir>] [--admin-port <n>] [--no-open]   the dashboard in a browser, for several backends
-  local-backend-engine server [--data-dir <dir>] [--backends-dir <dir>] [--port <n>] [--trust-proxy [private|<cidr,...>]] [--audit-days <n>] [--public-origin <origin>]
+  local-backend-engine server [--data-dir <dir>] [--backends-dir <dir>] [--port <n>] [--trust-proxy [private|<cidr,...>]] [--audit-days <n>] [--public-origin <origin>] [--allow-private-import-urls]
                               the team server: accounts, roles, API keys and an audit log, for Docker behind Caddy
   local-backend-engine server owner create --email <email> [--name <name>] [--password-stdin]
   local-backend-engine server owner reset-password --email <email> [--password-stdin] [--reset-totp]
@@ -117,6 +119,8 @@ async function main(): Promise<void> {
       'admin-port': { type: 'string' },
       openapi: { type: 'string' },
       json: { type: 'boolean' },
+      preview: { type: 'boolean' },
+      'allow-private-import-urls': { type: 'boolean' },
       'no-certs': { type: 'boolean' },
       http: { type: 'boolean' },
       'no-watch': { type: 'boolean' },
@@ -171,6 +175,14 @@ async function main(): Promise<void> {
       const report = checkContract(readDefinitionText(join(root, 'backend.json')).definition, parseOpenApi(text, values.openapi));
       process.stdout.write(values.json === true ? `${JSON.stringify(report, null, 2)}\n` : formatReport(report));
       process.exit(report.ok ? 0 : 1);
+      return;
+    }
+    case 'import': {
+      if (values.openapi === undefined) throw new DefinitionError('import needs --openapi <file|url>.');
+      const preview = values.preview === true;
+      const result = await importFromCli(root, values.openapi, { preview, ...(values.name === undefined ? {} : { name: values.name }) });
+      process.stdout.write(formatImport(result, preview));
+      if (!preview) err(`${result.created ? 'Created' : 'Updated'} ${join(root, 'backend.json')}`);
       return;
     }
     case 'snapshot': {

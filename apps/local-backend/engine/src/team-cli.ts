@@ -22,6 +22,7 @@ export interface ServerArgs {
   name?: string | undefined;
   'password-stdin'?: boolean | undefined;
   'reset-totp'?: boolean | undefined;
+  'allow-private-import-urls'?: boolean | undefined;
 }
 
 const say = (line = ''): void => void process.stdout.write(`${line}\n`);
@@ -119,13 +120,14 @@ export async function serverCommand(args: ServerArgs): Promise<void> {
   const trustProxy = trustValue === undefined || trustValue === '' ? [] : trustValue.split(',').map((item) => item.trim()).filter((item) => item !== '');
   const publicOrigin = args['public-origin'] ?? process.env.TEMPO_PUBLIC_ORIGIN;
   if (publicOrigin !== undefined && publicOrigin !== '' && !/^https?:\/\/[^/]+$/.test(publicOrigin)) throw new DefinitionError('--public-origin must be an origin such as https://api.example.com.');
-  const running = await startTeam({ dataDir, backendsDir, port, host: args.host ?? '0.0.0.0', trustProxy, auditDays, ...(publicOrigin === undefined || publicOrigin === '' ? {} : { publicOrigin }) });
+  const running = await startTeam({ dataDir, backendsDir, port, host: args.host ?? '0.0.0.0', trustProxy, auditDays, allowPrivateImportUrls: args['allow-private-import-urls'] === true || process.env.TEMPO_ALLOW_PRIVATE_IMPORT_URLS === '1', ...(publicOrigin === undefined || publicOrigin === '' ? {} : { publicOrigin }) });
   say('Tempo Local Backend (team server)');
   say(`  Listening:   http://${args.host ?? '0.0.0.0'}:${String(running.port)}  (plain HTTP: keep it behind a TLS proxy)`);
   say(`  Data:        ${dataDir}`);
   say(`  Backends:    ${backendsDir}  (public APIs at /b/<id>/...)`);
   say(`  Proxy trust: ${trustProxy.length === 0 ? 'off (cookies are not marked Secure, X-Forwarded-* is ignored)' : trustProxy.join(', ')}`);
   say(`  Public APIs: ${publicOrigin === undefined || publicOrigin === '' ? 'on the dashboard origin under /b/<id> (answered sandboxed; use --public-origin for a separate host)' : publicOrigin}`);
+  say(`  Import URLs: ${args['allow-private-import-urls'] === true || process.env.TEMPO_ALLOW_PRIVATE_IMPORT_URLS === '1' ? 'private network addresses allowed' : 'private network addresses refused'}`);
   say(`  Audit log:   kept ${String(auditDays)} days`);
   if (!running.store.hasOwner()) say('  No owner yet. Create one: tempo-local-backend server owner create --email <you@example.com>');
   const stop = (): void => void running.stop().then(() => process.exit(0));

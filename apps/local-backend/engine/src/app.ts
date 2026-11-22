@@ -11,6 +11,7 @@ import { checkContract, readOpenApiInside, requireDocument } from './contract.ts
 import { jsonReply, problemReply, readJson } from './http.ts';
 import { createEngineLog, RequestFiles } from './logs.ts';
 import { Manager } from './manager.ts';
+import { adminImportRoutes } from './import/admin-import.ts';
 import { buildOpenApi } from './openapi.ts';
 import { certsDirOf, closeServer, createPublicHandler, createPublicServer, listenOn, readTls, type PublicHandler } from './server.ts';
 
@@ -35,6 +36,11 @@ export interface StartOptions extends EngineOptions {
   mounted?: { prefix: string };
   /** Checks the access key of a backend with `publicAccess: "key"` (the team server passes its key store). */
   accessKey?: (key: string | undefined) => boolean;
+  /**
+   * URL imports. `allowPrivate` lets the engine fetch addresses on private networks. It defaults to true, except for a
+   * backend mounted by a team server (`mounted`), where it protects the server from being used to reach its own network.
+   */
+  importUrls?: { allowPrivate?: boolean };
   /** Watch backend.json for edits (default true). */
   watch?: boolean;
   /** Request log file limits (tests lower them). */
@@ -126,6 +132,7 @@ export async function startBackend(dir: string, options: StartOptions = {}): Pro
           stream: snapshotStream({ dir: engine.folder.dir, db: engine.store.db }),
         }),
       },
+      ...adminImportRoutes(manager, { allowPrivate: options.importUrls?.allowPrivate ?? options.mounted === undefined }),
       { method: 'GET', pattern: '/openapi', handler: () => jsonReply(200, buildOpenApi(engine.definition, { prefix: engine.publicPrefix })) },
     ],
   });
