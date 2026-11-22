@@ -60,12 +60,15 @@ jobs:
       - name: Install workspace packages
         working-directory: .
         run: yarn install --immutable
-      # `yarn api:check` (part of verify) runs the built tempo-api CLI of the linked dev-api package.
-      - name: Build the tempo-api and tempo CLIs
+      # `yarn api:check` and `yarn backend:check` (part of verify) run the built tempo-api CLI of the linked dev-api package
+      # and the built engine of the linked local-backend package; `yarn test:backend` uses the engine's test kit.
+      - name: Build the tempo-api, tempo and local backend tools
         working-directory: .
         run: yarn build:tools
       - run: yarn install --immutable
       - run: yarn verify
+      # The same suite again, answered by the Tempo local backend (backend/) started in memory in each test file.
+      - run: yarn test:backend --ci
       - run: yarn test:ai-log
       - run: yarn test:ai-sync
       - run: yarn test:assets
