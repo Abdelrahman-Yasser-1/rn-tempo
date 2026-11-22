@@ -148,7 +148,26 @@ function tempoTemplate(name: string): { definition: BackendInput; files: PresetF
       { id: 'auth.forgotPassword', type: 'auth', action: 'forgotPassword', method: 'POST', path: '/auth/forgot-password', summary: 'Send a password reset code', tags: ['auth'] },
       { id: 'auth.otpVerify', type: 'auth', action: 'otpVerify', method: 'POST', path: '/auth/otp/verify', summary: 'Check a one-time code', tags: ['auth'] },
       { id: 'auth.otpResend', type: 'auth', action: 'otpResend', method: 'POST', path: '/auth/otp/resend', summary: 'Send a new one-time code', tags: ['auth'] },
-      { id: 'users.add', type: 'users', action: 'add', method: 'POST', path: '/users/add', summary: 'Register a user', tags: ['users'] },
+      // Like the mock (and dummyjson): the user is echoed with dummyjson's id for a new user and nothing is stored, so
+      // registering a name that exists (the demo account) works. Change it to `type: "users", action: "add"` to store users.
+      {
+        id: 'users.add',
+        type: 'static',
+        method: 'POST',
+        path: '/users/add',
+        status: 201,
+        body: {
+          id: 209,
+          username: '{{body.username}}',
+          email: '{{body.email}}',
+          firstName: '{{body.firstName}}',
+          lastName: '{{body.lastName}}',
+          gender: 'female',
+          image: 'https://dummyjson.com/icon/emilys/128',
+        },
+        summary: 'Register a user (echoes it, stores nothing)',
+        tags: ['users'],
+      },
       { id: 'users.update', type: 'users', action: 'update', method: 'PUT', path: '/users/:id', auth: 'bearer', summary: 'Update a user', tags: ['users'] },
       // `/products/search` is the same list with `q`; it is listed before `/products/:id` (static segments win anyway).
       { ...crud, id: 'products.search', action: 'list', method: 'GET', path: '/products/search', searchFields: ['title'], summary: 'Search products by title' },
