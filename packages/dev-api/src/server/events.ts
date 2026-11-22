@@ -23,6 +23,8 @@ export interface RequestEntry {
   scenario?: string;
   /** Network simulation of the Tempo Local Backend: what was applied to this request (absent when nothing was). */
   network?: NetworkNote;
+  /** The GraphQL operation name (or `anonymous`) when the request was a GraphQL operation. */
+  operation?: string;
   req: { headers: unknown } & BodyView;
   res: BodyView;
 }
@@ -48,6 +50,7 @@ export interface EntryInput {
   ms: number;
   scenario?: string | undefined;
   network?: NetworkNote | undefined;
+  operation?: string | undefined;
   reqHeaders: unknown;
   reqBody: unknown;
   resBody: unknown;
@@ -89,6 +92,7 @@ export class RequestLog {
       ms: input.ms,
       ...(input.scenario === undefined ? {} : { scenario: input.scenario }),
       ...(input.network === undefined ? {} : { network: input.network }),
+      ...(input.operation === undefined ? {} : { operation: input.operation }),
       req: { headers: redactDeep(input.reqHeaders), ...req },
       res,
     };

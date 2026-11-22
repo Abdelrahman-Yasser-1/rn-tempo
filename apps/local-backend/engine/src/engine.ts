@@ -11,11 +11,14 @@ import { ContentService, modelOf } from './content.ts';
 import { handleContent } from './content-public.ts';
 import { crudHandler } from './crud.ts';
 import { EventBus } from './events.ts';
-import { Realtime } from './realtime.ts';
+import { GraphqlRuntime, type GqlContext } from './graphql.ts';
+import { buildGraphqlModel } from './graphql-schema.ts';
+import { GRAPHQL_WS_PROTOCOL, runGraphqlSocket } from './graphql-ws.ts';
+import { hiddenFieldsByCollection, Realtime } from './realtime.ts';
 import { sseHandler } from './sse.ts';
-import { bearerFrom, protocolsForLog, refuseUpgrade, WebSocketService, type LiveLogEntry } from './websocket.ts';
+import { bearerFrom, LiveSocket, protocolsForLog, refuseUpgrade, WebSocketService, type LiveLogEntry } from './websocket.ts';
 import { createHandlerRpc } from './handler-host.ts';
-import { HandlerFileError, handlerFailure, HandlerPool, replyFromHandler, resolveHandlerFile } from './handlers.ts';
+import { HandlerFileError, handlerFailure, HandlerPool, replyFromHandler, resolveHandlerFile, type RunResult } from './handlers.ts';
 import { readSeedFile, type BackendFolder } from './folder.ts';
 import { jsonReply, loggableBody, problemReply, readJson, type Reply, type RequestCtx } from './http.ts';
 import type { EngineLogger } from './logs.ts';
@@ -28,7 +31,7 @@ import { cleanHeaders, errorBody, expandTemplate, isTemplateRef, wrapBody, wrapp
 import { mountPath, Router, type Handler, type Params } from './router.ts';
 import { toCtx } from './server.ts';
 import { buildRequestValidator, invalidRequest } from './import/request-validation.ts';
-import type { Backend, Collection, Endpoint, Scenario, StaticEndpoint } from './schema.ts';
+import type { Backend, Collection, Endpoint, GraphqlEndpoint, Scenario, StaticEndpoint } from './schema.ts';
 import { Stats } from './stats.ts';
 import { Store, type Plan, type RenameHints } from './store.ts';
 import { loadJwtSecret } from './tokens.ts';
@@ -59,6 +62,8 @@ export interface EngineOptions {
 interface State {
   definition: Backend;
   router: Router;
+  /** The running GraphQL schema of each `graphql` endpoint, by endpoint id. */
+  graphql: Map<string, GraphqlRuntime>;
 }
 
 type Held = 'ok' | 'closed' | 'abandoned';
@@ -157,7 +162,7 @@ export class Engine {
       throw error;
     }
     try {
-      const engine = new Engine(folder, store, content, { definition: folder.definition, router: new Router([], undefined) }, options);
+      const engine = new Engine(folder, store, content, { definition: folder.definition, router: new Router([], undefined), graphql: new Map() }, options);
       engine.state = engine.build(folder.definition);
       engine.seedUsers();
       return engine;
@@ -211,14 +216,15 @@ export class Engine {
   private build(definition: Backend): State {
     const collections = new Map(definition.collections.map((collection) => [collection.name, collection]));
     const routes: { endpoint: Endpoint; path: string; handler: Handler }[] = [];
+    const graphql = new Map<string, GraphqlRuntime>();
     for (const endpoint of definition.endpoints) {
-      const handler = this.handlerFor(endpoint, collections);
+      const handler = this.handlerFor(endpoint, collections, graphql, definition);
       for (const path of [endpoint.path, ...(endpoint.aliases ?? [])]) routes.push({ endpoint, path, handler });
     }
-    return { definition, router: new Router(routes, definition.basePath) };
+    return { definition, router: new Router(routes, definition.basePath), graphql };
   }
 
-  private handlerFor(endpoint: Endpoint, collections: Map<string, Collection>): Handler {
+  private handlerFor(endpoint: Endpoint, collections: Map<string, Collection>, graphql: Map<string, GraphqlRuntime>, definition: Backend): Handler {
     switch (endpoint.type) {
       case 'crud': {
         const collection = collections.get(endpoint.collection);
@@ -263,6 +269,17 @@ export class Engine {
       }
       case 'sse':
         return sseHandler(endpoint, { realtime: this.realtime, zeroed: (headers) => this.delaysZeroed(headers), now: this.options.now });
+      case 'graphql': {
+        const runtime = this.graphqlRuntime(endpoint, definition);
+        graphql.set(endpoint.id, runtime);
+        return async (ctx) => {
+          // An open endpoint still knows who is calling when a token comes with the request (`{{user.id}}`, handler resolvers).
+          if (ctx.user === undefined && ctx.headers.authorization !== undefined) this.options.authorize(ctx, endpoint);
+          const values = ctx.values ?? this.placeholders(ctx, endpoint, {});
+          values.user = ctx.user;
+          return runtime.handleHttp(ctx, { request: ctx, user: ctx.user, values });
+        };
+      }
       case 'websocket':
         return () => problemReply(426, { title: 'Upgrade Required', detail: 'This is a WebSocket endpoint: connect with ws:// or wss://.', headers: { upgrade: 'websocket' } });
       case 'handler':
@@ -310,6 +327,48 @@ export class Engine {
           return handlerFailure(result);
         };
     }
+  }
+
+  private graphqlRuntime(endpoint: GraphqlEndpoint, definition: Backend): GraphqlRuntime {
+    const model = buildGraphqlModel(definition, endpoint, hiddenFieldsByCollection(definition));
+    return new GraphqlRuntime(
+      model,
+      { maxDepth: endpoint.maxDepth, maxFields: endpoint.maxFields, maxQueryBytes: endpoint.maxQueryBytes, introspection: endpoint.introspection, requireAuth: endpoint.requireAuth },
+      {
+        store: this.store,
+        definition: () => this.state.definition,
+        events: this.events,
+        mediaExists: (id) => this.media.has(id),
+        callHandler: (file, label, context, body) => this.callHandlerFile(file, label, context, body),
+      },
+      endpoint.id,
+    );
+  }
+
+  /** Runs a handler file for something that is not a `handler` endpoint (a GraphQL field resolver). */
+  private async callHandlerFile(file: string, label: string, context: GqlContext, body: unknown): Promise<RunResult> {
+    let resolved: string;
+    try {
+      resolved = resolveHandlerFile(this.folder.dir, file);
+    } catch (error) {
+      if (!(error instanceof HandlerFileError)) throw error;
+      this.options.logger?.warn({ handler: label }, error.message);
+      return { kind: 'error', message: error.message };
+    }
+    this.handlers.watchFolder(join(this.folder.dir, 'handlers'));
+    const ctx = context.request;
+    return this.handlers.run({
+      file: resolved,
+      label,
+      timeoutMs: 5000,
+      scenario: undefined,
+      origin: ctx.origin,
+      req: { method: ctx.method, path: ctx.path, params: {}, query: Object.fromEntries(ctx.query), headers: { ...ctx.headers }, body, user: context.user },
+      rpc: createHandlerRpc(
+        { store: this.store, emit: (name, payload) => this.events.emit(name, payload), userCount: () => this.auth.accounts.list({ limit: 1 }).total, definition: () => this.state.definition, media: this.media, mediaUrl: (id, origin) => this.mediaUrl(id, origin), logger: this.options.logger },
+        label,
+      ),
+    });
   }
 
   /** Runs definition changes one at a time. */
@@ -403,10 +462,10 @@ export class Engine {
   recordLive(entry: LiveLogEntry): void {
     if (this.closed) return;
     const logged = this.requests.record(
-      { method: 'WS', url: redactUrl(entry.url), status: entry.status, ms: entry.ms, reqHeaders: entry.headers ?? {}, reqBody: entry.reqBody, resBody: entry.resBody },
+      { method: 'WS', url: redactUrl(entry.url), status: entry.status, ms: entry.ms, reqHeaders: entry.headers ?? {}, reqBody: entry.reqBody, resBody: entry.resBody, operation: entry.operation },
       this.options.now(),
     );
-    this.stats.record(entry.endpointId, entry.status, entry.ms);
+    this.stats.record(entry.endpointId, entry.status, entry.ms, entry.operation);
     this.options.onRequest?.(logged, entry.endpointId);
   }
 
@@ -421,6 +480,11 @@ export class Engine {
     const router = this.state.router;
     const found = router.match('GET', ctx.path);
     const endpoint = found.kind === 'found' ? found.route.endpoint : undefined;
+    if (endpoint?.type !== 'websocket') {
+      const posted = router.match('POST', ctx.path);
+      const graphql = posted.kind === 'found' && posted.route.endpoint.type === 'graphql' ? posted.route.endpoint : undefined;
+      if (graphql !== undefined && posted.kind === 'found') return this.acceptGraphql({ endpoint: graphql, ctx, params: posted.params, req, socket, head, router });
+    }
     if (found.kind !== 'found' || endpoint?.type !== 'websocket') return refuseUpgrade(socket, found.kind === 'none' ? 404 : 400, found.kind === 'none' ? 'No endpoint for this path.' : 'This endpoint is not a WebSocket endpoint.');
     const bearer = bearerFrom(req.headers, ctx.query);
     if (bearer !== undefined && ctx.headers.authorization === undefined) ctx.headers = { ...ctx.headers, authorization: `Bearer ${bearer.token}` };
@@ -448,6 +512,66 @@ export class Engine {
       logHeaders,
       deps: { now: this.options.now, record: (entry) => this.recordLive(entry), zeroed: this.delaysZeroed(req.headers) },
     });
+  }
+
+  /** A WebSocket on a `graphql` endpoint's path: subscriptions with the graphql-transport-ws subprotocol. */
+  private acceptGraphql(input: { endpoint: GraphqlEndpoint; ctx: RequestCtx; params: Params; req: IncomingMessage; socket: Duplex; head: Buffer; router: Router }): void {
+    const { endpoint, ctx, req, socket } = input;
+    const runtime = this.state.graphql.get(endpoint.id);
+    if (runtime === undefined) return refuseUpgrade(socket, 404, 'No endpoint for this path.');
+    const bearer = bearerFrom(req.headers, ctx.query);
+    if (bearer !== undefined) {
+      if (ctx.headers.authorization === undefined) ctx.headers = { ...ctx.headers, authorization: `Bearer ${bearer.token}` };
+      // A bad token is refused here; a missing one may still come in `connection_init`.
+      if (!this.options.authorize(ctx, endpoint) && endpoint.auth === 'bearer') return refuseUpgrade(socket, 401, 'Invalid or expired token', { 'WWW-Authenticate': 'Bearer' });
+    }
+    const hub = this.realtime.hub(endpoint.id, 'graphql');
+    this.realtime.track(endpoint);
+    const ipHash = this.realtime.hashIp(ctx.ip);
+    if (hub.refusal(ipHash, endpoint) !== undefined) return refuseUpgrade(socket, 429, 'Too many connections', { 'Retry-After': '5' });
+    ctx.plan = this.planRequest('POST', ctx.path, ctx.headers, input.router);
+    const values = this.placeholders(ctx, endpoint, input.params);
+    values.user = ctx.user;
+    const logHeaders: Record<string, unknown> = { ...req.headers };
+    if (req.headers['sec-websocket-protocol'] !== undefined) logHeaders['sec-websocket-protocol'] = protocolsForLog(req.headers['sec-websocket-protocol']);
+    const deps = { now: this.options.now, record: (entry: LiveLogEntry) => this.recordLive(entry), zeroed: this.delaysZeroed(req.headers) };
+    const clientId = this.realtime.newId();
+    const maxPayload = Math.min(1_048_576, endpoint.maxQueryBytes + 65_536);
+    this.sockets.upgrade(
+      endpoint.id,
+      { signature: JSON.stringify([maxPayload]), maxPayload, protocol: (offered) => (offered.includes(GRAPHQL_WS_PROTOCOL) ? GRAPHQL_WS_PROTOCOL : false) },
+      req,
+      socket,
+      input.head,
+      (ws) => {
+        const client = new LiveSocket(ws, hub, { id: clientId, ipHash, connectedAt: this.options.now().toISOString(), maxBuffered: endpoint.maxBufferedBytes, pingIntervalMs: endpoint.pingIntervalMs });
+        client.user = ctx.user?.username;
+        client.protocol = ws.protocol === '' ? undefined : ws.protocol;
+        hub.add(client);
+        deps.record({ endpointId: endpoint.id, url: ctx.url, status: 101, ms: 0, headers: logHeaders, resBody: { event: 'connect', client: client.id } });
+        if (ws.protocol !== GRAPHQL_WS_PROTOCOL) {
+          client.whenGone(() => undefined);
+          return client.close(1002, 'Subprotocol not acceptable');
+        }
+        runGraphqlSocket({
+          ws,
+          client,
+          hub,
+          runtime,
+          context: { request: ctx, user: ctx.user, values },
+          authenticate: (token) => {
+            const probe: RequestCtx = { ...ctx, headers: { ...ctx.headers, authorization: `Bearer ${token}` }, user: undefined };
+            return this.options.authorize(probe, endpoint) ? probe.user : undefined;
+          },
+          requireSignIn: endpoint.auth === 'bearer',
+          initTimeoutMs: endpoint.initTimeoutMs,
+          maxOperations: endpoint.maxOperationsPerConnection,
+          deps,
+          endpointId: endpoint.id,
+          url: ctx.url,
+        });
+      },
+    );
   }
 
   // ---- requests
@@ -509,10 +633,11 @@ export class Engine {
         reqHeaders: ctx.headers,
         reqBody: loggableBody(ctx),
         resBody: reply.body,
+        operation: reply.operation,
       },
       this.options.now(),
     );
-    this.stats.record(endpointId, reply.status, ms);
+    this.stats.record(endpointId, reply.status, ms, reply.operation);
     this.options.onRequest?.(entry, endpointId);
     return reply;
   }

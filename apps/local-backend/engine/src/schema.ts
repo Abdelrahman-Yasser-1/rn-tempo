@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { MAX_DELAY_MS, MAX_TIMEOUT_MS } from './constants.ts';
 import { isIdentifier } from './names.ts';
+import { buildGraphqlModel, GraphqlSchemaError } from './graphql-schema.ts';
 import { parseJsonPath } from './ws-rules.ts';
 import { checkContentShape, isSlug, SLUG_HELP } from './content-values.ts';
 import { containsBodyToken, isTemplateRef, TEMPLATE_NAME, WRAP_KEYWORDS } from './responses.ts';
@@ -301,6 +302,42 @@ const WebsocketEndpoint = z.strictObject({
   maxBufferedBytes: z.number().int().min(1024).max(64 * 1024 * 1024).default(1_048_576).meta({ description: 'A client with more than this waiting to be sent is too slow and is closed with 1013.' }),
 });
 
+const GqlResolver = z
+  .strictObject({
+    collection: identifier.optional().meta({ description: 'Answer from this collection, with `action`.' }),
+    action: z.enum(['list', 'get', 'create', 'update', 'delete']).optional(),
+    static: z.unknown().optional().meta({ description: 'Answer with this value. `{{args.x}}` reads an argument of the field.' }),
+    handler: z.string().regex(HANDLER_FILE, 'A handler file looks like "handlers/name.js".').optional().meta({ description: 'Answer with a handler file. It gets `ctx.req.body = { field, args, parent }` and returns the value.' }),
+    event: z.string().regex(EVENT_PATTERN).optional().meta({ description: 'For a subscription field: stream the payloads of this event.' }),
+  })
+  .refine((resolver) => ['collection', 'static', 'handler', 'event'].filter((key) => key in resolver).length === 1, { message: 'A resolver names exactly one of collection, static, handler or event.' })
+  .meta({ title: 'GraphqlResolver' });
+
+const GraphqlEndpoint = z.strictObject({
+  ...common,
+  type: z.literal('graphql'),
+  schema: z
+    .strictObject({
+      source: z.enum(['collections', 'sdl']).default('collections').meta({ description: '`collections`: types, queries, mutations and subscriptions generated from the collections. `sdl`: the schema in `sdl`.' }),
+      sdl: z.string().max(200_000).optional().meta({ description: 'The schema. With `source: "collections"` it extends the generated one (`extend type Query { hello: String }`).' }),
+      collections: z.array(identifier).optional().meta({ description: 'Only these collections are exposed (default: all).' }),
+      hiddenFields: z.array(z.string().regex(/^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$/, 'Write collection.field.')).optional().meta({ description: 'Fields left out of the generated types, as `collection.field`. Fields a crud endpoint hides are left out too.' }),
+    })
+    .default({ source: 'collections' }),
+  resolvers: z.record(z.string().regex(/^[_A-Za-z][_0-9A-Za-z]*\.[_A-Za-z][_0-9A-Za-z]*$/, 'Write Type.field, for example Query.hello.'), GqlResolver).default({}).meta({ description: 'What answers a field: `{ "Query.hello": { "static": "world" } }`.' }),
+  maxDepth: z.number().int().min(1).max(50).default(10).meta({ description: 'The deepest nesting a query may have (introspection is not counted).' }),
+  maxFields: z.number().int().min(1).max(10_000).default(200).meta({ description: 'The most fields a query may select, fragments counted every time they are used.' }),
+  maxQueryBytes: z.number().int().min(100).max(1_000_000).default(20_000).meta({ description: 'The longest query text accepted (413 beyond).' }),
+  introspection: z.boolean().default(true).meta({ description: 'Answer `__schema` and `__type` (on by default: this is a mock).' }),
+  requireAuth: z.array(z.string().regex(/^(?:Query|Mutation|Subscription)\.[_A-Za-z][_0-9A-Za-z]*$/, 'Write Query.field, Mutation.field or Subscription.field.')).default([]).meta({ description: 'Operations that need a signed-in user even when the endpoint is open. `auth: "bearer"` protects every operation.' }),
+  maxOperationsPerConnection: z.number().int().min(1).max(1000).default(20).meta({ description: 'Most operations a subscriptions connection runs at once.' }),
+  initTimeoutMs: z.number().int().min(100).max(60_000).default(5000).meta({ description: 'A subscriptions connection that sends no connection_init within this time is closed with 4408.' }),
+  maxConnections: connectionLimit(100, 'The most subscription connections at once; the next one gets 429.'),
+  maxConnectionsPerIp: connectionLimit(10, 'The most subscription connections one address may hold at once.'),
+  pingIntervalMs: z.number().int().min(0).max(300_000).default(30_000).meta({ description: 'A ping this often on subscription connections; one that never answers is dropped. 0 turns it off.' }),
+  maxBufferedBytes: z.number().int().min(1024).max(64 * 1024 * 1024).default(1_048_576).meta({ description: 'A subscription client with more than this waiting is too slow and is closed with 1013.' }),
+});
+
 export const EndpointSchema = z.discriminatedUnion('type', [
   CrudEndpoint,
   StaticEndpoint,
@@ -311,6 +348,7 @@ export const EndpointSchema = z.discriminatedUnion('type', [
   UsersEndpoint,
   SseEndpoint,
   WebsocketEndpoint,
+  GraphqlEndpoint,
 ]);
 
 export const CONTENT_FIELD_TYPES = ['string', 'text', 'richText', 'number', 'boolean', 'date', 'enum', 'media', 'json', 'list'] as const;
@@ -552,6 +590,15 @@ export const BackendSchema = z
       if (endpoint.type === 'download' && ![endpoint.path, ...(endpoint.aliases ?? [])].every((path) => path.split('/').includes(':id'))) {
         ctx.addIssue({ code: 'custom', path: at('path'), message: 'A download endpoint needs an ":id" segment, for example "/media/:id".' });
       }
+      if (endpoint.type === 'graphql') {
+        if (endpoint.method !== 'POST') ctx.addIssue({ code: 'custom', path: at('method'), message: 'A graphql endpoint uses POST.' });
+        try {
+          buildGraphqlModel(def, endpoint);
+        } catch (error) {
+          if (!(error instanceof GraphqlSchemaError)) throw error;
+          ctx.addIssue({ code: 'custom', path: at('schema'), message: error.message });
+        }
+      }
       if (endpoint.type === 'websocket' && endpoint.method !== 'GET') ctx.addIssue({ code: 'custom', path: at('method'), message: 'A websocket endpoint uses GET (the upgrade request).' });
       if (endpoint.type === 'sse' && endpoint.method !== 'GET') ctx.addIssue({ code: 'custom', path: at('method'), message: 'An sse endpoint uses GET.' });
       if (endpoint.type === 'upload' && endpoint.method !== 'POST') ctx.addIssue({ code: 'custom', path: at('method'), message: 'An upload endpoint uses POST.' });
@@ -607,6 +654,7 @@ export type UploadEndpoint = Extract<Endpoint, { type: 'upload' }>;
 export type HandlerEndpoint = Extract<Endpoint, { type: 'handler' }>;
 export type SseEndpoint = Extract<Endpoint, { type: 'sse' }>;
 export type WebsocketEndpoint = Extract<Endpoint, { type: 'websocket' }>;
+export type GraphqlEndpoint = Extract<Endpoint, { type: 'graphql' }>;
 export type CrudEndpoint = Extract<Endpoint, { type: 'crud' }>;
 export type AuthConfigValue = z.infer<typeof AuthConfig>;
 export type ImportRecord = z.infer<typeof ImportRecordSchema>;

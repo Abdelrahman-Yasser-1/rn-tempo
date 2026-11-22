@@ -96,6 +96,7 @@ export const ADMIN_ROLE_TABLE: Readonly<Record<string, Role>> = {
   'PUT /settings/network': 'admin',
   'GET /settings/responses': 'viewer',
   'PUT /settings/responses': 'admin',
+  'POST /graphql/generate': 'viewer',
   'GET /realtime/:endpointId/clients': 'viewer',
   'GET /realtime/:endpointId/messages': 'viewer',
   'POST /realtime/:endpointId/send': 'editor',

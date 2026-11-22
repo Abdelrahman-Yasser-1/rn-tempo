@@ -125,7 +125,7 @@ export interface RequestSchemas {
 }
 
 export type HttpMethodName = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-export type EndpointType = 'crud' | 'static' | 'auth' | 'users' | 'upload' | 'download' | 'handler' | 'sse' | 'websocket';
+export type EndpointType = 'crud' | 'static' | 'auth' | 'users' | 'upload' | 'download' | 'handler' | 'sse' | 'websocket' | 'graphql';
 
 /** One rule of a WebSocket endpoint: the first whose `match` fits the message sends its `reply`. */
 export interface WsRuleDef {
@@ -208,6 +208,20 @@ export type EndpointDef = EndpointBase &
     | { type: 'upload'; maxBytes?: number; multiple?: boolean }
     | { type: 'download' }
     | { type: 'handler'; file: string; timeoutMs?: number }
+    | {
+        type: 'graphql';
+        schema?: { source?: 'collections' | 'sdl'; sdl?: string; collections?: string[]; hiddenFields?: string[] };
+        resolvers?: Record<string, unknown>;
+        maxDepth?: number;
+        maxFields?: number;
+        maxQueryBytes?: number;
+        introspection?: boolean;
+        requireAuth?: string[];
+        maxOperationsPerConnection?: number;
+        initTimeoutMs?: number;
+        maxConnections?: number;
+        maxConnectionsPerIp?: number;
+      }
     | { type: 'websocket'; behavior?: 'echo' | 'rules'; rules?: WsRuleDef[]; on?: string[]; onConnect?: unknown; subprotocols?: string[]; maxPayloadBytes?: number; maxConnections?: number; maxConnectionsPerIp?: number; pingIntervalMs?: number; maxBufferedBytes?: number }
     | { type: 'sse'; script?: SseMessageDef[]; on?: string[]; retryMs?: number; heartbeatMs?: number; idleTimeoutMs?: number; maxConnections?: number; maxConnectionsPerIp?: number; bufferSize?: number }
   );
@@ -314,6 +328,8 @@ export interface Stats {
   errors: number;
   errorRate: number;
   endpoints: EndpointStat[];
+  /** GraphQL operations by name (absent from an older engine). */
+  operations?: (EndpointStat & { operation: string })[];
   collections: Record<string, number>;
 }
 
@@ -403,6 +419,8 @@ export interface RequestEntry {
   scenario?: string;
   /** What the delay and throttle settings did to this request (absent when nothing). */
   network?: { delayMs?: number; delaySource?: string; downloadKbps?: number; uploadKbps?: number; timedOut?: true; testMode?: true };
+  /** The GraphQL operation name, when the request was a GraphQL operation. */
+  operation?: string;
   req: { headers?: unknown } & BodyView;
   res: BodyView;
 }

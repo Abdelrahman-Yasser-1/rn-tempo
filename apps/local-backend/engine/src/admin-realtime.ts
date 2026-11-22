@@ -1,12 +1,13 @@
 import type { Engine } from './engine.ts';
 import { jsonReply, problemReply, readJson } from './http.ts';
-import { sendManual } from './realtime.ts';
+import { generateFromCollections } from './graphql-schema.ts';
+import { hiddenFieldsByCollection, sendManual } from './realtime.ts';
 import type { AdminRoute } from './admin.ts';
 import type { Endpoint } from './schema.ts';
 
-type LiveEndpoint = Extract<Endpoint, { type: 'sse' | 'websocket' }>;
+type LiveEndpoint = Extract<Endpoint, { type: 'sse' | 'websocket' | 'graphql' }>;
 
-const isLive = (endpoint: Endpoint | undefined): endpoint is LiveEndpoint => endpoint !== undefined && (endpoint.type === 'sse' || endpoint.type === 'websocket');
+const isLive = (endpoint: Endpoint | undefined): endpoint is LiveEndpoint => endpoint !== undefined && (endpoint.type === 'sse' || endpoint.type === 'websocket' || endpoint.type === 'graphql');
 
 /**
  * The dashboard's Live panel: who is connected to an SSE, WebSocket or GraphQL endpoint, what was sent lately, a manual
@@ -17,8 +18,28 @@ export function adminRealtimeRoutes(engine: Engine): AdminRoute[] {
     const found = engine.definition.endpoints.find((candidate) => candidate.id === id);
     return isLive(found) ? found : undefined;
   };
-  const missing = (id: string | undefined) => problemReply(404, { detail: `No sse or websocket endpoint "${id ?? ''}".` });
+  const missing = (id: string | undefined) => problemReply(404, { detail: `No sse, websocket or graphql endpoint "${id ?? ''}".` });
   return [
+    {
+      // "Generate from collections": the SDL the engine would build, so it can be edited as text. Reads only.
+      method: 'POST',
+      pattern: '/graphql/generate',
+      handler: (ctx) => {
+        const parsed = readJson(ctx);
+        if (!parsed.ok) return parsed.reply;
+        const body = typeof parsed.value === 'object' && parsed.value !== null && !Array.isArray(parsed.value) ? (parsed.value as Record<string, unknown>) : {};
+        const names = Array.isArray(body.collections) ? body.collections.filter((name): name is string => typeof name === 'string') : undefined;
+        try {
+          const { sdl, resolvers } = generateFromCollections(engine.definition, { schema: { source: 'collections', collections: names }, resolvers: {} }, hiddenFieldsByCollection(engine.definition));
+          return jsonReply(200, {
+            sdl,
+            resolvers: Object.fromEntries([...resolvers].map(([key, spec]) => [key, spec.kind === 'collection' ? { collection: spec.collection, action: spec.action } : spec.kind === 'event' ? { event: spec.event } : {}])),
+          });
+        } catch (error) {
+          return problemReply(400, { detail: error instanceof Error ? error.message : 'The schema could not be generated.' });
+        }
+      },
+    },
     {
       method: 'GET',
       pattern: '/realtime/:endpointId/clients',
@@ -43,6 +64,7 @@ export function adminRealtimeRoutes(engine: Engine): AdminRoute[] {
       handler: (ctx, params) => {
         const endpoint = endpointOf(params.endpointId);
         if (endpoint === undefined) return missing(params.endpointId);
+        if (endpoint.type === 'graphql') return problemReply(400, { detail: 'A graphql endpoint sends only what its subscriptions produce.' });
         const parsed = readJson(ctx);
         if (!parsed.ok) return parsed.reply;
         const body = typeof parsed.value === 'object' && parsed.value !== null && !Array.isArray(parsed.value) ? (parsed.value as Record<string, unknown>) : {};

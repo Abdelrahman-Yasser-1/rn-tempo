@@ -6,12 +6,14 @@ import type { HttpRequest } from '../api/types';
 import { adminRoutes, makeApi, renderWithApi } from '../test/fakeApi';
 
 import { Endpoints } from './Endpoints';
+import { graphqlBody } from './GraphqlRunner';
 import { messageData } from './LivePanel';
 
 const definition = {
   name: 'shop',
   collections: [{ name: 'products', fields: [{ name: 'title', type: 'string' }] }],
   endpoints: [
+    { id: 'post.graphql', type: 'graphql', method: 'POST', path: '/graphql' },
     { id: 'get.ws', type: 'websocket', method: 'GET', path: '/ws', behavior: 'echo' },
     { id: 'get.live', type: 'sse', method: 'GET', path: '/live', script: [{ data: 'hi' }], on: ['products.created'], retryMs: 3000, heartbeatMs: 15000 },
     { id: 'get.products', type: 'crud', method: 'GET', path: '/products', collection: 'products', action: 'list' },
@@ -26,20 +28,26 @@ interface Calls {
 
 function setup(clients: unknown[] = []) {
   const calls: Calls = { posts: [], sends: [], drops: [] };
+  const tries: HttpRequest[] = [];
   const api = makeApi({
     admin: adminRoutes({
       'GET /definition': () => definition,
       'GET /scenarios': () => ({ active: {}, endpoints: [] }),
       'GET /users': () => ({ users: [], total: 0, skip: 0, limit: 100 }),
       'POST /endpoints': (request) => (calls.posts.push(request), { ok: true }),
+      'POST /graphql/generate': () => ({ sdl: 'type Query { products: [Product!]! } type Product { id: Int! }', resolvers: { 'Query.products': { collection: 'products', action: 'list' } } }),
       'GET /realtime/:id/clients': () => ({ type: 'sse', clients }),
       'GET /realtime/:id/messages': () => ({ messages: [{ at: '2026-11-22T10:00:00.000Z', direction: 'event', event: 'products.created', text: '{"id":1}' }] }),
       'POST /realtime/:id/send': (request) => (calls.sends.push(request), { sent: 1 }),
       'DELETE /realtime/:id/clients/:clientId': (request) => (calls.drops.push(request), { ok: true }),
     }),
+    tryIt: (_path: string, request: HttpRequest) => {
+      tries.push(request);
+      return Promise.resolve({ status: 200, body: '{"data":{"__typename":"Query"}}', ms: 3, contentType: 'application/json' });
+    },
   });
   renderWithApi(<Endpoints backend="/work/shop" />, api);
-  return { api, calls };
+  return { api, calls, tries };
 }
 
 describe('SSE endpoint form', () => {
@@ -111,6 +119,85 @@ describe('WebSocket endpoint form', () => {
     await userEvent.click(within(dialog).getByRole('button', { name: 'Add endpoint' }));
     expect(await within(dialog).findByText('The rules is a JSON list: [ ... ].')).toBeInTheDocument();
     expect(calls.posts).toHaveLength(0);
+  });
+});
+
+describe('GraphQL endpoint', () => {
+  it('AC-LP-7 adds a GraphQL endpoint, and Generate from collections writes the schema and its resolvers', async () => {
+    const { calls } = setup();
+    await userEvent.click(await screen.findByRole('button', { name: 'Add endpoint' }));
+    const dialog = screen.getByRole('dialog', { name: 'Add endpoint' });
+    await userEvent.selectOptions(within(dialog).getByLabelText(/^What should it do/), 'graphql');
+    expect(within(dialog).getByLabelText(/^Path/)).toHaveValue('/graphql');
+    expect(within(dialog).getByLabelText('Method')).toHaveValue('POST');
+    expect(within(dialog).getByLabelText('GraphQL schema')).toHaveValue('');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Generate from collections' }));
+    await waitFor(() => {
+      expect(within(dialog).getByLabelText('GraphQL schema')).toHaveValue('type Query { products: [Product!]! } type Product { id: Int! }');
+    });
+    expect(within(dialog).getAllByLabelText(/^Schema/)[0]).toHaveValue('sdl');
+    expect(within(dialog).getByLabelText('GraphQL resolvers')).toHaveValue(JSON.stringify({ 'Query.products': { collection: 'products', action: 'list' } }, null, 2));
+    await userEvent.type(within(dialog).getByLabelText(/^Needs sign-in \(optional\)/), 'Mutation.createProduct');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Add endpoint' }));
+    await waitFor(() => {
+      expect(calls.posts).toHaveLength(1);
+    });
+    expect(JSON.parse(calls.posts[0]?.body ?? '{}')).toMatchObject({
+      type: 'graphql',
+      method: 'POST',
+      path: '/graphql',
+      schema: { source: 'sdl', sdl: 'type Query { products: [Product!]! } type Product { id: Int! }' },
+      resolvers: { 'Query.products': { collection: 'products', action: 'list' } },
+      requireAuth: ['Mutation.createProduct'],
+      maxDepth: 10,
+    });
+  });
+
+  it('AC-LP-7 asks for the schema when it is written by hand and empty', async () => {
+    const { calls } = setup();
+    await userEvent.click(await screen.findByRole('button', { name: 'Add endpoint' }));
+    const dialog = screen.getByRole('dialog');
+    await userEvent.selectOptions(within(dialog).getByLabelText(/^What should it do/), 'graphql');
+    await userEvent.selectOptions(within(dialog).getAllByLabelText(/^Schema/)[0] as HTMLElement, 'sdl');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Add endpoint' }));
+    expect(await within(dialog).findByText('Write the schema, or use Generate from collections.')).toBeInTheDocument();
+    expect(calls.posts).toHaveLength(0);
+  });
+
+  it('AC-LP-7 the query runner sends the query with variables and the token, and shows the answer', async () => {
+    const { tries } = setup();
+    await userEvent.click(await screen.findByRole('button', { name: 'Query /graphql' }));
+    const panel = await screen.findByRole('region', { name: 'GraphQL query' });
+    fireEvent.change(within(panel).getByLabelText('Query'), { target: { value: 'query Q($n: Int) { products(limit: $n) { id } }' } });
+    fireEvent.change(within(panel).getByLabelText(/^Variables/), { target: { value: '{"n":2}' } });
+    await userEvent.type(within(panel).getByLabelText('Operation name (optional)'), 'Q');
+    await userEvent.type(within(panel).getByLabelText('Bearer token'), 'abc');
+    await userEvent.click(within(panel).getByRole('button', { name: 'Run' }));
+    expect(await within(panel).findByLabelText('Answer')).toHaveTextContent('__typename');
+    expect(tries).toHaveLength(1);
+    expect(tries[0]).toMatchObject({ method: 'POST', path: '/graphql' });
+    expect(tries[0]?.headers).toContainEqual(['authorization', 'Bearer abc']);
+    expect(JSON.parse(tries[0]?.body ?? '{}')).toEqual({ query: 'query Q($n: Int) { products(limit: $n) { id } }', variables: { n: 2 }, operationName: 'Q' });
+  });
+
+  it('AC-LP-7 does not send variables that are not a JSON object', async () => {
+    const { tries } = setup();
+    await userEvent.click(await screen.findByRole('button', { name: 'Query /graphql' }));
+    const panel = await screen.findByRole('region', { name: 'GraphQL query' });
+    fireEvent.change(within(panel).getByLabelText(/^Variables/), { target: { value: '[1]' } });
+    await userEvent.click(within(panel).getByRole('button', { name: 'Run' }));
+    expect(await within(panel).findByText('The variables are a JSON object: { "id": 1 }.')).toBeInTheDocument();
+    expect(tries).toHaveLength(0);
+    expect(graphqlBody('{ a }', 'nope', '')).toEqual({ ok: false, message: 'The variables are not valid JSON.' });
+    expect(graphqlBody('{ a }', '', '')).toEqual({ ok: true, body: '{"query":"{ a }"}' });
+  });
+
+  it('AC-LP-7 its Live panel lists subscription clients and has no send form', async () => {
+    setup([{ id: 'gql00001', connectedAt: '2026-11-22T10:00:00.000Z', ipHash: '0123456789ab', protocol: 'graphql-transport-ws', messagesIn: 2, messagesOut: 5 }]);
+    await userEvent.click(await screen.findByRole('button', { name: 'Live /graphql' }));
+    const panel = await screen.findByRole('region', { name: 'Live' });
+    expect(await within(panel).findByRole('table', { name: 'Connected clients' })).toHaveTextContent('gql00001');
+    expect(within(panel).queryByRole('form', { name: 'Send a message' })).not.toBeInTheDocument();
   });
 });
 
