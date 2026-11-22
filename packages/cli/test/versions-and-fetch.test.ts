@@ -16,7 +16,8 @@ const packagesDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '
 describe('embedded workspace versions', () => {
   it('match the packages/*/package.json files (run `yarn generate` after a version bump)', () => {
     for (const [name, version] of Object.entries(WORKSPACE_VERSIONS)) {
-      const dir = name.replace('@rn-tempo/', '');
+      // The engine lives in apps/, not packages/.
+      const dir = name === '@rn-tempo/local-backend' ? '../apps/local-backend/engine' : name.replace('@rn-tempo/', '');
       const pkg = JSON.parse(readFileSync(path.join(packagesDir, dir, 'package.json'), 'utf8')) as { version: string };
       expect(pkg.version).toBe(version);
     }

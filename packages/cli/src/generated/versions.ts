@@ -6,6 +6,7 @@ export const WORKSPACE_VERSIONS: Readonly<Record<string, string>> = {
   '@rn-tempo/contracts': '0.0.0',
   '@rn-tempo/dev-api': '0.0.0',
   '@rn-tempo/eslint-config': '0.0.0',
+  '@rn-tempo/local-backend': '0.0.0',
   '@rn-tempo/prettier-config': '0.0.0',
   '@rn-tempo/tsconfig': '0.0.0',
 };
