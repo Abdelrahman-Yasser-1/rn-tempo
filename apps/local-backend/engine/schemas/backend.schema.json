@@ -366,6 +366,63 @@
       "title": "Cors",
       "description": "Cross-origin rules of the public API, with preflight handling. Without it no CORS headers are sent (a browser app on another origin is blocked)."
     },
+    "oauth": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "type": "boolean"
+        },
+        "provider": {
+          "default": "google",
+          "description": "Which service to look like: it picks the claim names of the ID token and `userinfo`.",
+          "type": "string",
+          "enum": [
+            "google",
+            "apple",
+            "github",
+            "generic"
+          ]
+        },
+        "clients": {
+          "default": [],
+          "description": "Registered apps. A client secret, when one is made, is kept in `.data/secrets.json`.",
+          "maxItems": 50,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "clientId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._~-]{0,99}$"
+              },
+              "name": {
+                "type": "string",
+                "maxLength": 100
+              },
+              "redirectUris": {
+                "minItems": 1,
+                "maxItems": 20,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 2000
+                },
+                "description": "The only addresses a code is sent to. The `redirect_uri` of a request must equal one of these exactly."
+              }
+            },
+            "required": [
+              "clientId",
+              "redirectUris"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false,
+      "title": "Oauth",
+      "description": "A mock OAuth 2.0 / OpenID Connect provider (authorization code with PKCE) that signs in the backend's app users."
+    },
     "testMode": {
       "default": false,
       "description": "Zero every delay, throttle and timeout (and fix `{{now}}` and the random values). A request can opt back in with `x-tempo-test-delays: 1`.",

@@ -102,14 +102,20 @@ export class AuthService {
   authenticate(ctx: RequestCtx): boolean {
     if (ctx.user !== undefined) return true;
     const token = this.tokenOf(ctx);
-    if (token === undefined) return false;
+    const user = token === undefined ? undefined : this.userFromToken(token);
+    if (user === undefined) return false;
+    ctx.user = user;
+    return true;
+  }
+
+  /** The user an access token belongs to, when it is good (any auth mode). */
+  userFromToken(token: string): AuthUser | undefined {
     const verified = verifyAccessToken(this.secret, token, this.now().getTime());
-    if (!verified.ok) return false;
+    if (!verified.ok) return undefined;
     const id = Number(verified.claims.sub);
     const user = Number.isInteger(id) ? this.accounts.byId(id) : undefined;
-    if (user === undefined || user.disabled || user.tokenVersion !== verified.claims.ver) return false;
-    ctx.user = { id: user.id, username: user.username } satisfies AuthUser;
-    return true;
+    if (user === undefined || user.disabled || user.tokenVersion !== verified.claims.ver) return undefined;
+    return { id: user.id, username: user.username } satisfies AuthUser;
   }
 
   /** `bearer`, `cookie` or `both`: where a request may carry its access token. */

@@ -191,6 +191,45 @@ export const CorsSchema = z
   .meta({ title: 'Cors', description: 'Cross-origin rules of the public API, with preflight handling. Without it no CORS headers are sent (a browser app on another origin is blocked).' });
 export type Cors = z.infer<typeof CorsSchema>;
 
+export const OAUTH_PROVIDERS = ['google', 'apple', 'github', 'generic'] as const;
+const OAUTH_CLIENT_ID = /^[A-Za-z0-9][A-Za-z0-9._~-]{0,99}$/;
+export const OauthClientSchema = z.strictObject({
+  clientId: z.string().regex(OAUTH_CLIENT_ID, 'A client id is letters, digits and "._~-" (at most 100).'),
+  name: z.string().max(100).optional(),
+  redirectUris: z
+    .array(
+      z.string().max(2000).refine(
+        (value) => {
+          try {
+            const url = new URL(value);
+            return url.hash === '' && url.username === '' && url.password === '' && !value.includes('*');
+          } catch {
+            return false;
+          }
+        },
+        { message: 'A redirect URI is an absolute URL (an app scheme such as "myapp://callback" is fine) with no fragment, user name or "*".' },
+      ),
+    )
+    .min(1)
+    .max(20)
+    .meta({ description: 'The only addresses a code is sent to. The `redirect_uri` of a request must equal one of these exactly.' }),
+});
+export const OauthSchema = z
+  .strictObject({
+    enabled: z.boolean().default(false),
+    provider: z.enum(OAUTH_PROVIDERS).default('google').meta({ description: 'Which service to look like: it picks the claim names of the ID token and `userinfo`.' }),
+    clients: z.array(OauthClientSchema).max(50).default([]).meta({ description: 'Registered apps. A client secret, when one is made, is kept in `.data/secrets.json`.' }),
+  })
+  .superRefine((oauth, ctx) => {
+    const seen = new Set<string>();
+    oauth.clients.forEach((client, index) => {
+      if (seen.has(client.clientId)) ctx.addIssue({ code: 'custom', path: ['clients', index, 'clientId'], message: `Duplicate client "${client.clientId}".` });
+      seen.add(client.clientId);
+    });
+  })
+  .meta({ title: 'Oauth', description: 'A mock OAuth 2.0 / OpenID Connect provider (authorization code with PKCE) that signs in the backend\'s app users.' });
+export type Oauth = z.infer<typeof OauthSchema>;
+
 const common = {
   faults: FaultsSchema.optional().meta({ description: 'Faults for this endpoint. Each setting replaces the backend\'s.' }),
   id: z.string().min(1).max(200).meta({ description: 'Stable id, for example `get.products.:id`. Scenarios and stats use it.' }),
@@ -632,6 +671,7 @@ export const BackendSchema = z
     responseTemplates: z.record(z.string().regex(TEMPLATE_NAME, 'A template name starts with a letter and holds letters, digits, "-" and "_" (at most 64 characters).'), ResponseTemplateSchema).default({}),
     faults: FaultsSchema.optional().meta({ description: 'Faults of every endpoint that does not set its own.' }),
     cors: CorsSchema.optional(),
+    oauth: OauthSchema.optional(),
     testMode: z.boolean().default(false).meta({ description: 'Zero every delay, throttle and timeout (and fix `{{now}}` and the random values). A request can opt back in with `x-tempo-test-delays: 1`.' }),
     auth: AuthConfig.default(() => AuthConfig.parse({})),
     media: z.strictObject({ maxBytes: z.number().int().positive().default(104_857_600) }).default({ maxBytes: 104_857_600 }),

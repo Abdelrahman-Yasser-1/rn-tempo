@@ -40,6 +40,7 @@ import type { OutboundPolicy, Transport } from './outbound.ts';
 import { SecretStore } from './secrets.ts';
 import { WebhookService } from './webhooks.ts';
 import { Inbox } from './inbox.ts';
+import { OauthService } from './oauth.ts';
 import { PushService, type PushTransport } from './push.ts';
 import { httpTransport } from './outbound.ts';
 import { INBOX_MAX_BODY_BYTES } from './schema.ts';
@@ -120,6 +121,8 @@ export class Engine {
   readonly outbound: OutboundPolicy;
   /** Outgoing webhooks and their delivery log. */
   readonly webhooks: WebhookService;
+  /** The mock OAuth 2.0 / OpenID Connect provider. */
+  readonly oauth: OauthService;
   /** Counts of simulated faults since the engine started. */
   readonly faultCounts: FaultCounts = { rateLimited: 0, failed: 0, dropped: 0, offline: 0 };
   private readonly limiter = new RateLimiter();
@@ -160,6 +163,7 @@ export class Engine {
     this.realtime = new Realtime({ events: this.events, definition: () => this.state.definition, now });
     this.secrets = new SecretStore(folder.dataDir);
     this.outbound = { allowPrivate: options.outbound?.allowPrivate ?? true, requireHttps: options.outbound?.requireHttps ?? false, ...(options.outbound?.resolve === undefined ? {} : { resolve: options.outbound.resolve }) };
+    this.oauth = new OauthService({ definition: () => this.state.definition, auth: this.auth, accounts: this.auth.accounts, secrets: this.secrets, now, prefix: this.publicPrefix });
     this.inbox = new Inbox(store.db, now);
     this.push = new PushService({ db: store.db, secrets: this.secrets, now, ...(options.pushTransport === undefined ? {} : { transport: options.pushTransport }), ...(options.apnsOrigin === undefined ? {} : { apnsOrigin: options.apnsOrigin }) });
     this.outboundTransport = options.webhookTransport ?? httpTransport;
@@ -659,13 +663,16 @@ export class Engine {
         { definition: this.state.definition, content: this.content, media: this.media, mediaUrl: (id, origin) => this.mediaUrl(id, origin) },
         ctx,
       );
-      const match = publicContent === undefined ? router.match(ctx.method, ctx.path) : undefined;
+      const oauthReply = publicContent === undefined ? this.oauth.handle(ctx) : undefined;
+      const match = publicContent === undefined && oauthReply === undefined ? router.match(ctx.method, ctx.path) : undefined;
       if (match?.kind === 'found') endpointId = match.route.endpoint.id;
       outcome = await this.hold(plan.network, ctx.signal);
       if (outcome === 'closed') {
         reply = { status: 0, headers: {}, close: true };
       } else if (outcome === 'abandoned') {
         reply = { status: 499, headers: {}, abandoned: true };
+      } else if (oauthReply !== undefined) {
+        reply = oauthReply;
       } else if (publicContent !== undefined) {
         reply = this.finalize(publicContent, undefined, this.placeholders(ctx, undefined, {}));
       } else if (match?.kind === 'none') {
