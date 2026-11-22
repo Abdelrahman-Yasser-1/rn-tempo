@@ -54,8 +54,47 @@ export interface TempoBackend {
   };
   /** Data change events (`products.created`, `content.published`, a handler's `ctx.emit`), published after each write commits. Returns the function that stops listening. */
   events: { on(listener: (event: { name: string; payload: unknown; at: string }) => void): () => void };
+  /** Opens a WebSocket on a `websocket` endpoint (or the subscriptions of a `graphql` one: offer `protocols: ['graphql-transport-ws']`). A token goes in the subprotocol, never the URL. */
+  ws(path: string, options?: { protocols?: string[]; token?: string; headers?: Record<string, string> }): Promise<TestSocket>;
+  /** Opens an event stream on an `sse` endpoint. */
+  sse(path: string, options?: { headers?: Record<string, string>; lastEventId?: string | number }): Promise<TestStream>;
+  /** Runs one GraphQL operation over HTTP. GraphQL errors come back in `errors`. */
+  graphql<T = Record<string, unknown>>(
+    query: string,
+    variables?: Record<string, unknown>,
+    options?: { path?: string; operationName?: string; token?: string; headers?: Record<string, string> },
+  ): Promise<{ status: number; data: T | null | undefined; errors: { message: string; extensions?: Record<string, unknown> }[] | undefined }>;
   /** The requests the backend answered since the start or the last `reset()`, redacted (tokens and passwords are replaced). */
   requests(): RecordedRequest[];
   /** Back to the state at the start: data, media, users, scenarios, clock, sequences and recorded requests. */
   reset(): void;
+}
+
+/** One server-sent event as the test kit parses it. `data` is the lines joined with `\n`. */
+export interface SseEvent {
+  event?: string;
+  data: string;
+  id?: string;
+  retry?: number;
+}
+
+/** An open event stream: read it with `next()`, or `for await`. */
+export interface TestStream extends AsyncIterable<SseEvent> {
+  /** The next event. Rejects after `ms` (default 5000) or when the stream ends. */
+  next(ms?: number): Promise<SseEvent>;
+  /** The next event's data as JSON. */
+  json<T = unknown>(ms?: number): Promise<T>;
+  close(): void;
+}
+
+/** An open WebSocket: `send`, then read with `next()` or `for await`. */
+export interface TestSocket extends AsyncIterable<string> {
+  /** The subprotocol the server chose. */
+  readonly protocol: string;
+  send(data: string | object): void;
+  next(ms?: number): Promise<string>;
+  json<T = unknown>(ms?: number): Promise<T>;
+  /** Resolves with the close code once the socket is closed. */
+  readonly closed: Promise<number>;
+  close(): Promise<void>;
 }
