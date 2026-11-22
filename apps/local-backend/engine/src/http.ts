@@ -35,6 +35,8 @@ export interface RequestCtx {
   bodyNote?: string;
   /** The access token came from the session cookie, not an `Authorization` header (so CSRF rules apply). */
   viaCookie?: boolean;
+  /** A WebSocket upgrade or an event stream: GETs that stay open, so a cookie on them needs an `Origin` check, not a CSRF header. */
+  live?: boolean;
   /** A cookie-authenticated unsafe request was refused by the CSRF check: answer 403, not 401. */
   csrfRefused?: boolean;
   /** Aborts when the client goes away, so waiting stops at once. */

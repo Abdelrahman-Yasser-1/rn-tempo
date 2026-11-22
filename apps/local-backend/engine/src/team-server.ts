@@ -8,7 +8,7 @@ import type { AssetSources } from './assets.ts';
 import type { Actor } from './audit.ts';
 import { AuditLog, DEFAULT_AUDIT_DAYS } from './audit-log.ts';
 import { dashboardReply, SECURITY_HEADERS } from './dashboard.ts';
-import { isMutating, originOk, parseAdminTarget } from './hub.ts';
+import { isMutating, isStream, originOk, parseAdminTarget, streamOriginOk } from './hub.ts';
 import { BackendRegistry, BACKEND_ID, type RegistryOptions } from './hub-backends.ts';
 import { jsonReply, problemReply, readJson, type Reply } from './http.ts';
 import { atLeast, HUB_ROLE_TABLE, type AdminAccess, type ApiKeyScope, type Role } from './roles.ts';
@@ -163,6 +163,9 @@ export async function startTeam(options: TeamOptions): Promise<RunningTeam> {
     if (mutating) {
       if (req.headers.origin === undefined || !originOk(req, https)) return { denied: problemReply(403, { detail: 'A change must come from this page (Origin check).' }) };
       if (!csrfMatches(current.session, req.headers[CSRF_HEADER])) return { denied: problemReply(403, { detail: 'The CSRF token is missing or wrong.' }) };
+    } else if (isStream(req) && !streamOriginOk(req, https)) {
+      // A stream is a GET, so it carries no CSRF token: another site must not be able to open one on the cookie.
+      return { denied: problemReply(403, { detail: 'A stream must be opened from this page (Origin check).' }) };
     }
     return { principal: { kind: 'account', ...current } };
   }

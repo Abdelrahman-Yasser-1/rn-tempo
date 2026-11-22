@@ -118,6 +118,12 @@ export class AuthService {
       ctx.csrfRefused = true;
       return false;
     }
+    // A WebSocket or event stream is a GET and has no CSRF header, but the browser sends an Origin on a WebSocket and a
+    // cross-origin stream: it must be this server or a cors origin. Bearer-authenticated connections are not affected.
+    if (found.cookie && ctx.live === true && !this.streamOriginOk(ctx)) {
+      ctx.csrfRefused = true;
+      return false;
+    }
     if (found.cookie) ctx.viaCookie = true;
     ctx.user = user;
     return true;
@@ -139,6 +145,14 @@ export class AuthService {
     const allowed = origin === ctx.origin || this.corsOrigins().includes(origin);
     if (ctx.headers['sec-fetch-site'] === 'cross-site' && !this.corsOrigins().includes(origin)) return false;
     return allowed;
+  }
+
+  /** The Origin of a cookie-authenticated stream: this server, or a cors origin; no Origin only when the browser says `same-origin`. */
+  private streamOriginOk(ctx: RequestCtx): boolean {
+    const origin = typeof ctx.headers.origin === 'string' ? ctx.headers.origin : undefined;
+    if (origin === undefined) return ctx.headers['sec-fetch-site'] === 'same-origin';
+    if (this.corsOrigins().includes(origin)) return true;
+    return origin === ctx.origin && ctx.headers['sec-fetch-site'] !== 'cross-site';
   }
 
   /** The user an access token belongs to, when it is good (any auth mode). */
