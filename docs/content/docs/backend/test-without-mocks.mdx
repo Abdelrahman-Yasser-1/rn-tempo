@@ -71,6 +71,31 @@ Opt back in for one request with the header `x-tempo-test-delays: 1`, or turn th
 
 Each Jest worker, and each test file, gets its own engine, port and memory. A product one file creates is never seen by another. With `isolate: 'test'` the backend also goes back to its start state before every test.
 
+### Realtime endpoints
+
+When the backend has SSE, WebSocket or GraphQL endpoints (see [Live data](/docs/backend/local-backend#46-live-data-sse-websocket-and-graphql)), the kit has three helpers. They return async iterators and work under any Jest environment.
+
+```ts
+const backend = setupTempoBackend();
+
+it('gets the new product on the socket', async () => {
+  const socket = await backend.ws('/ws'); // { token } puts a bearer token in the subprotocol
+  backend.data.insert('products', { title: 'Lamp', price: 10 }); // publishes products.created
+  expect(await socket.json()).toMatchObject({ event: 'products.created' });
+  await socket.close();
+});
+
+it('reads a stream and runs a query', async () => {
+  const stream = await backend.sse('/events'); // { lastEventId } resumes
+  expect((await stream.next()).event).toBe('hello'); // test mode: every delay is 0
+  const { data } = await backend.graphql('{ products(limit: 1) { title } }');
+  expect(data).toBeDefined();
+  stream.close();
+});
+```
+
+For a GraphQL subscription, open `backend.ws('/graphql', { protocols: ['graphql-transport-ws'] })` and send `connection_init` and `subscribe` messages. `backend.events.on(listener)` hears the data change events directly.
+
 ## The test snapshot
 
 `GET /b/<backend>/__definition` on a team server (with a `read-definition` or `admin` key as `Authorization: Bearer tlb_...`) returns one JSON document. It holds `backend.json`, `seed/*`, `handlers/*`, a dump of each collection and of the content entries, and media files up to 5 MB in all (a bigger file becomes a small placeholder, listed in `placeholders`).

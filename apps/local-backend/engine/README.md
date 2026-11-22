@@ -51,6 +51,9 @@ rewrites it, a test keeps it in sync).
     the built-in app users.
   - `upload`: `maxBytes`, `multiple`. `download`: the path needs an `:id` segment. See "Media" below.
   - `handler`: `file` (`handlers/<name>.js`), `timeoutMs` (default 5000, at most 30000). See "Handlers" below.
+  - `sse`, `websocket`, `graphql`: server-sent events, WebSocket (echo or rules) and GraphQL with subscriptions over
+    graphql-transport-ws. They listen to the data change events (`products.created`, ...) of the backend. See
+    "Live data: SSE, WebSocket and GraphQL" in the user guide (`docs/content/docs/backend/local-backend.mdx`).
 - Paths starting with `/__` are reserved for the engine (`/__health`, `/__docs`).
 
 List queries: `limit`/`skip` or `page`/`pageSize`, `sort=field` / `-field` (also `sortBy`+`order`), equality
