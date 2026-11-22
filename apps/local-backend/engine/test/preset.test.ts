@@ -108,9 +108,9 @@ describe('Tempo template preset', () => {
     expect(await parse(await send(`${url}/auth/otp/verify`, 'POST', { target: 'a@b.test', code: '000000', purpose: 'register' }), OtpVerifyResponseSchema)).toEqual({ success: false });
     expect(await parse(await send(`${url}/auth/otp/resend`, 'POST', { target: 'a@b.test', purpose: 'register' }), OtpResendResponseSchema)).toEqual({ success: true, retryAfterSec: 60 });
     const added = await parse(await send(`${url}/users/add`, 'POST', { firstName: 'Zed', lastName: 'Z', username: 'zed', email: 'zed@example.test', password: 'zedspass1' }), UserSchema, 201);
-    expect(added).toMatchObject({ username: 'zed', firstName: 'Zed' });
+    expect(added).toMatchObject({ id: 209, username: 'zed', firstName: 'Zed' }); // echoed, like the mock: nothing is stored
     expect((await send(`${url}/users/${login.id}`, 'PUT', { firstName: 'X' })).status).toBe(401);
-    expect((await send(`${url}/users/${added.id}`, 'PUT', { firstName: 'X' }, token)).status).toBe(403);
+    expect((await send(`${url}/users/${login.id + 1}`, 'PUT', { firstName: 'X' }, token)).status).toBe(403);
     await parse(await send(`${url}/users/${login.id}`, 'PUT', { firstName: 'Emilia', lastName: 'Johnson', email: 'emilia@example.test' }, token), UserSchema);
     const page = await parse(await send(`${url}/products?limit=2&skip=0`), ItemsPageSchema);
     expect(page).toMatchObject({ total: 100, skip: 0 });
@@ -126,7 +126,7 @@ describe('Tempo template preset', () => {
     expect(config.maintenance.enabled).toBe(false);
     expect(config.flags).toEqual({});
     const stats = await json(await send(`${url}/stats/summary`));
-    expect(stats).toEqual({ products: 100, users: 2 });
+    expect(stats).toEqual({ products: 100, users: 1 });
   });
 
   it('adds a product that lists, strips extra fields, and survives an engine restart (AC-LB-1, engine side)', async () => {
