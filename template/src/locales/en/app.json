@@ -1,15 +1,15 @@
 {
   "debug": {
     "apiSource": {
-      "devApi": "Local dev API",
+      "devApi": "Tempo backend",
       "env": "Build default (env file)",
-      "hint": "Applies after restarting the app. Local dev API needs `yarn api up`; on a phone use the LAN URL it prints.",
+      "hint": "Applies after restarting the app. Tempo backend is your Tempo Local Backend: the Mac app, `yarn backend`, or a team server at https://<host>/b/<name>. On a phone use its LAN URL.",
       "mocks": "In-app mocks",
       "reset": "Use default",
       "save": "Save URL",
       "saved": "Saved. Restart the app to apply.",
       "title": "API source",
-      "urlLabel": "Local dev API URL"
+      "urlLabel": "Tempo backend URL"
     },
     "apiUrl": {
       "clear": "Clear",

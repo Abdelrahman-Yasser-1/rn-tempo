@@ -12,7 +12,7 @@ const OPTIONS = [
 
 /**
  * Dev builds only: where the app's requests go (the build's env setting, the in-app mocks or the
- * local dev API). Loaded through a guarded `require` in `DebugMenuScreen`, so release bundles never
+ * Tempo backend). Loaded through a guarded `require` in `DebugMenuScreen`, so release bundles never
  * contain it.
  */
 export function ApiSourceControls() {

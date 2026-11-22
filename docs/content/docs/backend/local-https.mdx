@@ -96,7 +96,7 @@ You can also switch a dev build to the local server from the app, without editin
 
 - **Build default**: today's behavior from the env file.
 - **In-app mocks**: the in-app mock adapter, even if `API_MOCKING=false`.
-- **Local dev API**: no mocks, and requests go to the URL in the field. It starts as `https://localhost:8443` on iOS and `https://10.0.2.2:8443` on Android. On a physical phone, enter the LAN URL (`https://<your LAN IP>:8443`).
+- **Tempo backend** (named **Local dev API** before): no mocks, and requests go to the URL in the field. For a backend on a team server, enter `https://<host>/b/<name>`. It starts as `https://localhost:8443` on iOS and `https://10.0.2.2:8443` on Android. On a physical phone, enter the LAN URL (`https://<your LAN IP>:8443`).
 
 The choice is saved in the app (`app.api-source`, `app.dev-api-url`) and applies after you close and reopen the app. It only exists in dev builds (`__DEV__` and not prod); release bundles do not contain it. The simulator or emulator must still trust the CA (steps 3 above), and on Android only the **devDebug** variant does.
 
