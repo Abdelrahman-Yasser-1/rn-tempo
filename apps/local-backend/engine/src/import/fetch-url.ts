@@ -21,7 +21,7 @@ export interface FetchOptions {
   resolve?: Lookup;
 }
 
-const defaultResolve: Lookup = (hostname) =>
+export const defaultResolve: Lookup = (hostname) =>
   new Promise((resolve, reject) => {
     dnsLookup(hostname, { all: true, verbatim: true }, (error, addresses: LookupAddress[]) => {
       if (error !== null) reject(error);

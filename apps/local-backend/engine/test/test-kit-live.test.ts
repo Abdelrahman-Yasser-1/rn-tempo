@@ -112,3 +112,26 @@ describe('test kit: realtime helpers', () => {
     expect(backend.data.list('products').some((row) => row.title === 'Temporary')).toBe(false);
   });
 });
+
+describe('test kit: webhooks', () => {
+  it('AC-LP-8 backend.webhooks.deliveries() captures a signed delivery in test mode and reset() clears it', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'tempo-kit-hooks-'));
+    temp.push(dir);
+    cpSync(FIXTURE, join(dir, 'backend'), { recursive: true });
+    const file = join(dir, 'backend', 'backend.json');
+    const definition = JSON.parse(readFileSync(file, 'utf8')) as Record<string, unknown>;
+    definition.webhooks = [{ id: 'orders', url: 'https://hooks.example.com/orders', events: ['products.created'] }];
+    writeFileSync(file, JSON.stringify(definition));
+    const backend = setupTempoBackend({ source: join(dir, 'backend'), hooks: false });
+    open.push(backend);
+    await backend.start();
+    backend.data.insert('products', { title: 'Lamp', price: 5 });
+    await new Promise((done) => setTimeout(done, 50));
+    const [delivery] = backend.webhooks.deliveries();
+    expect(delivery?.url).toBe('https://hooks.example.com/orders');
+    expect(delivery?.headers['x-tempo-signature']).toMatch(/^t=\d+,v1=[0-9a-f]{64}$/);
+    expect((delivery?.json as { event: string }).event).toBe('products.created');
+    backend.reset();
+    expect(backend.webhooks.deliveries()).toEqual([]);
+  });
+});

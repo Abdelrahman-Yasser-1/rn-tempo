@@ -35,6 +35,9 @@ import type { Backend, Collection, Endpoint, GraphqlEndpoint, Scenario, StaticEn
 import { Stats } from './stats.ts';
 import { Store, type Plan, type RenameHints } from './store.ts';
 import { loadJwtSecret } from './tokens.ts';
+import type { OutboundPolicy, Transport } from './outbound.ts';
+import { SecretStore } from './secrets.ts';
+import { WebhookService } from './webhooks.ts';
 
 export interface EngineOptions {
   /** Waits for a delay. Tests pass a faster one. It must return early when `signal` aborts. */
@@ -55,6 +58,10 @@ export interface EngineOptions {
   logger?: EngineLogger;
   /** The path the public API is served under when a server mounts it (`/b/<id>`), for the URLs and OpenAPI it hands out. */
   publicPrefix?: string;
+  /** Rules for the calls the engine makes to addresses people type (webhooks, the inbox replay). Default: everything allowed (desktop and local web). */
+  outbound?: Partial<OutboundPolicy>;
+  /** Sends webhook deliveries (tests pass a fake). Without one, test mode captures deliveries and other modes call out over HTTP. */
+  webhookTransport?: Transport;
   /** Called with every request log entry, after redaction. */
   onRequest?: (entry: ReturnType<RequestLog['record']>, endpointId: string | undefined) => void;
 }
@@ -98,6 +105,12 @@ export class Engine {
   readonly realtime: Realtime;
   /** The `ws` servers of websocket endpoints. */
   readonly sockets = new WebSocketService();
+  /** `.data/secrets.json`: the signing secrets, push credentials and OAuth keys. */
+  readonly secrets: SecretStore;
+  /** What this engine may call out to (webhooks, inbox replay). */
+  readonly outbound: OutboundPolicy;
+  /** Outgoing webhooks and their delivery log. */
+  readonly webhooks: WebhookService;
   private state: State;
   private readonly options: Required<Pick<EngineOptions, 'sleep' | 'now' | 'authorize'>> & Pick<EngineOptions, 'onRequest' | 'logger'>;
   /** Turns delays off for every request (`--test-mode`). */
@@ -127,6 +140,19 @@ export class Engine {
     this.handlers = new HandlerPool(options.logger);
     this.events = new EventBus(now);
     this.realtime = new Realtime({ events: this.events, definition: () => this.state.definition, now });
+    this.secrets = new SecretStore(folder.dataDir);
+    this.outbound = { allowPrivate: options.outbound?.allowPrivate ?? true, requireHttps: options.outbound?.requireHttps ?? false, ...(options.outbound?.resolve === undefined ? {} : { resolve: options.outbound.resolve }) };
+    this.webhooks = new WebhookService({
+      db: store.db,
+      definition: () => this.state.definition,
+      events: this.events,
+      secrets: this.secrets,
+      now,
+      policy: this.outbound,
+      testMode: options.testMode === true || folder.definition.testMode,
+      ...(options.webhookTransport === undefined ? {} : { transport: options.webhookTransport }),
+      logger: options.logger,
+    });
     store.onChange = (change): void => this.events.emit(`${change.payload.collection}.${change.action}`, change.payload);
     content.onEvent = (name, payload): void => this.events.emit(name, payload);
     this.options = {
@@ -165,6 +191,7 @@ export class Engine {
       const engine = new Engine(folder, store, content, { definition: folder.definition, router: new Router([], undefined), graphql: new Map() }, options);
       engine.state = engine.build(folder.definition);
       engine.seedUsers();
+      engine.webhooks.start();
       return engine;
     } catch (error) {
       store.close();
@@ -207,6 +234,7 @@ export class Engine {
   close(): void {
     this.closed = true;
     clearInterval(this.dueTimer);
+    this.webhooks.close();
     this.realtime.closeAll();
     this.sockets.close();
     void this.handlers.close();

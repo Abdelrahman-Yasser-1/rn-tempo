@@ -3468,6 +3468,104 @@
         "title": "ContentType"
       }
     },
+    "webhooks": {
+      "default": [],
+      "description": "Outgoing webhooks: signed calls to a URL when events happen.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]{0,62}$"
+          },
+          "url": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000,
+            "description": "Where the event is POSTed. https: on a team server; localhost is fine on a desktop or local web backend."
+          },
+          "events": {
+            "minItems": 1,
+            "maxItems": 50,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^(?:\\*|[A-Za-z][A-Za-z0-9_.:-]{0,63}\\*?)$"
+            },
+            "description": "Events that fire it: `products.created`, `products.*`, `*`, or a custom event from `ctx.emit`."
+          },
+          "enabled": {
+            "default": true,
+            "type": "boolean"
+          },
+          "secretRef": {
+            "description": "The name of the signing secret in `.data/secrets.json` (default: the webhook id). The secret itself is never in this file.",
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]{0,62}$"
+          },
+          "delayMs": {
+            "description": "Wait this long after the event before the first attempt. Test mode makes it 0.",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 60000
+          },
+          "retries": {
+            "default": {
+              "max": 3,
+              "backoff": "exponential",
+              "baseMs": 1000
+            },
+            "type": "object",
+            "properties": {
+              "max": {
+                "default": 3,
+                "description": "Retries after the first attempt (at most 10).",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10
+              },
+              "backoff": {
+                "default": "exponential",
+                "type": "string",
+                "const": "exponential"
+              },
+              "baseMs": {
+                "default": 1000,
+                "description": "The first wait; each retry doubles it (with up to 20% jitter, at most 5 minutes).",
+                "type": "integer",
+                "minimum": 10,
+                "maximum": 60000
+              }
+            },
+            "additionalProperties": false
+          },
+          "headers": {
+            "description": "Extra headers. `x-tempo-*`, `host` and the framing headers cannot be set.",
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9-]{1,100}$"
+            },
+            "additionalProperties": {
+              "type": "string",
+              "maxLength": 2000
+            }
+          },
+          "body": {
+            "description": "A body template. `{{event.id}}`, `{{event.name}}`, `{{event.createdAt}}` and `{{event.data.<path>}}` are filled in. Without it the body is `{ id, event, createdAt, data }`."
+          }
+        },
+        "required": [
+          "id",
+          "url",
+          "events"
+        ],
+        "additionalProperties": false,
+        "title": "Webhook",
+        "description": "An outgoing call on events, signed with HMAC-SHA256."
+      }
+    },
     "imports": {
       "default": [],
       "description": "API files imported into this backend, newest last.",

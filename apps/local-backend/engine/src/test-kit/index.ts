@@ -146,6 +146,7 @@ export function setupTempoBackend(options: TempoBackendOptions = {}): TempoBacke
     baseline?.restore();
     live.clearScenario();
     live.resetSequences();
+    live.webhooks.reset();
     clock = new Date(TEST_MODE_NOW);
     live.testClock = new Date(TEST_MODE_NOW);
     requestsAfter = lastRequestId();
@@ -215,6 +216,7 @@ export function setupTempoBackend(options: TempoBackendOptions = {}): TempoBacke
     sse: (path, streamOptions) => openStream(backend.url, path, streamOptions),
     graphql: (query, variables, graphqlOptions) => postGraphql(backend.url, query, variables, graphqlOptions),
     events: { on: (listener) => engine().events.on(listener) },
+    webhooks: { deliveries: () => engine().webhooks.captured() },
     requests: () => engine().requests.snapshot(requestsAfter),
     reset,
   };

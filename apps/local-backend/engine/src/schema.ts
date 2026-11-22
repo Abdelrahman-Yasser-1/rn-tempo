@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { MAX_DELAY_MS, MAX_TIMEOUT_MS } from './constants.ts';
+import { FORBIDDEN_HEADERS, MAX_DELAY_MS, MAX_TIMEOUT_MS } from './constants.ts';
 import { isIdentifier } from './names.ts';
 import { buildGraphqlModel, GraphqlSchemaError } from './graphql-schema.ts';
 import { parseJsonPath } from './ws-rules.ts';
@@ -338,6 +338,39 @@ const GraphqlEndpoint = z.strictObject({
   maxBufferedBytes: z.number().int().min(1024).max(64 * 1024 * 1024).default(1_048_576).meta({ description: 'A subscription client with more than this waiting is too slow and is closed with 1013.' }),
 });
 
+const SECRET_REF = /^[a-z][a-z0-9_-]{0,62}$/;
+const WEBHOOK_HEADER_NAME = /^[A-Za-z0-9-]{1,100}$/;
+
+export const WebhookSchema = z
+  .strictObject({
+    id: z.string().regex(SECRET_REF, 'A webhook id starts with a lowercase letter and holds lowercase letters, digits, "-" and "_".'),
+    url: z.string().min(1).max(2000).meta({ description: 'Where the event is POSTed. https: on a team server; localhost is fine on a desktop or local web backend.' }),
+    events: z.array(z.string().regex(EVENT_PATTERN, 'An event is a name like "products.created", a prefix like "products.*" or "*".')).min(1).max(50).meta({ description: 'Events that fire it: `products.created`, `products.*`, `*`, or a custom event from `ctx.emit`.' }),
+    enabled: z.boolean().default(true),
+    secretRef: z.string().regex(SECRET_REF).optional().meta({ description: 'The name of the signing secret in `.data/secrets.json` (default: the webhook id). The secret itself is never in this file.' }),
+    delayMs: z.number().int().min(0).max(MAX_DELAY_MS).optional().meta({ description: 'Wait this long after the event before the first attempt. Test mode makes it 0.' }),
+    retries: z
+      .strictObject({
+        max: z.number().int().min(0).max(10).default(3).meta({ description: 'Retries after the first attempt (at most 10).' }),
+        backoff: z.literal('exponential').default('exponential'),
+        baseMs: z.number().int().min(10).max(60_000).default(1000).meta({ description: 'The first wait; each retry doubles it (with up to 20% jitter, at most 5 minutes).' }),
+      })
+      .default({ max: 3, backoff: 'exponential', baseMs: 1000 }),
+    headers: z
+      .record(z.string().regex(WEBHOOK_HEADER_NAME), z.string().max(2000).refine((value) => !/[\r\n]/.test(value), { message: 'A header value is one line.' }))
+      .optional()
+      .meta({ description: 'Extra headers. `x-tempo-*`, `host` and the framing headers cannot be set.' }),
+    body: z.unknown().optional().meta({ description: 'A body template. `{{event.id}}`, `{{event.name}}`, `{{event.createdAt}}` and `{{event.data.<path>}}` are filled in. Without it the body is `{ id, event, createdAt, data }`.' }),
+  })
+  .superRefine((hook, ctx) => {
+    for (const name of Object.keys(hook.headers ?? {})) {
+      const lower = name.toLowerCase();
+      if (lower.startsWith('x-tempo-') || lower === 'host' || FORBIDDEN_HEADERS.has(lower)) ctx.addIssue({ code: 'custom', path: ['headers', name], message: `The header "${name}" is set by the server.` });
+    }
+  })
+  .meta({ title: 'Webhook', description: 'An outgoing call on events, signed with HMAC-SHA256.' });
+export type Webhook = z.infer<typeof WebhookSchema>;
+
 export const EndpointSchema = z.discriminatedUnion('type', [
   CrudEndpoint,
   StaticEndpoint,
@@ -546,6 +579,7 @@ export const BackendSchema = z
     endpoints: z.array(EndpointSchema).default([]),
     content: ContentConfig.default(() => ContentConfig.parse({})),
     contentTypes: z.array(ContentTypeSchema).default([]),
+    webhooks: z.array(WebhookSchema).default([]).meta({ description: 'Outgoing webhooks: signed calls to a URL when events happen.' }),
     imports: z.array(ImportRecordSchema).default([]).meta({ description: 'API files imported into this backend, newest last.' }),
   })
   .superRefine((def, ctx) => {
@@ -564,6 +598,11 @@ export const BackendSchema = z
       });
     });
     checkContent(def, ctx);
+    const hookIds = new Set<string>();
+    def.webhooks.forEach((hook, index) => {
+      if (hookIds.has(hook.id)) ctx.addIssue({ code: 'custom', path: ['webhooks', index, 'id'], message: `Duplicate webhook id "${hook.id}".` });
+      hookIds.add(hook.id);
+    });
     checkResponses(def, ctx);
     const ids = new Set<string>();
     const routes = new Set<string>();
