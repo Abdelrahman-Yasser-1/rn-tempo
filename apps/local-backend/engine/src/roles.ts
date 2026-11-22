@@ -122,6 +122,10 @@ export const ADMIN_ROLE_TABLE: Readonly<Record<string, Role>> = {
   'PUT /push/:platform': 'admin',
   'DELETE /push/:platform': 'admin',
   'POST /push/send': 'admin',
+  'GET /oauth': 'viewer',
+  'PUT /oauth': 'admin',
+  'POST /oauth/clients/:clientId/secret': 'admin',
+  'DELETE /oauth/clients/:clientId/secret': 'admin',
   'GET /stats': 'viewer',
   'POST /contract-check': 'viewer',
   'GET /snapshot': 'admin',
@@ -138,7 +142,7 @@ export const ADMIN_ROLE_TABLE: Readonly<Record<string, Role>> = {
 export const READ_DEFINITION_ROUTES: ReadonlySet<string> = new Set(['GET /definition', 'GET /test-snapshot']);
 
 /** Fields of `backend.json` that are settings, not content: changing them takes an admin. */
-const SETTINGS_FIELDS = ['publicAccess', 'port', 'https', 'certsDir', 'latency', 'network', 'testMode', 'responses', 'responseTemplates', 'faults', 'cors'] as const;
+const SETTINGS_FIELDS = ['publicAccess', 'port', 'https', 'certsDir', 'latency', 'network', 'testMode', 'responses', 'responseTemplates', 'faults', 'cors', 'oauth'] as const;
 const SETTINGS_DEFAULTS: Record<(typeof SETTINGS_FIELDS)[number], unknown> = {
   publicAccess: 'open',
   port: 8443,
@@ -151,6 +155,7 @@ const SETTINGS_DEFAULTS: Record<(typeof SETTINGS_FIELDS)[number], unknown> = {
   responseTemplates: {},
   faults: undefined,
   cors: undefined,
+  oauth: undefined,
 };
 
 /** True when a new definition changes a setting (access, port, certificates, delays) compared with the current one. */

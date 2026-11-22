@@ -16,6 +16,7 @@ import { adminRealtimeRoutes } from './admin-realtime.ts';
 import { adminWebhookRoutes } from './admin-webhooks.ts';
 import { adminInboxRoutes } from './admin-inbox.ts';
 import { adminPushRoutes } from './admin-push.ts';
+import { adminOauthRoutes } from './admin-oauth.ts';
 import { adminImportRoutes } from './import/admin-import.ts';
 import { buildOpenApi } from './openapi.ts';
 import { certsDirOf, closeServer, createPublicHandler, createPublicServer, createUpgradeHandler, listenOn, readTls, type PublicHandler, type UpgradeHandler } from './server.ts';
@@ -152,6 +153,7 @@ export async function startBackend(dir: string, options: StartOptions = {}): Pro
       ...adminWebhookRoutes(engine, manager, errorReply),
       ...adminInboxRoutes(engine),
       ...adminPushRoutes(engine),
+      ...adminOauthRoutes(engine, manager, errorReply),
       ...adminImportRoutes(manager, { allowPrivate: options.importUrls?.allowPrivate ?? options.mounted === undefined }),
       { method: 'GET', pattern: '/openapi', handler: () => jsonReply(200, buildOpenApi(engine.definition, { prefix: engine.publicPrefix })) },
     ],
