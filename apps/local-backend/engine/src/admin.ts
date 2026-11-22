@@ -7,6 +7,7 @@ import { adminAuthRoutes } from './admin-users.ts';
 import { adminContentRoutes, contentErrorReply } from './admin-content.ts';
 import { adminMediaRoutes } from './admin-media.ts';
 import { adminSettingsRoutes } from './admin-settings.ts';
+import { webhookAuditBody } from './admin-webhooks.ts';
 import { importAuditBody } from './import/admin-import.ts';
 import { jsonReply, problemReply, readJson, type Reply, type RequestCtx } from './http.ts';
 import { Manager, NotFoundError } from './manager.ts';
@@ -56,7 +57,7 @@ export function loopbackHost(req: IncomingMessage): boolean {
 }
 
 /** Routes whose request body holds a file or an address that may carry a secret: the audit keeps a redacted copy. */
-const auditBodyOf = (route: string, body: unknown): unknown => (route === 'POST /import/preview' || route === 'POST /import/apply' ? importAuditBody(body) : body);
+const auditBodyOf = (route: string, body: unknown): unknown => (route === 'POST /import/preview' || route === 'POST /import/apply' ? importAuditBody(webhookAuditBody(body)) : webhookAuditBody(body));
 
 function parseJsonOr(text: string): unknown {
   if (text === '') return undefined;
@@ -378,7 +379,7 @@ export function createAdminServer(manager: Manager, extras: AdminExtras = {}, to
       const report = (status: number, denied: boolean, before: unknown): void => {
         if (!writing) return;
         const length = Number(req.headers['content-length']);
-        access?.onWrite?.({ route: key, params, status, body: streaming ? undefined : auditBodyOf(key, parseJsonOr(ctx.bodyText)), before, denied, uploadBytes: streaming && Number.isFinite(length) ? length : undefined });
+        access?.onWrite?.({ route: key, params, status, body: streaming ? undefined : auditBodyOf(key, parseJsonOr(ctx.bodyText)), before: webhookAuditBody(before), denied, uploadBytes: streaming && Number.isFinite(length) ? length : undefined });
       };
       if (access !== undefined) {
         let decision = decide(access, key);
@@ -433,7 +434,7 @@ export function adminRouteList(extras: AdminExtras = {}): string[] {
     'DELETE /endpoints/x', 'GET /collections', 'POST /collections', 'GET /collections/x', 'DELETE /collections/x', 'POST /collections/x/rename',
     'POST /collections/x/fields', 'PUT /collections/x/fields/y', 'DELETE /collections/x/fields/y', 'POST /collections/x/fields/y/rename',
     'GET /data/x', 'GET /data/x/1', 'POST /data/x', 'PUT /data/x/1', 'PATCH /data/x/1', 'DELETE /data/x/1', 'GET /scenarios', 'PUT /scenarios/x',
-    'DELETE /scenarios/x', 'DELETE /scenarios', 'GET /requests', 'POST /graphql/generate', 'GET /realtime/x/clients', 'GET /realtime/x/messages', 'POST /realtime/x/send', 'DELETE /realtime/x/clients/y', 'GET /events', 'GET /settings/network', 'PUT /settings/network', 'GET /settings/responses', 'PUT /settings/responses',
+    'DELETE /scenarios/x', 'DELETE /scenarios', 'GET /requests', 'GET /webhooks', 'POST /webhooks', 'GET /webhooks/x', 'PUT /webhooks/x', 'DELETE /webhooks/x', 'POST /webhooks/x/rotate-secret', 'POST /webhooks/x/test', 'GET /webhook-deliveries', 'GET /webhook-deliveries/x', 'POST /webhook-deliveries/x/redeliver', 'POST /graphql/generate', 'GET /realtime/x/clients', 'GET /realtime/x/messages', 'POST /realtime/x/send', 'DELETE /realtime/x/clients/y', 'GET /events', 'GET /settings/network', 'PUT /settings/network', 'GET /settings/responses', 'PUT /settings/responses',
     'GET /users', 'POST /users', 'GET /users/1', 'PUT /users/1', 'PATCH /users/1', 'DELETE /users/1', 'POST /users/1/password', 'POST /users/1/disable',
     'POST /users/1/enable', 'POST /users/1/revoke', 'POST /users/1/token', 'GET /sessions', 'DELETE /sessions/1',
     'GET /media', 'POST /media', 'GET /media/usage', 'GET /media/1', 'GET /media/1/file', 'DELETE /media/1',

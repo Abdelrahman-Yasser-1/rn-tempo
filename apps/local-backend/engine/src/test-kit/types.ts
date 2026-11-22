@@ -64,6 +64,11 @@ export interface TempoBackend {
     variables?: Record<string, unknown>,
     options?: { path?: string; operationName?: string; token?: string; headers?: Record<string, string> },
   ): Promise<{ status: number; data: T | null | undefined; errors: { message: string; extensions?: Record<string, unknown> }[] | undefined }>;
+  /** Outgoing webhooks. In test mode a delivery is captured (signed, as it would be sent), never sent. */
+  webhooks: {
+    /** The captured deliveries since the start or the last `reset()`. */
+    deliveries(): { id: string; webhookId: string; event: string; url: string; headers: Record<string, string>; body: string; json: unknown }[];
+  };
   /** The requests the backend answered since the start or the last `reset()`, redacted (tokens and passwords are replaced). */
   requests(): RecordedRequest[];
   /** Back to the state at the start: data, media, users, scenarios, clock, sequences and recorded requests. */

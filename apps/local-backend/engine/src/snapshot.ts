@@ -101,7 +101,10 @@ export function walk(dir: string, prefix: string, skip: ReadonlySet<string> = ne
 export function scrubSessions(dbPath: string): void {
   const db = new DatabaseSync(dbPath);
   try {
-    if (db.prepare("SELECT 1 AS found FROM sqlite_master WHERE type = 'table' AND name = '_refresh_tokens'").get() !== undefined) db.exec('DELETE FROM _refresh_tokens');
+    // Sign-in sessions, and the logs of integrations (webhook deliveries, captured requests, push sends) carry live data and are never copied.
+    for (const table of ['_refresh_tokens', '_webhook_deliveries', '_inbox', '_push_history']) {
+      if (db.prepare("SELECT 1 AS found FROM sqlite_master WHERE type = 'table' AND name = ?").get(table) !== undefined) db.exec(`DELETE FROM ${table}`);
+    }
   } finally {
     db.close();
   }

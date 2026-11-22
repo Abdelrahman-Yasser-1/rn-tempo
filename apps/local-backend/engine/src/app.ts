@@ -13,6 +13,7 @@ import { jsonReply, problemReply, readJson } from './http.ts';
 import { createEngineLog, RequestFiles } from './logs.ts';
 import { Manager } from './manager.ts';
 import { adminRealtimeRoutes } from './admin-realtime.ts';
+import { adminWebhookRoutes } from './admin-webhooks.ts';
 import { adminImportRoutes } from './import/admin-import.ts';
 import { buildOpenApi } from './openapi.ts';
 import { certsDirOf, closeServer, createPublicHandler, createPublicServer, createUpgradeHandler, listenOn, readTls, type PublicHandler, type UpgradeHandler } from './server.ts';
@@ -79,6 +80,8 @@ export async function startBackend(dir: string, options: StartOptions = {}): Pro
   const files = new RequestFiles({ dir: join(folder.dataDir, 'logs'), ...(options.logLimits ?? {}) });
   const engine = Engine.start(folder, {
     ...options,
+    // A team server must not be usable to reach the network it runs in (SSRF): the same switch as URL imports.
+    outbound: { allowPrivate: options.importUrls?.allowPrivate ?? options.mounted === undefined, requireHttps: !(options.importUrls?.allowPrivate ?? options.mounted === undefined), ...options.outbound },
     ...(options.mounted === undefined ? {} : { publicPrefix: options.mounted.prefix }),
     logger: engineLog.logger,
     onRequest: (entry, endpointId) => {
@@ -144,6 +147,7 @@ export async function startBackend(dir: string, options: StartOptions = {}): Pro
         handler: (ctx) => testSnapshotReply(() => buildTestSnapshot({ dir: engine.folder.dir, db: engine.store.db, collections: engine.definition.collections.map((collection) => collection.name) }), ctx.headers['if-none-match']),
       },
       ...adminRealtimeRoutes(engine),
+      ...adminWebhookRoutes(engine, manager, errorReply),
       ...adminImportRoutes(manager, { allowPrivate: options.importUrls?.allowPrivate ?? options.mounted === undefined }),
       { method: 'GET', pattern: '/openapi', handler: () => jsonReply(200, buildOpenApi(engine.definition, { prefix: engine.publicPrefix })) },
     ],
