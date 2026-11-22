@@ -232,31 +232,47 @@ export interface AcceptInput {
   logHeaders: unknown;
 }
 
+export interface UpgradeOptions {
+  /** Changes when the server has to be made again (payload limit, protocols). */
+  signature: string;
+  maxPayload: number;
+  /** The subprotocol to answer with, from the ones the client offered. */
+  protocol: (offered: string[]) => string | false;
+}
+
 /** The sockets of the websocket endpoints: one `ws` server per endpoint, made when the first client comes. */
 export class WebSocketService {
   private readonly servers = new Map<string, { wss: WebSocketServer; signature: string }>();
 
-  private serverFor(endpoint: WebsocketEndpoint): WebSocketServer {
-    const signature = JSON.stringify([endpoint.maxPayloadBytes, endpoint.subprotocols, endpoint.auth]);
-    const found = this.servers.get(endpoint.id);
-    if (found?.signature === signature) return found.wss;
+  private serverFor(id: string, options: UpgradeOptions): WebSocketServer {
+    const found = this.servers.get(id);
+    if (found?.signature === options.signature) return found.wss;
     found?.wss.close();
     const wss = new WebSocketServer({
       noServer: true,
-      maxPayload: endpoint.maxPayloadBytes,
+      maxPayload: options.maxPayload,
       // Compression costs memory per client and a mock has no use for it.
       perMessageDeflate: false,
-      handleProtocols: (offered) => chooseProtocol([...offered], endpoint.subprotocols, endpoint.auth === 'bearer'),
+      handleProtocols: (offered) => options.protocol([...offered]),
     });
-    this.servers.set(endpoint.id, { wss, signature });
+    this.servers.set(id, { wss, signature: options.signature });
     return wss;
+  }
+
+  /** Upgrades one request to a WebSocket on the server of endpoint `id` (made on first use, and again when its settings change). */
+  upgrade(id: string, options: UpgradeOptions, req: HttpRequest, socket: Duplex, head: Buffer, onOpen: (ws: WebSocket) => void): void {
+    this.serverFor(id, options).handleUpgrade(req, socket, head, onOpen);
   }
 
   /** Upgrades the request and runs the endpoint's behaviour for the new client. */
   accept(input: AcceptInput): void {
     const { endpoint, hub, deps } = input;
-    const wss = this.serverFor(endpoint);
-    wss.handleUpgrade(input.req, input.socket, input.head, (ws) => {
+    const options: UpgradeOptions = {
+      signature: JSON.stringify([endpoint.maxPayloadBytes, endpoint.subprotocols, endpoint.auth]),
+      maxPayload: endpoint.maxPayloadBytes,
+      protocol: (offered) => chooseProtocol(offered, endpoint.subprotocols, endpoint.auth === 'bearer'),
+    };
+    this.upgrade(endpoint.id, options, input.req, input.socket, input.head, (ws) => {
       const client = new LiveSocket(ws, hub, { id: input.clientId, ipHash: input.ipHash, connectedAt: deps.now().toISOString(), maxBuffered: endpoint.maxBufferedBytes, pingIntervalMs: endpoint.pingIntervalMs });
       client.user = input.user;
       client.protocol = ws.protocol === '' ? undefined : ws.protocol;

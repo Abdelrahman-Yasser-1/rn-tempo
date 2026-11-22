@@ -16,6 +16,12 @@ export interface StatsSnapshot {
   /** Share of requests that answered 400 or more, 0 to 1. */
   errorRate: number;
   endpoints: EndpointStats[];
+  /** GraphQL operations, by endpoint and operation name. */
+  operations: OperationStats[];
+}
+
+export interface OperationStats extends EndpointStats {
+  operation: string;
 }
 
 /** The nearest-rank percentile of a list of numbers (0 for an empty one). */
@@ -38,12 +44,13 @@ export class Stats {
   private total = 0;
   private errors = 0;
   private readonly perEndpoint = new Map<string, PerEndpoint>();
+  private readonly perOperation = new Map<string, PerEndpoint & { endpoint: string; operation: string }>();
 
   constructor(now: () => number = Date.now) {
     this.now = now;
   }
 
-  record(endpointId: string | undefined, status: number, ms: number): void {
+  record(endpointId: string | undefined, status: number, ms: number, operation?: string): void {
     const at = this.now();
     this.recent.push(at);
     this.total += 1;
@@ -57,6 +64,15 @@ export class Stats {
     entry.samples.push(ms);
     if (entry.samples.length > SAMPLES) entry.samples.shift();
     this.perEndpoint.set(key, entry);
+    if (operation !== undefined) {
+      const id = `${key} ${operation}`;
+      const found = this.perOperation.get(id) ?? { endpoint: key, operation, count: 0, errors: 0, samples: [] };
+      found.count += 1;
+      if (failed) found.errors += 1;
+      found.samples.push(ms);
+      if (found.samples.length > SAMPLES) found.samples.shift();
+      this.perOperation.set(id, found);
+    }
     this.trim(at);
   }
 
@@ -77,6 +93,9 @@ export class Stats {
       endpoints: [...this.perEndpoint]
         .map(([id, entry]) => ({ id, count: entry.count, errors: entry.errors, p50: percentile(entry.samples, 50), p95: percentile(entry.samples, 95) }))
         .sort((a, b) => b.p95 - a.p95 || a.id.localeCompare(b.id)),
+      operations: [...this.perOperation.values()]
+        .map((entry) => ({ id: entry.endpoint, operation: entry.operation, count: entry.count, errors: entry.errors, p50: percentile(entry.samples, 50), p95: percentile(entry.samples, 95) }))
+        .sort((a, b) => b.p95 - a.p95 || a.operation.localeCompare(b.operation)),
     };
   }
 }

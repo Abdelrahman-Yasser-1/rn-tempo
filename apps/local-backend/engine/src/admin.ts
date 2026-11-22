@@ -433,7 +433,7 @@ export function adminRouteList(extras: AdminExtras = {}): string[] {
     'DELETE /endpoints/x', 'GET /collections', 'POST /collections', 'GET /collections/x', 'DELETE /collections/x', 'POST /collections/x/rename',
     'POST /collections/x/fields', 'PUT /collections/x/fields/y', 'DELETE /collections/x/fields/y', 'POST /collections/x/fields/y/rename',
     'GET /data/x', 'GET /data/x/1', 'POST /data/x', 'PUT /data/x/1', 'PATCH /data/x/1', 'DELETE /data/x/1', 'GET /scenarios', 'PUT /scenarios/x',
-    'DELETE /scenarios/x', 'DELETE /scenarios', 'GET /requests', 'GET /realtime/x/clients', 'GET /realtime/x/messages', 'POST /realtime/x/send', 'DELETE /realtime/x/clients/y', 'GET /events', 'GET /settings/network', 'PUT /settings/network', 'GET /settings/responses', 'PUT /settings/responses',
+    'DELETE /scenarios/x', 'DELETE /scenarios', 'GET /requests', 'POST /graphql/generate', 'GET /realtime/x/clients', 'GET /realtime/x/messages', 'POST /realtime/x/send', 'DELETE /realtime/x/clients/y', 'GET /events', 'GET /settings/network', 'PUT /settings/network', 'GET /settings/responses', 'PUT /settings/responses',
     'GET /users', 'POST /users', 'GET /users/1', 'PUT /users/1', 'PATCH /users/1', 'DELETE /users/1', 'POST /users/1/password', 'POST /users/1/disable',
     'POST /users/1/enable', 'POST /users/1/revoke', 'POST /users/1/token', 'GET /sessions', 'DELETE /sessions/1',
     'GET /media', 'POST /media', 'GET /media/usage', 'GET /media/1', 'GET /media/1/file', 'DELETE /media/1',

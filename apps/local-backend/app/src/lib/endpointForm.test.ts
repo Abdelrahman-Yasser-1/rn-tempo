@@ -117,3 +117,39 @@ describe('live socket (WebSocket) form', () => {
     expect(problemsOf({ ...bad, behavior: 'echo' }).some((problem) => problem.field === 'rules')).toBe(false);
   });
 });
+
+describe('GraphQL form', () => {
+  it('AC-LP-7 starts with POST /graphql built from the collections, and builds the endpoint', () => {
+    const form = blankForm('graphql', collections);
+    expect(form).toMatchObject({ method: 'POST', path: '/graphql', gqlSource: 'collections', maxDepth: '10', maxFields: '200', introspection: true });
+    expect(endpointFrom(form, 'post.graphql')).toEqual({
+      id: 'post.graphql',
+      type: 'graphql',
+      method: 'POST',
+      path: '/graphql',
+      auth: 'none',
+      schema: { source: 'collections' },
+      resolvers: {},
+      maxDepth: 10,
+      maxFields: 200,
+      introspection: true,
+      requireAuth: [],
+    });
+    const custom = endpointFrom({ ...form, gqlSource: 'sdl', sdl: 'type Query { a: Int }', resolvers: '{"Query.a":{"static":1}}', introspection: false, requireAuth: 'Mutation.a\nMutation.b' }, 'post.graphql');
+    expect(custom).toMatchObject({ schema: { source: 'sdl', sdl: 'type Query { a: Int }' }, resolvers: { 'Query.a': { static: 1 } }, introspection: false, requireAuth: ['Mutation.a', 'Mutation.b'] });
+  });
+
+  it('AC-LP-7 keeps the settings of schema the form does not show, and reads an endpoint back', () => {
+    const endpoint: EndpointDef = { id: 'g', type: 'graphql', method: 'POST', path: '/gql', schema: { source: 'collections', collections: ['products'], hiddenFields: ['products.secret'] }, maxDepth: 4, requireAuth: ['Mutation.x'] };
+    const form = formFrom(endpoint, collections);
+    expect(form).toMatchObject({ gqlSource: 'collections', maxDepth: '4', requireAuth: 'Mutation.x', resolvers: '{}' });
+    expect(endpointFrom(form, 'g', endpoint)).toMatchObject({ schema: { source: 'collections', collections: ['products'], hiddenFields: ['products.secret'] } });
+  });
+
+  it('AC-LP-7 names what is wrong', () => {
+    const form = { ...blankForm('graphql', collections), gqlSource: 'sdl' as const, sdl: '', resolvers: '[]', maxDepth: '0', maxFields: 'x', requireAuth: 'products' };
+    expect(problemsOf(form).map((problem) => problem.field).sort()).toEqual(['maxDepth', 'maxFields', 'requireAuth', 'resolvers', 'sdl']);
+    expect(problemsOf({ ...blankForm('graphql', collections), resolvers: 'nope' }).find((problem) => problem.field === 'resolvers')?.message).toBe('The resolvers are not valid JSON.');
+    expect(problemsOf(blankForm('graphql', collections))).toEqual([]);
+  });
+});

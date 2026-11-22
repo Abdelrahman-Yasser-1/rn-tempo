@@ -80,6 +80,13 @@ export function EndpointDialog({ backend, collections, existingIds, templates = 
     },
     onSuccess: onSaved,
   });
+  const generate = useMutation({
+    mutationFn: () => adminSend<{ sdl: string; resolvers: Record<string, unknown> }>(api, backend, 'POST', '/graphql/generate', {}),
+    onSuccess: (generated) => {
+      // Written out as text, the generated schema can be edited; its resolvers go with it.
+      setForm((current) => ({ ...current, gqlSource: 'sdl', sdl: generated.sdl, resolvers: JSON.stringify(generated.resolvers, null, 2) }));
+    },
+  });
   const makeFile = useMutation({
     mutationFn: () => api.createHandler(backend, form.file.replace(/^handlers\//, '')),
     onSuccess: (file) => {
@@ -366,6 +373,125 @@ export function EndpointDialog({ backend, collections, existingIds, templates = 
             </div>
             <ErrorNote error={makeFile.error === null ? null : errorMessage(makeFile.error)} />
             <p className="warning">A handler is code that runs on this Mac with your permissions. It is not a sandbox: only use backends you trust.</p>
+          </>
+        ) : null}
+
+        {form.type === 'graphql' ? (
+          <>
+            {field(
+              'gqlSource',
+              'Schema',
+              <select
+                value={form.gqlSource}
+                onChange={(event) => {
+                  set('gqlSource', event.target.value as EndpointForm['gqlSource']);
+                }}
+              >
+                <option value="collections">Built from my collections</option>
+                <option value="sdl">Written by me (SDL)</option>
+              </select>,
+              'From collections: each collection gets a type, queries (products, productsById), mutations (createProduct...) and subscriptions (productsCreated...). With your own SDL, every field is answered by a resolver you name below, or is null.',
+            )}
+            <div className="stack tight">
+              <div className="row">
+                <label className="grow" htmlFor={`${ids}-sdl`}>
+                  {form.gqlSource === 'sdl' ? 'Schema (SDL)' : 'Extra schema (optional, SDL)'}{' '}
+                  {problem('sdl') === undefined ? null : <span className="error">{problem('sdl')}</span>}
+                </label>
+                <button
+                  type="button"
+                  disabled={generate.isPending}
+                  onClick={() => {
+                    generate.mutate();
+                  }}
+                >
+                  Generate from collections
+                </button>
+              </div>
+              <textarea
+                id={`${ids}-sdl`}
+                className="code-area"
+                rows={form.gqlSource === 'sdl' ? 12 : 4}
+                spellCheck={false}
+                aria-label="GraphQL schema"
+                placeholder={form.gqlSource === 'sdl' ? 'type Query { hello(name: String): String }' : 'extend type Query { hello: String }'}
+                value={form.sdl}
+                aria-invalid={problem('sdl') !== undefined}
+                onChange={(event) => {
+                  set('sdl', event.target.value);
+                }}
+              />
+              <ErrorNote error={generate.error === null ? null : errorMessage(generate.error)} />
+            </div>
+            <div className="stack tight">
+              <span>
+                Resolvers {problem('resolvers') === undefined ? null : <span className="error">{problem('resolvers')}</span>}{' '}
+                <Hint text='What answers a field: { "Query.hello": { "static": "Hello {{args.name}}" } }, { "Query.items": { "collection": "products", "action": "list" } }, { "Query.x": { "handler": "handlers/x.js" } } or, for a subscription, { "Subscription.shipped": { "event": "orders.shipped" } }.' />
+              </span>
+              <ResponseEditor
+                label="GraphQL resolvers"
+                value={form.resolvers}
+                onChange={(resolvers) => {
+                  set('resolvers', resolvers);
+                }}
+                invalid={problem('resolvers') !== undefined}
+                height={140}
+              />
+            </div>
+            <div className="row">
+              {field(
+                'maxDepth',
+                'Deepest query',
+                <input
+                  className="short"
+                  inputMode="numeric"
+                  value={form.maxDepth}
+                  aria-invalid={problem('maxDepth') !== undefined}
+                  onChange={(event) => {
+                    set('maxDepth', event.target.value);
+                  }}
+                />,
+                'A query nested deeper than this is refused. The schema questions that tools ask (introspection) are not counted.',
+              )}
+              {field(
+                'maxFields',
+                'Most fields',
+                <input
+                  className="short"
+                  inputMode="numeric"
+                  value={form.maxFields}
+                  aria-invalid={problem('maxFields') !== undefined}
+                  onChange={(event) => {
+                    set('maxFields', event.target.value);
+                  }}
+                />,
+                'A query that selects more fields than this is refused. A fragment counts every time it is used.',
+              )}
+              <label className="check">
+                <input
+                  type="checkbox"
+                  checked={form.introspection}
+                  onChange={(event) => {
+                    set('introspection', event.target.checked);
+                  }}
+                />
+                Answer introspection
+              </label>
+            </div>
+            {field(
+              'requireAuth',
+              'Needs sign-in (optional)',
+              <textarea
+                rows={2}
+                value={form.requireAuth}
+                placeholder="Mutation.createProduct"
+                aria-invalid={problem('requireAuth') !== undefined}
+                onChange={(event) => {
+                  set('requireAuth', event.target.value);
+                }}
+              />,
+              'These operations need a signed-in user, one per line. To protect every operation, tick Needs sign-in below.',
+            )}
           </>
         ) : null}
 

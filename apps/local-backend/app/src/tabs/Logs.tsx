@@ -18,6 +18,7 @@ function Detail({ entry, onClose }: { entry: RequestEntry; onClose: () => void }
       <div className="row">
         <h2 className="grow">
           <code>{entry.method}</code> {entry.url}
+          {entry.operation === undefined ? null : <span className="muted"> {entry.operation}</span>}
         </h2>
         <button type="button" className="ghost" onClick={onClose} aria-label="Close detail">
           ×
@@ -168,6 +169,7 @@ export function Logs({ backend }: { backend: BackendStatus }) {
                     >
                       {entry.url}
                     </button>
+                    {entry.operation === undefined ? null : <span className="muted"> {entry.operation}</span>}
                   </td>
                   <td className={entry.status > 0 && entry.status < 400 ? 'ok' : 'bad'}>{entry.status === 0 ? 'closed' : entry.status}</td>
                   <td>{entry.ms}</td>

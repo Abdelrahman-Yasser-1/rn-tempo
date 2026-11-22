@@ -60,6 +60,20 @@ function Stats({ backend }: { backend: BackendStatus }) {
           </ul>
         )}
       </Stat>
+      {(data.operations ?? []).length === 0 ? null : (
+        <Stat title="GraphQL operations" hint="Each operation name, by how long its slowest answers took.">
+          <ul className="plain">
+            {(data.operations ?? []).slice(0, 5).map((operation) => (
+              <li key={`${operation.id} ${operation.operation}`} className="between">
+                <code>{operation.operation}</code>
+                <span>
+                  {operation.count} · {formatMs(operation.p95)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Stat>
+      )}
       <Stat title="Records per collection" hint="A collection is a table of records, such as products.">
         {collections.length === 0 ? (
           <EmptyState>Add a collection in the Data tab.</EmptyState>

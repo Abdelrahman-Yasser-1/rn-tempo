@@ -13,6 +13,7 @@ import { EmptyState, ErrorNote } from '../ui/bits';
 import { EndpointDetail, hasDetail } from './EndpointDetail';
 import { EndpointDialog } from './EndpointDialog';
 import { ImportDialog } from './ImportDialog';
+import { GraphqlRunner } from './GraphqlRunner';
 import { LivePanel } from './LivePanel';
 import { TryIt } from './TryIt';
 import { Write } from '../hooks/team';
@@ -20,7 +21,7 @@ import { Write } from '../hooks/team';
 const typeLabel = (type: EndpointDef['type']): string => ENDPOINT_TYPES.find((item) => item.value === type)?.label.split(' (')[0] ?? type;
 
 /** Endpoints that hold connections open: they get a Live panel instead of Try it. */
-const isLive = (endpoint: EndpointDef): boolean => endpoint.type === 'sse' || endpoint.type === 'websocket';
+const isLive = (endpoint: EndpointDef): boolean => endpoint.type === 'sse' || endpoint.type === 'websocket' || endpoint.type === 'graphql';
 
 type Dialog = { kind: 'add' } | { kind: 'edit'; endpoint: EndpointDef } | { kind: 'copy'; endpoint: EndpointDef };
 
@@ -66,6 +67,7 @@ export function Endpoints({ backend }: { backend: string }) {
   const [deleting, setDeleting] = useState<EndpointDef | null>(null);
   const [trying, setTrying] = useState<EndpointDef | null>(null);
   const [live, setLive] = useState<EndpointDef | null>(null);
+  const [runner, setRunner] = useState<EndpointDef | null>(null);
   const [importing, setImporting] = useState(false);
   const [detail, setDetail] = useState<EndpointDef | null>(null);
   const [imported, setImported] = useState<string | null>(null);
@@ -143,6 +145,18 @@ export function Endpoints({ backend }: { backend: string }) {
                 <td className="summary">{endpoint.summary ?? ''}</td>
                 <td>{scenarios.data === undefined ? null : <Write><ScenarioPicker backend={backend} endpoint={endpoint} scenarios={scenarios.data} /></Write>}</td>
                 <td className="actions-cell">
+                  {endpoint.type === 'graphql' ? (
+                    <button
+                      type="button"
+                      className="ghost"
+                      aria-label={`Query ${endpoint.path}`}
+                      onClick={() => {
+                        setRunner(endpoint);
+                      }}
+                    >
+                      Query
+                    </button>
+                  ) : null}
                   {isLive(endpoint) ? (
                     <button
                       type="button"
@@ -213,6 +227,16 @@ export function Endpoints({ backend }: { backend: string }) {
             ))}
           </tbody>
         </table>
+      )}
+      {runner === null ? null : (
+        <GraphqlRunner
+          key={runner.id}
+          backend={backend}
+          endpoint={runner}
+          onClose={() => {
+            setRunner(null);
+          }}
+        />
       )}
       {live === null ? null : (
         <LivePanel

@@ -215,6 +215,7 @@ const requestOf = (properties: JsonObject, required: string[]): JsonObject => ({
 function builtinOperation(endpoint: Exclude<Endpoint, { type: 'crud' | 'static' }>): JsonObject {
   const responses: JsonObject = {};
   let requestBody: JsonObject | undefined;
+  let description: string | undefined;
   switch (endpoint.type) {
     case 'auth':
       switch (endpoint.action) {
@@ -286,6 +287,13 @@ function builtinOperation(endpoint: Exclude<Endpoint, { type: 'crud' | 'static' 
       responses['200'] = { description: 'A `text/event-stream` that stays open: server-sent events.', content: { 'text/event-stream': { schema: { type: 'string' } } } };
       responses['429'] = problem('Too many connections to this endpoint or from this address.');
       break;
+    case 'graphql':
+      requestBody = requestOf({ query: str, variables: { type: 'object', additionalProperties: true }, operationName: str }, ['query']);
+      responses['200'] = answer(200, object({ data: { description: 'The result of the operation (null when it failed as a whole).' }, errors: { type: 'array', items: { type: 'object', properties: { message: str, locations: { type: 'array' }, path: { type: 'array' }, extensions: { type: 'object' } }, required: ['message'] } } }, []));
+      responses['400'] = answer(400, object({ errors: { type: 'array', items: { type: 'object', properties: { message: str }, required: ['message'] } } }, ['errors']));
+      responses['413'] = answer(413, object({ errors: { type: 'array', items: { type: 'object', properties: { message: str }, required: ['message'] } } }, ['errors']));
+      description = 'A GraphQL endpoint: send `{ "query", "variables", "operationName" }` as JSON. The answer is `{ data, errors }`. Subscriptions use a WebSocket on the same path with the `graphql-transport-ws` subprotocol. Batching is not supported.';
+      break;
     case 'websocket':
       responses['101'] = { description: 'Switching Protocols: the connection becomes a WebSocket (use ws:// or wss://). A plain GET answers 426.' };
       responses['426'] = problem('This is a WebSocket endpoint.');
@@ -297,7 +305,7 @@ function builtinOperation(endpoint: Exclude<Endpoint, { type: 'crud' | 'static' 
       responses['504'] = problem('The handler ran longer than its timeout.');
       break;
   }
-  return { ...(requestBody === undefined ? {} : { requestBody }), responses };
+  return { ...(requestBody === undefined ? {} : { requestBody }), ...(description === undefined ? {} : { description, 'x-graphql': true }), responses };
 }
 
 const BODY_TOKEN = /^\{\{\s*body\s*\}\}$/;
@@ -409,7 +417,8 @@ function operation(endpoint: Endpoint, collections: Map<string, Collection>, def
   }
   const responses = body.responses as JsonObject;
   if (endpoint.auth === 'bearer') responses['401'] = problem('The access token is missing or wrong.');
-  wrapResponses(responses, wrapperOf(definition, endpoint));
+  // A GraphQL answer is `{ data, errors }` and is never put inside the success wrapper.
+  if (endpoint.type !== 'graphql') wrapResponses(responses, wrapperOf(definition, endpoint));
   return {
     operationId: endpoint.id.replaceAll(':', '_'),
     ...(endpoint.summary === undefined ? {} : { summary: endpoint.summary }),

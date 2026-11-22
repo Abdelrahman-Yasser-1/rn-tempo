@@ -48,6 +48,8 @@ export interface Reply {
   stream?: Readable;
   /** The scenario that shaped this reply. */
   scenario?: string;
+  /** The GraphQL operation this reply answered, for the request log and the stats. */
+  operation?: string;
   /** Send the body at this many kilobits per second. */
   downloadKbps?: number;
   /** An open stream (SSE) that lives as long as the client does: no throttling applies to it. */

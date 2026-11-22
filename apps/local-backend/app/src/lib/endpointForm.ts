@@ -12,6 +12,7 @@ export const ENDPOINT_TYPES: { value: EndpointType; label: string; hint: string 
   { value: 'upload', label: 'File upload', hint: 'Accepts a file and stores it in Media.' },
   { value: 'download', label: 'File download', hint: 'Sends back a stored file by its id.' },
   { value: 'handler', label: 'Custom code', hint: 'Runs a JavaScript file you write. Only for backends you trust.' },
+  { value: 'graphql', label: 'GraphQL', hint: 'A GraphQL API built from your collections (queries, mutations, subscriptions) or from a schema you write.' },
   { value: 'websocket', label: 'Live socket (WebSocket)', hint: 'A WebSocket: echo, or answers chosen by rules, plus the data changes you pick, to every connected app.' },
   { value: 'sse', label: 'Live events (SSE)', hint: 'A stream of server-sent events: a script of messages and the data changes you pick, to every connected app.' },
 ];
@@ -94,6 +95,17 @@ export interface EndpointForm {
   onConnect: string;
   subprotocols: string;
   maxPayloadKb: string;
+  // GraphQL
+  gqlSource: 'collections' | 'sdl';
+  /** The schema text. With `collections` it only extends the generated one. */
+  sdl: string;
+  /** Which field is answered by what, as JSON text: `{ "Query.hello": { "static": "world" } }`. */
+  resolvers: string;
+  maxDepth: string;
+  maxFields: string;
+  introspection: boolean;
+  /** Operations that need sign-in, one per line (`Mutation.createProduct`). */
+  requireAuth: string;
   // every type: how the answer is shaped and how slow it is
   /** `inherit` (the backend's wrapper), `none`, or the name of a response template. */
   wrap: string;
@@ -131,6 +143,13 @@ export function blankForm(type: EndpointType, collections: CollectionDef[]): End
     onConnect: '',
     subprotocols: '',
     maxPayloadKb: '64',
+    gqlSource: 'collections',
+    sdl: '',
+    resolvers: '{}',
+    maxDepth: '10',
+    maxFields: '200',
+    introspection: true,
+    requireAuth: '',
     wrap: 'inherit',
     headers: [],
     latency: blankLatency('inherit'),
@@ -167,6 +186,9 @@ export function suggest(form: EndpointForm, force = false): EndpointForm {
   } else if (form.type === 'sse') {
     next.method = 'GET';
     if (force || form.path === '') next.path = '/events';
+  } else if (form.type === 'graphql') {
+    next.method = 'POST';
+    if (force || form.path === '') next.path = '/graphql';
   } else if (form.type === 'websocket') {
     next.method = 'GET';
     if (force || form.path === '') next.path = '/ws';
@@ -249,6 +271,17 @@ export function formFrom(endpoint: EndpointDef, collections: CollectionDef[]): E
         subprotocols: (endpoint.subprotocols ?? []).join(', '),
         maxPayloadKb: String((endpoint.maxPayloadBytes ?? 65_536) / 1024),
       };
+    case 'graphql':
+      return {
+        ...form,
+        gqlSource: endpoint.schema?.source ?? 'collections',
+        sdl: endpoint.schema?.sdl ?? '',
+        resolvers: JSON.stringify(endpoint.resolvers ?? {}, null, 2),
+        maxDepth: String(endpoint.maxDepth ?? 10),
+        maxFields: String(endpoint.maxFields ?? 200),
+        introspection: endpoint.introspection ?? true,
+        requireAuth: (endpoint.requireAuth ?? []).join('\n'),
+      };
     case 'download':
       return form;
   }
@@ -256,6 +289,19 @@ export function formFrom(endpoint: EndpointDef, collections: CollectionDef[]): E
 
 /** The events of the "forward" box: one per line or comma. */
 export const eventsFromText = (text: string): string[] => text.split(/[\s,]+/).filter((item) => item !== '');
+
+/** One entry per line (or comma). */
+export const linesFromText = (text: string): string[] => text.split(/[\s,]+/).filter((item) => item !== '');
+
+/** A JSON object written as text, or an empty one when the text is not an object. */
+function listProblemObject(text: string): Record<string, unknown> {
+  try {
+    const value = JSON.parse(text) as unknown;
+    return typeof value === 'object' && value !== null && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+  } catch {
+    return {};
+  }
+}
 
 /** A JSON list written as text, or why it is not one. */
 export function listProblem(text: string, what: string): string | undefined {
@@ -308,6 +354,18 @@ export function problemsOf(form: EndpointForm): FormProblem[] {
     }
     if (!(Number(form.maxPayloadKb) > 0 && Number(form.maxPayloadKb) <= 1024)) found.push({ field: 'maxPayloadKb', message: 'The largest message is a number of KB from 1 to 1024.' });
     if (eventsFromText(form.on).some((item) => !/^(?:\*|[A-Za-z][A-Za-z0-9_.:-]{0,63}\*?)$/.test(item))) found.push({ field: 'on', message: 'An event is a name like products.created, a prefix like products.* or *.' });
+  }
+  if (form.type === 'graphql') {
+    if (form.gqlSource === 'sdl' && form.sdl.trim() === '') found.push({ field: 'sdl', message: 'Write the schema, or use Generate from collections.' });
+    try {
+      const parsed = JSON.parse(form.resolvers) as unknown;
+      if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) found.push({ field: 'resolvers', message: 'The resolvers are a JSON object: { "Query.hello": { ... } }.' });
+    } catch {
+      found.push({ field: 'resolvers', message: 'The resolvers are not valid JSON.' });
+    }
+    if (!/^\d{1,2}$/.test(form.maxDepth) || Number(form.maxDepth) < 1 || Number(form.maxDepth) > 50) found.push({ field: 'maxDepth', message: 'The depth limit is a number from 1 to 50.' });
+    if (!/^\d{1,5}$/.test(form.maxFields) || Number(form.maxFields) < 1 || Number(form.maxFields) > 10_000) found.push({ field: 'maxFields', message: 'The field limit is a number from 1 to 10000.' });
+    if (linesFromText(form.requireAuth).some((item) => !/^(?:Query|Mutation|Subscription)\.[_A-Za-z][_0-9A-Za-z]*$/.test(item))) found.push({ field: 'requireAuth', message: 'Write Query.field, Mutation.field or Subscription.field, one per line.' });
   }
   if (form.type === 'upload' && form.maxMb !== '' && !(Number(form.maxMb) > 0)) found.push({ field: 'maxMb', message: 'The size limit is a number of megabytes.' });
   if (form.type === 'handler') {
@@ -426,6 +484,17 @@ export function endpointFrom(form: EndpointForm, id: string, original?: Endpoint
       set('subprotocols', form.subprotocols.split(/[\s,]+/).filter((item) => item !== ''));
       set('maxPayloadBytes', Math.round(Number(form.maxPayloadKb) * 1024));
       break;
+    case 'graphql': {
+      // The source and the schema text change together (the other settings of `schema` stay as they were).
+      const schema = { ...(original?.type === 'graphql' ? original.schema : undefined), source: form.gqlSource, sdl: form.sdl.trim() === '' ? undefined : form.sdl };
+      set('schema', Object.fromEntries(Object.entries(schema).filter(([, value]) => value !== undefined)));
+      set('resolvers', listProblemObject(form.resolvers));
+      set('maxDepth', Number(form.maxDepth));
+      set('maxFields', Number(form.maxFields));
+      set('introspection', form.introspection);
+      set('requireAuth', linesFromText(form.requireAuth));
+      break;
+    }
     case 'download':
       break;
   }
