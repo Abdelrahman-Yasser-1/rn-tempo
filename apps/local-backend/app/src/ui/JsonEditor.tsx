@@ -32,6 +32,8 @@ interface Props {
   saved?: string | undefined;
   height?: number;
   invalid?: boolean;
+  /** Show the text without letting it be edited (a captured request body). */
+  readOnly?: boolean;
 }
 
 /**
@@ -39,7 +41,7 @@ interface Props {
  * text and a light or dark theme. Monaco loads the first time one opens; until then (and if it cannot load) a plain text box
  * holds the same value.
  */
-export function JsonEditor({ label, value, onChange, schema, saved, height = 200, invalid = false }: Props) {
+export function JsonEditor({ label, value, onChange, schema, saved, height = 200, invalid = false, readOnly = false }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const handle = useRef<EditorHandle | null>(null);
   const [adapter, setAdapter] = useState(peekAdapter);
@@ -47,10 +49,10 @@ export function JsonEditor({ label, value, onChange, schema, saved, height = 200
   const [minimap, setMinimap] = useState(false);
   const [diff, setDiff] = useState(false);
   const dark = useDark();
-  const latest = useRef({ value, onChange, schema, label, dark, minimap });
+  const latest = useRef({ value, onChange, schema, label, dark, minimap, readOnly });
   // The mount effect and the change listener read the newest props from here, so they never go stale.
   useEffect(() => {
-    latest.current = { value, onChange, schema, label, dark, minimap };
+    latest.current = { value, onChange, schema, label, dark, minimap, readOnly };
   });
 
   useEffect(() => {
@@ -72,7 +74,7 @@ export function JsonEditor({ label, value, onChange, schema, saved, height = 200
   useEffect(() => {
     if (adapter === undefined || host.current === null) return;
     const current = latest.current;
-    const mounted = adapter.mount(host.current, { value: current.value, label: current.label, dark: current.dark, minimap: current.minimap, schema: current.schema });
+    const mounted = adapter.mount(host.current, { value: current.value, label: current.label, dark: current.dark, minimap: current.minimap, schema: current.schema, readOnly: current.readOnly });
     handle.current = mounted;
     const stop = mounted.onChange((next) => {
       latest.current.onChange(next);
@@ -152,6 +154,7 @@ export function JsonEditor({ label, value, onChange, schema, saved, height = 200
           spellCheck={false}
           aria-label={label}
           aria-invalid={invalid}
+          readOnly={readOnly}
           value={value}
           onChange={(event) => {
             onChange(event.target.value);

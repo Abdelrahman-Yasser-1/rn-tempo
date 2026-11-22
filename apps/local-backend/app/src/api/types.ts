@@ -238,6 +238,7 @@ export interface Definition {
     refreshTtlDays?: number;
     otpCode?: string;
     otpResendSec?: number;
+    mode?: 'bearer' | 'cookie' | 'both';
     seedUsers?: unknown[];
   };
   media?: { maxBytes?: number };

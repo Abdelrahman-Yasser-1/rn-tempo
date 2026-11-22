@@ -6,6 +6,10 @@ import { keys, useAdminQuery } from '../hooks/lb';
 import { EmptyState, ErrorNote } from '../ui/bits';
 
 import { SettingsCertificates } from './SettingsCertificates';
+import { SettingsFaults } from './SettingsFaults';
+import { SettingsOauth } from './SettingsOauth';
+import { SettingsPush } from './SettingsPush';
+import { SettingsWebhooks } from './SettingsWebhooks';
 import { SettingsNetwork } from './SettingsNetwork';
 import { SettingsResponses } from './SettingsResponses';
 import { SettingsServer } from './SettingsServer';
@@ -30,6 +34,10 @@ export function Settings({ backend, onOpen }: { backend: BackendStatus; onOpen: 
             <SettingsServer key={JSON.stringify([definition.data.port, definition.data.https])} backend={backend} definition={definition.data} certs={certs.data} />
             <SettingsNetwork key={JSON.stringify([definition.data.latency, definition.data.network, definition.data.testMode])} backend={backend} definition={definition.data} />
             <SettingsResponses key={JSON.stringify([definition.data.responses, definition.data.responseTemplates])} backend={backend} definition={definition.data} />
+            <SettingsFaults key={JSON.stringify([definition.data.faults, definition.data.cors, definition.data.auth?.mode])} backend={backend} definition={definition.data} />
+            <SettingsWebhooks backend={backend} />
+            <SettingsPush backend={backend} />
+            <SettingsOauth backend={backend} />
           </>
         )
       ) : (

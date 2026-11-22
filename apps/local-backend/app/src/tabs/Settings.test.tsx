@@ -12,7 +12,7 @@ const definition = { name: 'shop', port: 8556, https: true, auth: { accessTtlMin
 function setup(backend = RUNNING) {
   const puts: HttpRequest[] = [];
   const api = makeApi({
-    admin: adminRoutes({ 'GET /definition': () => definition, 'PUT /definition': (request) => (puts.push(request), { ok: true }) }),
+    admin: adminRoutes({ 'GET /webhooks': () => [], 'GET /webhook-deliveries': () => [], 'GET /push': () => ({ fcm: { configured: false }, apns: { configured: false }, history: [] }), 'GET /oauth': () => ({ enabled: false, provider: 'google', clients: [], endpoints: { issuer: '', authorizationEndpoint: '', tokenEndpoint: '', userinfoEndpoint: '', jwksUri: '', discovery: '' } }), 'GET /stats': () => ({}), 'GET /definition': () => definition, 'PUT /definition': (request) => (puts.push(request), { ok: true }) }),
     listSimulators: () => Promise.resolve([{ udid: 'AB12-34', name: 'iPhone 16', runtime: 'iOS 18.0' }]),
   });
   const onOpen = vi.fn();
