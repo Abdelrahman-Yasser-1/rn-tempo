@@ -95,10 +95,10 @@ An admin makes keys in **Team**, **API keys**. A key belongs to one backend and 
 
 | Scope | Allows |
 |---|---|
-| `read-definition` | `GET` of the definition and of the snapshot export, nothing else (the test kit and CI) |
+| `read-definition` | `GET /b/<backend>/__definition`, the test snapshot, and `GET` of the definition. Nothing else, and not the backup zip (the test kit and CI) |
 | `admin` | The backend's admin API, like an admin |
 | `public` | Calling the public API when the backend needs an access key |
-| `sessions` | Reserved for CI sessions |
+| `sessions` | Create and delete [temporary CI sessions](/docs/backend/test-without-mocks#ci-sessions), nothing else |
 
 The key (`tlb_...`) is shown once. Only a hash and the first characters are stored. Revoke it in the same list; it stops working at once.
 
@@ -129,7 +129,7 @@ Entries are deleted after 90 days. Change that with `TEMPO_AUDIT_DAYS` (or `--au
 Two things to keep:
 
 - **The volume.** `tempo-data` holds `server.sqlite` (accounts, keys, the audit log), `server-secret.json` (it encrypts the two-step secrets: without it they cannot be read) and the backends. Back up the whole volume together. For a consistent copy, stop the server first: `docker compose stop tempo`, copy the volume (`docker run --rm -v tempo-team_tempo-data:/data -v "$PWD:/backup" alpine tar czf /backup/tempo-data.tgz -C /data .`), then `docker compose start tempo`.
-- **A snapshot of one backend.** On the backend's **Settings** tab, **Export backup** gives a zip of its definition, handlers, data and media, without secrets. The owner can restore one as a new backend. A restored backend can contain handler code, which runs on the server, so only restore backups you trust. A key with `read-definition` can fetch the same zip from CI.
+- **A snapshot of one backend.** On the backend's **Settings** tab, **Export backup** gives a zip of its definition, handlers, data and media, without secrets. The owner can restore one as a new backend. A restored backend can contain handler code, which runs on the server, so only restore backups you trust. A key with `read-definition` cannot fetch the backup (it holds the database, with app users' password hashes); it gets the [test snapshot](/docs/backend/test-without-mocks#the-test-snapshot) instead.
 
 ## 9. Upgrade
 

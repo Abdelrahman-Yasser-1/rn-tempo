@@ -7,6 +7,7 @@
     "dev-api",
     "local-https",
     "local-backend",
-    "team-server"
+    "team-server",
+    "test-without-mocks"
   ]
 }
