@@ -52,6 +52,8 @@ export interface TempoBackend {
     get(collection: string, id: number): Record<string, unknown> | undefined;
     remove(collection: string, id: number): boolean;
   };
+  /** Data change events (`products.created`, `content.published`, a handler's `ctx.emit`), published after each write commits. Returns the function that stops listening. */
+  events: { on(listener: (event: { name: string; payload: unknown; at: string }) => void): () => void };
   /** The requests the backend answered since the start or the last `reset()`, redacted (tokens and passwords are replaced). */
   requests(): RecordedRequest[];
   /** Back to the state at the start: data, media, users, scenarios, clock, sequences and recorded requests. */

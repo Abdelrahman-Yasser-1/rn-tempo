@@ -4,6 +4,7 @@ import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
 
 import { migrateBuiltins } from './accounts.ts';
 import { migrateContentTables } from './content.ts';
+import type { CollectionAction, CollectionEventPayload } from './events.ts';
 import { quoteIdent, uniqueIndexName } from './names.ts';
 import type { Collection, Field, FieldType } from './schema.ts';
 import { decodeValue, encodeValue, validateRecord } from './values.ts';
@@ -123,9 +124,19 @@ export function uniqueViolation(error: unknown): UniqueViolationError | undefine
   return undefined;
 }
 
+/** One committed write to a collection, as the change listener hears it. */
+export interface DataChange {
+  action: CollectionAction;
+  payload: CollectionEventPayload;
+}
+
 export class Store {
   readonly db: DatabaseSync;
   private applied: Collection[];
+  /** Told about every committed row write (`insert`, `update`, `remove`). The engine turns them into events. */
+  onChange: ((change: DataChange) => void) | undefined;
+  /** Changes made inside an open transaction, held until it commits (and dropped when it rolls back). */
+  private pendingChanges: DataChange[] = [];
 
   private constructor(db: DatabaseSync, applied: Collection[]) {
     this.db = db;
@@ -371,6 +382,41 @@ export class Store {
 
   // ---- data
 
+  /** Tells the listener about a write, once nothing is left to roll back: inside a transaction it waits for the commit. */
+  private notify(action: CollectionAction, collection: string, record: Row): void {
+    const change: DataChange = { action, payload: { collection, id: record.id, record } };
+    if (this.db.isTransaction) {
+      this.pendingChanges.push(change);
+      return;
+    }
+    this.flushChanges();
+    this.onChange?.(change);
+  }
+
+  private flushChanges(): void {
+    const changes = this.pendingChanges.splice(0);
+    for (const change of changes) this.onChange?.(change);
+  }
+
+  /**
+   * Runs several writes as one transaction. Their change events are published after the commit, in order, and not at all
+   * when `work` throws (everything is rolled back).
+   */
+  transaction<T>(work: () => T): T {
+    this.db.exec('BEGIN IMMEDIATE');
+    let result: T;
+    try {
+      result = work();
+      this.db.exec('COMMIT');
+    } catch (error) {
+      this.db.exec('ROLLBACK');
+      this.pendingChanges = [];
+      throw error;
+    }
+    this.flushChanges();
+    return result;
+  }
+
   private insertRow(collection: Collection, values: Record<string, unknown>, id?: number): number {
     const names = Object.keys(values);
     const columns = names.map((name) => quoteIdent(name));
@@ -439,12 +485,15 @@ export class Store {
   /** Inserts validated values and returns the new row. Throws UniqueViolationError on a duplicate. */
   insert(collectionName: string, values: Record<string, unknown>): Row {
     const collection = this.collection(collectionName);
+    let row: Row;
     try {
       const id = this.insertRow(collection, values);
-      return this.get(collectionName, id) as Row;
+      row = this.get(collectionName, id) as Row;
     } catch (error) {
       throw uniqueViolation(error) ?? error;
     }
+    this.notify('created', collection.name, row);
+    return row;
   }
 
   /** Writes the given columns of one row. Returns the row, or undefined when the id does not exist. */
@@ -460,11 +509,16 @@ export class Store {
     } catch (error) {
       throw uniqueViolation(error) ?? error;
     }
-    return this.get(collectionName, id);
+    const row = this.get(collectionName, id);
+    if (row !== undefined) this.notify('updated', collection.name, row);
+    return row;
   }
 
   remove(collectionName: string, id: number): boolean {
     const collection = this.collection(collectionName);
-    return Number(this.db.prepare(`DELETE FROM ${quoteIdent(collection.name)} WHERE id = ?`).run(id).changes) > 0;
+    const before = this.get(collectionName, id);
+    const removed = Number(this.db.prepare(`DELETE FROM ${quoteIdent(collection.name)} WHERE id = ?`).run(id).changes) > 0;
+    if (removed && before !== undefined) this.notify('deleted', collection.name, before);
+    return removed;
   }
 }

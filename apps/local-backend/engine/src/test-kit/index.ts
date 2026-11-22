@@ -210,6 +210,7 @@ export function setupTempoBackend(options: TempoBackendOptions = {}): TempoBacke
         return engine().store.remove(collection, id);
       },
     },
+    events: { on: (listener) => engine().events.on(listener) },
     requests: () => engine().requests.snapshot(requestsAfter),
     reset,
   };

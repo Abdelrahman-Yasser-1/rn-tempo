@@ -1,5 +1,6 @@
 import { redactDeep } from '@rn-tempo/dev-api';
 
+import { EVENT_NAME } from './events.ts';
 import type { MediaService } from './media.ts';
 import type { HandlerRpc } from './handlers.ts';
 import type { EngineLogger } from './logs.ts';
@@ -9,6 +10,8 @@ import { isPlainObject, validateRecord } from './values.ts';
 
 export interface HostDeps {
   store: Store;
+  /** Publishes a custom event on the backend's bus (`ctx.emit`). */
+  emit: (name: string, payload: unknown) => void;
   /** How many app users exist (handlers only get the number, never the users). */
   userCount: () => number;
   definition: () => Backend;
@@ -91,6 +94,12 @@ export function createHandlerRpc(deps: HostDeps, label: string): HandlerRpc {
         if (row === undefined) return null;
         deps.store.remove(collection.name, id);
         return row;
+      }
+      case 'emit': {
+        const name = asString(args[0], 'The event name');
+        if (!EVENT_NAME.test(name)) throw new Error('An event name starts with a letter and holds letters, digits, ".", ":", "_" and "-" (at most 64 characters).');
+        deps.emit(name, args[1]);
+        return undefined;
       }
       case 'users.count':
         return deps.userCount();
