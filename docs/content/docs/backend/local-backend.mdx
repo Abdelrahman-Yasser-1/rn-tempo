@@ -264,6 +264,134 @@ Bodies, scenarios, templates, the success wrapper, **Try it** bodies and JSON fi
 
 The editor is bundled with the app, works offline and loads only the first time one opens, so the dashboard starts as fast as before.
 
+### 4.6 Live data: SSE, WebSocket and GraphQL
+
+Three more endpoint types keep a connection open or speak GraphQL. All of them read the **data change events** of the backend: whenever a record is created, updated or deleted (by an endpoint, the Data tab, a handler or the test kit), the event `<collection>.created`, `<collection>.updated` or `<collection>.deleted` is published after the change is saved, with `{ collection, id, record }` (a delete carries the record as it was). Publishing or unpublishing a content entry publishes `content.published` or `content.unpublished`, and a handler publishes its own with `ctx.emit(name, payload)`. Fields that a collection endpoint hides are left out of the events too.
+
+In an endpoint's list, list events with `on`: a name (`products.created`), a prefix (`products.*`) or `*`.
+
+Each of these endpoints has a **Live** button in the Endpoints tab. It shows who is connected (a client id, when it connected, how many messages went each way, and a short hash of the address, never the address), the latest messages, a form that sends a message to everyone or to one client, and **Disconnect**. Viewers can read the panel; sending and disconnecting need the editor role on a team server.
+
+#### Server-sent events (SSE)
+
+Choose **Live events (SSE)**. The endpoint answers `GET` with `text/event-stream`.
+
+| Setting | What it does |
+| --- | --- |
+| `script` | Messages sent, in order, to every client that connects: `{ "event": "hello", "data": { "n": "{{seq}}" }, "delayMs": 500, "repeat": 3 }`. `data` is sent as text, or as JSON when it is not text; placeholders are filled for every message, and `{{seq}}` counts the messages of that connection. |
+| `on` | Data change events to forward. A forwarded message has `event: products.created` and the payload as JSON in `data`. |
+| `retryMs` | The `retry:` hint, how long a client waits before reconnecting (default 3000). |
+| `heartbeatMs` | A comment line this often keeps proxies from closing a quiet stream (default 15000, 0 turns it off). |
+| `idleTimeoutMs` | A client that gets no message for this long (heartbeats do not count) is closed (default 30 minutes, 0 turns it off). |
+| `maxConnections`, `maxConnectionsPerIp` | The next client past the limit gets `429` (default 100 and 10). |
+| `bufferSize` | How many forwarded and broadcast messages are kept for `Last-Event-ID` (default 100). |
+
+Messages are real SSE: `id`, `event`, one `data:` line per line of text, `retry`. A client that reconnects with `Last-Event-ID` gets the messages it missed from the buffer instead of the script again. `auth: "bearer"` needs a token in the `Authorization` header. In test mode every `delayMs` is 0 and the order of the messages stays the same.
+
+```bash
+curl -N https://localhost:8443/events
+```
+
+From React Native, `EventSource` does not exist, so add a polyfill. Both of these read the same stream:
+
+```ts
+import EventSource from 'react-native-sse';
+
+const source = new EventSource('https://192.168.1.20:8443/events', {
+  headers: { Authorization: `Bearer ${token}` },
+});
+source.addEventListener('products.created', (event) => {
+  const { record } = JSON.parse(event.data ?? '{}');
+  console.log('new product', record.title);
+});
+// Close it when the screen goes away: source.close()
+```
+
+#### WebSocket
+
+Choose **Live socket (WebSocket)**. The endpoint answers the HTTP Upgrade on its path (a plain `GET` answers `426`). The engine uses the `ws` library, because Node has a WebSocket client but no server.
+
+| Setting | What it does |
+| --- | --- |
+| `behavior` | `echo` sends every message back. `rules` answers with the first rule that matches (and says nothing when none does). |
+| `rules` | `{ "match": { ... }, "reply": ..., "delayMs": 200, "broadcast": true }`. `reply` is sent as text, or as JSON when it is not text. `{{message.user.name}}` reads a field of the message and `{{message}}` is the whole message. `broadcast` sends the reply to every connected client. |
+| `onConnect` | A welcome message sent when a client connects. |
+| `on` | Data change events to forward, sent as `{ "event": "products.created", "data": { ... } }`. |
+| `subprotocols` | The subprotocols the endpoint speaks. The first one the client offers is chosen. |
+| `maxPayloadBytes` | The largest message (default 64 KB). A client that sends more is closed with 1009. |
+| `maxConnections`, `maxConnectionsPerIp` | Past the limit the upgrade gets `429`. |
+| `pingIntervalMs` | A ping this often. A client that never answers the last one is dropped (default 30 seconds). |
+| `maxBufferedBytes` | A client with more than this waiting to be sent is too slow and is closed with 1013 (default 1 MB). |
+
+A rule matches when **every** condition it lists fits: `type` (the message is JSON with this `type`), `jsonPath` (`$.user.name`, `$.items[0].id`, `$['a b']`; alone it means the value exists), `equals` (the value at `jsonPath`, or the whole message, is equal to this), `contains`, `startsWith` and `endsWith` (text). Regular expressions are not supported on purpose: a pattern written in `backend.json` runs on whatever a client sends, and a crafted one can freeze the server (ReDoS). Every condition above takes time proportional to the message.
+
+**Signing in.** With `auth: "bearer"`, send the token one of three ways. The first is best, because a URL ends up in proxy logs.
+
+1. In the subprotocol: `new WebSocket(url, ['bearer', token])`. The engine answers with `bearer`, never with the token.
+2. In the `Authorization` header, where the client can set one (React Native can: `new WebSocket(url, null, { headers })`).
+3. In the URL: `wss://host/ws?token=<token>`. The engine hides a `token` in the request log.
+
+Under a team server the same endpoint is at `wss://<server>/b/<backend>/ws` and, in a CI session, at `wss://<server>/s/<session>/ws`. Caddy's `reverse_proxy` passes upgrades and event streams on as they are, so the compose file needs no change.
+
+```ts
+const socket = new WebSocket('wss://192.168.1.20:8443/ws', ['bearer', token]);
+socket.onopen = () => socket.send(JSON.stringify({ type: 'ping' }));
+socket.onmessage = (event) => {
+  const message = JSON.parse(String(event.data));
+  if (message.event === 'products.created') console.log(message.data.record.title);
+};
+```
+
+The request log shows a `WS` row for the connection (status 101), one for each message (200, the text cut and secrets replaced) and one when it closes.
+
+#### GraphQL
+
+Choose **GraphQL**. It answers `POST` at its path (default `/graphql`), built with the reference `graphql` package.
+
+- **Built from my collections.** For a collection `products` you get the type `Product`, the query `products(limit, skip, where, sort)` and `productsById(id)`, the mutations `createProduct`, `updateProduct` and `deleteProduct`, and the subscriptions `productsCreated`, `productsUpdated` and `productsDeleted`. Enum fields become enums, `json` fields use a `JSON` scalar, and fields that a collection endpoint hides are left out (hide more with `schema.hiddenFields: ["products.secret"]`; limit the collections with `schema.collections`).
+- **Written by me (SDL).** Put the schema in `schema.sdl`. Every field is null unless `resolvers` names what answers it: `{ "Query.hello": { "static": "Hello {{args.name}}" } }`, `{ "Query.items": { "collection": "products", "action": "list" } }`, `{ "Query.x": { "handler": "handlers/x.js" } }` (the handler gets `ctx.req.body = { field, args, parent }` and returns the value) or, for a subscription, `{ "Subscription.shipped": { "event": "orders.shipped" } }`.
+- **Generate from collections** in the endpoint form writes the generated schema and its resolvers out as text, so you can edit them. With the built-in schema, `schema.sdl` can also hold extra types (`extend type Query { hello: String }`).
+
+| Setting | What it does |
+| --- | --- |
+| `maxDepth` | The deepest query allowed (default 10). Introspection is not counted. |
+| `maxFields` | The most fields a query may select, with every use of a fragment counted again (default 200). |
+| `maxQueryBytes` | The longest query text (default 20 KB, `413` beyond). |
+| `introspection` | Answer `__schema` and `__type` (on by default, because this is a mock). |
+| `requireAuth` | Operations that need a signed-in user, such as `Mutation.createProduct`. `auth: "bearer"` protects every operation. |
+
+Batching is not supported (an array body answers 400). A query that is too deep or too big is refused before it runs, and fragment cycles cannot loop. The answer is `{ data, errors }` and is never put inside the backend's success wrapper. The request log and the stats keep the operation name (`query ListProducts {...}` shows as `ListProducts`; an unnamed one as `anonymous`). OpenAPI lists the endpoint as a `POST` with a generic body, marked as GraphQL.
+
+**Subscriptions** use a WebSocket on the same path with the `graphql-transport-ws` subprotocol (the graphql-ws protocol): `connection_init`, `subscribe`, `next`, `complete`, ping and pong, and its close codes (`4401` before init, `4408` init timeout, `4409` duplicate id, `4429` second init, `4403` forbidden). The engine implements this small subset itself, because the `graphql-ws` package would take over the socket, its limits and the request log. With `auth: "bearer"` a client signs in with `connection_init`'s payload (`{ "Authorization": "Bearer <token>" }`), the subprotocol pair or `?token=`.
+
+There is no GraphiQL page: it would have to load scripts from a CDN, which the engine never does. The **Query** button in the Endpoints tab opens a small query runner in the dashboard instead (query, variables, operation name, and **Log in as** an app user). Point Apollo, urql or `fetch` at the URL:
+
+```ts
+import { ApolloClient, HttpLink, InMemoryCache, split } from '@apollo/client';
+import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
+import { getMainDefinition } from '@apollo/client/utilities';
+import { createClient } from 'graphql-ws';
+
+const http = new HttpLink({ uri: 'https://192.168.1.20:8443/graphql' });
+const ws = new GraphQLWsLink(
+  createClient({
+    url: 'wss://192.168.1.20:8443/graphql',
+    connectionParams: { Authorization: `Bearer ${token}` },
+  }),
+);
+const link = split(
+  ({ query }) => {
+    const definition = getMainDefinition(query);
+    return definition.kind === 'OperationDefinition' && definition.operation === 'subscription';
+  },
+  ws,
+  http,
+);
+export const client = new ApolloClient({ link, cache: new InMemoryCache() });
+```
+
+With urql, use `createClient({ url, exchanges: [cacheExchange, fetchExchange, subscriptionExchange({ forwardSubscription })] })` and a `graphql-ws` client in `forwardSubscription`; both clients speak the same protocol.
+
 ## 5. Data
 
 Open the **Data** tab.
@@ -346,6 +474,7 @@ What `ctx` has:
 | `ctx.db` | `list`, `get`, `count`, `create`, `update`, `delete` on your collections. There is no raw SQL. |
 | `ctx.users.count()` | How many app users exist |
 | `ctx.media` | `get(id)` and `url(id)` |
+| `ctx.emit(name, payload)` | Publishes a custom event (see [Live data](#46-live-data-sse-websocket-and-graphql)) that SSE and WebSocket endpoints and GraphQL subscriptions can listen to |
 | `ctx.log` | `debug`, `info`, `warn`, `error`, written to the engine log with secrets hidden |
 | `ctx.scenario` | The scenario picked for this endpoint |
 
