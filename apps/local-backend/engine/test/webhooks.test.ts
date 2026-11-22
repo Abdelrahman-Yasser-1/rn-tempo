@@ -421,7 +421,7 @@ describe('webhook secrets are keyed by the webhook id only', () => {
 });
 
 describe('webhook views hide what a viewer must not see', () => {
-  it('AC-LP-8 the list and single reads hide header values and the address\'s userinfo and query values; an editor can open the full one', async () => {
+  it('AC-LP-8 the list and single reads hide header values and the address\'s path and query (`scheme://host/…`); an editor can open the full one', async () => {
     const e = await engine({ webhooks: [] });
     const target = new URL(e.target.url);
     const url = `http://${target.host}/hook?token=query-token-1&x=2`;
@@ -431,7 +431,8 @@ describe('webhook views hide what a viewer must not see', () => {
       expect(text, path).not.toContain('receiver-token-123456');
       expect(text, path).not.toContain('query-token-1');
       expect(text).toContain('x-api-key');
-      expect(text).toContain('token=***');
+      expect(text).not.toContain('/hook');
+      expect(text).toContain(`http://${target.host}/…`);
     }
     const full = (await (await e.admin('/webhooks/late/full')).json()) as { url: string; headers: Record<string, string> };
     expect(full.url).toBe(url);
@@ -442,7 +443,7 @@ describe('webhook views hide what a viewer must not see', () => {
     expect(table['GET /webhooks/:id/full']).toBe('editor');
     // The delivery log keeps the same safe form of the address.
     await e.admin('/webhooks/late/test', 'POST');
-    await vi.waitFor(async () => expect(((await (await e.admin('/webhook-deliveries')).json()) as { url: string }[])[0]?.url).toBe(`http://${target.host}/hook?token=***&x=***`));
+    await vi.waitFor(async () => expect(((await (await e.admin('/webhook-deliveries')).json()) as { url: string }[])[0]?.url).toBe(`http://${target.host}/…`));
   });
 
   it('AC-LP-8 a delivery log address has no userinfo', async () => {

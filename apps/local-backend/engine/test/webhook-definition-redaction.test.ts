@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { parseTestSnapshot } from '../src/test-snapshot.ts';
+import { maskUrl } from '../src/webhooks.ts';
+import { auditSummary } from '../src/audit.ts';
+import { webhookAuditBody } from '../src/admin-webhooks.ts';
 import { member, rawCall, startSite, stopTeams, type Site } from './team-helpers.ts';
 
 afterEach(stopTeams);
@@ -26,7 +29,8 @@ const withKey = (site: Site, key: string, path: string) => rawCall(site.team.por
 function expectHidden(text: string): void {
   for (const secret of [TOKEN, URL_SECRET]) expect(text, secret).not.toContain(secret);
   expect(text).toContain('[REDACTED]');
-  expect(text).toContain('token=***');
+  expect(text).toContain('https://hooks.example.com/…');
+  expect(text).not.toContain('/in?');
 }
 
 describe('webhook header values and address query values in the definition and the test snapshot', () => {
@@ -54,5 +58,40 @@ describe('webhook header values and address query values in the definition and t
     expect(mine).toContain(URL_SECRET);
     const admin = await keyOf(site, 'admin');
     expect((await withKey(site, admin, '/__admin/b/demo/definition')).body).toContain(TOKEN);
+  });
+});
+
+describe('addresses whose path holds the secret', () => {
+  const SLACK = 'https://hooks.slack.com/services/T0123ABCD/B0456EFGH/slack-path-secret';
+  const DISCORD = 'https://discord.com/api/webhooks/4242424242/discord-path-secret-token';
+
+  it('masks an address to scheme://host/… (no path, no query)', () => {
+    expect(maskUrl(SLACK)).toBe('https://hooks.slack.com/…');
+    expect(maskUrl(DISCORD)).toBe('https://discord.com/…');
+    expect(maskUrl(`${DISCORD}?wait=true&thread_id=9`)).toBe('https://discord.com/…');
+    expect(maskUrl('not a url')).toBe('[invalid address]');
+  });
+
+  it('hides a Slack-style and a Discord-style path from viewers, read-definition keys, the delivery views and the audit copy', async () => {
+    const site = await startSite();
+    for (const [id, url] of [['slack', SLACK], ['discord', DISCORD]] as const) expect((await site.owner.admin('demo', 'POST', '/webhooks', { id, url, events: ['*'] })).status).toBe(201);
+    const viewer = await member(site, 'viewer@example.com', 'viewer');
+    const key = await keyOf(site, 'read-definition');
+    const reads = [
+      (await viewer.admin('demo', 'GET', '/webhooks')).body,
+      (await viewer.admin('demo', 'GET', '/webhooks/slack')).body,
+      (await viewer.admin('demo', 'GET', '/webhooks/discord')).body,
+      (await viewer.admin('demo', 'GET', '/definition')).body,
+      (await withKey(site, key, '/__admin/b/demo/definition')).body,
+      (await withKey(site, key, '/__admin/b/demo/test-snapshot')).body,
+      (await withKey(site, key, '/b/demo/__definition')).body,
+      JSON.stringify(auditSummary(webhookAuditBody({ id: 'slack', url: SLACK, events: ['*'] }))),
+    ];
+    for (const text of reads) for (const secret of ['slack-path-secret', 'T0123ABCD', 'discord-path-secret-token', '4242424242']) expect(text, secret).not.toContain(secret);
+    expect(reads[0]).toContain('https://hooks.slack.com/…');
+    expect(reads[0]).toContain('https://discord.com/…');
+    // The editor's full view keeps the address as written.
+    const editor = await member(site, 'editor@example.com', 'editor');
+    expect((await editor.admin('demo', 'GET', '/webhooks/slack/full')).body).toContain('slack-path-secret');
   });
 });

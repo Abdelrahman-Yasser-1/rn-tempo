@@ -389,7 +389,8 @@ export class WebhookService {
       event: row.event,
       eventId: row.event_id,
       createdAt: row.created_at,
-      url: row.url,
+      // The row keeps the redacted address (to tell a changed address); readers see it masked, as the path may hold a token.
+      url: maskUrl(row.url),
       status: row.status as DeliveryStatus,
       attempt: row.attempt,
       nextAt: row.next_at === null ? null : new Date(row.next_at).toISOString(),
@@ -459,9 +460,21 @@ export function safeUrl(raw: string): string {
 }
 
 /**
+ * An address for a reader who must not hold the receiver's credentials: `scheme://host/…`, with no path and no query.
+ * Many receivers carry their secret in the path (Slack `/services/T…/B…/<token>`, Discord `/api/webhooks/<id>/<token>`),
+ * so the path is as sensitive as the query. A mask of an already-masked address is the same address.
+ */
+export function maskUrl(raw: string): string {
+  try {
+    return `${new URL(raw).origin}/…`;
+  } catch {
+    return '[invalid address]';
+  }
+}
+
+/**
  * A copy of a definition (`backend.json` as an object) that is safe to hand to a reader who must not hold the receivers'
- * credentials: every webhook's header values are replaced and its address goes through `safeUrl` (no user name or
- * password, query values hidden). Anything else is returned as it is.
+ * credentials: every webhook's header values are replaced and its address is masked to `scheme://host/…`. Anything else is returned as it is.
  */
 export function redactWebhookSecrets<T>(definition: T): T {
   if (typeof definition !== 'object' || definition === null) return definition;
@@ -471,7 +484,7 @@ export function redactWebhookSecrets<T>(definition: T): T {
     if (typeof hook !== 'object' || hook === null) return hook;
     const item = hook as Record<string, unknown>;
     const headers = typeof item.headers === 'object' && item.headers !== null ? Object.fromEntries(Object.keys(item.headers).map((name) => [name, '[REDACTED]'])) : item.headers;
-    return { ...item, ...(typeof item.url === 'string' ? { url: safeUrl(item.url) } : {}), ...(item.headers === undefined ? {} : { headers }) };
+    return { ...item, ...(typeof item.url === 'string' ? { url: maskUrl(item.url) } : {}), ...(item.headers === undefined ? {} : { headers }) };
   });
   return { ...record, webhooks } as T;
 }

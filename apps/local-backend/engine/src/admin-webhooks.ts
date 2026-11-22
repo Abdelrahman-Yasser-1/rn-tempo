@@ -3,12 +3,12 @@ import { jsonReply, problemReply, readJson, type Reply } from './http.ts';
 import type { Engine } from './engine.ts';
 import type { Manager, RawDefinition } from './manager.ts';
 import { checkOutboundUrl, OutboundError } from './outbound.ts';
-import { safeUrl } from './webhooks.ts';
+import { maskUrl } from './webhooks.ts';
 import { DefinitionError, issuesFromZod, WebhookSchema, type Webhook } from './schema.ts';
 
 const HIDDEN = '[REDACTED]';
 
-/** A copy of a body or an item with the values of every webhook's `headers` hidden: they may carry a receiver's token. For the audit only. */
+/** A copy of a body or an item with the values of every webhook's `headers` hidden and its address masked: both may carry a receiver's token. For the audit only. */
 export function webhookAuditBody(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(webhookAuditBody);
   if (typeof value !== 'object' || value === null) return value;
@@ -16,7 +16,11 @@ export function webhookAuditBody(value: unknown): unknown {
   return Object.fromEntries(
     Object.entries(value).map(([key, child]) => [
       key,
-      isHook && key === 'headers' && typeof child === 'object' && child !== null ? Object.fromEntries(Object.keys(child).map((name) => [name, HIDDEN])) : webhookAuditBody(child),
+      isHook && key === 'headers' && typeof child === 'object' && child !== null
+        ? Object.fromEntries(Object.keys(child).map((name) => [name, HIDDEN]))
+        : isHook && key === 'url' && typeof child === 'string'
+          ? maskUrl(child)
+          : webhookAuditBody(child),
     ]),
   );
 }
@@ -31,10 +35,10 @@ export function adminWebhookRoutes(engine: Engine, manager: Manager, errorReply:
   const hooks = (): Webhook[] => engine.definition.webhooks;
   const find = (id: string | undefined): Webhook | undefined => hooks().find((hook) => hook.id === id);
   const missing = (id: string | undefined): Reply => problemReply(404, { detail: `No webhook "${id ?? ''}".` });
-  /** What any reader sees: header values and the address's userinfo and query values are hidden. */
+  /** What any reader sees: header values are hidden and the address is `scheme://host/…` (its path and query may hold a token). */
   const view = (hook: Webhook): Record<string, unknown> => ({
     ...hook,
-    url: safeUrl(hook.url),
+    url: maskUrl(hook.url),
     ...(hook.headers === undefined ? {} : { headers: Object.fromEntries(Object.keys(hook.headers).map((name) => [name, HIDDEN])) }),
     secretConfigured: engine.webhooks.hasSecret(hook),
   });
