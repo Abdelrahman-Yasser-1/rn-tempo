@@ -8,6 +8,7 @@ import { adminContentRoutes, contentErrorReply } from './admin-content.ts';
 import { adminMediaRoutes } from './admin-media.ts';
 import { adminSettingsRoutes } from './admin-settings.ts';
 import { webhookAuditBody } from './admin-webhooks.ts';
+import { redactWebhookSecrets } from './webhooks.ts';
 import { pushSendAudit, pushUploadAudit } from './admin-push.ts';
 import { importAuditBody } from './import/admin-import.ts';
 import { jsonReply, problemReply, readJson, type Reply, type RequestCtx } from './http.ts';
@@ -401,6 +402,10 @@ export function createAdminServer(manager: Manager, extras: AdminExtras = {}, to
         answer = errorReply(error);
       }
       report(answer.status, false, before);
+      // Below editor, and for a read-definition key, the definition hides the webhooks' header values and address credentials.
+      if (access !== undefined && key === 'GET /definition' && answer.status === 200 && (!atLeast(access.role, 'editor') || access.keyScope === 'read-definition')) {
+        answer = { ...answer, body: redactWebhookSecrets(answer.body) };
+      }
       return sendReply(res, answer);
     }
     sendReply(res, known ? problemReply(405, { detail: 'Method not allowed.' }) : problemReply(404, { detail: 'Not found.' }));

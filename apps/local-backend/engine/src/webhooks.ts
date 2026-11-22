@@ -421,6 +421,24 @@ export function safeUrl(raw: string): string {
   }
 }
 
+/**
+ * A copy of a definition (`backend.json` as an object) that is safe to hand to a reader who must not hold the receivers'
+ * credentials: every webhook's header values are replaced and its address goes through `safeUrl` (no user name or
+ * password, query values hidden). Anything else is returned as it is.
+ */
+export function redactWebhookSecrets<T>(definition: T): T {
+  if (typeof definition !== 'object' || definition === null) return definition;
+  const record = definition as Record<string, unknown>;
+  if (!Array.isArray(record.webhooks)) return definition;
+  const webhooks = record.webhooks.map((hook: unknown) => {
+    if (typeof hook !== 'object' || hook === null) return hook;
+    const item = hook as Record<string, unknown>;
+    const headers = typeof item.headers === 'object' && item.headers !== null ? Object.fromEntries(Object.keys(item.headers).map((name) => [name, '[REDACTED]'])) : item.headers;
+    return { ...item, ...(typeof item.url === 'string' ? { url: safeUrl(item.url) } : {}), ...(item.headers === undefined ? {} : { headers }) };
+  });
+  return { ...record, webhooks } as T;
+}
+
 function safeJson(text: string): unknown {
   try {
     return JSON.parse(text) as unknown;
