@@ -104,6 +104,7 @@ export const ADMIN_ROLE_TABLE: Readonly<Record<string, Role>> = {
   'GET /webhooks': 'viewer',
   'POST /webhooks': 'editor',
   'GET /webhooks/:id': 'viewer',
+  'GET /webhooks/:id/full': 'editor',
   'PUT /webhooks/:id': 'editor',
   'DELETE /webhooks/:id': 'editor',
   'POST /webhooks/:id/rotate-secret': 'admin',

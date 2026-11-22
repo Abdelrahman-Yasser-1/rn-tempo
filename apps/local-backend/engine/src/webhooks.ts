@@ -1,8 +1,6 @@
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import type { DatabaseSync } from 'node:sqlite';
 
-import { redactUrl } from '@rn-tempo/dev-api';
-
 import { matchesEvent, type BackendEvent, type EventBus } from './events.ts';
 import type { EngineLogger } from './logs.ts';
 import { checkOutboundUrl, httpTransport, OutboundError, type OutboundPolicy, type Transport } from './outbound.ts';
@@ -188,8 +186,9 @@ export class WebhookService {
 
   // ---- secrets
 
+  /** The secret of a webhook is always keyed by its own id: no definition field can point at another webhook's secret. */
   private refOf(hook: Webhook): string {
-    return hook.secretRef ?? hook.id;
+    return hook.id;
   }
 
   /** The signing secret of a webhook, made on first use. */
@@ -213,7 +212,7 @@ export class WebhookService {
     return made;
   }
 
-  /** Creates the secret of a new webhook and returns it (shown once). */
+  /** Makes the secret of a webhook that was just created and returns it (shown once). It always makes a new one, so an old secret of that id is never handed out. */
   createSecret(hook: Webhook): string {
     return this.rotateSecret(hook);
   }
@@ -260,7 +259,7 @@ export class WebhookService {
       event.name,
       eventId,
       event.at,
-      redactUrl(hook.url),
+      safeUrl(hook.url),
       payload,
       full ? 'failed' : 'pending',
       full ? null : nowMs + delay,
@@ -408,6 +407,17 @@ export class WebhookService {
 
   prune(): void {
     this.deps.db.prepare('DELETE FROM _webhook_deliveries WHERE updated_at < ?').run(this.deps.now().getTime() - DELIVERY_KEEP_DAYS * 86_400_000);
+  }
+}
+
+/** A URL fit for a log or a list: no user name or password, no fragment, and every query value hidden. */
+export function safeUrl(raw: string): string {
+  try {
+    const url = new URL(raw);
+    const keys = [...new Set(url.searchParams.keys())];
+    return `${url.origin}${url.pathname}${keys.length === 0 ? '' : `?${keys.map((key) => `${encodeURIComponent(key)}=***`).join('&')}`}`;
+  } catch {
+    return '[invalid address]';
   }
 }
 
