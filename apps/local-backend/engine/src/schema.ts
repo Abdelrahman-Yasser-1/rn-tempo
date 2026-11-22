@@ -338,16 +338,15 @@ const GraphqlEndpoint = z.strictObject({
   maxBufferedBytes: z.number().int().min(1024).max(64 * 1024 * 1024).default(1_048_576).meta({ description: 'A subscription client with more than this waiting is too slow and is closed with 1013.' }),
 });
 
-const SECRET_REF = /^[a-z][a-z0-9_-]{0,62}$/;
+const WEBHOOK_ID = /^[a-z][a-z0-9_-]{0,62}$/;
 const WEBHOOK_HEADER_NAME = /^[A-Za-z0-9-]{1,100}$/;
 
 export const WebhookSchema = z
   .strictObject({
-    id: z.string().regex(SECRET_REF, 'A webhook id starts with a lowercase letter and holds lowercase letters, digits, "-" and "_".'),
+    id: z.string().regex(WEBHOOK_ID, 'A webhook id starts with a lowercase letter and holds lowercase letters, digits, "-" and "_".'),
     url: z.string().min(1).max(2000).meta({ description: 'Where the event is POSTed. https: on a team server; localhost is fine on a desktop or local web backend.' }),
     events: z.array(z.string().regex(EVENT_PATTERN, 'An event is a name like "products.created", a prefix like "products.*" or "*".')).min(1).max(50).meta({ description: 'Events that fire it: `products.created`, `products.*`, `*`, or a custom event from `ctx.emit`.' }),
     enabled: z.boolean().default(true),
-    secretRef: z.string().regex(SECRET_REF).optional().meta({ description: 'The name of the signing secret in `.data/secrets.json` (default: the webhook id). The secret itself is never in this file.' }),
     delayMs: z.number().int().min(0).max(MAX_DELAY_MS).optional().meta({ description: 'Wait this long after the event before the first attempt. Test mode makes it 0.' }),
     retries: z
       .strictObject({

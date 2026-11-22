@@ -380,3 +380,74 @@ describe('webhook audit', () => {
     expect(audited).toContain('x-api-key');
   });
 });
+
+describe('webhook secrets are keyed by the webhook id only', () => {
+  it('AC-LP-8 secretRef is not a field: a definition that sets it is refused', () => {
+    expect(() => parseBackend({ name: 'x', webhooks: [{ id: 'a', url: 'https://x.test', events: ['*'], secretRef: 'b' }] })).toThrow(/secretRef|Unrecognized/);
+  });
+
+  it('AC-LP-8 creating or editing a webhook never returns or adopts another webhook\'s secret', async () => {
+    const e = await engine({ webhooks: [] });
+    const first = (await (await e.admin('/webhooks', 'POST', { id: 'first', url: e.target.url, events: ['*'] })).json()) as { secret: string };
+    const sneaky = await e.admin('/webhooks', 'POST', { id: 'second', url: e.target.url, events: ['*'], secretRef: 'first' });
+    expect(sneaky.status).toBe(400);
+    expect(await sneaky.text()).not.toContain(first.secret);
+    const second = (await (await e.admin('/webhooks', 'POST', { id: 'second', url: e.target.url, events: ['*'] })).json()) as { secret: string };
+    expect(second.secret).not.toBe(first.secret);
+    // The id of a webhook cannot be changed on PUT (that would adopt another webhook's secret).
+    const rename = await e.admin('/webhooks/second', 'PUT', { id: 'first', url: e.target.url, events: ['*'] });
+    expect(rename.status).toBe(400);
+    expect(await rename.text()).not.toContain(first.secret);
+    // Re-creating an id whose webhook was deleted gives a new secret, and deleting forgets only that webhook's.
+    await e.admin('/webhooks/second', 'DELETE');
+    const secrets = JSON.parse(readFileSync(join(e.dir, '.data', 'secrets.json'), 'utf8')) as { webhooks: Record<string, string> };
+    expect(Object.keys(secrets.webhooks)).toEqual(['first']);
+    const again = (await (await e.admin('/webhooks', 'POST', { id: 'second', url: e.target.url, events: ['*'] })).json()) as { secret: string };
+    expect(again.secret).not.toBe(second.secret);
+  });
+
+  it('AC-LP-8 a delivery is signed with its own webhook\'s secret only', async () => {
+    const r = rig({ hooks: [hook({ id: 'one' }), hook({ id: 'two' })] });
+    r.events.emit('products.created', {});
+    await vi.waitFor(() => expect(r.sent).toHaveLength(2));
+    const secrets = r.secrets.section('webhooks') as Record<string, string>;
+    expect(secrets.one).not.toBe(secrets.two);
+    for (const call of r.sent) {
+      const matching = Object.entries(secrets).filter(([, secret]) => verifySignature(secret, call.headers['x-tempo-signature'] ?? '', call.body));
+      expect(matching).toHaveLength(1);
+    }
+    r.service.close();
+  });
+});
+
+describe('webhook views hide what a viewer must not see', () => {
+  it('AC-LP-8 the list and single reads hide header values and the address\'s userinfo and query values; an editor can open the full one', async () => {
+    const e = await engine({ webhooks: [] });
+    const target = new URL(e.target.url);
+    const url = `http://${target.host}/hook?token=query-token-1&x=2`;
+    expect((await e.admin('/webhooks', 'POST', { id: 'late', url, events: ['*'], headers: { 'x-api-key': 'receiver-token-123456' } })).status).toBe(201);
+    for (const path of ['/webhooks', '/webhooks/late']) {
+      const text = await (await e.admin(path)).text();
+      expect(text, path).not.toContain('receiver-token-123456');
+      expect(text, path).not.toContain('query-token-1');
+      expect(text).toContain('x-api-key');
+      expect(text).toContain('token=***');
+    }
+    const full = (await (await e.admin('/webhooks/late/full')).json()) as { url: string; headers: Record<string, string> };
+    expect(full.url).toBe(url);
+    expect(full.headers['x-api-key']).toBe('receiver-token-123456');
+    const secrets = JSON.parse(readFileSync(join(e.dir, '.data', 'secrets.json'), 'utf8')) as { webhooks: Record<string, string> };
+    expect(JSON.stringify(full)).not.toContain(secrets.webhooks.late ?? 'missing');
+    const { ADMIN_ROLE_TABLE: table } = await import('../src/roles.ts');
+    expect(table['GET /webhooks/:id/full']).toBe('editor');
+    // The delivery log keeps the same safe form of the address.
+    await e.admin('/webhooks/late/test', 'POST');
+    await vi.waitFor(async () => expect(((await (await e.admin('/webhook-deliveries')).json()) as { url: string }[])[0]?.url).toBe(`http://${target.host}/hook?token=***&x=***`));
+  });
+
+  it('AC-LP-8 a delivery log address has no userinfo', async () => {
+    const { safeUrl } = await import('../src/webhooks.ts');
+    expect(safeUrl('https://user:pw@example.com/a/b?k=v#frag')).toBe('https://example.com/a/b?k=***');
+    expect(safeUrl('not a url')).toBe('[invalid address]');
+  });
+});

@@ -3755,11 +3755,6 @@
             "default": true,
             "type": "boolean"
           },
-          "secretRef": {
-            "description": "The name of the signing secret in `.data/secrets.json` (default: the webhook id). The secret itself is never in this file.",
-            "type": "string",
-            "pattern": "^[a-z][a-z0-9_-]{0,62}$"
-          },
           "delayMs": {
             "description": "Wait this long after the event before the first attempt. Test mode makes it 0.",
             "type": "integer",

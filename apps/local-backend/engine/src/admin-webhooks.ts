@@ -3,6 +3,7 @@ import { jsonReply, problemReply, readJson, type Reply } from './http.ts';
 import type { Engine } from './engine.ts';
 import type { Manager, RawDefinition } from './manager.ts';
 import { checkOutboundUrl, OutboundError } from './outbound.ts';
+import { safeUrl } from './webhooks.ts';
 import { DefinitionError, issuesFromZod, WebhookSchema, type Webhook } from './schema.ts';
 
 const HIDDEN = '[REDACTED]';
@@ -30,12 +31,21 @@ export function adminWebhookRoutes(engine: Engine, manager: Manager, errorReply:
   const hooks = (): Webhook[] => engine.definition.webhooks;
   const find = (id: string | undefined): Webhook | undefined => hooks().find((hook) => hook.id === id);
   const missing = (id: string | undefined): Reply => problemReply(404, { detail: `No webhook "${id ?? ''}".` });
-  const view = (hook: Webhook): Record<string, unknown> => ({ ...hook, secretConfigured: engine.webhooks.hasSecret(hook) });
+  /** What any reader sees: header values and the address's userinfo and query values are hidden. */
+  const view = (hook: Webhook): Record<string, unknown> => ({
+    ...hook,
+    url: safeUrl(hook.url),
+    ...(hook.headers === undefined ? {} : { headers: Object.fromEntries(Object.keys(hook.headers).map((name) => [name, HIDDEN])) }),
+    secretConfigured: engine.webhooks.hasSecret(hook),
+  });
+  /** What an editor opening the webhook for editing sees: the address and headers as written. Never the secret. */
+  const full = (hook: Webhook): Record<string, unknown> => ({ ...hook, secretConfigured: engine.webhooks.hasSecret(hook) });
 
   /** Parses a webhook from a request body and checks its address against this server's outbound rules. */
   const parse = (value: unknown, id?: string): { ok: true; hook: Webhook; raw: Record<string, unknown> } | { ok: false; reply: Reply } => {
     const body = asObject(value);
     if (body === undefined) return { ok: false, reply: problemReply(400, { detail: 'Send a JSON object.' }) };
+    if (id !== undefined && body.id !== undefined && body.id !== id) return { ok: false, reply: problemReply(400, { detail: 'A webhook\'s id cannot be changed. Create a new webhook instead.', errors: [{ path: 'id', message: 'Cannot be changed.' }] }) };
     const raw = id === undefined ? body : { ...body, id };
     const parsed = WebhookSchema.safeParse(raw);
     if (!parsed.success) return { ok: false, reply: errorReply(new DefinitionError('The webhook is not valid:', issuesFromZod(parsed.error))) };
@@ -72,6 +82,7 @@ export function adminWebhookRoutes(engine: Engine, manager: Manager, errorReply:
         return jsonReply(201, { webhook: view({ ...created }), secret: engine.webhooks.createSecret(created) });
       },
     },
+    { method: 'GET', pattern: '/webhooks/:id/full', handler: (_ctx, params) => { const hook = find(params.id); return hook === undefined ? missing(params.id) : jsonReply(200, full(hook)); } },
     { method: 'GET', pattern: '/webhooks/:id', handler: (_ctx, params) => { const hook = find(params.id); return hook === undefined ? missing(params.id) : jsonReply(200, view(hook)); } },
     {
       method: 'PUT',
