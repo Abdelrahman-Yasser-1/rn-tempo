@@ -14,7 +14,8 @@ import { jsonReply, loggableBody, problemReply, readJson, type Reply, type Reque
 import type { EngineLogger } from './logs.ts';
 import { downloadReply, MediaService, uploadFailure, uploadJson } from './media.ts';
 import { mountPath, Router, type Handler } from './router.ts';
-import type { Backend, Collection, Endpoint, Scenario } from './schema.ts';
+import { buildRequestValidator, invalidRequest } from './import/request-validation.ts';
+import type { Backend, Collection, Endpoint, Scenario, StaticEndpoint } from './schema.ts';
 import { Stats } from './stats.ts';
 import { Store, type Plan, type RenameHints } from './store.ts';
 import { loadJwtSecret } from './tokens.ts';
@@ -203,12 +204,17 @@ export class Engine {
         };
       case 'download':
         return (ctx, params) => downloadReply(this.media, params.id ?? '', ctx.headers);
-      case 'static':
-        return () => ({
-          status: endpoint.status,
-          headers: { 'content-type': 'application/json; charset=utf-8', ...endpoint.headers },
-          ...(endpoint.body === undefined ? {} : { body: endpoint.body }),
-        });
+      case 'static': {
+        const validator = buildRequestValidator(endpoint.request);
+        return (ctx, params) => {
+          if (validator !== undefined) {
+            const found = validator.check(ctx, params);
+            if (!Array.isArray(found)) return found;
+            if (found.length > 0) return invalidRequest(found);
+          }
+          return staticReply(endpoint);
+        };
+      }
       case 'handler':
         return async (ctx, params) => {
           const label = endpoint.id;
@@ -389,6 +395,14 @@ export class Engine {
     if (scenario.status !== undefined) return { status, headers: { ...extra }, scenario: name };
     return { ...(await handle()), scenario: name };
   }
+}
+
+function staticReply(endpoint: StaticEndpoint): Reply {
+  return {
+    status: endpoint.status,
+    headers: { 'content-type': 'application/json; charset=utf-8', ...endpoint.headers },
+    ...(endpoint.body === undefined ? {} : { body: endpoint.body }),
+  };
 }
 
 function seedRows(dir: string, collection: Collection): Record<string, unknown>[] {

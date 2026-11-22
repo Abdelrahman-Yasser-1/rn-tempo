@@ -327,12 +327,30 @@
                       "additionalProperties": {
                         "type": "string"
                       }
+                    },
+                    "description": {
+                      "description": "What the response is (from an imported API file).",
+                      "type": "string",
+                      "maxLength": 500
+                    },
+                    "schema": {
+                      "description": "JSON Schema of this response body (from an imported API file). Documentation only.",
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {}
                     }
                   },
                   "additionalProperties": false,
                   "title": "Scenario",
                   "description": "A canned response, picked with the x-tempo-scenario header or the admin API."
                 }
+              },
+              "importedFrom": {
+                "description": "Fingerprint of the endpoint as an API file import made it. A different fingerprint now means someone edited it.",
+                "type": "string",
+                "maxLength": 100
               },
               "type": {
                 "type": "string",
@@ -507,6 +525,19 @@
                       "additionalProperties": {
                         "type": "string"
                       }
+                    },
+                    "description": {
+                      "description": "What the response is (from an imported API file).",
+                      "type": "string",
+                      "maxLength": 500
+                    },
+                    "schema": {
+                      "description": "JSON Schema of this response body (from an imported API file). Documentation only.",
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {}
                     }
                   },
                   "additionalProperties": false,
@@ -514,9 +545,50 @@
                   "description": "A canned response, picked with the x-tempo-scenario header or the admin API."
                 }
               },
+              "importedFrom": {
+                "description": "Fingerprint of the endpoint as an API file import made it. A different fingerprint now means someone edited it.",
+                "type": "string",
+                "maxLength": 100
+              },
               "type": {
                 "type": "string",
                 "const": "static"
+              },
+              "request": {
+                "type": "object",
+                "properties": {
+                  "params": {
+                    "description": "JSON Schema of the path parameters.",
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
+                  },
+                  "query": {
+                    "description": "JSON Schema of the query string.",
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
+                  },
+                  "body": {
+                    "description": "JSON Schema of the JSON request body.",
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
+                  },
+                  "bodyRequired": {
+                    "description": "A request without a body is refused with 400.",
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false,
+                "title": "RequestSchemas",
+                "description": "A request that does not match answers 400 with the names of the wrong fields."
               },
               "status": {
                 "default": 200,
@@ -625,12 +697,30 @@
                       "additionalProperties": {
                         "type": "string"
                       }
+                    },
+                    "description": {
+                      "description": "What the response is (from an imported API file).",
+                      "type": "string",
+                      "maxLength": 500
+                    },
+                    "schema": {
+                      "description": "JSON Schema of this response body (from an imported API file). Documentation only.",
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {}
                     }
                   },
                   "additionalProperties": false,
                   "title": "Scenario",
                   "description": "A canned response, picked with the x-tempo-scenario header or the admin API."
                 }
+              },
+              "importedFrom": {
+                "description": "Fingerprint of the endpoint as an API file import made it. A different fingerprint now means someone edited it.",
+                "type": "string",
+                "maxLength": 100
               },
               "type": {
                 "type": "string",
@@ -741,12 +831,30 @@
                       "additionalProperties": {
                         "type": "string"
                       }
+                    },
+                    "description": {
+                      "description": "What the response is (from an imported API file).",
+                      "type": "string",
+                      "maxLength": 500
+                    },
+                    "schema": {
+                      "description": "JSON Schema of this response body (from an imported API file). Documentation only.",
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {}
                     }
                   },
                   "additionalProperties": false,
                   "title": "Scenario",
                   "description": "A canned response, picked with the x-tempo-scenario header or the admin API."
                 }
+              },
+              "importedFrom": {
+                "description": "Fingerprint of the endpoint as an API file import made it. A different fingerprint now means someone edited it.",
+                "type": "string",
+                "maxLength": 100
               },
               "type": {
                 "type": "string",
@@ -853,12 +961,30 @@
                       "additionalProperties": {
                         "type": "string"
                       }
+                    },
+                    "description": {
+                      "description": "What the response is (from an imported API file).",
+                      "type": "string",
+                      "maxLength": 500
+                    },
+                    "schema": {
+                      "description": "JSON Schema of this response body (from an imported API file). Documentation only.",
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {}
                     }
                   },
                   "additionalProperties": false,
                   "title": "Scenario",
                   "description": "A canned response, picked with the x-tempo-scenario header or the admin API."
                 }
+              },
+              "importedFrom": {
+                "description": "Fingerprint of the endpoint as an API file import made it. A different fingerprint now means someone edited it.",
+                "type": "string",
+                "maxLength": 100
               },
               "type": {
                 "type": "string",
@@ -954,12 +1080,30 @@
                       "additionalProperties": {
                         "type": "string"
                       }
+                    },
+                    "description": {
+                      "description": "What the response is (from an imported API file).",
+                      "type": "string",
+                      "maxLength": 500
+                    },
+                    "schema": {
+                      "description": "JSON Schema of this response body (from an imported API file). Documentation only.",
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {}
                     }
                   },
                   "additionalProperties": false,
                   "title": "Scenario",
                   "description": "A canned response, picked with the x-tempo-scenario header or the admin API."
                 }
+              },
+              "importedFrom": {
+                "description": "Fingerprint of the endpoint as an API file import made it. A different fingerprint now means someone edited it.",
+                "type": "string",
+                "maxLength": 100
               },
               "type": {
                 "type": "string",
@@ -1068,12 +1212,30 @@
                       "additionalProperties": {
                         "type": "string"
                       }
+                    },
+                    "description": {
+                      "description": "What the response is (from an imported API file).",
+                      "type": "string",
+                      "maxLength": 500
+                    },
+                    "schema": {
+                      "description": "JSON Schema of this response body (from an imported API file). Documentation only.",
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {}
                     }
                   },
                   "additionalProperties": false,
                   "title": "Scenario",
                   "description": "A canned response, picked with the x-tempo-scenario header or the admin API."
                 }
+              },
+              "importedFrom": {
+                "description": "Fingerprint of the endpoint as an API file import made it. A different fingerprint now means someone edited it.",
+                "type": "string",
+                "maxLength": 100
               },
               "type": {
                 "type": "string",
@@ -1263,6 +1425,45 @@
         ],
         "additionalProperties": false,
         "title": "ContentType"
+      }
+    },
+    "imports": {
+      "default": [],
+      "description": "API files imported into this backend, newest last.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "maxLength": 2000,
+            "description": "The file name or URL the API file came from."
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "openapi-3.0",
+              "openapi-3.1",
+              "swagger-2.0"
+            ]
+          },
+          "importedAt": {
+            "type": "string"
+          },
+          "hash": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "SHA-256 of the file text."
+          }
+        },
+        "required": [
+          "source",
+          "format",
+          "importedAt",
+          "hash"
+        ],
+        "additionalProperties": false,
+        "title": "ImportRecord"
       }
     }
   },
