@@ -45,6 +45,11 @@ export interface TeamOptions {
    * origin. Without it the public APIs share the dashboard's origin and are answered sandboxed and as downloads.
    */
   publicOrigin?: string;
+  /**
+   * Let backends import an API file from a URL that points at a private network (a LAN address, localhost, link-local).
+   * Off by default, so the server cannot be used to reach the network it runs in (SSRF).
+   */
+  allowPrivateImportUrls?: boolean;
   /** Start the backends found in the backends directory (default true). */
   autostart?: boolean;
 }
@@ -75,7 +80,7 @@ export async function startTeam(options: TeamOptions): Promise<RunningTeam> {
   const audit = new AuditLog(store, { clock, retentionDays: options.auditDays ?? DEFAULT_AUDIT_DAYS });
   const sessions = new Sessions({ clock, maxSessions: 1000, ...(options.idleMs === undefined ? {} : { idleMs: options.idleMs }) });
   const trust = new ProxyTrust(options.trustProxy ?? []);
-  const registry = new BackendRegistry(options.backendsDir, { ...(options.registry ?? {}), mounted: true, accessKey: (id, key) => keys.allows(key, id, 'public') });
+  const registry = new BackendRegistry(options.backendsDir, { ...(options.registry ?? {}), start: { ...(options.registry?.start ?? {}), importUrls: { allowPrivate: options.allowPrivateImportUrls === true } }, mounted: true, accessKey: (id, key) => keys.allows(key, id, 'public') });
   const publicOrigin = options.publicOrigin === undefined ? null : new URL(options.publicOrigin).origin;
   const publicHost = publicOrigin === null ? null : new URL(publicOrigin).host;
   const services: TeamServices = { store, auth, keys, registry, sessions, audit, now: clock, publicOrigin };

@@ -19,7 +19,7 @@ export const isKeyScope = (value: unknown): value is ApiKeyScope => typeof value
  * routes of a running backend and fails on any route without an entry (and on any entry without a route).
  *
  * - viewer: reads, including logs and "Try it".
- * - editor: changes endpoints, collections, data, scenarios, media, content and the backend's app users.
+ * - editor: imports API files (preview and apply), changes endpoints, collections, data, scenarios, media, content and the backend's app users.
  * - admin: also the snapshot export (a backup). Members, API keys, settings and certificates are hub routes (below).
  */
 export const ADMIN_ROLE_TABLE: Readonly<Record<string, Role>> = {
@@ -96,6 +96,8 @@ export const ADMIN_ROLE_TABLE: Readonly<Record<string, Role>> = {
   'POST /contract-check': 'viewer',
   'GET /snapshot': 'admin',
   'GET /openapi': 'viewer',
+  'POST /import/preview': 'editor',
+  'POST /import/apply': 'editor',
 };
 
 /** What a `read-definition` key may call: the definition and the snapshot export, read only (Z5's test kit). */
