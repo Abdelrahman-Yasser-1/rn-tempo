@@ -10,7 +10,7 @@ import { ContentService, modelOf } from './content.ts';
 import { handleContent } from './content-public.ts';
 import { crudHandler } from './crud.ts';
 import { createHandlerRpc } from './handler-host.ts';
-import { FORBIDDEN_HEADERS, HandlerFileError, handlerFailure, HandlerPool, replyFromHandler, resolveHandlerFile } from './handlers.ts';
+import { HandlerFileError, handlerFailure, HandlerPool, replyFromHandler, resolveHandlerFile } from './handlers.ts';
 import { readSeedFile, type BackendFolder } from './folder.ts';
 import { jsonReply, loggableBody, problemReply, readJson, type Reply, type RequestCtx } from './http.ts';
 import type { EngineLogger } from './logs.ts';
@@ -18,8 +18,8 @@ import { downloadReply, MediaService, uploadFailure, uploadJson } from './media.
 import { Rng } from './import/generate.ts';
 import { noteOf, paceRequest, planNetwork, requestSeed, sleepFor, testModeOf, type NetworkPlan, type RequestPlan } from './network.ts';
 import { TEST_MODE_NOW, TEST_MODE_SEED } from './constants.ts';
-import { PlaceholderError, type PlaceholderContext } from './placeholders.ts';
-import { errorBody, expandTemplate, wrapBody, wrapperOf } from './responses.ts';
+import { fill, PlaceholderError, type PlaceholderContext } from './placeholders.ts';
+import { cleanHeaders, errorBody, expandTemplate, isTemplateRef, wrapBody, wrapperOf } from './responses.ts';
 import { mountPath, Router, type Handler, type Params } from './router.ts';
 import { buildRequestValidator, invalidRequest } from './import/request-validation.ts';
 import type { Backend, Collection, Endpoint, Scenario, StaticEndpoint } from './schema.ts';
@@ -456,9 +456,9 @@ export class Engine {
     }
     if (scenario === undefined || name === undefined) return handle();
     ctx.scenario = name;
-    const extra = scenario.headers ?? {};
+    const extra = cleanHeaders(scenario.headers, values);
     if (scenario.body !== undefined) {
-      const expanded = expandTemplate(scenario.body, this.state.definition.responseTemplates, values);
+      const expanded = this.bodyOf(scenario.body, values);
       const status = scenario.status ?? expanded.status ?? 200;
       return { ...jsonReply(status, expanded.body, { ...expanded.headers, ...extra }), scenario: name };
     }
@@ -475,14 +475,19 @@ export class Engine {
 
   /** The static endpoint's answer: its body (a template reference is expanded first), status and headers. */
   private staticReply(endpoint: StaticEndpoint, values: PlaceholderContext): Reply {
-    const expanded = endpoint.body === undefined ? { body: undefined } : expandTemplate(endpoint.body, this.state.definition.responseTemplates, values);
+    const expanded = endpoint.body === undefined ? { body: undefined } : this.bodyOf(endpoint.body, values);
     // A template's status applies when the endpoint leaves its own at the default (200).
     const status = endpoint.status === 200 && 'status' in expanded && expanded.status !== undefined ? expanded.status : endpoint.status;
     return {
       status,
-      headers: { 'content-type': 'application/json; charset=utf-8', ...('headers' in expanded ? expanded.headers : undefined), ...endpoint.headers },
+      headers: { 'content-type': 'application/json; charset=utf-8', ...('headers' in expanded ? expanded.headers : undefined), ...cleanHeaders(endpoint.headers, values) },
       ...(expanded.body === undefined ? {} : { body: expanded.body }),
     };
+  }
+
+  /** A body from the definition: a template reference is expanded, anything else has its placeholders filled. */
+  private bodyOf(body: unknown, values: PlaceholderContext): { body: unknown; status?: number; headers?: Record<string, string> } {
+    return isTemplateRef(body) ? expandTemplate(body, this.state.definition.responseTemplates, values) : { body: fill(body, values) };
   }
 
   /** What the placeholders of one request can see. `user` is set after the token check. */
@@ -536,7 +541,7 @@ export class Engine {
       const wrapper = wrapperOf(definition, endpoint);
       if (wrapper !== undefined) out = { ...reply, body: wrapBody(wrapper, reply.body, values) };
     }
-    const common = { ...cleanHeaders(definition.responses?.headers), ...cleanHeaders(endpoint?.headers) };
+    const common = { ...cleanHeaders(definition.responses?.headers, values), ...cleanHeaders(endpoint?.headers, values) };
     return Object.keys(common).length === 0 ? out : { ...out, headers: { ...common, ...out.headers } };
   }
 }
@@ -546,16 +551,6 @@ const isObject = (value: unknown): value is Record<string, unknown> => typeof va
 /** A 2xx answer with a JSON body the engine holds (not a file, a stream or raw text). */
 function isWrappable(reply: Reply): boolean {
   return reply.status >= 200 && reply.status < 300 && reply.body !== undefined && reply.raw === undefined && reply.file === undefined && reply.stream === undefined && /json/i.test(reply.headers['content-type'] ?? '');
-}
-
-/** Header names the engine may send, lower-cased, with hop-by-hop ones dropped. */
-function cleanHeaders(headers: Record<string, string> | undefined): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const [name, value] of Object.entries(headers ?? {})) {
-    const key = name.toLowerCase();
-    if (/^[a-z0-9-]+$/.test(key) && !FORBIDDEN_HEADERS.has(key)) out[key] = value;
-  }
-  return out;
 }
 
 /** The parsed JSON body of a request, or `undefined` when there is none or it is not JSON. */

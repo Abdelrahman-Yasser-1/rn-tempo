@@ -18,3 +18,6 @@ export const MAX_DELAY_MS = 60_000;
 export const MAX_TIMEOUT_MS = 120_000;
 /** The `timeout` preset holds this long when the definition gives no `timeoutMs`. */
 export const DEFAULT_TIMEOUT_MS = 30_000;
+
+/** Response header names an endpoint, template or handler may not set: the server frames the message itself. */
+export const FORBIDDEN_HEADERS = new Set(['content-length', 'transfer-encoding', 'connection', 'keep-alive', 'upgrade', 'te', 'trailer']);
