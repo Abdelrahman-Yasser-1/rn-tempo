@@ -160,3 +160,5 @@ npx @rn-tempo/local-backend server --data-dir ./team-data --port 8080 --trust-pr
 ```
 
 `--trust-proxy` alone means the loopback and private ranges; pass an address or range (`--trust-proxy 10.0.0.0/8`) to name your proxy. Put a TLS proxy in front.
+
+`--allow-private-import-urls` (or `TEMPO_ALLOW_PRIVATE_IMPORT_URLS=1`) lets backends import an API file from an address on a private network. It is off by default so the server cannot be used to reach its own network; see [Import an OpenAPI or Swagger file](/docs/backend/local-backend).
