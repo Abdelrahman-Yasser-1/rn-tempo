@@ -57,6 +57,8 @@ useQuery({ queryKey: ['item', itemId], queryFn: () => fetch(url).then((r) => r.j
 
 ## The mock API (`api/`)
 
+> **Deprecated.** The code-defined mocks (`api/endpoints`, `yarn api`, the MSW handlers, the in-app mock mode and `tempo g endpoint`) are replaced by the Tempo Local Backend: `backend/backend.json`, edited in the app (see `backend/README.md` and the docs page "Migrate from the dev API"). They still work and stay the default until the owner confirms the switch; they are removed only after that. For a new endpoint keep following the steps below until then, and also add it to `backend/` (`yarn backend:check` compares the two).
+
 Mock endpoints are defined once, with `@rn-tempo/api-contract`, in `api/endpoints/<domain>.ts` and listed in `api/tempo-api.config.ts`. Three things read them: the dev server (`yarn api up`), the Jest MSW handlers (`api/generated/msw-handlers.ts`) and the in-app mock mode (`API_MOCKING=true`). Do not write a mock for one of these endpoints anywhere else, and never hand-edit `api/generated/`.
 
 - After adding or changing an endpoint run `yarn api generate`; `yarn api:check` (part of `yarn verify`) fails on stale output.

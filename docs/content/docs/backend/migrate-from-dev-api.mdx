@@ -1,0 +1,56 @@
+---
+title: Migrate from the dev API
+description: Move a project from code-defined mocks (api/, yarn api, MSW handlers) to the Tempo Local Backend, step by step, and see how tempo g endpoint maps to editing backend.json.
+---
+
+<Callout title="Deprecated, not removed" type="warn">
+  The code-defined mocks (`api/endpoints`, `yarn api`, the generated MSW handlers and the in-app mock mode) are deprecated in favor of the Tempo Local Backend. They still work and are still the default, so nothing breaks if you do not migrate. They will be removed only after the project owner confirms the switch.
+</Callout>
+
+The old mocks are code: you write an endpoint with `@rn-tempo/api-contract`, run `yarn api generate`, and Jest, the dev server and the in-app mock all read it. The Tempo Local Backend is a real API you edit in an app. The same backend answers the simulator, a phone and your Jest tests, and the project keeps no mock code or mock data, only a `backend/` folder and a URL.
+
+| Before | After |
+| --- | --- |
+| `api/endpoints/*.ts` | `backend/backend.json`, edited in the app |
+| `yarn api up` | `yarn backend`, the Mac app, or `npx @rn-tempo/local-backend` |
+| `yarn api generate`, `yarn api:check` | `yarn backend:check` (the backend against `api/generated/openapi.json`) |
+| MSW handlers in Jest (`yarn test`) | `yarn test:backend`: the test kit starts the backend in memory in each test file |
+| Debug menu **Local dev API** | Debug menu **Tempo backend** (the same MMKV keys) |
+| `tempo g endpoint` | **Endpoints → Add** in the app |
+| `data: () => ({...})` in an endpoint | A static body, a CRUD endpoint on a collection, or a [handler](/docs/backend/local-backend) |
+
+## Steps
+
+1. **Check that the template has its backend.** `backend/` holds `backend.json`, `seed/` and `handlers/`, made from the `tempo-template` preset. It answers the same C13 contract as `api/`, and `yarn backend:check` (part of `yarn verify`) fails when they drift. For an older project, create it with `npx @rn-tempo/local-backend` (the dashboard) or the engine's `create backend --preset tempo-template`.
+2. **Open it.** Open the folder in the Mac app, or run `npx @rn-tempo/local-backend` and add it. For a plain run, `yarn backend --http --port 8555`. Sign in as `emilys` / `emilyspass`.
+3. **Point the app at it.** In a dev build, open the debug menu, **API source**, **Tempo backend**, and fill in the URL: `https://localhost:8443` on the iOS simulator, `https://10.0.2.2:8443` on the Android emulator, or a team server's `https://<host>/b/<name>`. Restart the app. See [Connect the template app](/docs/backend/local-backend#3-connect-the-template-app).
+4. **Run the tests against it.** `yarn test:backend` runs the whole Jest suite against the backend, in memory and in test mode (no delays, no random faults, a fixed clock). Existing `server.use(...)` overrides keep working, because MSW stays on for them. Fix data differences in `backend/` (the seed or the endpoint), not in the tests. In CI, run it after `yarn test`.
+5. **Move your own endpoints.** For each endpoint you added with `tempo g endpoint`, add it in the app (below). Then run `yarn backend:check`.
+6. **Stop using the mocks.** Once `yarn test:backend` is your suite and the app runs against the backend, leave `API_MOCKING=false`, stop using `yarn api`, and do not add new files under `api/endpoints`. Deleting `api/` and the MSW handlers waits for the owner's confirmation.
+
+## From `tempo g endpoint` to `backend.json`
+
+`yarn tempo g endpoint items.getItem --path /items/:id` writes a definition in `api/endpoints/items.ts`, an entry in `api/tempo-api.config.ts`, and the app side (`schemas.ts`, `items.api.ts`, the key and the hook). The generator still writes the app side. Only the definition moves:
+
+| In `api/` | In the Tempo Local Backend app |
+| --- | --- |
+| `defineEndpoint({ method, path, ... })` | **Endpoints → Add**: method and path (`:id` is a path parameter) |
+| `response` schema and fixed `data` | A **static** endpoint with the body, or a **CRUD** endpoint on a collection with seed rows in `seed/` |
+| `resource('items', ...)` (five endpoints) | A collection `items` and five **CRUD** endpoints (list, get, create, update, delete) |
+| `throw new ApiError(404, ...)` | A [scenario](/docs/backend/local-backend) such as `notFound`, picked per request or in the dashboard |
+| `auth` of the request | The endpoint's **Sign-in required** setting; app users are in `auth.seedUsers` |
+| `yarn api generate` after a change | Nothing: the engine reloads `backend.json` when it changes |
+
+In `backend.json` the same endpoint is an object in `endpoints`:
+
+```json
+{ "id": "items.getItem", "type": "static", "method": "GET", "path": "/items/:id", "body": { "id": "{{params.id}}" } }
+```
+
+Commit `backend.json`, `seed/` and `handlers/`. Never commit `backend/.data/` (the database, certificates and logs); it is git-ignored. After the change, run `yarn backend:check` to see what differs from `api/generated/openapi.json`, and `yarn test:backend` to run the suite.
+
+## What stays the same
+
+- The app's request functions, schemas and hooks do not change. The app still parses every response with its Zod schema, so a wrong backend answer fails loudly.
+- `API_BASE_URL` is still the only address the app knows. Release bundles contain no backend code and no API source switch.
+- A test can still override one answer with `server.use(...)`. To drive the backend instead, use the test kit's `backend.scenario(...)` and `backend.data.insert(...)`. See [Test without mock data](/docs/backend/test-without-mocks).

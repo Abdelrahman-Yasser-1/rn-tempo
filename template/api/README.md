@@ -1,5 +1,7 @@
 # API definitions
 
+> **Deprecated.** The code-defined mocks described here (`api/endpoints`, `yarn api`, the generated MSW handlers, the in-app mock mode and `tempo g endpoint`) are replaced by the Tempo Local Backend: a real API in `backend/` that you edit in an app, and that `yarn test:backend` runs the whole Jest suite against. Nothing here is removed yet: it stays the default and keeps working until the project owner confirms the switch, and removal comes only after that. To move over, see "Migrate from the dev API" in the docs (Backend section) and `backend/README.md`.
+
 The app's backend contract (C13), written once with `@rn-tempo/api-contract`. Everything else is built from it:
 
 | Consumer                                       | How it reads the definitions                                              |

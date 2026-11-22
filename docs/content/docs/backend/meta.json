@@ -8,6 +8,7 @@
     "local-https",
     "local-backend",
     "team-server",
-    "test-without-mocks"
+    "test-without-mocks",
+    "migrate-from-dev-api"
   ]
 }

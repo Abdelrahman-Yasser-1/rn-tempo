@@ -3,6 +3,10 @@ title: Dev API
 description: A local mock API built from Zod endpoint definitions, with seeded data, scenarios and a tempo-api command.
 ---
 
+<Callout title="Deprecated" type="warn">
+  The code-defined mocks (`template/api`, `yarn api`, the MSW handlers and the in-app mock mode) are deprecated. Their replacement is the [Tempo Local Backend](/docs/backend/local-backend): a real API you edit in an app, with a Jest test kit. They keep working and stay the default until the project owner confirms the switch; removal comes after that confirmation, not before. See [Migrate from the dev API](/docs/backend/migrate-from-dev-api).
+</Callout>
+
 <Callout title="Development only" type="warn">
   The dev API is a development tool. Its mock login accepts a public test user and issues opaque tokens that are not real JWTs. Never expose it to an untrusted network and never use it in production.
 </Callout>
