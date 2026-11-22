@@ -151,6 +151,8 @@ export interface ListEntriesQuery {
 export class ContentService {
   private readonly db: DatabaseSync;
   private readonly now: () => Date;
+  /** Told when an entry goes live or is taken down (`content.published`, `content.unpublished`). The engine turns it into an event. */
+  onEvent: ((name: 'content.published' | 'content.unpublished', payload: { type: string; id: number; slug: string | null }) => void) | undefined;
 
   constructor(db: DatabaseSync, now: () => Date) {
     this.db = db;
@@ -548,12 +550,14 @@ export class ContentService {
     this.checkPublishable(model, row);
     const now = this.stamp();
     this.db.prepare("UPDATE _content_entries SET status = 'published', publishAt = ?, updatedAt = ? WHERE id = ?").run(now, now, id);
+    this.onEvent?.('content.published', { type: row.type, id, slug: row.slug });
     return this.detailOf(this.mustFind(id));
   }
 
   unpublish(id: number): EntryDetail {
-    this.mustFind(id);
+    const row = this.mustFind(id);
     this.db.prepare("UPDATE _content_entries SET status = 'draft', publishAt = NULL, updatedAt = ? WHERE id = ?").run(this.stamp(), id);
+    if (row.status === 'published') this.onEvent?.('content.unpublished', { type: row.type, id, slug: row.slug });
     return this.detailOf(this.mustFind(id));
   }
 
@@ -571,7 +575,10 @@ export class ContentService {
   /** Makes every scheduled entry whose time has come published. Returns how many. */
   publishDue(): number {
     const now = this.stamp();
-    return Number(this.db.prepare("UPDATE _content_entries SET status = 'published', updatedAt = ? WHERE status = 'scheduled' AND publishAt <= ?").run(now, now).changes);
+    const due = this.onEvent === undefined ? [] : this.db.prepare("SELECT id, type, slug FROM _content_entries WHERE status = 'scheduled' AND publishAt <= ?").all(now);
+    const changed = Number(this.db.prepare("UPDATE _content_entries SET status = 'published', updatedAt = ? WHERE status = 'scheduled' AND publishAt <= ?").run(now, now).changes);
+    for (const entry of due) this.onEvent?.('content.published', { type: String(entry.type), id: Number(entry.id), slug: entry.slug === null ? null : String(entry.slug) });
+    return changed;
   }
 
   versions(id: number): VersionInfo[] {

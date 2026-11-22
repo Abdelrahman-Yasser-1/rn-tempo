@@ -9,6 +9,7 @@ import { authHandler, AuthService, usersHandler } from './auth.ts';
 import { ContentService, modelOf } from './content.ts';
 import { handleContent } from './content-public.ts';
 import { crudHandler } from './crud.ts';
+import { EventBus } from './events.ts';
 import { createHandlerRpc } from './handler-host.ts';
 import { HandlerFileError, handlerFailure, HandlerPool, replyFromHandler, resolveHandlerFile } from './handlers.ts';
 import { readSeedFile, type BackendFolder } from './folder.ts';
@@ -81,6 +82,8 @@ export class Engine {
   readonly content: ContentService;
   /** Workers that run `handler` endpoints. */
   readonly handlers: HandlerPool;
+  /** Data change events (`products.created`, `content.published`, a handler's `ctx.emit`). Published after the write commits. */
+  readonly events: EventBus;
   private state: State;
   private readonly options: Required<Pick<EngineOptions, 'sleep' | 'now' | 'authorize'>> & Pick<EngineOptions, 'onRequest' | 'logger'>;
   /** Turns delays off for every request (`--test-mode`). */
@@ -107,6 +110,9 @@ export class Engine {
     this.media = new MediaService(folder.dataDir, store.db, now);
     this.content = content;
     this.handlers = new HandlerPool(options.logger);
+    this.events = new EventBus(now);
+    store.onChange = (change): void => this.events.emit(`${change.payload.collection}.${change.action}`, change.payload);
+    content.onEvent = (name, payload): void => this.events.emit(name, payload);
     this.options = {
       sleep: options.sleep ?? sleepFor,
       now,
@@ -277,7 +283,7 @@ export class Engine {
               user: ctx.user,
             },
             rpc: createHandlerRpc(
-              { store: this.store, userCount: () => this.auth.accounts.list({ limit: 1 }).total, definition: () => this.state.definition, media: this.media, mediaUrl: (id, origin) => this.mediaUrl(id, origin), logger: this.options.logger },
+              { store: this.store, emit: (name, payload) => this.events.emit(name, payload), userCount: () => this.auth.accounts.list({ limit: 1 }).total, definition: () => this.state.definition, media: this.media, mediaUrl: (id, origin) => this.mediaUrl(id, origin), logger: this.options.logger },
               label,
             ),
           });
