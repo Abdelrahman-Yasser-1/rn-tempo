@@ -111,7 +111,7 @@ export async function startBackend(dir: string, options: StartOptions = {}): Pro
         pattern: '/stats',
         handler: () => {
           const collections = Object.fromEntries(engine.definition.collections.map((collection) => [collection.name, engine.store.count(collection.name)]));
-          return jsonReply(200, { ...engine.stats.snapshot(), collections });
+          return jsonReply(200, { ...engine.stats.snapshot(), collections, faults: engine.faultCounts });
         },
       },
       {

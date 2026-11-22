@@ -6,6 +6,7 @@ import type { Manager, RawDefinition } from './manager.ts';
 export const SETTINGS_PAGES = {
   network: ['network', 'latency', 'testMode'],
   responses: ['responses', 'responseTemplates'],
+  faults: ['faults', 'cors'],
 } as const;
 type Page = keyof typeof SETTINGS_PAGES;
 

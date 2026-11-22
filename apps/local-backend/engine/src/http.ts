@@ -56,6 +56,10 @@ export interface Reply {
   downloadKbps?: number;
   /** An open stream (SSE) that lives as long as the client does: no throttling applies to it. */
   live?: true;
+  /** Send part of the answer, then destroy the connection (the `dropRate` fault). */
+  drop?: true;
+  /** An answer the engine itself made as a page (the OAuth sign-in page): the team server keeps its strict policy. */
+  page?: true;
   /** Close the connection without sending anything (the `timeout` preset). */
   close?: true;
   /** The client left while the engine was waiting: nothing is sent. */

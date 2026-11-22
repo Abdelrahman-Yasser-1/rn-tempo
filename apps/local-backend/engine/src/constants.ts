@@ -8,6 +8,12 @@ export const TEST_MODE_HEADER = 'x-tempo-test-mode';
 /** With test mode on, `x-tempo-test-delays: 1` keeps the configured delays and throttling (a developer's opt-in). */
 export const TEST_DELAYS_HEADER = 'x-tempo-test-delays';
 
+/** Faults and limits (rate limits, failure and drop rates, offline) are off in test mode unless a request sends `x-tempo-test-faults: 1`. */
+export const TEST_FAULTS_HEADER = 'x-tempo-test-faults';
+
+/** The cookie an app user's browser session lives in (auth mode `cookie` or `both`). Never the dashboard's own cookie name. */
+export const APP_SESSION_COOKIE = 'tempo_app_session';
+
 /** The clock `{{now}}` shows in test mode (a fixed instant, so a test can assert on it). */
 export const TEST_MODE_NOW = '2025-01-01T00:00:00.000Z';
 /** The seed of random and fake values in test mode. */

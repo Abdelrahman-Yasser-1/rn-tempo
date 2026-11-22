@@ -94,6 +94,8 @@ export const ADMIN_ROLE_TABLE: Readonly<Record<string, Role>> = {
   'POST /content/entries/:id/revert': 'editor',
   'GET /settings/network': 'viewer',
   'PUT /settings/network': 'admin',
+  'GET /settings/faults': 'viewer',
+  'PUT /settings/faults': 'admin',
   'GET /settings/responses': 'viewer',
   'PUT /settings/responses': 'admin',
   'POST /graphql/generate': 'viewer',
@@ -136,7 +138,7 @@ export const ADMIN_ROLE_TABLE: Readonly<Record<string, Role>> = {
 export const READ_DEFINITION_ROUTES: ReadonlySet<string> = new Set(['GET /definition', 'GET /test-snapshot']);
 
 /** Fields of `backend.json` that are settings, not content: changing them takes an admin. */
-const SETTINGS_FIELDS = ['publicAccess', 'port', 'https', 'certsDir', 'latency', 'network', 'testMode', 'responses', 'responseTemplates'] as const;
+const SETTINGS_FIELDS = ['publicAccess', 'port', 'https', 'certsDir', 'latency', 'network', 'testMode', 'responses', 'responseTemplates', 'faults', 'cors'] as const;
 const SETTINGS_DEFAULTS: Record<(typeof SETTINGS_FIELDS)[number], unknown> = {
   publicAccess: 'open',
   port: 8443,
@@ -147,6 +149,8 @@ const SETTINGS_DEFAULTS: Record<(typeof SETTINGS_FIELDS)[number], unknown> = {
   testMode: false,
   responses: undefined,
   responseTemplates: {},
+  faults: undefined,
+  cors: undefined,
 };
 
 /** True when a new definition changes a setting (access, port, certificates, delays) compared with the current one. */
@@ -155,7 +159,12 @@ export function settingsChanged(current: unknown, next: unknown): boolean {
     const found = typeof value === 'object' && value !== null ? (value as Record<string, unknown>)[field] : undefined;
     return JSON.stringify(found === undefined ? SETTINGS_DEFAULTS[field] : found) ?? '';
   };
-  return SETTINGS_FIELDS.some((field) => read(current, field) !== read(next, field));
+  // The auth mode (cookie sessions) is a setting too, though it lives inside `auth`.
+  const mode = (value: unknown): unknown => {
+    const auth = typeof value === 'object' && value !== null ? (value as { auth?: { mode?: unknown } }).auth : undefined;
+    return auth?.mode ?? 'bearer';
+  };
+  return SETTINGS_FIELDS.some((field) => read(current, field) !== read(next, field)) || mode(current) !== mode(next);
 }
 
 /** Who is calling a backend's admin API in the team server, for the role check and the audit. */

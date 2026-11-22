@@ -21,6 +21,8 @@ import { teamRoutes, type TeamRoute, type TeamServices, type Who } from './team-
 import { loadServerSecret } from './team-secret.ts';
 import { TeamStore, type AccountRow } from './team-store.ts';
 import { ProxyTrust } from './trust-proxy.ts';
+import { APP_SESSION_COOKIE } from './constants.ts';
+import { trustedPages } from './server.ts';
 import { clearedCookie, CSRF_HEADER, csrfMatches, readCookie, SESSION_COOKIE, sessionCookie, Sessions, type Clock, type Session } from './web-auth.ts';
 
 export const DEFAULT_TEAM_PORT = 8080;
@@ -408,7 +410,7 @@ export async function startTeam(options: TeamOptions): Promise<RunningTeam> {
     const running = SESSION_ID.test(id) ? await tempSessions.get(id) : undefined;
     if (found === null || running === undefined) return reply(res, problemReply(404, { detail: 'No such session (it may have expired).' }));
     req.url = `${found[2] ?? '/'}${found[3] ?? ''}`;
-    hardenPublic(res, (found[2] ?? '/').startsWith('/__docs'));
+    hardenPublic(res, (found[2] ?? '/').startsWith('/__docs'), running.engine.definition.auth.mode === 'bearer' ? undefined : `/s/${id}/`);
     running.handlePublic(req, res, { scheme: https ? 'https' : 'http', ip: trust.client(req).ip });
   }
 
@@ -432,7 +434,7 @@ export async function startTeam(options: TeamOptions): Promise<RunningTeam> {
     }
     // The engine sees the path without the prefix, like on its own port.
     req.url = `${found[2] ?? '/'}${found[3] ?? ''}`;
-    hardenPublic(res, (found[2] ?? '/').startsWith('/__docs'));
+    hardenPublic(res, (found[2] ?? '/').startsWith('/__docs'), running.engine.definition.auth.mode === 'bearer' ? undefined : `/b/${id}/`);
     running.handlePublic(req, res, { scheme: https ? 'https' : 'http', ip: trust.client(req).ip });
   }
 
@@ -545,18 +547,35 @@ const ACTIVE_TYPES = /^(text\/html|application\/xhtml\+xml|image\/svg\+xml|text\
  * an opaque origin and no cookies or storage of the dashboard), sniffing is off, pages and SVG are downloads, and a
  * backend can never set a cookie. The engine's own Swagger UI keeps its policy (it needs its scripts) but no cookie.
  */
-function hardenPublic(res: ServerResponse, engineOwned: boolean): void {
+/** A cookie a backend may set on the team server: only the app session cookie, scoped to `/b/<id>/`, with no `Domain`, never the dashboard's. */
+export function vetAppCookie(cookie: string, path: string): string | undefined {
+  const parts = cookie.split(';').map((part) => part.trim());
+  const name = parts[0]?.slice(0, parts[0].indexOf('=')) ?? '';
+  if (name !== APP_SESSION_COOKIE) return undefined;
+  const attributes = parts.slice(1).map((part) => part.toLowerCase());
+  if (attributes.some((part) => part.startsWith('domain='))) return undefined;
+  if (!attributes.includes(`path=${path.toLowerCase()}`)) return undefined;
+  return cookie;
+}
+
+function hardenPublic(res: ServerResponse, engineOwned: boolean, cookiePath?: string): void {
   const write = res.writeHead.bind(res) as (status: number, ...rest: unknown[]) => ServerResponse;
   res.writeHead = ((status: number, ...rest: unknown[]) => {
     const given = rest.find((item) => typeof item === 'object' && item !== null && !Array.isArray(item)) as Record<string, string | number | string[]> | undefined;
     const headers: Record<string, string | number | string[]> = {};
     for (const [name, value] of Object.entries({ ...res.getHeaders(), ...(given ?? {}) })) if (value !== undefined) headers[name.toLowerCase()] = value as string | number | string[];
+    // A backend can never set a cookie, unless its auth mode is cookie: then only its own session cookie, scoped to its path.
+    const offered = headers['set-cookie'];
     delete headers['set-cookie'];
     delete headers['set-cookie2'];
+    if (cookiePath !== undefined && offered !== undefined) {
+      const kept = (Array.isArray(offered) ? offered : [String(offered)]).map((cookie) => vetAppCookie(cookie, cookiePath)).filter((cookie): cookie is string => cookie !== undefined);
+      if (kept.length > 0) headers['set-cookie'] = kept;
+    }
     headers['x-content-type-options'] = 'nosniff';
     headers['cross-origin-resource-policy'] = 'same-site';
     headers['referrer-policy'] = 'no-referrer';
-    if (!engineOwned) {
+    if (!engineOwned && !trustedPages.has(res)) {
       headers['content-security-policy'] = "sandbox; default-src 'none'";
       if (ACTIVE_TYPES.test(String(headers['content-type'] ?? ''))) headers['content-disposition'] = 'attachment';
     }

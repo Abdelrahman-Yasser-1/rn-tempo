@@ -35,6 +35,7 @@ import type { Backend, Collection, Endpoint, GraphqlEndpoint, Scenario, StaticEn
 import { Stats } from './stats.ts';
 import { Store, type Plan, type RenameHints } from './store.ts';
 import { loadJwtSecret } from './tokens.ts';
+import { faultsActive, planFaults, RateLimiter, rateHeaders, type FaultCounts, type FaultPlan } from './faults.ts';
 import type { OutboundPolicy, Transport } from './outbound.ts';
 import { SecretStore } from './secrets.ts';
 import { WebhookService } from './webhooks.ts';
@@ -119,6 +120,9 @@ export class Engine {
   readonly outbound: OutboundPolicy;
   /** Outgoing webhooks and their delivery log. */
   readonly webhooks: WebhookService;
+  /** Counts of simulated faults since the engine started. */
+  readonly faultCounts: FaultCounts = { rateLimited: 0, failed: 0, dropped: 0, offline: 0 };
+  private readonly limiter = new RateLimiter();
   /** The push test sender (FCM and APNs). */
   readonly push: PushService;
   /** What `inbox` endpoints captured. */
@@ -280,7 +284,7 @@ export class Engine {
         });
       }
       case 'auth':
-        return authHandler(endpoint, this.auth);
+        return authHandler(endpoint, this.auth, { path: () => (this.publicPrefix === '' ? (this.state.definition.basePath ?? '/') : `${this.publicPrefix}/`) });
       case 'users':
         return usersHandler(endpoint, this.auth);
       case 'upload':
@@ -507,8 +511,13 @@ export class Engine {
     const header = headers[SCENARIO_HEADER];
     const picked = typeof header === 'string' && header !== '' ? header : endpoint === undefined ? undefined : this.scenarioPicks.get(endpoint.id);
     const scenario = endpoint === undefined || picked === undefined ? undefined : this.findScenario(endpoint, picked);
-    const network = planNetwork({ definition, endpoint, scenario, zeroed, rng: new Rng(requestSeed(testMode ? TEST_MODE_SEED : this.seed, requestId)) });
-    return { requestId, testMode, network };
+    const seedText = requestSeed(testMode ? TEST_MODE_SEED : this.seed, requestId);
+    const network = planNetwork({ definition, endpoint, scenario, zeroed, rng: new Rng(seedText) });
+    // Faults only touch requests that reach an endpoint, and are off in test mode unless the request opts in.
+    const faults = planFaults({ backend: definition.faults, endpoint: endpoint?.faults, endpointId: endpoint?.id, active: endpoint !== undefined && faultsActive(testMode, headers), rng: new Rng(`${seedText}:faults`) });
+    if (faults.slowDownload !== undefined) network.downloadKbps = faults.slowDownload;
+    if (faults.slowUpload !== undefined) network.uploadKbps = faults.slowUpload;
+    return { requestId, testMode, network, faults };
   }
 
   /** Whether delays are 0 for a request with these headers (test mode, unless it asks for its delays back). */
@@ -667,7 +676,17 @@ export class Engine {
         const { endpoint } = match.route;
         const values = this.placeholders(ctx, endpoint, match.params);
         ctx.values = values;
-        reply = this.finalize(await this.run(ctx, endpoint, values, () => match.route.handler(ctx, match.params)), endpoint, values);
+        const gate = this.faultGate(ctx, endpoint, plan.faults);
+        if (gate.reply !== undefined) {
+          reply = this.finalize(gate.reply, endpoint, values);
+        } else {
+          reply = this.finalize(await this.run(ctx, endpoint, values, () => match.route.handler(ctx, match.params)), endpoint, values);
+          if (Object.keys(gate.headers).length > 0) reply = { ...reply, headers: { ...reply.headers, ...gate.headers } };
+          if (plan.faults.drop) {
+            this.faultCounts.dropped += 1;
+            reply = { ...reply, drop: true };
+          }
+        }
       } else {
         reply = problemReply(500, { detail: 'Unexpected server error.' });
       }
@@ -700,6 +719,40 @@ export class Engine {
     this.stats.record(endpointId, reply.status, ms, reply.operation);
     this.options.onRequest?.(entry, endpointId);
     return reply;
+  }
+
+  /** The rate limit, then the simulated failure. A reply here replaces the endpoint's; `headers` (the `RateLimit` ones) go on the endpoint's own answer. */
+  private faultGate(ctx: RequestCtx, endpoint: Endpoint, faults: FaultPlan): { reply?: Reply; headers: Record<string, string> } {
+    if (!faults.active) return { headers: {} };
+    let headers: Record<string, string> = {};
+    const limit = faults.rateLimit;
+    if (limit !== undefined) {
+      let who = 'all';
+      if (limit.key === 'user') {
+        this.auth.authenticate(ctx);
+        who = ctx.user === undefined ? `ip:${ctx.ip ?? 'unknown'}` : `user:${String(ctx.user.id)}`;
+      } else if (limit.key === 'ip') who = `ip:${ctx.ip ?? 'unknown'}`;
+      const decision = this.limiter.hit(`${limit.scope}|${who}`, limit, this.options.now().getTime());
+      headers = rateHeaders(decision, limit.perSeconds);
+      if (!decision.allowed) {
+        this.faultCounts.rateLimited += 1;
+        return { headers, reply: problemReply(429, { title: 'Too Many Requests', detail: `Rate limit exceeded: ${String(limit.requests)} requests per ${String(limit.perSeconds)} seconds. Try again in ${headers['retry-after'] ?? '1'} seconds.`, headers }) };
+      }
+    }
+    if (faults.fail) {
+      this.faultCounts.failed += 1;
+      return { headers, reply: faults.failureBody === undefined ? problemReply(faults.failureStatus, { detail: 'Simulated failure.', headers }) : jsonReply(faults.failureStatus, faults.failureBody, headers) };
+    }
+    void endpoint;
+    return { headers };
+  }
+
+  /** The request log and the counts of a request that was refused before it was read (the `offline` fault). */
+  recordOffline(method: string, url: string): void {
+    this.faultCounts.offline += 1;
+    const entry = this.requests.record({ method, url: redactUrl(url), status: 0, ms: 0, reqHeaders: {}, reqBody: undefined, resBody: undefined }, this.options.now());
+    this.stats.record(undefined, 0, 0);
+    this.options.onRequest?.(entry, undefined);
   }
 
   /** Waits the planned delay. The `timeout` plan ends in `closed`; a client that leaves meanwhile ends it early as `abandoned`. */
