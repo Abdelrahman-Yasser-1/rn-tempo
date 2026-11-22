@@ -25,6 +25,7 @@ use crate::{registry, simulators};
 const MAX_UPLOAD_BYTES: u64 = 512 * 1024 * 1024;
 const CHUNK: usize = 256 * 1024;
 const MAX_IMPORT_BYTES: u64 = 20 * 1024 * 1024;
+const MAX_API_FILE_BYTES: u64 = 10 * 1024 * 1024;
 const MAX_IMAGE_PREVIEW: usize = 25 * 1024 * 1024;
 const MAX_STREAM_PREVIEW: usize = 60 * 1024 * 1024;
 
@@ -563,6 +564,28 @@ pub async fn pick_import_file(app: AppHandle) -> Res<Option<ImportFile>> {
             return Ok(None);
         };
         let text = files::read_text_limited(&file, MAX_IMPORT_BYTES)?;
+        let name = file
+            .file_name()
+            .map_or_else(String::new, |n| n.to_string_lossy().into_owned());
+        Ok(Some(ImportFile { name, text }))
+    })
+    .await?
+}
+
+/// A file dialog for importing an API description (OpenAPI 3.x or Swagger 2.0, JSON or YAML). The text comes back;
+/// the path never does. Files over 10 MB are refused here, before the engine sees them.
+#[tauri::command]
+pub async fn pick_api_file(app: AppHandle) -> Res<Option<ImportFile>> {
+    blocking(move || {
+        let Some(file) = pick_file(
+            &app,
+            "Choose an OpenAPI or Swagger file",
+            "API description",
+            &["json", "yaml", "yml"],
+        ) else {
+            return Ok(None);
+        };
+        let text = files::read_text_limited(&file, MAX_API_FILE_BYTES)?;
         let name = file
             .file_name()
             .map_or_else(String::new, |n| n.to_string_lossy().into_owned());

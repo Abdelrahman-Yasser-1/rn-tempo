@@ -56,6 +56,7 @@ fn main() {
         "create_handler",
         "engine_log",
         "pick_import_file",
+        "pick_api_file",
         "save_export",
         "upload_media",
         "upload_dropped",

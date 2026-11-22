@@ -10,7 +10,9 @@ import { errorMessage } from '../lib/errors';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { EmptyState, ErrorNote } from '../ui/bits';
 
+import { EndpointDetail, hasDetail } from './EndpointDetail';
 import { EndpointDialog } from './EndpointDialog';
+import { ImportDialog } from './ImportDialog';
 import { TryIt } from './TryIt';
 import { Write } from '../hooks/team';
 
@@ -59,6 +61,9 @@ export function Endpoints({ backend }: { backend: string }) {
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const [deleting, setDeleting] = useState<EndpointDef | null>(null);
   const [trying, setTrying] = useState<EndpointDef | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [detail, setDetail] = useState<EndpointDef | null>(null);
+  const [imported, setImported] = useState<string | null>(null);
 
   const remove = useMutation({
     mutationFn: (endpoint: EndpointDef) => adminSend(api, backend, 'DELETE', `/endpoints/${encodeURIComponent(endpoint.id)}`),
@@ -81,6 +86,14 @@ export function Endpoints({ backend }: { backend: string }) {
         <span className="spacer" />
         <Write><button
           type="button"
+          onClick={() => {
+            setImporting(true);
+          }}
+        >
+          Import API file…
+        </button></Write>
+        <Write><button
+          type="button"
           className="primary"
           onClick={() => {
             setDialog({ kind: 'add' });
@@ -89,8 +102,13 @@ export function Endpoints({ backend }: { backend: string }) {
           Add endpoint
         </button></Write>
       </div>
+      {imported === null ? null : (
+        <p className="ok" role="status">
+          {imported}
+        </p>
+      )}
       {endpoints.length === 0 ? (
-        <EmptyState>No endpoints yet. Choose Add endpoint to make the first one.</EmptyState>
+        <EmptyState>No endpoints yet. Choose Add endpoint to make the first one, or Import API file to make them from an OpenAPI or Swagger file.</EmptyState>
       ) : (
         <table className="table">
           <thead>
@@ -130,6 +148,18 @@ export function Endpoints({ backend }: { backend: string }) {
                   >
                     Try
                   </button>
+                  {hasDetail(endpoint) ? (
+                    <button
+                      type="button"
+                      className="ghost"
+                      aria-label={`Details of ${endpoint.method} ${endpoint.path}`}
+                      onClick={() => {
+                        setDetail(endpoint);
+                      }}
+                    >
+                      Details
+                    </button>
+                  ) : null}
                   <Write><button
                     type="button"
                     className="ghost"
@@ -179,6 +209,28 @@ export function Endpoints({ backend }: { backend: string }) {
           onSaved={() => {
             setDialog(null);
             void refresh();
+          }}
+        />
+      )}
+      {importing ? (
+        <ImportDialog
+          backend={backend}
+          onClose={() => {
+            setImporting(false);
+          }}
+          onDone={(result) => {
+            setImporting(false);
+            const { added, removed, taken, merged } = result.applied;
+            setImported(`Imported: ${String(added.length)} added, ${String(taken.length + merged.length)} changed, ${String(removed.length)} removed.`);
+            void refresh();
+          }}
+        />
+      ) : null}
+      {detail === null ? null : (
+        <EndpointDetail
+          endpoint={detail}
+          onClose={() => {
+            setDetail(null);
           }}
         />
       )}

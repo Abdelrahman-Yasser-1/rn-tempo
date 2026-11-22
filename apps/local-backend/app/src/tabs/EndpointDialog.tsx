@@ -59,7 +59,9 @@ export function EndpointDialog({ backend, collections, existingIds, endpoint, co
   const save = useMutation({
     mutationFn: async () => {
       const id = editing ? endpoint.id : newId(form.method, form.path, existingIds);
-      const body = endpointFrom(form, id, endpoint);
+      const made = endpointFrom(form, id, endpoint);
+      // A copy is a new endpoint of your own: it is not what an import made.
+      const body = editing ? made : (Object.fromEntries(Object.entries(made).filter(([key]) => key !== 'importedFrom')) as unknown as typeof made);
       if (editing) await adminSend(api, backend, 'PUT', `/endpoints/${encodeURIComponent(id)}`, body);
       else await adminSend(api, backend, 'POST', '/endpoints', body);
     },

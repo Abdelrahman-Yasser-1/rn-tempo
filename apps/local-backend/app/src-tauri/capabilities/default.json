@@ -29,6 +29,7 @@
     "allow-create-handler",
     "allow-engine-log",
     "allow-pick-import-file",
+    "allow-pick-api-file",
     "allow-save-export",
     "allow-upload-media",
     "allow-upload-dropped",
