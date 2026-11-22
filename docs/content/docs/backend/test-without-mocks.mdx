@@ -1,0 +1,100 @@
+---
+title: Test without mock data
+description: Run your Jest tests against a real Tempo backend that starts inside the test process, in memory and in test mode, and give CI isolated temporary copies of a backend.
+---
+
+Your project keeps no mock files and no mock data. A test run starts a real HTTP backend from a definition the team keeps in one place, on `127.0.0.1` and a random port, and the app talks to it with its normal HTTP client. Nothing is intercepted.
+
+## The test kit
+
+`@rn-tempo/local-backend/test` is a Node-only package export (no React Native code). In your Jest setup file:
+
+```ts
+import { setupTempoBackend } from '@rn-tempo/local-backend/test';
+
+export const backend = setupTempoBackend({
+  source: process.env.TEMPO_BACKEND ?? './backend', // "https://host/b/name" or a backend folder
+  apiKey: process.env.TEMPO_BACKEND_KEY,             // a read-definition key, for a URL
+  cacheDir: 'node_modules/.cache/tempo-backend',
+  testMode: true,                                    // the default
+  isolate: 'file',                                   // 'file' (default) or 'test'
+});
+```
+
+Under Jest the kit registers `beforeAll` (start) and `afterAll` (stop), and a `beforeEach` reset with `isolate: 'test'`. With Vitest (no globals) or a script, call `await backend.start()` and `await backend.stop()` yourself; `hooks: false` turns the registration off.
+
+| Helper | What it does |
+|---|---|
+| `backend.url` | `http://127.0.0.1:<port>`, set once the backend has started |
+| `backend.scenario('getProduct', 'notFound')` | Picks a scenario for an endpoint until `backend.clearScenarios()` |
+| `backend.time.set('2025-01-01T00:00:00Z')` | Moves the clock `{{now}}` and every timestamp the backend writes show |
+| `backend.data.insert('products', {...})`, `list`, `get`, `remove` | Reads and writes the collections directly |
+| `backend.requests()` | The requests the backend answered since the start or the last reset, with tokens and passwords replaced |
+| `backend.reset()` | Back to the state at the start: data, media, users, scenarios, clock, `{{seq}}` and recorded requests |
+
+### Point the app at it
+
+The app's HTTP client reads `API_BASE_URL` from `react-native-config`, which Jest replaces with a mock. Make the mock hand out the backend's URL, and turn the in-app mocking off:
+
+```ts
+// jest.setup.ts: one line of wiring (the kit's beforeAll has started the backend before tests run)
+import Config from 'react-native-config';
+import { backend } from './test-utils/backend';
+
+Object.defineProperty(Config, 'API_BASE_URL', { get: () => backend.url });
+Object.defineProperty(Config, 'API_MOCKING', { value: 'false' });
+```
+
+The base URL must be read lazily (the client reads it on the first request, after `beforeAll`). The Tempo template switches to this in a later step; until then its MSW handlers keep working and are marked deprecated.
+
+### Where the definition comes from
+
+- **A folder** (`./backend`, committed): `backend.json`, `seed/` and `handlers/` are read. The seed files fill the collections.
+- **A URL** (`https://tempo.example.com/b/shop`): the kit downloads the [test snapshot](#the-test-snapshot) with the key and caches it by ETag in `cacheDir`. The next run asks with `If-None-Match`, and a 304 reuses the cache.
+- **Offline.** If the network fails and a cache exists, the kit uses it and prints a warning. With neither, the error says what to do. A refused key is an error, never a fallback.
+
+The key is only sent over `https` (or to `localhost`) and is never printed or cached.
+
+### In memory, in test mode
+
+The engine runs in the test process with its database in SQLite `:memory:` (no file to clean up, and the fastest start). Uploaded media and logs go to a temporary folder that is removed on stop. Starting it for a 100-row backend takes a few tens of milliseconds, so a fresh copy per test file is cheap.
+
+Test mode is the default:
+
+- every delay, throttle and timeout is 0, even if the backend says 2 s
+- no random faults
+- a fixed clock (`2025-01-01T00:00:00.000Z`) and a fixed seed, so `{{now}}`, `{{uuid}}` and fake data are the same on every run
+
+Opt back in for one request with the header `x-tempo-test-delays: 1`, or turn the whole thing off with `testMode: false` (a request can then opt in with `x-tempo-test-mode: 1`).
+
+### Isolation and parallel workers
+
+Each Jest worker, and each test file, gets its own engine, port and memory. A product one file creates is never seen by another. With `isolate: 'test'` the backend also goes back to its start state before every test.
+
+## The test snapshot
+
+`GET /b/<backend>/__definition` on a team server (with a `read-definition` or `admin` key as `Authorization: Bearer tlb_...`) returns one JSON document. It holds `backend.json`, `seed/*`, `handlers/*`, a dump of each collection and of the content entries, and media files up to 5 MB in all (a bigger file becomes a small placeholder, listed in `placeholders`).
+
+It never holds secrets (the JWT secret), app users, sign-in sessions, team accounts, API keys, the audit log, logs or certificates, and it says so in its `excluded` list. The document is the same bytes for the same data, so its hash is a strong `ETag`; the route answers `304` to `If-None-Match`. A backend over 32 MB is refused (413), and a key may call the route 30 times a minute (429 with `Retry-After`).
+
+The local web and desktop modes serve the same document at `/__admin/.../test-snapshot` to the signed-in admin. The backup zip (**Export backup**) is a different thing: it holds the database and is not for a read-only key.
+
+## CI sessions
+
+For end-to-end runs that need a real URL (a simulator, a browser), a CI job creates a temporary isolated copy of the backend:
+
+```sh
+SESSION=$(curl -sS -X POST -H "Authorization: Bearer $TEMPO_SESSIONS_KEY" \
+  -H 'content-type: application/json' -d '{"ttlSeconds": 1800}' \
+  https://tempo.example.com/b/shop/__sessions)
+# { "id": "…32 hex…", "url": "https://tempo.example.com/s/<id>/", "expiresAt": "…" }
+# run the E2E suite against the url, then:
+curl -sS -X DELETE -H "Authorization: Bearer $TEMPO_SESSIONS_KEY" https://tempo.example.com/b/shop/__sessions/<id>
+```
+
+- The key needs the `sessions` scope (or `admin`) on that backend.
+- The copy has its own database and media folder and is made from the test snapshot, with the same exclusions. It starts in test mode (send `x-tempo-test-mode: 0` to opt a request out) and is served at `/s/<id>/` with the same sandbox headers as `/b`.
+- The id is 128 random bits. Two sessions never see each other's data, and a session never reaches the backend or the other way round.
+- `ttlSeconds` defaults to 1800 (30 minutes) and may be up to 21600 (6 hours). A session is deleted on `DELETE`, or when its time is up (expired sessions are swept every minute). A restart of the server removes the ones that were running.
+- Limits: 20 sessions per backend, 10 per key, and 1 GB of disk in all. Over a limit the server answers `429` with `Retry-After`.
+- Creating and deleting are in the [audit log](/docs/backend/team-server#7-the-audit-log) (only the first 8 characters of the id).
