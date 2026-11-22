@@ -112,6 +112,54 @@ An endpoint is one method and path your app can call. Open the **Endpoints** tab
 
 Saving goes through the engine, which reloads at once.
 
+### 4.1 Import an OpenAPI or Swagger file
+
+If your API already has a description file, import it instead of writing each endpoint. The engine reads **OpenAPI 3.0 and 3.1** and **Swagger 2.0**, as JSON or YAML.
+
+**From the dashboard.** In the **Endpoints** tab choose **Import API file…**. In the desktop app the app opens a file dialog. In the browser you choose a file or drop it on the dialog. You can also paste an address (**From URL**). A review screen shows the endpoints per tag and any warnings. Choose **Apply** to make the endpoints.
+
+**From a terminal.** The command creates the backend folder when it does not exist, and updates it when it does:
+
+```bash
+npx @rn-tempo/local-backend import ./backends/pets --openapi ./petstore.yaml
+npx @rn-tempo/local-backend import ./backends/pets --openapi https://example.com/openapi.json --preview
+```
+
+`--preview` only prints what would change. Without a choice screen, the command adds new endpoints, takes changes to endpoints you never edited, keeps the ones you edited, and deletes nothing.
+
+**What you get.** Each operation becomes one fixed-answer endpoint:
+
+- The id is the `operationId`, or the method and path when there is none (`get.pets.:petId`). Tags and the summary are kept, and `{petId}` becomes `:petId`.
+- **Each documented response is a scenario**, named after its status and description (`200 aListOfPets`, `404 notFound`, `422 validationFailed`). The first 2xx response is the normal answer. Pick another with the scenario picker, or the `x-tempo-scenario` header: `curl -H 'x-tempo-scenario: 404 notFound' ...`.
+- **Response bodies** come from the file's `example` or `examples`. When there is none, the engine generates data from the schema: emails, UUIDs, dates, URLs, enums, number limits and arrays of 1 to 3 items. The data is the same every time you import the same file.
+- **Requests are checked.** A request whose path parameters, query or JSON body do not match the schema gets `400` with the names of the wrong fields (`body.name`, `query.limit`). A scenario you pick replaces the answer without the check.
+- **Sign-in.** An operation with a bearer, OAuth 2 or API key requirement needs a bearer token. API keys and basic authentication are not supported, so they become bearer and a warning says so.
+- **Swagger 2.0** is converted in the engine itself: `definitions`, body, form, query, path and header parameters, response `schema` and `examples`, `consumes` and `produces`, `securityDefinitions`, and `host`, `basePath` and `schemes`.
+- **Base path.** A new backend takes the path of the file's first server (`/api/v1`) as its base path.
+
+**Warnings** list what was skipped: callbacks, links, webhooks, `HEAD`, `OPTIONS` and `TRACE`, paths that mix text and a parameter in one segment (`/files/{name}.json`), recursive references (cut to "any"), request bodies that are not JSON, and header parameters (documented, not checked). Regular expressions (`pattern`) in schemas are removed, because a pattern from a file runs against whatever callers send and could be made to run for a very long time. A file whose references fan out into more than 200 000 schema nodes is refused.
+
+**Import again, and review the diff.** `backend.json` records each import (`imports`) and a fingerprint of every endpoint as the import made it (`importedFrom`). Import the changed file again and the review screen lists:
+
+| Group | Meaning |
+| --- | --- |
+| Added | In the file, not in the backend yet. Default: add. |
+| Changed | The file differs. The list says what: request body, a response schema, a new scenario... Default: take the new one, or keep yours when you edited it. |
+| Removed | Made by an earlier import, but not in the file now. Default: keep (nothing is deleted unless you choose it). |
+| Unchanged | The same as before. |
+
+An endpoint you edited after the import is marked **you edited it**. For each changed endpoint choose:
+
+- **Take the new one** replaces it with the file's version.
+- **Keep mine** leaves it as it is. The same file is not offered again as a change.
+- **Merge** adds the file's new scenarios and updates the schemas, and keeps your response bodies, statuses, headers and delays.
+
+Endpoints you made yourself are never listed as removed. A new operation whose method and path another endpoint already answers is left out, and the screen says so. Importing a second, different file into a backend lists the first file's endpoints under "not in the file any more"; they stay unless you choose to delete them.
+
+**An address.** Only `https:` addresses (and `http:` for localhost) are fetched, at most 10 MB, within 15 seconds and after at most 3 redirects, each one checked again. On a [team server](/docs/backend/team-server) a name or address on a private network (localhost, `10.x`, `192.168.x`, link-local) is refused, so the server cannot be used to reach the network it runs in. Upload the file instead, or start the server with `--allow-private-import-urls` for a team that keeps its API descriptions on a LAN. Only the address without user name, password, query and fragment is recorded in `backend.json` and in the audit log.
+
+On a team server, previewing and importing need the **editor** role, and both are written to the audit log.
+
 ## 5. Data
 
 Open the **Data** tab.
