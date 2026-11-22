@@ -392,6 +392,137 @@ export const client = new ApolloClient({ link, cache: new InMemoryCache() });
 
 With urql, use `createClient({ url, exchanges: [cacheExchange, fetchExchange, subscriptionExchange({ forwardSubscription })] })` and a `graphql-ws` client in `forwardSubscription`; both clients speak the same protocol.
 
+### 4.7 Webhooks
+
+A webhook calls a URL when an event happens: a record is created, changed or deleted (`products.created`, `products.updated`, `products.deleted`, `products.*`, `*`), content is published (`content.published`), or a handler calls `ctx.emit('orders.shipped', { ... })`. Add them in **Settings → Webhooks**, or in `backend.json`:
+
+```json
+{
+  "webhooks": [
+    {
+      "id": "orders",
+      "url": "http://localhost:8557/hook",
+      "events": ["products.created", "custom.*"],
+      "delayMs": 0,
+      "retries": { "max": 3, "backoff": "exponential", "baseMs": 1000 },
+      "headers": { "x-env": "dev" },
+      "body": { "text": "New {{event.data.record.title}}" }
+    }
+  ]
+}
+```
+
+- **Body.** Without `body` it is `{ "id", "event", "createdAt", "data" }`. With a template, `{{event.id}}`, `{{event.name}}`, `{{event.createdAt}}` and `{{event.data.<path>}}` are filled in. Fields an endpoint hides are not sent.
+- **Signing.** Every call has `X-Tempo-Signature: t=<unix seconds>,v1=<hex HMAC-SHA256 of "t.body">` (like Stripe), `X-Tempo-Event` and `X-Tempo-Delivery`. The signing secret is made per webhook, is **shown once** when you create the webhook (or rotate it, which needs the admin role), and lives only in `.data/secrets.json`. Verify it in your receiver:
+
+  ```js
+  import { createHmac, timingSafeEqual } from 'node:crypto';
+  const [t, v1] = header.split(',').map((part) => part.split('=')[1]);
+  const expected = createHmac('sha256', secret).update(`${t}.${body}`).digest('hex');
+  const ok = timingSafeEqual(Buffer.from(v1), Buffer.from(expected));
+  ```
+
+- **Delivery.** 10 second timeout. A failure (a network error or a status outside 2xx) is retried with exponential backoff and up to 20% jitter, at most 5 minutes apart. Pending deliveries are stored in the database, so a restart continues them. The log (status, duration, response code, the first 2 KB of the answer, attempt number) is kept 7 days. **Redeliver** sends a delivery again, and **Send test** sends a `webhook.test` event.
+- **Test mode.** No delays, deterministic ids, and nothing is sent: the test kit captures each delivery. `backend.webhooks.deliveries()` returns `{ id, webhookId, event, url, headers, body, json }`, signed as it would have been.
+- **Safety.** Redirects are not followed. On a team server the URL must be `https:` and may not point at the local machine or a private network (the same rule as importing an API file from a URL; the owner can allow private addresses with `--allow-private-import-urls`). On your own machine `http://localhost` is fine. The webhook list hides header values and query values; the secret is in no export, snapshot, log or answer.
+
+### 4.8 Inbox: capture what a service sends you
+
+Add an endpoint of type `inbox` (for example `/inbox/stripe`) and point a service at it. It answers `200 { "received": true }` (set `status` and `body` to change that, and a latency as for any endpoint), accepts **any method**, and keeps the headers, query and the raw body (up to 1 MB, otherwise 413). The newest 500 per endpoint are kept, with a total size cap.
+
+```json
+{ "id": "stripe.inbox", "type": "inbox", "path": "/inbox/stripe", "status": 200 }
+```
+
+The **Inbox** tab lists captures (time, method, path, size, status). Editors open one to see the headers, the query and the body (pretty JSON in a read-only editor, or raw), copy it as a `curl` command, **replay** it to another URL (through the same safety rules as webhooks), or clear the inbox. Credentials are hidden before anything is stored: any header or query parameter whose name has `auth`, `token`, `key`, `secret`, `session`, `cookie`, `credential` or `password` is replaced, and signature headers keep only their last four characters. The request log shows the length of an inbox body, never the body.
+
+### 4.9 Push notification test sender
+
+**Settings → Push** sends a test push to a real device token from your Mac. Both senders keep their credentials in `.data/secrets.json` (never in `backend.json`, exports, snapshots, logs or answers). The page shows only "Configured" and the project or key id. Needs the admin role on a team server.
+
+- **FCM (HTTP v1).** Upload a service account JSON (Firebase console, Project settings, Service accounts, Generate new private key). The engine signs an RS256 JWT with it, exchanges it at `oauth2.googleapis.com` for an access token (cached until it is about to expire) and posts the message to `fcm.googleapis.com/v1/projects/<project>/messages:send`.
+- **APNs.** Upload the `.p8` key and give its key id, your team id and the app's bundle id. The engine signs an ES256 provider token (reused for under 50 minutes) and calls `api.sandbox.push.apple.com` (the **Sandbox** toggle, for development builds) or `api.push.apple.com` over HTTP/2 with `apns-topic`, `apns-push-type` and `apns-priority`.
+- **Send test.** Choose the platform, paste the device token, give a title and body (or neither, for a silent data push) and optional data JSON. The result shows the provider's status and reason (`UNREGISTERED`, `BadDeviceToken`...). The last 50 sends are kept with the token masked.
+
+**Owner check on a real device (AC-LP-9).** The automated tests use generated keys and fake network layers, so a real delivery is yours to confirm:
+
+1. Run the app on a physical phone with push set up, and read its device token (FCM registration token, or the APNs token as hex).
+2. Upload the credentials in Settings → Push (for APNs a development build uses the sandbox).
+3. Send a test with a title and body. The phone should show the notification, and the result should read status 200.
+4. Check that the credentials appear nowhere else: not in `backend.json`, not in an exported backup, not in `.data/logs`.
+
+### 4.10 Faults and limits
+
+**Settings → Faults, CORS and sessions** (or `faults` in `backend.json`, for the whole backend or one endpoint; an endpoint's setting replaces the backend's) simulates trouble:
+
+| Setting | Effect |
+|---|---|
+| `rateLimit: { requests, perSeconds, key }` | More than `requests` in `perSeconds` answers **429** with `Retry-After`. `key` is `ip`, `user` or `global`. `null` on an endpoint turns the backend's limit off. |
+| `failureRate` (0 to 1), `failureStatus`, `failureBody` | That share of requests fails before reaching the endpoint (status 500 by default). |
+| `dropRate` | That share of answers are cut: the head and half the body are sent, then the connection is destroyed. |
+| `offline: true` | Every connection is closed at once. |
+| `slowUpload`, `slowDownload` | Kilobits per second (the same throttle as network presets). |
+
+Rate limit answers carry the IETF `RateLimit` headers: `RateLimit: limit=…, remaining=…, reset=…` and `RateLimit-Policy`, plus the older `RateLimit-Limit`, `RateLimit-Remaining` and `RateLimit-Reset` that many clients still read. Windows are fixed, starting at a key's first request.
+
+**Repeatable.** Random choices are drawn from a generator seeded with the request number and the engine's seed (fixed in test mode and in the test kit), so the same run fails on the same requests. **Test mode.** Faults are **off** in test mode unless a request sends `x-tempo-test-faults: 1` (the engine exports the name as `TEST_FAULTS_HEADER`), like `x-tempo-test-delays: 1` for delays. The dashboard and `GET /stats` show how many requests were rate limited, failed, dropped or refused offline.
+
+### 4.11 CORS and cookie sessions
+
+**CORS.** Without a `cors` setting no CORS headers are sent, as before: a web page on another origin cannot read the API (native apps are not affected). Set it to let a web app call the backend:
+
+```json
+{ "cors": { "origins": ["https://app.example.com"], "methods": ["GET", "POST"], "credentials": true, "maxAge": 600 } }
+```
+
+`origins` is `"*"` or a list; the matching origin is echoed with `Vary: Origin`. Preflight (`OPTIONS` with `Access-Control-Request-Method`) is answered with 204, before any access key check. `"*"` with `credentials: true` is refused, as browsers refuse it.
+
+**Cookie sessions.** `auth.mode` is `bearer` (default), `cookie` or `both`. In cookie mode, login sets `tempo_app_session` (`HttpOnly; SameSite=Lax; Path=<base path, or /b/<id>/ on a team server>`, `Secure` over HTTPS) and, in the answer, a `csrfToken` (also in the `tempo_app_csrf` cookie, readable by scripts). Endpoints with `auth: "bearer"` then accept the cookie, and logout clears it. In `cookie` mode the answer carries no access token, so scripts never hold one.
+
+- **CSRF.** A request that is signed in by the cookie and uses POST, PUT, PATCH or DELETE needs either the `x-tempo-csrf` header with the login's `csrfToken` (double submit), or an `Origin` that is the server itself or one of `cors.origins` (and not `Sec-Fetch-Site: cross-site` unless listed). Otherwise it gets 403. Native mobile apps send no `Origin`, so they send the header. Requests with a bearer token need none.
+- **Why Lax.** `SameSite=Lax` keeps the cookie when the user is sent back from another site, which OAuth redirects need (`Strict` would drop it). The CSRF check above covers what Lax lets through.
+- **Team server.** A backend can never set a cookie there, unless its mode is cookie: then only `tempo_app_session` and `tempo_app_csrf`, with `Path=/b/<id>/` and no `Domain`, are passed on, and the dashboard's own cookie name is never used.
+
+### 4.12 OAuth 2.0 / social login mock
+
+**Settings → OAuth sign-in mock** (or `oauth` in `backend.json`) makes the backend an OAuth 2.0 and OpenID Connect provider for its app users:
+
+```json
+{ "oauth": { "enabled": true, "provider": "google", "clients": [{ "clientId": "my-app", "redirectUris": ["myapp://callback"] }] } }
+```
+
+| Address | What |
+|---|---|
+| `GET /oauth/authorize` | A plain page (strict content security policy, no scripts, sandboxed) that lists the app users and **Deny**. It redirects only to a registered `redirectUris` entry, compared exactly. |
+| `POST /oauth/token` | `authorization_code` with **PKCE S256 required**, and `refresh_token`. Codes work once and expire after 60 seconds. |
+| `GET /oauth/userinfo` | The user's claims, with `Authorization: Bearer <access_token>`. |
+| `GET /.well-known/openid-configuration`, `GET /oauth/jwks` | Discovery and the key for the RS256 `id_token` (the private key is in `.data/secrets.json`). |
+
+The `provider` picks the claim names: `google` (`sub, email, email_verified, name, given_name, family_name, picture`), `apple` (`sub, email, email_verified, is_private_email`, as strings) or `github` (`id, login, name, email, avatar_url`); `generic` gives `preferred_username`. The access and refresh tokens are the backend's own, so they also work on `auth: "bearer"` endpoints. A client is public by default; make a **client secret** (shown once, kept in secrets) and the token endpoint then requires it. Clients and secrets are managed by admins.
+
+Not implemented: the implicit and password grants, `plain` PKCE, a consent screen, scopes beyond `openid profile email`, introspection, revocation, dynamic client registration and key rotation.
+
+With `react-native-app-auth`:
+
+```ts
+import { authorize } from 'react-native-app-auth';
+
+const result = await authorize({
+  issuer: 'https://localhost:8443', // or https://<server>/b/<id> on a team server
+  clientId: 'my-app',
+  redirectUrl: 'myapp://callback',
+  scopes: ['openid', 'profile', 'email'],
+  usePKCE: true,
+});
+```
+
+### 4.13 Security notes for these features
+
+- Secrets (webhook signing secrets, FCM and APNs credentials, OAuth client secrets and the id token key) live only in `.data/secrets.json`, mode 0600. They are in no `backend.json`, snapshot, test snapshot, export, log, audit entry or answer. A webhook secret is keyed by the webhook's own id, so no setting can point at another webhook's secret.
+- Everything the engine calls on your behalf (webhook URLs, inbox replays) goes through the SSRF guard: no redirects, the connection goes to the address that was checked, and a team server refuses private, loopback and link-local addresses and plain `http:`.
+- Captured inbox bodies are kept as received because you need to see them. Only editors read them, and the list and the request log never show them.
+- Settings that change how the backend is reached (faults, CORS, the session mode, OAuth) need the admin role on a team server.
+
 ## 5. Data
 
 Open the **Data** tab.
