@@ -4,15 +4,20 @@ import { readDashboardAsset, type AssetSources } from './assets.ts';
 import { problemReply, type Reply } from './http.ts';
 
 /**
- * The Content Security Policy of the web dashboard. It matches the desktop one (`tauri.conf.json`): scripts and styles
- * only from the same origin (no inline script), `connect-src 'self'` so the page can only talk to the server it came from,
- * and no framing. `style-src-attr` allows the `style=""` attributes React sets.
+ * The Content Security Policy of the web dashboard. It matches the desktop one (`tauri.conf.json`): scripts only from the
+ * same origin (no inline script, no `eval`), `connect-src 'self'` so the page can only talk to the server it came from,
+ * and no framing. Monaco's two workers are same-origin files (`worker-src 'self'`; no `blob:`, no CDN).
+ *
+ * Styles allow `'unsafe-inline'`, for styles ONLY. Monaco writes its theme colours and codicon rules into `<style>` elements
+ * it creates at run time (`style.textContent = ...`), and it offers no way to put a nonce on them; a hash would change with
+ * every theme and Monaco release. Inline styles cannot run code, and `script-src` stays `'self'`.
  */
 export const DASHBOARD_CSP = [
   "default-src 'self'",
   "script-src 'self'",
-  "style-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
   "style-src-attr 'unsafe-inline'",
+  "worker-src 'self'",
   "img-src 'self' data: blob:",
   "media-src 'self' blob:",
   "connect-src 'self'",
@@ -45,6 +50,7 @@ const TYPES: Record<string, string> = {
   '.map': 'application/json; charset=utf-8',
   '.woff2': 'font/woff2',
   '.woff': 'font/woff',
+  '.ttf': 'font/ttf',
   '.txt': 'text/plain; charset=utf-8',
 };
 

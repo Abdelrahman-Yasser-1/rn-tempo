@@ -927,3 +927,84 @@ fieldset.plain-fieldset legend {
   color: var(--warn);
   font-size: 11px;
 }
+
+/* JSON editor (Monaco, loaded on demand) and the Form / JSON tabs */
+.tabs.small {
+  padding: 0;
+  margin-bottom: 6px;
+}
+.json-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.json-editor[data-invalid='true'] .json-host,
+.json-editor[data-invalid='true'] .json-fallback {
+  outline: 1px solid var(--bad);
+}
+.json-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.json-hint {
+  margin-left: auto;
+  font-size: 12px;
+}
+.json-host {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  min-height: 80px;
+}
+.json-fallback {
+  width: 100%;
+}
+.tempo-placeholder {
+  color: #8a3ffc;
+  background: rgba(138, 63, 252, 0.14);
+  border-radius: 3px;
+}
+@media (prefers-color-scheme: dark) {
+  .tempo-placeholder {
+    color: #c4a2ff;
+    background: rgba(196, 162, 255, 0.16);
+  }
+}
+.json-form {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+}
+.help-popover {
+  position: relative;
+  display: inline-block;
+}
+.help-popover > div {
+  position: absolute;
+  z-index: 5;
+  right: 0;
+  width: min(460px, 80vw);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+}
+.help-popover dt {
+  font-family: var(--mono);
+  font-size: 12px;
+  margin-top: 6px;
+}
+.help-popover dd {
+  margin: 0 0 0 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.template-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

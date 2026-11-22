@@ -377,3 +377,14 @@ describe('the web listener (AC-LP-1)', () => {
     await expect(startWeb({ host, assets, adminPort: first.port })).rejects.toThrow(/EADDRINUSE/);
   });
 });
+
+describe('AC-LP-6 the CSP lets Monaco run without weakening scripts', () => {
+  it('AC-LP-6 allows inline styles only for styles, workers only from the same origin, and no eval or blob', () => {
+    expect(DASHBOARD_CSP).toContain("style-src 'self' 'unsafe-inline'");
+    expect(DASHBOARD_CSP).toContain("worker-src 'self'");
+    expect(DASHBOARD_CSP).toMatch(/script-src 'self'(;|$)/);
+    expect(DASHBOARD_CSP).not.toMatch(/unsafe-eval|blob:[^;]*worker|worker-src[^;]*blob/);
+    expect(DASHBOARD_CSP).not.toMatch(/script-src[^;]*unsafe/);
+    expect(DASHBOARD_CSP).not.toMatch(/https?:\/\/[a-z]/);
+  });
+});

@@ -6,7 +6,7 @@ import type { BackendStatus, RequestEntry } from '../api/types';
 import { keys } from '../hooks/lb';
 import { useRequestLog } from '../hooks/useRequestLog';
 import { errorMessage } from '../lib/errors';
-import { bodyText, filterEntries, methodsSeen, NO_FILTERS, type Filters, type StatusFilter } from '../lib/requests';
+import { bodyText, filterEntries, methodsSeen, networkNote, NO_FILTERS, type Filters, type StatusFilter } from '../lib/requests';
 import { EmptyState, ErrorNote } from '../ui/bits';
 
 const STATUSES: StatusFilter[] = ['all', '2xx', '3xx', '4xx', '5xx'];
@@ -24,9 +24,10 @@ function Detail({ entry, onClose }: { entry: RequestEntry; onClose: () => void }
         </button>
       </div>
       <p className="muted">
-        {entry.status} in {entry.ms} ms at {new Date(entry.at).toLocaleTimeString()}
+        {entry.status === 0 ? 'Closed without an answer' : entry.status} in {entry.ms} ms at {new Date(entry.at).toLocaleTimeString()}
         {entry.scenario === undefined ? '' : ` (scenario ${entry.scenario})`}
       </p>
+      {networkNote(entry.network) === null ? null : <p className="muted">Network: {networkNote(entry.network)}.</p>}
       <h3>Request headers</h3>
       <pre>{bodyText(entry.req.headers, undefined)}</pre>
       <h3>Request body</h3>
@@ -168,7 +169,7 @@ export function Logs({ backend }: { backend: BackendStatus }) {
                       {entry.url}
                     </button>
                   </td>
-                  <td className={entry.status < 400 ? 'ok' : 'bad'}>{entry.status}</td>
+                  <td className={entry.status > 0 && entry.status < 400 ? 'ok' : 'bad'}>{entry.status === 0 ? 'closed' : entry.status}</td>
                   <td>{entry.ms}</td>
                 </tr>
               ))}

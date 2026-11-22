@@ -202,6 +202,7 @@ export function Endpoints({ backend }: { backend: string }) {
           backend={backend}
           collections={collections}
           existingIds={ids}
+          templates={definition.data.responseTemplates ?? {}}
           {...(dialog.kind === 'add' ? {} : { endpoint: dialog.endpoint, copy: dialog.kind === 'copy' })}
           onClose={() => {
             setDialog(null);
