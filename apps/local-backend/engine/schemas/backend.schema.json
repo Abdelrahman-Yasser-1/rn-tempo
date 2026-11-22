@@ -38,6 +38,102 @@
       "description": "Folder with cert.pem and key.pem. Defaults to `.data/certs`.",
       "type": "string"
     },
+    "latency": {
+      "description": "Delays. A scenario's `delayMs` wins over an endpoint's `latency`, which wins over this.",
+      "type": "object",
+      "properties": {
+        "default": {
+          "description": "The delay of every endpoint that does not set its own.",
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "fixedMs": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 60000,
+                  "description": "Wait exactly this long before answering."
+                }
+              },
+              "required": [
+                "fixedMs"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "minMs": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 60000,
+                  "description": "The shortest wait."
+                },
+                "maxMs": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 60000,
+                  "description": "The longest wait. A random value from `minMs` to `maxMs` is picked for each request."
+                }
+              },
+              "required": [
+                "minMs",
+                "maxMs"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "title": "Latency"
+        }
+      },
+      "additionalProperties": false
+    },
+    "network": {
+      "description": "The connection profile of every endpoint that does not set its own.",
+      "type": "object",
+      "properties": {
+        "preset": {
+          "type": "string",
+          "enum": [
+            "instant",
+            "wifi",
+            "4g",
+            "3g-slow",
+            "timeout",
+            "custom"
+          ],
+          "description": "`instant` (no delay), `wifi` (20 ms, 30 Mbps down), `4g` (60 ms, 9 Mbps down), `3g-slow` (400 ms, 500 kbps), `timeout` (holds the answer, then closes the connection) or `custom` (only the numbers below)."
+        },
+        "downloadKbps": {
+          "description": "Response speed in kilobits per second. Replaces the preset's own.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000000
+        },
+        "uploadKbps": {
+          "description": "Request body speed in kilobits per second. Replaces the preset's own.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000000
+        },
+        "timeoutMs": {
+          "description": "How long the `timeout` preset holds the request before closing the connection (default 30000).",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 120000
+        }
+      },
+      "required": [
+        "preset"
+      ],
+      "additionalProperties": false,
+      "title": "Network"
+    },
+    "testMode": {
+      "default": false,
+      "description": "Zero every delay, throttle and timeout (and fix `{{now}}` and the random values). A request can opt back in with `x-tempo-test-delays: 1`.",
+      "type": "boolean"
+    },
     "auth": {
       "default": {
         "accessTtlMin": 30,
@@ -296,6 +392,107 @@
                   "bearer"
                 ]
               },
+              "latency": {
+                "description": "A delay for this endpoint, or `\"inherit\"` (the default) for the backend's `latency.default`.",
+                "anyOf": [
+                  {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "fixedMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60000,
+                            "description": "Wait exactly this long before answering."
+                          }
+                        },
+                        "required": [
+                          "fixedMs"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "minMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60000,
+                            "description": "The shortest wait."
+                          },
+                          "maxMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60000,
+                            "description": "The longest wait. A random value from `minMs` to `maxMs` is picked for each request."
+                          }
+                        },
+                        "required": [
+                          "minMs",
+                          "maxMs"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ],
+                    "title": "Latency",
+                    "description": "A fixed delay (`{ \"fixedMs\": 300 }`) or a random one (`{ \"minMs\": 100, \"maxMs\": 900 }`)."
+                  },
+                  {
+                    "type": "string",
+                    "const": "inherit"
+                  }
+                ]
+              },
+              "network": {
+                "description": "A network profile for this endpoint, or `\"inherit\"` (the default) for the backend's `network`.",
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "preset": {
+                        "type": "string",
+                        "enum": [
+                          "instant",
+                          "wifi",
+                          "4g",
+                          "3g-slow",
+                          "timeout",
+                          "custom"
+                        ],
+                        "description": "`instant` (no delay), `wifi` (20 ms, 30 Mbps down), `4g` (60 ms, 9 Mbps down), `3g-slow` (400 ms, 500 kbps), `timeout` (holds the answer, then closes the connection) or `custom` (only the numbers below)."
+                      },
+                      "downloadKbps": {
+                        "description": "Response speed in kilobits per second. Replaces the preset's own.",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 10000000
+                      },
+                      "uploadKbps": {
+                        "description": "Request body speed in kilobits per second. Replaces the preset's own.",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 10000000
+                      },
+                      "timeoutMs": {
+                        "description": "How long the `timeout` preset holds the request before closing the connection (default 30000).",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 120000
+                      }
+                    },
+                    "required": [
+                      "preset"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Network"
+                  },
+                  {
+                    "type": "string",
+                    "const": "inherit"
+                  }
+                ]
+              },
               "scenarios": {
                 "default": {},
                 "type": "object",
@@ -311,7 +508,7 @@
                       "maximum": 599
                     },
                     "delayMs": {
-                      "description": "Wait this long before answering.",
+                      "description": "Wait this long before answering. It wins over every other delay setting.",
                       "type": "integer",
                       "minimum": 0,
                       "maximum": 60000
@@ -494,6 +691,107 @@
                   "bearer"
                 ]
               },
+              "latency": {
+                "description": "A delay for this endpoint, or `\"inherit\"` (the default) for the backend's `latency.default`.",
+                "anyOf": [
+                  {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "fixedMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60000,
+                            "description": "Wait exactly this long before answering."
+                          }
+                        },
+                        "required": [
+                          "fixedMs"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "minMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60000,
+                            "description": "The shortest wait."
+                          },
+                          "maxMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60000,
+                            "description": "The longest wait. A random value from `minMs` to `maxMs` is picked for each request."
+                          }
+                        },
+                        "required": [
+                          "minMs",
+                          "maxMs"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ],
+                    "title": "Latency",
+                    "description": "A fixed delay (`{ \"fixedMs\": 300 }`) or a random one (`{ \"minMs\": 100, \"maxMs\": 900 }`)."
+                  },
+                  {
+                    "type": "string",
+                    "const": "inherit"
+                  }
+                ]
+              },
+              "network": {
+                "description": "A network profile for this endpoint, or `\"inherit\"` (the default) for the backend's `network`.",
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "preset": {
+                        "type": "string",
+                        "enum": [
+                          "instant",
+                          "wifi",
+                          "4g",
+                          "3g-slow",
+                          "timeout",
+                          "custom"
+                        ],
+                        "description": "`instant` (no delay), `wifi` (20 ms, 30 Mbps down), `4g` (60 ms, 9 Mbps down), `3g-slow` (400 ms, 500 kbps), `timeout` (holds the answer, then closes the connection) or `custom` (only the numbers below)."
+                      },
+                      "downloadKbps": {
+                        "description": "Response speed in kilobits per second. Replaces the preset's own.",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 10000000
+                      },
+                      "uploadKbps": {
+                        "description": "Request body speed in kilobits per second. Replaces the preset's own.",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 10000000
+                      },
+                      "timeoutMs": {
+                        "description": "How long the `timeout` preset holds the request before closing the connection (default 30000).",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 120000
+                      }
+                    },
+                    "required": [
+                      "preset"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Network"
+                  },
+                  {
+                    "type": "string",
+                    "const": "inherit"
+                  }
+                ]
+              },
               "scenarios": {
                 "default": {},
                 "type": "object",
@@ -509,7 +807,7 @@
                       "maximum": 599
                     },
                     "delayMs": {
-                      "description": "Wait this long before answering.",
+                      "description": "Wait this long before answering. It wins over every other delay setting.",
                       "type": "integer",
                       "minimum": 0,
                       "maximum": 60000
@@ -666,6 +964,107 @@
                   "bearer"
                 ]
               },
+              "latency": {
+                "description": "A delay for this endpoint, or `\"inherit\"` (the default) for the backend's `latency.default`.",
+                "anyOf": [
+                  {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "fixedMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60000,
+                            "description": "Wait exactly this long before answering."
+                          }
+                        },
+                        "required": [
+                          "fixedMs"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "minMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60000,
+                            "description": "The shortest wait."
+                          },
+                          "maxMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60000,
+                            "description": "The longest wait. A random value from `minMs` to `maxMs` is picked for each request."
+                          }
+                        },
+                        "required": [
+                          "minMs",
+                          "maxMs"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ],
+                    "title": "Latency",
+                    "description": "A fixed delay (`{ \"fixedMs\": 300 }`) or a random one (`{ \"minMs\": 100, \"maxMs\": 900 }`)."
+                  },
+                  {
+                    "type": "string",
+                    "const": "inherit"
+                  }
+                ]
+              },
+              "network": {
+                "description": "A network profile for this endpoint, or `\"inherit\"` (the default) for the backend's `network`.",
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "preset": {
+                        "type": "string",
+                        "enum": [
+                          "instant",
+                          "wifi",
+                          "4g",
+                          "3g-slow",
+                          "timeout",
+                          "custom"
+                        ],
+                        "description": "`instant` (no delay), `wifi` (20 ms, 30 Mbps down), `4g` (60 ms, 9 Mbps down), `3g-slow` (400 ms, 500 kbps), `timeout` (holds the answer, then closes the connection) or `custom` (only the numbers below)."
+                      },
+                      "downloadKbps": {
+                        "description": "Response speed in kilobits per second. Replaces the preset's own.",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 10000000
+                      },
+                      "uploadKbps": {
+                        "description": "Request body speed in kilobits per second. Replaces the preset's own.",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 10000000
+                      },
+                      "timeoutMs": {
+                        "description": "How long the `timeout` preset holds the request before closing the connection (default 30000).",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 120000
+                      }
+                    },
+                    "required": [
+                      "preset"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Network"
+                  },
+                  {
+                    "type": "string",
+                    "const": "inherit"
+                  }
+                ]
+              },
               "scenarios": {
                 "default": {},
                 "type": "object",
@@ -681,7 +1080,7 @@
                       "maximum": 599
                     },
                     "delayMs": {
-                      "description": "Wait this long before answering.",
+                      "description": "Wait this long before answering. It wins over every other delay setting.",
                       "type": "integer",
                       "minimum": 0,
                       "maximum": 60000
@@ -800,6 +1199,107 @@
                   "bearer"
                 ]
               },
+              "latency": {
+                "description": "A delay for this endpoint, or `\"inherit\"` (the default) for the backend's `latency.default`.",
+                "anyOf": [
+                  {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "fixedMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60000,
+                            "description": "Wait exactly this long before answering."
+                          }
+                        },
+                        "required": [
+                          "fixedMs"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "minMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60000,
+                            "description": "The shortest wait."
+                          },
+                          "maxMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60000,
+                            "description": "The longest wait. A random value from `minMs` to `maxMs` is picked for each request."
+                          }
+                        },
+                        "required": [
+                          "minMs",
+                          "maxMs"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ],
+                    "title": "Latency",
+                    "description": "A fixed delay (`{ \"fixedMs\": 300 }`) or a random one (`{ \"minMs\": 100, \"maxMs\": 900 }`)."
+                  },
+                  {
+                    "type": "string",
+                    "const": "inherit"
+                  }
+                ]
+              },
+              "network": {
+                "description": "A network profile for this endpoint, or `\"inherit\"` (the default) for the backend's `network`.",
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "preset": {
+                        "type": "string",
+                        "enum": [
+                          "instant",
+                          "wifi",
+                          "4g",
+                          "3g-slow",
+                          "timeout",
+                          "custom"
+                        ],
+                        "description": "`instant` (no delay), `wifi` (20 ms, 30 Mbps down), `4g` (60 ms, 9 Mbps down), `3g-slow` (400 ms, 500 kbps), `timeout` (holds the answer, then closes the connection) or `custom` (only the numbers below)."
+                      },
+                      "downloadKbps": {
+                        "description": "Response speed in kilobits per second. Replaces the preset's own.",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 10000000
+                      },
+                      "uploadKbps": {
+                        "description": "Request body speed in kilobits per second. Replaces the preset's own.",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 10000000
+                      },
+                      "timeoutMs": {
+                        "description": "How long the `timeout` preset holds the request before closing the connection (default 30000).",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 120000
+                      }
+                    },
+                    "required": [
+                      "preset"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Network"
+                  },
+                  {
+                    "type": "string",
+                    "const": "inherit"
+                  }
+                ]
+              },
               "scenarios": {
                 "default": {},
                 "type": "object",
@@ -815,7 +1315,7 @@
                       "maximum": 599
                     },
                     "delayMs": {
-                      "description": "Wait this long before answering.",
+                      "description": "Wait this long before answering. It wins over every other delay setting.",
                       "type": "integer",
                       "minimum": 0,
                       "maximum": 60000
@@ -930,6 +1430,107 @@
                   "bearer"
                 ]
               },
+              "latency": {
+                "description": "A delay for this endpoint, or `\"inherit\"` (the default) for the backend's `latency.default`.",
+                "anyOf": [
+                  {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "fixedMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60000,
+                            "description": "Wait exactly this long before answering."
+                          }
+                        },
+                        "required": [
+                          "fixedMs"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "minMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60000,
+                            "description": "The shortest wait."
+                          },
+                          "maxMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60000,
+                            "description": "The longest wait. A random value from `minMs` to `maxMs` is picked for each request."
+                          }
+                        },
+                        "required": [
+                          "minMs",
+                          "maxMs"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ],
+                    "title": "Latency",
+                    "description": "A fixed delay (`{ \"fixedMs\": 300 }`) or a random one (`{ \"minMs\": 100, \"maxMs\": 900 }`)."
+                  },
+                  {
+                    "type": "string",
+                    "const": "inherit"
+                  }
+                ]
+              },
+              "network": {
+                "description": "A network profile for this endpoint, or `\"inherit\"` (the default) for the backend's `network`.",
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "preset": {
+                        "type": "string",
+                        "enum": [
+                          "instant",
+                          "wifi",
+                          "4g",
+                          "3g-slow",
+                          "timeout",
+                          "custom"
+                        ],
+                        "description": "`instant` (no delay), `wifi` (20 ms, 30 Mbps down), `4g` (60 ms, 9 Mbps down), `3g-slow` (400 ms, 500 kbps), `timeout` (holds the answer, then closes the connection) or `custom` (only the numbers below)."
+                      },
+                      "downloadKbps": {
+                        "description": "Response speed in kilobits per second. Replaces the preset's own.",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 10000000
+                      },
+                      "uploadKbps": {
+                        "description": "Request body speed in kilobits per second. Replaces the preset's own.",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 10000000
+                      },
+                      "timeoutMs": {
+                        "description": "How long the `timeout` preset holds the request before closing the connection (default 30000).",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 120000
+                      }
+                    },
+                    "required": [
+                      "preset"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Network"
+                  },
+                  {
+                    "type": "string",
+                    "const": "inherit"
+                  }
+                ]
+              },
               "scenarios": {
                 "default": {},
                 "type": "object",
@@ -945,7 +1546,7 @@
                       "maximum": 599
                     },
                     "delayMs": {
-                      "description": "Wait this long before answering.",
+                      "description": "Wait this long before answering. It wins over every other delay setting.",
                       "type": "integer",
                       "minimum": 0,
                       "maximum": 60000
@@ -1049,6 +1650,107 @@
                   "bearer"
                 ]
               },
+              "latency": {
+                "description": "A delay for this endpoint, or `\"inherit\"` (the default) for the backend's `latency.default`.",
+                "anyOf": [
+                  {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "fixedMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60000,
+                            "description": "Wait exactly this long before answering."
+                          }
+                        },
+                        "required": [
+                          "fixedMs"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "minMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60000,
+                            "description": "The shortest wait."
+                          },
+                          "maxMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60000,
+                            "description": "The longest wait. A random value from `minMs` to `maxMs` is picked for each request."
+                          }
+                        },
+                        "required": [
+                          "minMs",
+                          "maxMs"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ],
+                    "title": "Latency",
+                    "description": "A fixed delay (`{ \"fixedMs\": 300 }`) or a random one (`{ \"minMs\": 100, \"maxMs\": 900 }`)."
+                  },
+                  {
+                    "type": "string",
+                    "const": "inherit"
+                  }
+                ]
+              },
+              "network": {
+                "description": "A network profile for this endpoint, or `\"inherit\"` (the default) for the backend's `network`.",
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "preset": {
+                        "type": "string",
+                        "enum": [
+                          "instant",
+                          "wifi",
+                          "4g",
+                          "3g-slow",
+                          "timeout",
+                          "custom"
+                        ],
+                        "description": "`instant` (no delay), `wifi` (20 ms, 30 Mbps down), `4g` (60 ms, 9 Mbps down), `3g-slow` (400 ms, 500 kbps), `timeout` (holds the answer, then closes the connection) or `custom` (only the numbers below)."
+                      },
+                      "downloadKbps": {
+                        "description": "Response speed in kilobits per second. Replaces the preset's own.",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 10000000
+                      },
+                      "uploadKbps": {
+                        "description": "Request body speed in kilobits per second. Replaces the preset's own.",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 10000000
+                      },
+                      "timeoutMs": {
+                        "description": "How long the `timeout` preset holds the request before closing the connection (default 30000).",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 120000
+                      }
+                    },
+                    "required": [
+                      "preset"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Network"
+                  },
+                  {
+                    "type": "string",
+                    "const": "inherit"
+                  }
+                ]
+              },
               "scenarios": {
                 "default": {},
                 "type": "object",
@@ -1064,7 +1766,7 @@
                       "maximum": 599
                     },
                     "delayMs": {
-                      "description": "Wait this long before answering.",
+                      "description": "Wait this long before answering. It wins over every other delay setting.",
                       "type": "integer",
                       "minimum": 0,
                       "maximum": 60000
@@ -1181,6 +1883,107 @@
                   "bearer"
                 ]
               },
+              "latency": {
+                "description": "A delay for this endpoint, or `\"inherit\"` (the default) for the backend's `latency.default`.",
+                "anyOf": [
+                  {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "fixedMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60000,
+                            "description": "Wait exactly this long before answering."
+                          }
+                        },
+                        "required": [
+                          "fixedMs"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "minMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60000,
+                            "description": "The shortest wait."
+                          },
+                          "maxMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60000,
+                            "description": "The longest wait. A random value from `minMs` to `maxMs` is picked for each request."
+                          }
+                        },
+                        "required": [
+                          "minMs",
+                          "maxMs"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ],
+                    "title": "Latency",
+                    "description": "A fixed delay (`{ \"fixedMs\": 300 }`) or a random one (`{ \"minMs\": 100, \"maxMs\": 900 }`)."
+                  },
+                  {
+                    "type": "string",
+                    "const": "inherit"
+                  }
+                ]
+              },
+              "network": {
+                "description": "A network profile for this endpoint, or `\"inherit\"` (the default) for the backend's `network`.",
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "preset": {
+                        "type": "string",
+                        "enum": [
+                          "instant",
+                          "wifi",
+                          "4g",
+                          "3g-slow",
+                          "timeout",
+                          "custom"
+                        ],
+                        "description": "`instant` (no delay), `wifi` (20 ms, 30 Mbps down), `4g` (60 ms, 9 Mbps down), `3g-slow` (400 ms, 500 kbps), `timeout` (holds the answer, then closes the connection) or `custom` (only the numbers below)."
+                      },
+                      "downloadKbps": {
+                        "description": "Response speed in kilobits per second. Replaces the preset's own.",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 10000000
+                      },
+                      "uploadKbps": {
+                        "description": "Request body speed in kilobits per second. Replaces the preset's own.",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 10000000
+                      },
+                      "timeoutMs": {
+                        "description": "How long the `timeout` preset holds the request before closing the connection (default 30000).",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 120000
+                      }
+                    },
+                    "required": [
+                      "preset"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Network"
+                  },
+                  {
+                    "type": "string",
+                    "const": "inherit"
+                  }
+                ]
+              },
               "scenarios": {
                 "default": {},
                 "type": "object",
@@ -1196,7 +1999,7 @@
                       "maximum": 599
                     },
                     "delayMs": {
-                      "description": "Wait this long before answering.",
+                      "description": "Wait this long before answering. It wins over every other delay setting.",
                       "type": "integer",
                       "minimum": 0,
                       "maximum": 60000

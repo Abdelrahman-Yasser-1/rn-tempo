@@ -19,8 +19,8 @@ export const isKeyScope = (value: unknown): value is ApiKeyScope => typeof value
  * routes of a running backend and fails on any route without an entry (and on any entry without a route).
  *
  * - viewer: reads, including logs and "Try it".
- * - editor: imports API files (preview and apply), changes endpoints, collections, data, scenarios, media, content and the backend's app users.
- * - admin: also the snapshot export (a backup). Members, API keys, settings and certificates are hub routes (below).
+ * - editor: imports API files (preview and apply), changes endpoints (including their own delays and wrapper), collections, data, scenarios, media, content and the backend's app users.
+ * - admin: also the snapshot export (a backup) and the backend-wide settings (public access, delays and network presets). Members, API keys, settings and certificates are hub routes (below).
  */
 export const ADMIN_ROLE_TABLE: Readonly<Record<string, Role>> = {
   'GET /events': 'viewer',
@@ -92,6 +92,8 @@ export const ADMIN_ROLE_TABLE: Readonly<Record<string, Role>> = {
   'GET /content/entries/:id/versions': 'viewer',
   'GET /content/entries/:id/versions/:version': 'viewer',
   'POST /content/entries/:id/revert': 'editor',
+  'GET /settings/network': 'viewer',
+  'PUT /settings/network': 'admin',
   'GET /stats': 'viewer',
   'POST /contract-check': 'viewer',
   'GET /snapshot': 'admin',
@@ -104,14 +106,22 @@ export const ADMIN_ROLE_TABLE: Readonly<Record<string, Role>> = {
 export const READ_DEFINITION_ROUTES: ReadonlySet<string> = new Set(['GET /definition', 'GET /snapshot']);
 
 /** Fields of `backend.json` that are settings, not content: changing them takes an admin. */
-const SETTINGS_FIELDS = ['publicAccess', 'port', 'https', 'certsDir'] as const;
-const SETTINGS_DEFAULTS: Record<(typeof SETTINGS_FIELDS)[number], unknown> = { publicAccess: 'open', port: 8443, https: true, certsDir: undefined };
+const SETTINGS_FIELDS = ['publicAccess', 'port', 'https', 'certsDir', 'latency', 'network', 'testMode'] as const;
+const SETTINGS_DEFAULTS: Record<(typeof SETTINGS_FIELDS)[number], unknown> = {
+  publicAccess: 'open',
+  port: 8443,
+  https: true,
+  certsDir: undefined,
+  latency: undefined,
+  network: undefined,
+  testMode: false,
+};
 
-/** True when a new definition changes a setting (`publicAccess`, port, https, certificates) compared with the current one. */
+/** True when a new definition changes a setting (access, port, certificates, delays) compared with the current one. */
 export function settingsChanged(current: unknown, next: unknown): boolean {
-  const read = (value: unknown, field: (typeof SETTINGS_FIELDS)[number]): unknown => {
+  const read = (value: unknown, field: (typeof SETTINGS_FIELDS)[number]): string => {
     const found = typeof value === 'object' && value !== null ? (value as Record<string, unknown>)[field] : undefined;
-    return found === undefined ? SETTINGS_DEFAULTS[field] : found;
+    return JSON.stringify(found === undefined ? SETTINGS_DEFAULTS[field] : found) ?? '';
   };
   return SETTINGS_FIELDS.some((field) => read(current, field) !== read(next, field));
 }

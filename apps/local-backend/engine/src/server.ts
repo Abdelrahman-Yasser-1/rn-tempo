@@ -3,12 +3,13 @@ import { closeSync, constants, createReadStream, openSync } from 'node:fs';
 import { createServer as createHttpServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { createServer as createHttpsServer } from 'node:https';
 import { join, isAbsolute, resolve } from 'node:path';
-import { pipeline } from 'node:stream';
+import { pipeline, Readable } from 'node:stream';
 
 import { CERT_FILE, KEY_FILE } from '@rn-tempo/dev-api';
 
 import type { Engine } from './engine.ts';
 import { problemReply, type Reply, type RequestCtx } from './http.ts';
+import { paceRequest, ThrottleStream } from './network.ts';
 
 /** The most a request body may hold. Uploads (Y2) will stream past this on their own routes. */
 export const MAX_BODY_BYTES = 1024 * 1024;
@@ -63,6 +64,15 @@ export function toCtx(req: IncomingMessage, bodyText: string, scheme?: 'http' | 
 }
 
 export function sendReply(res: ServerResponse, reply: Reply, headOnly = false): void {
+  if (reply.abandoned === true || res.destroyed) {
+    reply.stream?.destroy();
+    return;
+  }
+  if (reply.close === true) {
+    // The `timeout` preset: no status line, no body, just a closed connection.
+    res.destroy();
+    return;
+  }
   let fd: number | undefined;
   if (reply.file !== undefined && !headOnly) {
     try {
@@ -86,19 +96,30 @@ export function sendReply(res: ServerResponse, reply: Reply, headOnly = false): 
     res.end('Invalid response headers in the endpoint definition.');
     return;
   }
+  // Throttling sends the body through a stream that releases it at the set rate; it stops when the client does.
   if (reply.file !== undefined && fd !== undefined) {
     // The path comes from a validated media id. `O_NOFOLLOW` keeps a planted link from being read.
     const source = createReadStream(reply.file.path, { fd, start: reply.file.start, end: reply.file.end });
-    pipeline(source, res, () => undefined);
+    streamOut(source, res, reply.downloadKbps);
     return;
   }
   if (reply.stream !== undefined) {
     if (headOnly) reply.stream.destroy();
-    else pipeline(reply.stream, res, () => undefined);
+    else streamOut(reply.stream, res, reply.downloadKbps);
     if (headOnly) res.end();
     return;
   }
+  if (payload !== undefined && !headOnly && reply.downloadKbps !== undefined) {
+    streamOut(Readable.from([Buffer.from(payload)]), res, reply.downloadKbps);
+    return;
+  }
   res.end(headOnly ? undefined : payload);
+}
+
+/** Pipes a body to the client, at `kbps` when that is set. Everything is torn down when either side closes. */
+function streamOut(source: Readable, res: ServerResponse, kbps: number | undefined): void {
+  if (kbps === undefined) pipeline(source, res, () => undefined);
+  else pipeline(source, new ThrottleStream(kbps), res, () => undefined);
 }
 
 export interface PublicListenOptions {
@@ -136,7 +157,13 @@ export function createPublicHandler(engine: Engine, extra: (ctx: RequestCtx, res
           return;
         }
       }
-      const streaming = engine.streamsBody(req.method === 'HEAD' ? 'GET' : (req.method ?? 'GET'), path);
+      const method = req.method === 'HEAD' ? 'GET' : (req.method ?? 'GET');
+      const streaming = engine.streamsBody(method, path);
+      // Delay and throttle are worked out first, from the headers, so a slow upload is slowed while it is read.
+      const plan = engine.planRequest(method, path, req.headers);
+      const gone = new AbortController();
+      res.once('close', () => gone.abort());
+      if (!streaming && plan.network.uploadKbps !== undefined) paceRequest(req, plan.network.uploadKbps);
       const body = streaming ? { ok: true as const, text: '' } : await readBody(req);
       if (!body.ok) {
         sendReply(res, problemReply(413, { title: 'Payload Too Large', detail: `Bodies are limited to ${MAX_BODY_BYTES} bytes.` }));
@@ -144,6 +171,8 @@ export function createPublicHandler(engine: Engine, extra: (ctx: RequestCtx, res
       }
       const head = req.method === 'HEAD';
       const ctx = toCtx(req, body.text, meta?.scheme);
+      ctx.plan = plan;
+      ctx.signal = gone.signal;
       if (streaming) ctx.stream = req;
       if (head) ctx.method = 'GET';
       if (ctx.path === '/__health') {

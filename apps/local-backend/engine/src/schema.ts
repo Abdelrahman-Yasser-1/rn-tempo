@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { MAX_DELAY_MS, MAX_TIMEOUT_MS } from './constants.ts';
 import { isIdentifier } from './names.ts';
 import { checkContentShape, isSlug, SLUG_HELP } from './content-values.ts';
 import { checkShape } from './values.ts';
@@ -62,10 +63,40 @@ export const CollectionSchema = z
   })
   .meta({ title: 'Collection' });
 
+const delayMs = z.number().int().min(0).max(MAX_DELAY_MS);
+
+const FixedLatency = z.strictObject({ fixedMs: delayMs.meta({ description: 'Wait exactly this long before answering.' }) });
+const RangeLatency = z
+  .strictObject({
+    minMs: delayMs.meta({ description: 'The shortest wait.' }),
+    maxMs: delayMs.meta({ description: 'The longest wait. A random value from `minMs` to `maxMs` is picked for each request.' }),
+  })
+  .refine((range) => range.minMs <= range.maxMs, { message: 'minMs must not be more than maxMs.', path: ['maxMs'] });
+/** A wait before answering: a fixed time, or a random one inside a range. */
+export const LatencySchema = z.union([FixedLatency, RangeLatency]).meta({ title: 'Latency', description: 'A fixed delay (`{ "fixedMs": 300 }`) or a random one (`{ "minMs": 100, "maxMs": 900 }`).' });
+export type Latency = z.infer<typeof LatencySchema>;
+
+export const NETWORK_PRESETS = ['instant', 'wifi', '4g', '3g-slow', 'timeout', 'custom'] as const;
+export type NetworkPreset = (typeof NETWORK_PRESETS)[number];
+const kbps = z.number().int().min(1).max(10_000_000);
+/** How the connection behaves: a named profile (latency and throughput), with optional overrides. */
+export const NetworkSchema = z
+  .strictObject({
+    preset: z.enum(NETWORK_PRESETS).meta({
+      description:
+        '`instant` (no delay), `wifi` (20 ms, 30 Mbps down), `4g` (60 ms, 9 Mbps down), `3g-slow` (400 ms, 500 kbps), `timeout` (holds the answer, then closes the connection) or `custom` (only the numbers below).',
+    }),
+    downloadKbps: kbps.optional().meta({ description: 'Response speed in kilobits per second. Replaces the preset\'s own.' }),
+    uploadKbps: kbps.optional().meta({ description: 'Request body speed in kilobits per second. Replaces the preset\'s own.' }),
+    timeoutMs: z.number().int().min(1).max(MAX_TIMEOUT_MS).optional().meta({ description: 'How long the `timeout` preset holds the request before closing the connection (default 30000).' }),
+  })
+  .meta({ title: 'Network' });
+export type Network = z.infer<typeof NetworkSchema>;
+
 export const ScenarioSchema = z
   .strictObject({
     status: z.number().int().min(100).max(599).optional(),
-    delayMs: z.number().int().min(0).max(60_000).optional().meta({ description: 'Wait this long before answering.' }),
+    delayMs: z.number().int().min(0).max(MAX_DELAY_MS).optional().meta({ description: 'Wait this long before answering. It wins over every other delay setting.' }),
     body: z.unknown().optional().meta({ description: 'Sent as the JSON body instead of the normal response.' }),
     headers: z.record(z.string(), z.string()).optional(),
     description: z.string().max(500).optional().meta({ description: 'What the response is (from an imported API file).' }),
@@ -95,6 +126,8 @@ const common = {
   summary: z.string().optional(),
   tags: z.array(z.string()).optional(),
   auth: z.enum(['none', 'bearer']).default('none'),
+  latency: z.union([LatencySchema, z.literal('inherit')]).optional().meta({ description: 'A delay for this endpoint, or `"inherit"` (the default) for the backend\'s `latency.default`.' }),
+  network: z.union([NetworkSchema, z.literal('inherit')]).optional().meta({ description: 'A network profile for this endpoint, or `"inherit"` (the default) for the backend\'s `network`.' }),
   scenarios: z.record(z.string(), ScenarioSchema).default({}),
   importedFrom: z.string().max(100).optional().meta({ description: 'Fingerprint of the endpoint as an API file import made it. A different fingerprint now means someone edited it.' }),
 };
@@ -337,6 +370,12 @@ export const BackendSchema = z
       .default('open')
       .meta({ description: '`open`: the public API answers anyone. `key`: every public request needs an `x-tempo-access-key` header with a key of scope `public` (team server only).' }),
     certsDir: z.string().optional().meta({ description: 'Folder with cert.pem and key.pem. Defaults to `.data/certs`.' }),
+    latency: z
+      .strictObject({ default: LatencySchema.optional().meta({ description: 'The delay of every endpoint that does not set its own.' }) })
+      .optional()
+      .meta({ description: 'Delays. A scenario\'s `delayMs` wins over an endpoint\'s `latency`, which wins over this.' }),
+    network: NetworkSchema.optional().meta({ description: 'The connection profile of every endpoint that does not set its own.' }),
+    testMode: z.boolean().default(false).meta({ description: 'Zero every delay, throttle and timeout (and fix `{{now}}` and the random values). A request can opt back in with `x-tempo-test-delays: 1`.' }),
     auth: AuthConfig.default(() => AuthConfig.parse({})),
     media: z.strictObject({ maxBytes: z.number().int().positive().default(104_857_600) }).default({ maxBytes: 104_857_600 }),
     collections: z.array(CollectionSchema).default([]),
