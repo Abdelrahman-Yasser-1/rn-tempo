@@ -31,11 +31,14 @@ const USAGE = `local-backend-engine: serve a Tempo Local Backend folder
                               the team server: accounts, roles, API keys and an audit log, for Docker behind Caddy
   local-backend-engine server owner create --email <email> [--name <name>] [--password-stdin]
   local-backend-engine server owner reset-password --email <email> [--password-stdin] [--reset-totp]
-  local-backend-engine serve  <dir> [--port <n>] [--http] [--admin-port <n>] [--no-watch] [--parent-stdin]
+  local-backend-engine serve  <dir> [--port <n>] [--http] [--admin-port <n>] [--no-watch] [--parent-stdin] [--test-mode]
 
 With no command (for example \`npx @rn-tempo/local-backend\`) the engine runs \`web\`: it prints a one-time login code, opens
 http://127.0.0.1:<port>/login and serves the dashboard on 127.0.0.1 only. Backends live in --backends-dir
 (default ~/.tempo-local-backend/backends).
+
+--test-mode turns every delay, throttle and timeout off (and fixes {{now}} and the random values); a request can opt back in
+with the header x-tempo-test-delays: 1.
 
 serve prints one JSON line on stdout when it is ready, with the admin port and its token.
 That line is the only place the token appears.
@@ -43,12 +46,13 @@ That line is the only place the token appears.
 
 const err = (line: string): void => void process.stderr.write(`${line}\n`);
 
-async function serve(dir: string, values: { port?: string | undefined; http?: boolean | undefined; 'admin-port'?: string | undefined; 'no-watch'?: boolean | undefined; 'parent-stdin'?: boolean | undefined }): Promise<void> {
+async function serve(dir: string, values: { port?: string | undefined; http?: boolean | undefined; 'admin-port'?: string | undefined; 'no-watch'?: boolean | undefined; 'parent-stdin'?: boolean | undefined; 'test-mode'?: boolean | undefined }): Promise<void> {
   const running = await startBackend(dir, {
     ...(values.port === undefined ? {} : { port: Number(values.port) }),
     ...(values.http === true ? { https: false } : {}),
     ...(values['admin-port'] === undefined ? {} : { adminPort: Number(values['admin-port']) }),
     ...(values['no-watch'] === true ? { watch: false } : {}),
+    ...(values['test-mode'] === true ? { testMode: true } : {}),
   });
   if (running.notice !== undefined) err(running.notice);
   err(`${running.engine.definition.name}: ${running.scheme}://localhost:${running.port}  (docs at /__docs)`);
@@ -125,6 +129,7 @@ async function main(): Promise<void> {
       http: { type: 'boolean' },
       'no-watch': { type: 'boolean' },
       'parent-stdin': { type: 'boolean' },
+      'test-mode': { type: 'boolean' },
       'backends-dir': { type: 'string' },
       'no-open': { type: 'boolean' },
       'data-dir': { type: 'string' },

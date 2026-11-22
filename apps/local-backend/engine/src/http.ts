@@ -4,6 +4,7 @@ import type { IncomingHttpHeaders, IncomingMessage } from 'node:http';
 import { problem, PROBLEM_CONTENT_TYPE, type FieldIssue } from '@rn-tempo/api-contract';
 
 import type { AuthUser } from './accounts.ts';
+import type { RequestPlan } from './network.ts';
 
 /** A request as the engine sees it: the listener has already read the (size-limited) body. */
 export interface RequestCtx {
@@ -23,6 +24,10 @@ export interface RequestCtx {
   user?: AuthUser;
   /** The scenario that was picked for this request, when it still reaches the endpoint. */
   scenario?: string;
+  /** The delay and throttling of this request, worked out before its body was read. The engine makes one when it is missing. */
+  plan?: RequestPlan;
+  /** Aborts when the client goes away, so waiting stops at once. */
+  signal?: AbortSignal;
 }
 
 export interface Reply {
@@ -38,6 +43,12 @@ export interface Reply {
   stream?: Readable;
   /** The scenario that shaped this reply. */
   scenario?: string;
+  /** Send the body at this many kilobits per second. */
+  downloadKbps?: number;
+  /** Close the connection without sending anything (the `timeout` preset). */
+  close?: true;
+  /** The client left while the engine was waiting: nothing is sent. */
+  abandoned?: true;
 }
 
 export const jsonReply = (status: number, body: unknown, headers: Record<string, string> = {}): Reply => ({

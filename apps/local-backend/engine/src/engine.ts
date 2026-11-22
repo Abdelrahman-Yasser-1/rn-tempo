@@ -1,3 +1,5 @@
+import { randomBytes } from 'node:crypto';
+import type { IncomingHttpHeaders } from 'node:http';
 import { join } from 'node:path';
 
 import { BUILTIN_SCENARIOS, redactUrl, RequestLog, SCENARIO_HEADER } from '@rn-tempo/dev-api';
@@ -13,6 +15,9 @@ import { readSeedFile, type BackendFolder } from './folder.ts';
 import { jsonReply, loggableBody, problemReply, readJson, type Reply, type RequestCtx } from './http.ts';
 import type { EngineLogger } from './logs.ts';
 import { downloadReply, MediaService, uploadFailure, uploadJson } from './media.ts';
+import { Rng } from './import/generate.ts';
+import { noteOf, paceRequest, planNetwork, requestSeed, sleepFor, testModeOf, type NetworkPlan, type RequestPlan } from './network.ts';
+import { TEST_MODE_SEED } from './constants.ts';
 import { mountPath, Router, type Handler } from './router.ts';
 import { buildRequestValidator, invalidRequest } from './import/request-validation.ts';
 import type { Backend, Collection, Endpoint, Scenario, StaticEndpoint } from './schema.ts';
@@ -21,8 +26,12 @@ import { Store, type Plan, type RenameHints } from './store.ts';
 import { loadJwtSecret } from './tokens.ts';
 
 export interface EngineOptions {
-  /** Waits for a scenario's delay. Tests pass a faster one. */
-  sleep?: (ms: number) => Promise<void>;
+  /** Waits for a delay. Tests pass a faster one. It must return early when `signal` aborts. */
+  sleep?: (ms: number, signal?: AbortSignal) => Promise<void>;
+  /** Test mode for every request: no delays, throttling or timeouts, a fixed clock and seeded random values. */
+  testMode?: boolean;
+  /** The seed of random delays (and of random values outside test mode). A fresh random one by default. */
+  seed?: string;
   now?: () => Date;
   /**
    * Decides whether a `bearer` endpoint may be called. The default verifies the JWT and sets `ctx.user`;
@@ -42,10 +51,10 @@ interface State {
   router: Router;
 }
 
+type Held = 'ok' | 'closed' | 'abandoned';
+
 /** How often scheduled content is checked. */
 export const SCHEDULE_TICK_MS = 30_000;
-
-const defaultSleep = (ms: number): Promise<void> => new Promise((done) => setTimeout(done, ms));
 
 /**
  * The running backend: a definition, its database, the route table built from it, the scenario picks and
@@ -70,6 +79,10 @@ export class Engine {
   readonly handlers: HandlerPool;
   private state: State;
   private readonly options: Required<Pick<EngineOptions, 'sleep' | 'now' | 'authorize'>> & Pick<EngineOptions, 'onRequest' | 'logger'>;
+  /** Turns delays off for every request (`--test-mode`). */
+  readonly testMode: boolean;
+  private readonly seed: string;
+  private requestCounter = 0;
   private readonly scenarioPicks = new Map<string, string>();
   private queue: Promise<unknown> = Promise.resolve();
   private readonly dueTimer: NodeJS.Timeout;
@@ -79,13 +92,15 @@ export class Engine {
     this.store = store;
     this.state = state;
     this.publicPrefix = options.publicPrefix ?? '';
+    this.testMode = options.testMode === true;
+    this.seed = options.seed ?? randomBytes(8).toString('hex');
     const now = options.now ?? ((): Date => new Date());
     this.auth = new AuthService(new Accounts(store.db, now), loadJwtSecret(folder.dataDir), () => this.state.definition.auth, now);
     this.media = new MediaService(folder.dataDir, store.db, now);
     this.content = content;
     this.handlers = new HandlerPool(options.logger);
     this.options = {
-      sleep: options.sleep ?? defaultSleep,
+      sleep: options.sleep ?? sleepFor,
       now,
       authorize: options.authorize ?? ((ctx): boolean => this.auth.authenticate(ctx)),
       ...(options.onRequest === undefined ? {} : { onRequest: options.onRequest }),
@@ -193,6 +208,9 @@ export class Engine {
         return async (ctx) => {
           try {
             const limit = endpoint.maxBytes ?? this.state.definition.media.maxBytes;
+            // Slow uploads are paced here, right before the body is read, because an upload reads its own stream.
+            const uploadKbps = ctx.plan?.network.uploadKbps;
+            if (uploadKbps !== undefined && ctx.stream !== undefined) paceRequest(ctx.stream, uploadKbps);
             const records = await this.media.receive(ctx, { maxBytes: limit, multiple: endpoint.multiple, uploadedBy: ctx.user?.id });
             return uploadJson(
               records.map((record) => this.media.describe(record, this.mediaUrl(record.id, ctx.origin))),
@@ -320,38 +338,68 @@ export class Engine {
     else this.scenarioPicks.delete(endpointId);
   }
 
+  // ---- network simulation
+
+  /**
+   * The delay and throttling of a request, worked out from its endpoint, the scenario it picks and its headers. The public
+   * listener calls it before the body is read; `handle` calls it when nobody did. A random delay is drawn from an RNG seeded
+   * with this request's number, so the same number always gives the same delay.
+   */
+  planRequest(method: string, path: string, headers: IncomingHttpHeaders, router: Router = this.state.router): RequestPlan {
+    const found = router.match(method, path);
+    const endpoint = found.kind === 'found' ? found.route.endpoint : undefined;
+    const definition = this.state.definition;
+    const { testMode, zeroed } = testModeOf({ engine: this.testMode, definition: definition.testMode, headers });
+    const requestId = (this.requestCounter += 1);
+    const header = headers[SCENARIO_HEADER];
+    const picked = typeof header === 'string' && header !== '' ? header : endpoint === undefined ? undefined : this.scenarioPicks.get(endpoint.id);
+    const scenario = endpoint === undefined || picked === undefined ? undefined : this.findScenario(endpoint, picked);
+    const network = planNetwork({ definition, endpoint, scenario, zeroed, rng: new Rng(requestSeed(testMode ? TEST_MODE_SEED : this.seed, requestId)) });
+    return { requestId, testMode, network };
+  }
+
   // ---- requests
 
   /** Answers one request and records it in the request log. Never throws. */
   async handle(ctx: RequestCtx): Promise<Reply> {
     const started = process.hrtime.bigint();
     const router = this.state.router; // held for the whole request
+    const plan = ctx.plan ?? this.planRequest(ctx.method, ctx.path, ctx.headers, router);
+    ctx.plan = plan;
     let endpointId: string | undefined;
     let reply: Reply;
+    let outcome: Held = 'ok';
     try {
       const publicContent = handleContent(
         { definition: this.state.definition, content: this.content, media: this.media, mediaUrl: (id, origin) => this.mediaUrl(id, origin) },
         ctx,
       );
-      if (publicContent !== undefined) {
+      const match = publicContent === undefined ? router.match(ctx.method, ctx.path) : undefined;
+      if (match?.kind === 'found') endpointId = match.route.endpoint.id;
+      outcome = await this.hold(plan.network, ctx.signal);
+      if (outcome === 'closed') {
+        reply = { status: 0, headers: {}, close: true };
+      } else if (outcome === 'abandoned') {
+        reply = { status: 499, headers: {}, abandoned: true };
+      } else if (publicContent !== undefined) {
         reply = publicContent;
+      } else if (match?.kind === 'none') {
+        reply = problemReply(404, { detail: `No endpoint for ${ctx.method} ${ctx.path}.` });
+      } else if (match?.kind === 'method') {
+        reply = problemReply(405, { detail: `${ctx.method} is not allowed here.`, headers: { allow: match.allowed.join(', ') } });
+      } else if (match?.kind === 'found') {
+        const { endpoint } = match.route;
+        reply = await this.run(ctx, endpoint, () => match.route.handler(ctx, match.params));
       } else {
-        const match = router.match(ctx.method, ctx.path);
-        if (match.kind === 'none') {
-          reply = problemReply(404, { detail: `No endpoint for ${ctx.method} ${ctx.path}.` });
-        } else if (match.kind === 'method') {
-          reply = problemReply(405, { detail: `${ctx.method} is not allowed here.`, headers: { allow: match.allowed.join(', ') } });
-        } else {
-          const { endpoint } = match.route;
-          endpointId = endpoint.id;
-          reply = await this.run(ctx, endpoint, () => match.route.handler(ctx, match.params));
-        }
+        reply = problemReply(500, { detail: 'Unexpected server error.' });
       }
     } catch (error) {
       this.options.logger?.error({ err: error instanceof Error ? error.message : String(error), method: ctx.method, path: ctx.path }, 'request failed');
       reply = problemReply(500, { detail: 'Unexpected server error.' });
     }
+    if (outcome === 'ok' && plan.network.downloadKbps !== undefined) reply = { ...reply, downloadKbps: plan.network.downloadKbps };
     const ms = Math.round(Number(process.hrtime.bigint() - started) / 1e6);
+    const network = noteOf(plan.network, outcome === 'closed' ? 'closed' : 'done');
     const entry = this.requests.record(
       {
         method: ctx.method,
@@ -359,6 +407,7 @@ export class Engine {
         status: reply.status,
         ms,
         scenario: reply.scenario,
+        network,
         reqHeaders: ctx.headers,
         reqBody: loggableBody(ctx),
         resBody: reply.body,
@@ -368,6 +417,14 @@ export class Engine {
     this.stats.record(endpointId, reply.status, ms);
     this.options.onRequest?.(entry, endpointId);
     return reply;
+  }
+
+  /** Waits the planned delay. The `timeout` plan ends in `closed`; a client that leaves meanwhile ends it early as `abandoned`. */
+  private async hold(plan: NetworkPlan, signal?: AbortSignal): Promise<Held> {
+    if (plan.delayMs <= 0) return 'ok';
+    await this.options.sleep(plan.delayMs, signal);
+    if (signal?.aborted === true) return 'abandoned';
+    return plan.timeoutMs === undefined ? 'ok' : 'closed';
   }
 
   /** Auth, then the scenario (header first, then the admin pick), then the endpoint itself. */
@@ -384,7 +441,6 @@ export class Engine {
     }
     if (scenario === undefined || name === undefined) return handle();
     ctx.scenario = name;
-    if (scenario.delayMs !== undefined) await this.options.sleep(scenario.delayMs);
     const status = scenario.status ?? 200;
     const extra = scenario.headers ?? {};
     if (scenario.body !== undefined) return { ...jsonReply(status, scenario.body, extra), scenario: name };

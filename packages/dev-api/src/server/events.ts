@@ -21,8 +21,24 @@ export interface RequestEntry {
   status: number;
   ms: number;
   scenario?: string;
+  /** Network simulation of the Tempo Local Backend: what was applied to this request (absent when nothing was). */
+  network?: NetworkNote;
   req: { headers: unknown } & BodyView;
   res: BodyView;
+}
+
+/** What the Tempo Local Backend's delay and throttle settings did to one request. */
+export interface NetworkNote {
+  /** Milliseconds the answer was held back before the endpoint ran (a timeout counts its whole wait). */
+  delayMs?: number;
+  /** Where the delay came from: `scenario`, `endpoint`, `default`, `preset` or `timeout`. */
+  delaySource?: string;
+  downloadKbps?: number;
+  uploadKbps?: number;
+  /** The connection was closed without an answer (the `timeout` preset). */
+  timedOut?: true;
+  /** Test mode zeroed the delays and throttling. */
+  testMode?: true;
 }
 
 export interface EntryInput {
@@ -31,6 +47,7 @@ export interface EntryInput {
   status: number;
   ms: number;
   scenario?: string | undefined;
+  network?: NetworkNote | undefined;
   reqHeaders: unknown;
   reqBody: unknown;
   resBody: unknown;
@@ -71,6 +88,7 @@ export class RequestLog {
       status: input.status,
       ms: input.ms,
       ...(input.scenario === undefined ? {} : { scenario: input.scenario }),
+      ...(input.network === undefined ? {} : { network: input.network }),
       req: { headers: redactDeep(input.reqHeaders), ...req },
       res,
     };

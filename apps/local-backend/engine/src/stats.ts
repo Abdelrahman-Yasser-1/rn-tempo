@@ -47,7 +47,8 @@ export class Stats {
     const at = this.now();
     this.recent.push(at);
     this.total += 1;
-    const failed = status >= 400;
+    // Status 0 is a connection closed without an answer (the `timeout` preset).
+    const failed = status >= 400 || status === 0;
     if (failed) this.errors += 1;
     const key = endpointId ?? '(unmatched)';
     const entry = this.perEndpoint.get(key) ?? { count: 0, errors: 0, samples: [] };
