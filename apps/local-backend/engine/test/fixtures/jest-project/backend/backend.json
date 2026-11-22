@@ -1,0 +1,120 @@
+{
+  "name": "Jest fixture",
+  "port": 8443,
+  "https": false,
+  "latency": {
+    "default": {
+      "fixedMs": 2000
+    }
+  },
+  "collections": [
+    {
+      "name": "products",
+      "fields": [
+        {
+          "name": "title",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "name": "price",
+          "type": "number",
+          "required": true
+        },
+        {
+          "name": "category",
+          "type": "string"
+        },
+        {
+          "name": "stock",
+          "type": "number",
+          "default": 0
+        }
+      ],
+      "seed": "products.json"
+    }
+  ],
+  "endpoints": [
+    {
+      "id": "products.list",
+      "type": "crud",
+      "collection": "products",
+      "action": "list",
+      "method": "GET",
+      "path": "/products",
+      "tags": [
+        "products"
+      ]
+    },
+    {
+      "id": "products.search",
+      "type": "crud",
+      "collection": "products",
+      "action": "list",
+      "method": "GET",
+      "path": "/products/search",
+      "tags": [
+        "products"
+      ]
+    },
+    {
+      "id": "products.get",
+      "type": "crud",
+      "collection": "products",
+      "action": "get",
+      "method": "GET",
+      "path": "/products/:id",
+      "tags": [
+        "products"
+      ]
+    },
+    {
+      "id": "products.create",
+      "type": "crud",
+      "collection": "products",
+      "action": "create",
+      "method": "POST",
+      "path": "/products",
+      "tags": [
+        "products"
+      ]
+    },
+    {
+      "id": "products.update",
+      "type": "crud",
+      "collection": "products",
+      "action": "update",
+      "method": "PUT",
+      "path": "/products/:id",
+      "tags": [
+        "products"
+      ]
+    },
+    {
+      "id": "products.patch",
+      "type": "crud",
+      "collection": "products",
+      "action": "update",
+      "method": "PATCH",
+      "path": "/products/:id",
+      "tags": [
+        "products"
+      ]
+    },
+    {
+      "id": "products.delete",
+      "type": "crud",
+      "collection": "products",
+      "action": "delete",
+      "method": "DELETE",
+      "path": "/products/:id",
+      "tags": [
+        "products"
+      ]
+    }
+  ]
+}

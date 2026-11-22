@@ -1,0 +1,702 @@
+[
+ {
+  "title": "Product 001",
+  "description": "Fixture product number 1.",
+  "price": 1.5,
+  "category": "home",
+  "stock": 1
+ },
+ {
+  "title": "Product 002",
+  "description": "Fixture product number 2.",
+  "price": 2.0,
+  "category": "tools",
+  "stock": 2
+ },
+ {
+  "title": "Product 003",
+  "description": "Fixture product number 3.",
+  "price": 2.5,
+  "category": "toys",
+  "stock": 3
+ },
+ {
+  "title": "Product 004",
+  "description": "Fixture product number 4.",
+  "price": 3.0,
+  "category": "beauty",
+  "stock": 4
+ },
+ {
+  "title": "Product 005",
+  "description": "Fixture product number 5.",
+  "price": 3.5,
+  "category": "home",
+  "stock": 5
+ },
+ {
+  "title": "Product 006",
+  "description": "Fixture product number 6.",
+  "price": 4.0,
+  "category": "tools",
+  "stock": 6
+ },
+ {
+  "title": "Product 007",
+  "description": "Fixture product number 7.",
+  "price": 4.5,
+  "category": "toys",
+  "stock": 7
+ },
+ {
+  "title": "Product 008",
+  "description": "Fixture product number 8.",
+  "price": 5.0,
+  "category": "beauty",
+  "stock": 8
+ },
+ {
+  "title": "Product 009",
+  "description": "Fixture product number 9.",
+  "price": 5.5,
+  "category": "home",
+  "stock": 9
+ },
+ {
+  "title": "Product 010",
+  "description": "Fixture product number 10.",
+  "price": 6.0,
+  "category": "tools",
+  "stock": 10
+ },
+ {
+  "title": "Product 011",
+  "description": "Fixture product number 11.",
+  "price": 6.5,
+  "category": "toys",
+  "stock": 11
+ },
+ {
+  "title": "Product 012",
+  "description": "Fixture product number 12.",
+  "price": 7.0,
+  "category": "beauty",
+  "stock": 12
+ },
+ {
+  "title": "Product 013",
+  "description": "Fixture product number 13.",
+  "price": 7.5,
+  "category": "home",
+  "stock": 13
+ },
+ {
+  "title": "Product 014",
+  "description": "Fixture product number 14.",
+  "price": 8.0,
+  "category": "tools",
+  "stock": 14
+ },
+ {
+  "title": "Product 015",
+  "description": "Fixture product number 15.",
+  "price": 8.5,
+  "category": "toys",
+  "stock": 15
+ },
+ {
+  "title": "Product 016",
+  "description": "Fixture product number 16.",
+  "price": 9.0,
+  "category": "beauty",
+  "stock": 16
+ },
+ {
+  "title": "Product 017",
+  "description": "Fixture product number 17.",
+  "price": 9.5,
+  "category": "home",
+  "stock": 0
+ },
+ {
+  "title": "Product 018",
+  "description": "Fixture product number 18.",
+  "price": 10.0,
+  "category": "tools",
+  "stock": 1
+ },
+ {
+  "title": "Product 019",
+  "description": "Fixture product number 19.",
+  "price": 10.5,
+  "category": "toys",
+  "stock": 2
+ },
+ {
+  "title": "Product 020",
+  "description": "Fixture product number 20.",
+  "price": 11.0,
+  "category": "beauty",
+  "stock": 3
+ },
+ {
+  "title": "Product 021",
+  "description": "Fixture product number 21.",
+  "price": 11.5,
+  "category": "home",
+  "stock": 4
+ },
+ {
+  "title": "Product 022",
+  "description": "Fixture product number 22.",
+  "price": 12.0,
+  "category": "tools",
+  "stock": 5
+ },
+ {
+  "title": "Product 023",
+  "description": "Fixture product number 23.",
+  "price": 12.5,
+  "category": "toys",
+  "stock": 6
+ },
+ {
+  "title": "Product 024",
+  "description": "Fixture product number 24.",
+  "price": 13.0,
+  "category": "beauty",
+  "stock": 7
+ },
+ {
+  "title": "Product 025",
+  "description": "Fixture product number 25.",
+  "price": 13.5,
+  "category": "home",
+  "stock": 8
+ },
+ {
+  "title": "Product 026",
+  "description": "Fixture product number 26.",
+  "price": 14.0,
+  "category": "tools",
+  "stock": 9
+ },
+ {
+  "title": "Product 027",
+  "description": "Fixture product number 27.",
+  "price": 14.5,
+  "category": "toys",
+  "stock": 10
+ },
+ {
+  "title": "Product 028",
+  "description": "Fixture product number 28.",
+  "price": 15.0,
+  "category": "beauty",
+  "stock": 11
+ },
+ {
+  "title": "Product 029",
+  "description": "Fixture product number 29.",
+  "price": 15.5,
+  "category": "home",
+  "stock": 12
+ },
+ {
+  "title": "Product 030",
+  "description": "Fixture product number 30.",
+  "price": 16.0,
+  "category": "tools",
+  "stock": 13
+ },
+ {
+  "title": "Product 031",
+  "description": "Fixture product number 31.",
+  "price": 16.5,
+  "category": "toys",
+  "stock": 14
+ },
+ {
+  "title": "Product 032",
+  "description": "Fixture product number 32.",
+  "price": 17.0,
+  "category": "beauty",
+  "stock": 15
+ },
+ {
+  "title": "Product 033",
+  "description": "Fixture product number 33.",
+  "price": 17.5,
+  "category": "home",
+  "stock": 16
+ },
+ {
+  "title": "Product 034",
+  "description": "Fixture product number 34.",
+  "price": 18.0,
+  "category": "tools",
+  "stock": 0
+ },
+ {
+  "title": "Product 035",
+  "description": "Fixture product number 35.",
+  "price": 18.5,
+  "category": "toys",
+  "stock": 1
+ },
+ {
+  "title": "Product 036",
+  "description": "Fixture product number 36.",
+  "price": 19.0,
+  "category": "beauty",
+  "stock": 2
+ },
+ {
+  "title": "Product 037",
+  "description": "Fixture product number 37.",
+  "price": 19.5,
+  "category": "home",
+  "stock": 3
+ },
+ {
+  "title": "Product 038",
+  "description": "Fixture product number 38.",
+  "price": 20.0,
+  "category": "tools",
+  "stock": 4
+ },
+ {
+  "title": "Product 039",
+  "description": "Fixture product number 39.",
+  "price": 20.5,
+  "category": "toys",
+  "stock": 5
+ },
+ {
+  "title": "Product 040",
+  "description": "Fixture product number 40.",
+  "price": 21.0,
+  "category": "beauty",
+  "stock": 6
+ },
+ {
+  "title": "Product 041",
+  "description": "Fixture product number 41.",
+  "price": 21.5,
+  "category": "home",
+  "stock": 7
+ },
+ {
+  "title": "Product 042",
+  "description": "Fixture product number 42.",
+  "price": 22.0,
+  "category": "tools",
+  "stock": 8
+ },
+ {
+  "title": "Product 043",
+  "description": "Fixture product number 43.",
+  "price": 22.5,
+  "category": "toys",
+  "stock": 9
+ },
+ {
+  "title": "Product 044",
+  "description": "Fixture product number 44.",
+  "price": 23.0,
+  "category": "beauty",
+  "stock": 10
+ },
+ {
+  "title": "Product 045",
+  "description": "Fixture product number 45.",
+  "price": 23.5,
+  "category": "home",
+  "stock": 11
+ },
+ {
+  "title": "Product 046",
+  "description": "Fixture product number 46.",
+  "price": 24.0,
+  "category": "tools",
+  "stock": 12
+ },
+ {
+  "title": "Product 047",
+  "description": "Fixture product number 47.",
+  "price": 24.5,
+  "category": "toys",
+  "stock": 13
+ },
+ {
+  "title": "Product 048",
+  "description": "Fixture product number 48.",
+  "price": 25.0,
+  "category": "beauty",
+  "stock": 14
+ },
+ {
+  "title": "Product 049",
+  "description": "Fixture product number 49.",
+  "price": 25.5,
+  "category": "home",
+  "stock": 15
+ },
+ {
+  "title": "Product 050",
+  "description": "Fixture product number 50.",
+  "price": 26.0,
+  "category": "tools",
+  "stock": 16
+ },
+ {
+  "title": "Product 051",
+  "description": "Fixture product number 51.",
+  "price": 26.5,
+  "category": "toys",
+  "stock": 0
+ },
+ {
+  "title": "Product 052",
+  "description": "Fixture product number 52.",
+  "price": 27.0,
+  "category": "beauty",
+  "stock": 1
+ },
+ {
+  "title": "Product 053",
+  "description": "Fixture product number 53.",
+  "price": 27.5,
+  "category": "home",
+  "stock": 2
+ },
+ {
+  "title": "Product 054",
+  "description": "Fixture product number 54.",
+  "price": 28.0,
+  "category": "tools",
+  "stock": 3
+ },
+ {
+  "title": "Product 055",
+  "description": "Fixture product number 55.",
+  "price": 28.5,
+  "category": "toys",
+  "stock": 4
+ },
+ {
+  "title": "Product 056",
+  "description": "Fixture product number 56.",
+  "price": 29.0,
+  "category": "beauty",
+  "stock": 5
+ },
+ {
+  "title": "Product 057",
+  "description": "Fixture product number 57.",
+  "price": 29.5,
+  "category": "home",
+  "stock": 6
+ },
+ {
+  "title": "Product 058",
+  "description": "Fixture product number 58.",
+  "price": 30.0,
+  "category": "tools",
+  "stock": 7
+ },
+ {
+  "title": "Product 059",
+  "description": "Fixture product number 59.",
+  "price": 30.5,
+  "category": "toys",
+  "stock": 8
+ },
+ {
+  "title": "Product 060",
+  "description": "Fixture product number 60.",
+  "price": 31.0,
+  "category": "beauty",
+  "stock": 9
+ },
+ {
+  "title": "Product 061",
+  "description": "Fixture product number 61.",
+  "price": 31.5,
+  "category": "home",
+  "stock": 10
+ },
+ {
+  "title": "Product 062",
+  "description": "Fixture product number 62.",
+  "price": 32.0,
+  "category": "tools",
+  "stock": 11
+ },
+ {
+  "title": "Product 063",
+  "description": "Fixture product number 63.",
+  "price": 32.5,
+  "category": "toys",
+  "stock": 12
+ },
+ {
+  "title": "Product 064",
+  "description": "Fixture product number 64.",
+  "price": 33.0,
+  "category": "beauty",
+  "stock": 13
+ },
+ {
+  "title": "Product 065",
+  "description": "Fixture product number 65.",
+  "price": 33.5,
+  "category": "home",
+  "stock": 14
+ },
+ {
+  "title": "Product 066",
+  "description": "Fixture product number 66.",
+  "price": 34.0,
+  "category": "tools",
+  "stock": 15
+ },
+ {
+  "title": "Product 067",
+  "description": "Fixture product number 67.",
+  "price": 34.5,
+  "category": "toys",
+  "stock": 16
+ },
+ {
+  "title": "Product 068",
+  "description": "Fixture product number 68.",
+  "price": 35.0,
+  "category": "beauty",
+  "stock": 0
+ },
+ {
+  "title": "Product 069",
+  "description": "Fixture product number 69.",
+  "price": 35.5,
+  "category": "home",
+  "stock": 1
+ },
+ {
+  "title": "Product 070",
+  "description": "Fixture product number 70.",
+  "price": 36.0,
+  "category": "tools",
+  "stock": 2
+ },
+ {
+  "title": "Product 071",
+  "description": "Fixture product number 71.",
+  "price": 36.5,
+  "category": "toys",
+  "stock": 3
+ },
+ {
+  "title": "Product 072",
+  "description": "Fixture product number 72.",
+  "price": 37.0,
+  "category": "beauty",
+  "stock": 4
+ },
+ {
+  "title": "Product 073",
+  "description": "Fixture product number 73.",
+  "price": 37.5,
+  "category": "home",
+  "stock": 5
+ },
+ {
+  "title": "Product 074",
+  "description": "Fixture product number 74.",
+  "price": 38.0,
+  "category": "tools",
+  "stock": 6
+ },
+ {
+  "title": "Product 075",
+  "description": "Fixture product number 75.",
+  "price": 38.5,
+  "category": "toys",
+  "stock": 7
+ },
+ {
+  "title": "Product 076",
+  "description": "Fixture product number 76.",
+  "price": 39.0,
+  "category": "beauty",
+  "stock": 8
+ },
+ {
+  "title": "Product 077",
+  "description": "Fixture product number 77.",
+  "price": 39.5,
+  "category": "home",
+  "stock": 9
+ },
+ {
+  "title": "Product 078",
+  "description": "Fixture product number 78.",
+  "price": 40.0,
+  "category": "tools",
+  "stock": 10
+ },
+ {
+  "title": "Product 079",
+  "description": "Fixture product number 79.",
+  "price": 40.5,
+  "category": "toys",
+  "stock": 11
+ },
+ {
+  "title": "Product 080",
+  "description": "Fixture product number 80.",
+  "price": 41.0,
+  "category": "beauty",
+  "stock": 12
+ },
+ {
+  "title": "Product 081",
+  "description": "Fixture product number 81.",
+  "price": 41.5,
+  "category": "home",
+  "stock": 13
+ },
+ {
+  "title": "Product 082",
+  "description": "Fixture product number 82.",
+  "price": 42.0,
+  "category": "tools",
+  "stock": 14
+ },
+ {
+  "title": "Product 083",
+  "description": "Fixture product number 83.",
+  "price": 42.5,
+  "category": "toys",
+  "stock": 15
+ },
+ {
+  "title": "Product 084",
+  "description": "Fixture product number 84.",
+  "price": 43.0,
+  "category": "beauty",
+  "stock": 16
+ },
+ {
+  "title": "Product 085",
+  "description": "Fixture product number 85.",
+  "price": 43.5,
+  "category": "home",
+  "stock": 0
+ },
+ {
+  "title": "Product 086",
+  "description": "Fixture product number 86.",
+  "price": 44.0,
+  "category": "tools",
+  "stock": 1
+ },
+ {
+  "title": "Product 087",
+  "description": "Fixture product number 87.",
+  "price": 44.5,
+  "category": "toys",
+  "stock": 2
+ },
+ {
+  "title": "Product 088",
+  "description": "Fixture product number 88.",
+  "price": 45.0,
+  "category": "beauty",
+  "stock": 3
+ },
+ {
+  "title": "Product 089",
+  "description": "Fixture product number 89.",
+  "price": 45.5,
+  "category": "home",
+  "stock": 4
+ },
+ {
+  "title": "Product 090",
+  "description": "Fixture product number 90.",
+  "price": 46.0,
+  "category": "tools",
+  "stock": 5
+ },
+ {
+  "title": "Product 091",
+  "description": "Fixture product number 91.",
+  "price": 46.5,
+  "category": "toys",
+  "stock": 6
+ },
+ {
+  "title": "Product 092",
+  "description": "Fixture product number 92.",
+  "price": 47.0,
+  "category": "beauty",
+  "stock": 7
+ },
+ {
+  "title": "Product 093",
+  "description": "Fixture product number 93.",
+  "price": 47.5,
+  "category": "home",
+  "stock": 8
+ },
+ {
+  "title": "Product 094",
+  "description": "Fixture product number 94.",
+  "price": 48.0,
+  "category": "tools",
+  "stock": 9
+ },
+ {
+  "title": "Product 095",
+  "description": "Fixture product number 95.",
+  "price": 48.5,
+  "category": "toys",
+  "stock": 10
+ },
+ {
+  "title": "Product 096",
+  "description": "Fixture product number 96.",
+  "price": 49.0,
+  "category": "beauty",
+  "stock": 11
+ },
+ {
+  "title": "Product 097",
+  "description": "Fixture product number 97.",
+  "price": 49.5,
+  "category": "home",
+  "stock": 12
+ },
+ {
+  "title": "Product 098",
+  "description": "Fixture product number 98.",
+  "price": 50.0,
+  "category": "tools",
+  "stock": 13
+ },
+ {
+  "title": "Product 099",
+  "description": "Fixture product number 99.",
+  "price": 50.5,
+  "category": "toys",
+  "stock": 14
+ },
+ {
+  "title": "Product 100",
+  "description": "Fixture product number 100.",
+  "price": 51.0,
+  "category": "beauty",
+  "stock": 15
+ }
+]

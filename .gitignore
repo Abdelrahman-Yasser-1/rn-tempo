@@ -54,3 +54,4 @@ docker/certs/
 apps/*/src-tauri/target/
 apps/*/src-tauri/gen/
 apps/*/src-tauri/resources/
+apps/local-backend/engine/.kit-stage/
