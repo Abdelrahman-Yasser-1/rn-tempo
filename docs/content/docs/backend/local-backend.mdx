@@ -160,6 +160,110 @@ Endpoints you made yourself are never listed as removed. A new operation whose m
 
 On a team server, previewing and importing need the **editor** role, and both are written to the audit log.
 
+### 4.2 Delays and network presets
+
+Make the backend as slow as a real connection. Set it for the whole backend in **Settings, Network**, or for one endpoint in its form under **Speed**.
+
+| Preset | Delay | Download | Upload |
+| --- | --- | --- | --- |
+| Instant | none | no limit | no limit |
+| Fast Wi-Fi | 20 ms | 30 Mbps | 15 Mbps |
+| 4G | 60 ms | 9 Mbps | 1.5 Mbps |
+| Slow 3G | 400 ms | 500 kbps | 500 kbps |
+| Timeout | holds the request, then closes the connection without an answer (30 s, or your `timeoutMs`) | | |
+| Custom | only the speeds you type | | |
+
+4G and Slow 3G use the numbers of Chrome DevTools' "Fast 4G" and "Slow 3G" profiles. Fast Wi-Fi is a typical home connection, not a DevTools profile.
+
+The same settings in `backend.json`:
+
+```json
+{
+  "latency": { "default": { "minMs": 100, "maxMs": 900 } },
+  "network": { "preset": "4g" },
+  "endpoints": [
+    { "id": "get.slow", "type": "static", "method": "GET", "path": "/slow", "latency": { "fixedMs": 2000 }, "network": { "preset": "custom", "downloadKbps": 200 } }
+  ]
+}
+```
+
+Which delay wins, first match: a scenario's `delayMs`, the endpoint's `latency`, the backend's `latency.default`, then the preset's own delay. An endpoint's `network` replaces the backend's. `"inherit"` (the default) uses the backend's.
+
+- A **random range** picks a value for each request from a generator seeded by the request number, so a run can be repeated. The **Logs** detail shows what was applied, for example "delayed 734 ms (default), download 500 kbps".
+- **Throttling** sends response bodies, including media downloads, in small pieces at the set speed, and reads request bodies at the set upload speed. Everything stops at once when the app disconnects.
+- A request that times out shows as **closed** in the log.
+
+**Test mode** turns every delay, speed limit and timeout off, and fixes `{{now}}` and the random values. Turn it on for a whole backend (`"testMode": true`, or the checkbox in Settings), for the engine (`local-backend-engine serve <dir> --test-mode`), or for one request with the header `x-tempo-test-mode: 1`. Send `x-tempo-test-delays: 1` as well to keep the configured delays anyway, for a test that is about slowness.
+
+### 4.3 A shared response shape and templates
+
+In **Settings, Responses** (or `responses` in `backend.json`) you can give every answer the same shape.
+
+```json
+{
+  "responses": {
+    "success": { "success": true, "data": "{{body}}", "message": null },
+    "error": { "format": "custom", "template": { "success": false, "code": "{{status}}", "message": "{{message}}", "details": "{{errors}}" } },
+    "headers": { "x-api-version": "2" }
+  }
+}
+```
+
+- **Success wrapper.** The string `"{{body}}"` (the whole string) is replaced by the endpoint's body and keeps its type, so arrays and objects stay as they are. Only success answers with a JSON body are wrapped; errors, empty answers and file downloads are not.
+- **Error format.** `problem` (the default, `application/problem+json`), `dummyjson` (`{ "message": "..." }`) or `custom` with your own template that receives `{{status}}`, `{{message}}` and `{{errors}}`. It applies to errors the engine makes: validation (400), sign-in (401), not found (404), wrong method (405) and rate limits (429). An error body you wrote yourself in a scenario is sent as written.
+- **Common headers** are added to every answer. An endpoint's `headers` win over them, and a scenario's win over both.
+- **Per endpoint.** `wrap` is `"inherit"` (the default), `"none"` or the name of a template. The OpenAPI document and the contract check describe the wrapped shape.
+- The **Tempo template** preset sets `"wrap": "none"` on every endpoint, so its answers match the template's contract even if you add a wrapper later.
+
+A **response template** is a response you reuse:
+
+```json
+{
+  "responseTemplates": { "gone": { "status": 410, "body": { "message": "{{with.message}}" } } },
+  "endpoints": [
+    { "id": "get.old", "type": "static", "method": "GET", "path": "/old", "body": { "template": "gone", "with": { "message": "Use /new" } } }
+  ]
+}
+```
+
+A body that is exactly `{ "template": "name" }` or `{ "template": "name", "with": { ... } }` uses the template. The template's `status` applies when the endpoint or scenario leaves its own unset (for an endpoint: at the default 200). Pick one in the endpoint form with **Use template**.
+
+Order of work for one answer: the endpoint's body (a template is expanded and dynamic values filled), then the wrapper, then the headers. Changing these settings needs the admin role on a team server, and is recorded in the audit log.
+
+### 4.4 Dynamic values
+
+Static bodies, scenario bodies, template bodies and header values can hold `{{...}}` values. Press **Dynamic values** in the endpoint form for the list.
+
+| Value | Meaning |
+| --- | --- |
+| `{{params.id}}`, `{{query.q}}` | A path parameter, a query value (text) |
+| `{{body.user.name}}` | A value of the JSON request body (keeps its type) |
+| `{{headers.x_request_id}}` | A request header (`_` reads `-`). Never `authorization` or `cookie` |
+| `{{user.id}}`, `{{user.username}}` | The signed-in app user, on endpoints that need sign-in |
+| `{{now}}`, `{{now.iso}}`, `{{now.unix}}` | The time as ISO text, and as seconds |
+| `{{uuid}}`, `{{seq}}` | A new id, and a counter of this endpoint's requests (the same inside one answer) |
+| `{{random.int 1 100}}` | A whole number in a range |
+| `{{fake.name}}`, `{{fake.email}}`, `{{fake.sentence}}` | Made-up text |
+| `{{with.x}}` | In a template: a value passed with `with` |
+
+The rules:
+
+- **No code is run.** A small tokenizer cuts out `{{ ... }}` and looks the name up in a fixed list. A path has only letters, digits and `_` segments, and `__proto__`, `constructor` and `prototype` are refused. Expressions such as `{{1+1}}` are not understood and give a missing value.
+- **Types.** A string that is only one value keeps the value's type: `"{{body.n}}"` is a number when `n` is. Inside other text (`"id-{{params.id}}"`) a value becomes text. Path and query values are text, so write `{{params.id | number}}` to get a number (the only filter).
+- **Missing values** are `null` on their own and empty inside text. They never cause an error.
+- **Escape** with a backslash: `\{{` writes a literal `{{` (in JSON, `"\\{{"`).
+- The answer may not grow past 1 MB after filling; the engine then answers 500 and says why. Stored data (collections, content) is never filled in.
+- In **test mode** `{{now}}` is fixed (`2025-01-01T00:00:00.000Z`), and `{{uuid}}`, `{{random...}}` and `{{fake...}}` are seeded, so the same requests give the same values. `{{seq}}` starts again after a reset.
+
+### 4.5 The JSON editor
+
+Bodies, scenarios, templates, the success wrapper, **Try it** bodies and JSON fields of data rows and content entries open in an editor with two tabs.
+
+- **JSON** is a code editor (Monaco) with formatting (**Format**, or Shift+Alt+F), folding, find and replace (Ctrl or Cmd+F, Ctrl or Cmd+H), a **Minimap** switch, a light or dark theme that follows the system, and **Show changes**, a side by side diff against the last saved text. When an imported file or the collection describes the shape, the editor checks against it and suggests fields. `{{...}}` values are coloured and never flagged, even where a number is expected.
+- **Form** is made from the same schema (or from the value, when there is none) and edits the same text. Switching tabs keeps your edits. Switching to the form needs valid JSON, and says what to fix.
+
+The editor is bundled with the app, works offline and loads only the first time one opens, so the dashboard starts as fast as before.
+
 ## 5. Data
 
 Open the **Data** tab.
@@ -211,6 +315,8 @@ Open the **Logs** tab. You see live requests with method, status and path filter
 ## 10. Settings
 
 - **Server.** The port, HTTPS on or off, token lifetimes and the largest media file. A new port or HTTPS choice needs a restart, and the tab offers **Restart now**.
+- **Network.** The default delay, the network preset and test mode. See step 4.2.
+- **Responses.** The success wrapper, the error format, common headers and the response templates. See step 4.3.
 - **Certificates.** See step 3.1.
 - **Backup.** **Export backup…** writes one `.zip` with the definitions, the data and the media. **Restore into new folder…** unpacks a backup into an empty folder and opens it. Secrets and certificates are never in a backup, so a restored backup gets a new certificate and new secrets.
 - **Check against an OpenAPI file…** compares the backend with a file such as `template/api/generated/openapi.json`. It lists what is missing or different, so your local backend does not drift from the real contract.
@@ -345,4 +451,4 @@ These actions change files or trust stores outside the backends directory, so th
 - **The session is a cookie.** It is `HttpOnly` (scripts cannot read it) and `SameSite=Strict`. On `http://127.0.0.1` the browser accepts it without `Secure`, so this setup is for your own machine only; a server behind HTTPS sets `Secure`. A session ends after 12 hours without a request, when you press Sign out, or when the server restarts.
 - **CSRF.** Every change must send the CSRF token (a header, kept in the page's memory) and an `Origin` of the same host. Without both the server answers 403.
 - **The admin token stays on the server.** The desktop app's per-launch token is never sent to a browser.
-- **A strict content security policy.** Scripts and styles only from the server itself, no inline scripts, and the page can only call the server it came from. "Try it" calls go through the server, which trusts only that backend's own certificate.
+- **A strict content security policy.** Scripts only from the server itself (no inline scripts, no `eval`), and the page can only call the server it came from. Inline styles are allowed, for styles only: the code editor writes its theme colours into style elements at run time and cannot put a nonce on them. Its two workers are files of the same server, never a CDN. "Try it" calls go through the server, which trusts only that backend's own certificate.
