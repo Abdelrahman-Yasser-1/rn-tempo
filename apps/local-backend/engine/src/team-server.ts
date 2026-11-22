@@ -9,7 +9,8 @@ import { dashboardReply, SECURITY_HEADERS } from './dashboard.ts';
 import { isMutating, originOk, parseAdminTarget } from './hub.ts';
 import { BackendRegistry, BACKEND_ID, type RegistryOptions } from './hub-backends.ts';
 import { jsonReply, problemReply, readJson, type Reply } from './http.ts';
-import { atLeast, HUB_ROLE_TABLE, type AdminAccess, type Role } from './roles.ts';
+import { atLeast, HUB_ROLE_TABLE, type AdminAccess, type ApiKeyScope, type Role } from './roles.ts';
+import { buildTestSnapshot, testSnapshotReply } from './test-snapshot.ts';
 import { closeServer, listenOn, readBody, sendReply, toCtx } from './server.ts';
 import { TeamAuth, type TeamAuthOptions } from './team-auth.ts';
 import { teamRoutes, type TeamRoute, type TeamServices, type Who } from './team-routes.ts';
@@ -52,6 +53,8 @@ export interface TeamOptions {
   allowPrivateImportUrls?: boolean;
   /** Start the backends found in the backends directory (default true). */
   autostart?: boolean;
+  /** Requests per minute a key may make to `__definition` and `__sessions` (default 30). */
+  controlRatePerMinute?: number;
 }
 
 export interface RunningTeam {
@@ -83,6 +86,20 @@ export async function startTeam(options: TeamOptions): Promise<RunningTeam> {
   const registry = new BackendRegistry(options.backendsDir, { ...(options.registry ?? {}), start: { ...(options.registry?.start ?? {}), importUrls: { allowPrivate: options.allowPrivateImportUrls === true } }, mounted: true, accessKey: (id, key) => keys.allows(key, id, 'public') });
   const publicOrigin = options.publicOrigin === undefined ? null : new URL(options.publicOrigin).origin;
   const publicHost = publicOrigin === null ? null : new URL(publicOrigin).host;
+  const controlHits = new Map<number, number[]>();
+  const controlRate = options.controlRatePerMinute ?? 30;
+  /** At most `controlRate` calls per minute and key to the control routes. Returns the seconds to wait, or 0. */
+  const throttled = (keyId: number): number => {
+    const now = clock();
+    const recent = (controlHits.get(keyId) ?? []).filter((at) => now - at < 60_000);
+    if (recent.length >= controlRate) {
+      controlHits.set(keyId, recent);
+      return Math.max(1, Math.ceil((60_000 - (now - (recent[0] ?? now))) / 1000));
+    }
+    recent.push(now);
+    controlHits.set(keyId, recent);
+    return 0;
+  };
   const services: TeamServices = { store, auth, keys, registry, sessions, audit, now: clock, publicOrigin };
 
   const replaced = new Set(['GET /info', 'GET /backends', 'POST /backends', 'POST /backends/open', 'POST /restore', 'DELETE /backends/:id']);
@@ -300,6 +317,36 @@ export async function startTeam(options: TeamOptions): Promise<RunningTeam> {
     return reply(res, known ? problemReply(405, { detail: 'Method not allowed.' }) : problemReply(404, { detail: 'Not found.' }));
   }
 
+  // ---- control routes under /b/<id>: the test snapshot and the CI sessions
+
+  /** A key of this backend with one of the scopes, from `Authorization: Bearer tlb_...`; else the answer to send. */
+  function controlKey(req: IncomingMessage, id: string, scopes: readonly ApiKeyScope[]): { key: NonNullable<ReturnType<ApiKeys['verify']>> } | { denied: Reply } {
+    const given = tokenOf(req);
+    if (given === undefined) return { denied: problemReply(401, { detail: 'Send an API key: Authorization: Bearer tlb_...' }) };
+    const key = looksLikeKey(given) ? keys.verify(given) : undefined;
+    if (key === undefined) return { denied: problemReply(401, { detail: 'That API key is wrong or was revoked.' }) };
+    if (key.backendId !== id) return { denied: problemReply(403, { detail: 'That API key belongs to another backend.' }) };
+    if (!scopes.includes(key.scope)) return { denied: problemReply(403, { detail: `That needs an API key with the ${scopes.join(' or ')} scope.` }) };
+    const wait = throttled(key.id);
+    if (wait > 0) return { denied: problemReply(429, { detail: 'Too many requests with this key. Wait a moment.', headers: { 'retry-after': String(wait) } }) };
+    return { key };
+  }
+
+  async function controlRoute(req: IncomingMessage, res: ServerResponse, id: string, sub: string): Promise<void> {
+    const method = req.method ?? 'GET';
+    const head = method === 'HEAD';
+    if (sub === '/__definition') {
+      if (method !== 'GET' && !head) return reply(res, problemReply(405, { detail: 'Use GET.', headers: { allow: 'GET, HEAD' } }));
+      const who = controlKey(req, id, ['read-definition', 'admin']);
+      if ('denied' in who) return reply(res, who.denied);
+      const running = registry.running(id);
+      if (running === undefined) return reply(res, problemReply(503, { detail: `${id} is not running.` }));
+      const engine = running.engine;
+      return reply(res, testSnapshotReply(() => buildTestSnapshot({ dir: engine.folder.dir, db: engine.store.db, collections: engine.definition.collections.map((collection) => collection.name) }), req.headers['if-none-match']), head);
+    }
+    return reply(res, problemReply(404, { detail: 'Not found.' }));
+  }
+
   // ---- a backend's public API under /b/<id>
 
   function publicRoute(req: IncomingMessage, res: ServerResponse, https: boolean): void {
@@ -309,6 +356,11 @@ export async function startTeam(options: TeamOptions): Promise<RunningTeam> {
     if (found === null || !BACKEND_ID.test(id) || !registry.listedIds().includes(id)) return reply(res, problemReply(404, { detail: 'No such backend.' }));
     const running = registry.running(id);
     if (running === undefined) return reply(res, problemReply(503, { detail: `${id} is not running.` }));
+    const sub = found[2] ?? '/';
+    if (sub === '/__definition') {
+      void controlRoute(req, res, id, sub);
+      return;
+    }
     // The engine sees the path without the prefix, like on its own port.
     req.url = `${found[2] ?? '/'}${found[3] ?? ''}`;
     hardenPublic(res, (found[2] ?? '/').startsWith('/__docs'));

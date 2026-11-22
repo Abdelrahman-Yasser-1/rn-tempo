@@ -57,7 +57,7 @@ export type SnapshotManifest = z.infer<typeof ManifestSchema>;
 
 // ---- what goes in
 
-interface SourceFile {
+export interface SourceFile {
   /** The name inside the zip. */
   name: string;
   /** The file on disk. */
@@ -69,7 +69,7 @@ interface SourceFile {
  * Checks a folder the export reads from: absent is fine (`false`), but a symbolic link, a non-folder, or a path
  * whose real location is outside the backend folder is refused, so a crafted folder cannot pull other files into the zip.
  */
-function checkRoot(path: string, backend: string, label: string): boolean {
+export function checkRoot(path: string, backend: string, label: string): boolean {
   const stat = lstatSync(path, { throwIfNoEntry: false });
   if (stat === undefined) return false;
   if (stat.isSymbolicLink()) throw new DefinitionError(`${label} is a symbolic link and is not exported: ${path}`);
@@ -80,7 +80,7 @@ function checkRoot(path: string, backend: string, label: string): boolean {
 }
 
 /** Regular files under `dir`, as `prefix/relative` names. Links and special files are skipped, never followed. */
-function walk(dir: string, prefix: string, skip: ReadonlySet<string> = new Set()): SourceFile[] {
+export function walk(dir: string, prefix: string, skip: ReadonlySet<string> = new Set()): SourceFile[] {
   const out: SourceFile[] = [];
   let entries;
   try {

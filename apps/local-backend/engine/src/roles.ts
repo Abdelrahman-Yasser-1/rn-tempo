@@ -99,13 +99,17 @@ export const ADMIN_ROLE_TABLE: Readonly<Record<string, Role>> = {
   'GET /stats': 'viewer',
   'POST /contract-check': 'viewer',
   'GET /snapshot': 'admin',
+  'GET /test-snapshot': 'admin',
   'GET /openapi': 'viewer',
   'POST /import/preview': 'editor',
   'POST /import/apply': 'editor',
 };
 
-/** What a `read-definition` key may call: the definition and the snapshot export, read only (Z5's test kit). */
-export const READ_DEFINITION_ROUTES: ReadonlySet<string> = new Set(['GET /definition', 'GET /snapshot']);
+/**
+ * What a `read-definition` key may call: the definition and the test snapshot, read only (the test kit). Not the backup
+ * (`GET /snapshot`): that holds the whole database, app users' password hashes included.
+ */
+export const READ_DEFINITION_ROUTES: ReadonlySet<string> = new Set(['GET /definition', 'GET /test-snapshot']);
 
 /** Fields of `backend.json` that are settings, not content: changing them takes an admin. */
 const SETTINGS_FIELDS = ['publicAccess', 'port', 'https', 'certsDir', 'latency', 'network', 'testMode', 'responses', 'responseTemplates'] as const;
