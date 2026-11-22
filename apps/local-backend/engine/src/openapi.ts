@@ -282,6 +282,10 @@ function builtinOperation(endpoint: Exclude<Endpoint, { type: 'crud' | 'static' 
       responses['200'] = { description: 'The file, with its own content type.', content: { 'application/octet-stream': { schema: { type: 'string', format: 'binary' } } } };
       responses['404'] = problem('No file with that id.');
       break;
+    case 'sse':
+      responses['200'] = { description: 'A `text/event-stream` that stays open: server-sent events.', content: { 'text/event-stream': { schema: { type: 'string' } } } };
+      responses['429'] = problem('Too many connections to this endpoint or from this address.');
+      break;
     case 'handler':
       responses['200'] = { description: 'Whatever the handler returns.', content: { 'application/json': {} } };
       responses['500'] = problem('The handler threw.');

@@ -407,7 +407,7 @@ export async function startTeam(options: TeamOptions): Promise<RunningTeam> {
     if (found === null || running === undefined) return reply(res, problemReply(404, { detail: 'No such session (it may have expired).' }));
     req.url = `${found[2] ?? '/'}${found[3] ?? ''}`;
     hardenPublic(res, (found[2] ?? '/').startsWith('/__docs'));
-    running.handlePublic(req, res, { scheme: https ? 'https' : 'http' });
+    running.handlePublic(req, res, { scheme: https ? 'https' : 'http', ip: trust.client(req).ip });
   }
 
   // ---- a backend's public API under /b/<id>
@@ -431,7 +431,7 @@ export async function startTeam(options: TeamOptions): Promise<RunningTeam> {
     // The engine sees the path without the prefix, like on its own port.
     req.url = `${found[2] ?? '/'}${found[3] ?? ''}`;
     hardenPublic(res, (found[2] ?? '/').startsWith('/__docs'));
-    running.handlePublic(req, res, { scheme: https ? 'https' : 'http' });
+    running.handlePublic(req, res, { scheme: https ? 'https' : 'http', ip: trust.client(req).ip });
   }
 
   const server = createServer((req, res) => {

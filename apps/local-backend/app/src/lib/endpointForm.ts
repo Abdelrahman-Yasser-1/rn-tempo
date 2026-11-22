@@ -12,6 +12,7 @@ export const ENDPOINT_TYPES: { value: EndpointType; label: string; hint: string 
   { value: 'upload', label: 'File upload', hint: 'Accepts a file and stores it in Media.' },
   { value: 'download', label: 'File download', hint: 'Sends back a stored file by its id.' },
   { value: 'handler', label: 'Custom code', hint: 'Runs a JavaScript file you write. Only for backends you trust.' },
+  { value: 'sse', label: 'Live events (SSE)', hint: 'A stream of server-sent events: a script of messages and the data changes you pick, to every connected app.' },
 ];
 
 export const CRUD_ACTIONS: { value: CrudAction; label: string; method: HttpMethodName }[] = [
@@ -77,6 +78,13 @@ export interface EndpointForm {
   // custom code
   file: string;
   timeoutMs: string;
+  // live events (SSE)
+  /** The script, as JSON text: a list of `{ event?, data, delayMs?, repeat? }`. */
+  script: string;
+  /** Events to forward, one per line or separated by commas. */
+  on: string;
+  retryMs: string;
+  heartbeatMs: string;
   // every type: how the answer is shaped and how slow it is
   /** `inherit` (the backend's wrapper), `none`, or the name of a response template. */
   wrap: string;
@@ -105,6 +113,10 @@ export function blankForm(type: EndpointType, collections: CollectionDef[]): End
     multiple: false,
     file: 'handlers/hello.js',
     timeoutMs: '5000',
+    script: '[\n  { "event": "hello", "data": { "message": "connected" } }\n]',
+    on: '',
+    retryMs: '3000',
+    heartbeatMs: '15000',
     wrap: 'inherit',
     headers: [],
     latency: blankLatency('inherit'),
@@ -138,6 +150,9 @@ export function suggest(form: EndpointForm, force = false): EndpointForm {
       if (force || form.path === '') next.path = action.path;
       next.auth = action.bearer ? 'bearer' : 'none';
     }
+  } else if (form.type === 'sse') {
+    next.method = 'GET';
+    if (force || form.path === '') next.path = '/events';
   } else if (form.type === 'upload') {
     next.method = 'POST';
     if (force || form.path === '') next.path = '/media/upload';
@@ -199,8 +214,28 @@ export function formFrom(endpoint: EndpointDef, collections: CollectionDef[]): E
       return { ...form, maxMb: endpoint.maxBytes === undefined ? '' : String(Math.round(endpoint.maxBytes / 1024 / 1024)), multiple: endpoint.multiple ?? false };
     case 'handler':
       return { ...form, file: endpoint.file, timeoutMs: String(endpoint.timeoutMs ?? 5000) };
+    case 'sse':
+      return {
+        ...form,
+        script: JSON.stringify(endpoint.script ?? [], null, 2),
+        on: (endpoint.on ?? []).join('\n'),
+        retryMs: String(endpoint.retryMs ?? 3000),
+        heartbeatMs: String(endpoint.heartbeatMs ?? 15_000),
+      };
     case 'download':
       return form;
+  }
+}
+
+/** The events of the "forward" box: one per line or comma. */
+export const eventsFromText = (text: string): string[] => text.split(/[\s,]+/).filter((item) => item !== '');
+
+/** A JSON list written as text, or why it is not one. */
+export function listProblem(text: string, what: string): string | undefined {
+  try {
+    return Array.isArray(JSON.parse(text)) ? undefined : `${what} is a JSON list: [ ... ].`;
+  } catch {
+    return `${what} is not valid JSON.`;
   }
 }
 
@@ -224,6 +259,13 @@ export function problemsOf(form: EndpointForm): FormProblem[] {
         found.push({ field: 'body', message: 'The body is not valid JSON.' });
       }
     }
+  }
+  if (form.type === 'sse') {
+    const script = listProblem(form.script, 'The script');
+    if (script !== undefined) found.push({ field: 'script', message: script });
+    if (!/^\d{1,6}$/.test(form.retryMs)) found.push({ field: 'retryMs', message: 'The retry time is a number of milliseconds.' });
+    if (!/^\d{1,6}$/.test(form.heartbeatMs)) found.push({ field: 'heartbeatMs', message: 'The heartbeat is a number of milliseconds (0 turns it off).' });
+    if (eventsFromText(form.on).some((item) => !/^(?:\*|[A-Za-z][A-Za-z0-9_.:-]{0,63}\*?)$/.test(item))) found.push({ field: 'on', message: 'An event is a name like products.created, a prefix like products.* or *.' });
   }
   if (form.type === 'upload' && form.maxMb !== '' && !(Number(form.maxMb) > 0)) found.push({ field: 'maxMb', message: 'The size limit is a number of megabytes.' });
   if (form.type === 'handler') {
@@ -327,6 +369,12 @@ export function endpointFrom(form: EndpointForm, id: string, original?: Endpoint
     case 'handler':
       set('file', form.file);
       set('timeoutMs', Number(form.timeoutMs));
+      break;
+    case 'sse':
+      set('script', listProblem(form.script, '') === undefined ? (JSON.parse(form.script) as unknown) : []);
+      set('on', eventsFromText(form.on));
+      set('retryMs', Number(form.retryMs));
+      set('heartbeatMs', Number(form.heartbeatMs));
       break;
     case 'download':
       break;

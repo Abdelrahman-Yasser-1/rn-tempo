@@ -125,7 +125,15 @@ export interface RequestSchemas {
 }
 
 export type HttpMethodName = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-export type EndpointType = 'crud' | 'static' | 'auth' | 'users' | 'upload' | 'download' | 'handler';
+export type EndpointType = 'crud' | 'static' | 'auth' | 'users' | 'upload' | 'download' | 'handler' | 'sse';
+
+/** One message of an SSE script. */
+export interface SseMessageDef {
+  event?: string;
+  data?: unknown;
+  delayMs?: number;
+  repeat?: number;
+}
 export type CrudAction = 'list' | 'get' | 'create' | 'update' | 'delete';
 
 /** A wait before answering: fixed, or a random one inside a range. */
@@ -192,6 +200,7 @@ export type EndpointDef = EndpointBase &
     | { type: 'upload'; maxBytes?: number; multiple?: boolean }
     | { type: 'download' }
     | { type: 'handler'; file: string; timeoutMs?: number }
+    | { type: 'sse'; script?: SseMessageDef[]; on?: string[]; retryMs?: number; heartbeatMs?: number; idleTimeoutMs?: number; maxConnections?: number; maxConnectionsPerIp?: number; bufferSize?: number }
   );
 
 export interface Definition {
@@ -498,4 +507,23 @@ export interface EntryVersion {
   savedAt: string;
   slug: string | null;
   locales: string[];
+}
+
+/** A client connected to an SSE, WebSocket or GraphQL endpoint (the Live panel). The address is only a short hash. */
+export interface LiveClient {
+  id: string;
+  connectedAt: string;
+  ipHash: string;
+  user?: string;
+  protocol?: string;
+  messagesIn: number;
+  messagesOut: number;
+}
+
+export interface LiveLine {
+  at: string;
+  direction: 'in' | 'out' | 'event' | 'system';
+  clientId?: string;
+  event?: string;
+  text: string;
 }
