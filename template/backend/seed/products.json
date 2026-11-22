@@ -1,0 +1,1002 @@
+[
+  {
+    "id": 1,
+    "title": "Product 1",
+    "description": "Description of product 1",
+    "price": 6,
+    "category": "beauty",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%201",
+    "rating": 3.1,
+    "stock": 11
+  },
+  {
+    "id": 2,
+    "title": "Product 2",
+    "description": "Description of product 2",
+    "price": 7,
+    "category": "fragrances",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%202",
+    "rating": 3.2,
+    "stock": 12
+  },
+  {
+    "id": 3,
+    "title": "Product 3",
+    "description": "Description of product 3",
+    "price": 8,
+    "category": "furniture",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%203",
+    "rating": 3.3,
+    "stock": 13
+  },
+  {
+    "id": 4,
+    "title": "Product 4",
+    "description": "Description of product 4",
+    "price": 9,
+    "category": "groceries",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%204",
+    "rating": 3.4,
+    "stock": 14
+  },
+  {
+    "id": 5,
+    "title": "Product 5",
+    "description": "Description of product 5",
+    "price": 10,
+    "category": "beauty",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%205",
+    "rating": 3.5,
+    "stock": 15
+  },
+  {
+    "id": 6,
+    "title": "Product 6",
+    "description": "Description of product 6",
+    "price": 11,
+    "category": "fragrances",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%206",
+    "rating": 3.6,
+    "stock": 16
+  },
+  {
+    "id": 7,
+    "title": "Product 7",
+    "description": "Description of product 7",
+    "price": 12,
+    "category": "furniture",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%207",
+    "rating": 3.7,
+    "stock": 17
+  },
+  {
+    "id": 8,
+    "title": "Product 8",
+    "description": "Description of product 8",
+    "price": 13,
+    "category": "groceries",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%208",
+    "rating": 3.8,
+    "stock": 18
+  },
+  {
+    "id": 9,
+    "title": "Product 9",
+    "description": "Description of product 9",
+    "price": 14,
+    "category": "beauty",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%209",
+    "rating": 3.9,
+    "stock": 19
+  },
+  {
+    "id": 10,
+    "title": "Product 10",
+    "description": "Description of product 10",
+    "price": 15,
+    "category": "fragrances",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2010",
+    "rating": 4,
+    "stock": 20
+  },
+  {
+    "id": 11,
+    "title": "Product 11",
+    "description": "Description of product 11",
+    "price": 16,
+    "category": "furniture",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2011",
+    "rating": 4.1,
+    "stock": 21
+  },
+  {
+    "id": 12,
+    "title": "Product 12",
+    "description": "Description of product 12",
+    "price": 17,
+    "category": "groceries",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2012",
+    "rating": 4.2,
+    "stock": 22
+  },
+  {
+    "id": 13,
+    "title": "Product 13",
+    "description": "Description of product 13",
+    "price": 18,
+    "category": "beauty",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2013",
+    "rating": 4.3,
+    "stock": 23
+  },
+  {
+    "id": 14,
+    "title": "Product 14",
+    "description": "Description of product 14",
+    "price": 19,
+    "category": "fragrances",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2014",
+    "rating": 4.4,
+    "stock": 24
+  },
+  {
+    "id": 15,
+    "title": "Product 15",
+    "description": "Description of product 15",
+    "price": 20,
+    "category": "furniture",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2015",
+    "rating": 4.5,
+    "stock": 25
+  },
+  {
+    "id": 16,
+    "title": "Product 16",
+    "description": "Description of product 16",
+    "price": 21,
+    "category": "groceries",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2016",
+    "rating": 4.6,
+    "stock": 26
+  },
+  {
+    "id": 17,
+    "title": "Product 17",
+    "description": "Description of product 17",
+    "price": 22,
+    "category": "beauty",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2017",
+    "rating": 4.7,
+    "stock": 27
+  },
+  {
+    "id": 18,
+    "title": "Product 18",
+    "description": "Description of product 18",
+    "price": 23,
+    "category": "fragrances",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2018",
+    "rating": 4.8,
+    "stock": 28
+  },
+  {
+    "id": 19,
+    "title": "Product 19",
+    "description": "Description of product 19",
+    "price": 24,
+    "category": "furniture",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2019",
+    "rating": 4.9,
+    "stock": 29
+  },
+  {
+    "id": 20,
+    "title": "Product 20",
+    "description": "Description of product 20",
+    "price": 25,
+    "category": "groceries",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2020",
+    "rating": 3,
+    "stock": 30
+  },
+  {
+    "id": 21,
+    "title": "Product 21",
+    "description": "Description of product 21",
+    "price": 26,
+    "category": "beauty",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2021",
+    "rating": 3.1,
+    "stock": 31
+  },
+  {
+    "id": 22,
+    "title": "Product 22",
+    "description": "Description of product 22",
+    "price": 27,
+    "category": "fragrances",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2022",
+    "rating": 3.2,
+    "stock": 32
+  },
+  {
+    "id": 23,
+    "title": "Product 23",
+    "description": "Description of product 23",
+    "price": 28,
+    "category": "furniture",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2023",
+    "rating": 3.3,
+    "stock": 33
+  },
+  {
+    "id": 24,
+    "title": "Product 24",
+    "description": "Description of product 24",
+    "price": 29,
+    "category": "groceries",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2024",
+    "rating": 3.4,
+    "stock": 34
+  },
+  {
+    "id": 25,
+    "title": "Product 25",
+    "description": "Description of product 25",
+    "price": 30,
+    "category": "beauty",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2025",
+    "rating": 3.5,
+    "stock": 35
+  },
+  {
+    "id": 26,
+    "title": "Product 26",
+    "description": "Description of product 26",
+    "price": 31,
+    "category": "fragrances",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2026",
+    "rating": 3.6,
+    "stock": 36
+  },
+  {
+    "id": 27,
+    "title": "Product 27",
+    "description": "Description of product 27",
+    "price": 32,
+    "category": "furniture",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2027",
+    "rating": 3.7,
+    "stock": 37
+  },
+  {
+    "id": 28,
+    "title": "Product 28",
+    "description": "Description of product 28",
+    "price": 33,
+    "category": "groceries",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2028",
+    "rating": 3.8,
+    "stock": 38
+  },
+  {
+    "id": 29,
+    "title": "Product 29",
+    "description": "Description of product 29",
+    "price": 34,
+    "category": "beauty",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2029",
+    "rating": 3.9,
+    "stock": 39
+  },
+  {
+    "id": 30,
+    "title": "Product 30",
+    "description": "Description of product 30",
+    "price": 35,
+    "category": "fragrances",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2030",
+    "rating": 4,
+    "stock": 40
+  },
+  {
+    "id": 31,
+    "title": "Product 31",
+    "description": "Description of product 31",
+    "price": 36,
+    "category": "furniture",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2031",
+    "rating": 4.1,
+    "stock": 41
+  },
+  {
+    "id": 32,
+    "title": "Product 32",
+    "description": "Description of product 32",
+    "price": 37,
+    "category": "groceries",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2032",
+    "rating": 4.2,
+    "stock": 42
+  },
+  {
+    "id": 33,
+    "title": "Product 33",
+    "description": "Description of product 33",
+    "price": 38,
+    "category": "beauty",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2033",
+    "rating": 4.3,
+    "stock": 43
+  },
+  {
+    "id": 34,
+    "title": "Product 34",
+    "description": "Description of product 34",
+    "price": 39,
+    "category": "fragrances",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2034",
+    "rating": 4.4,
+    "stock": 44
+  },
+  {
+    "id": 35,
+    "title": "Product 35",
+    "description": "Description of product 35",
+    "price": 40,
+    "category": "furniture",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2035",
+    "rating": 4.5,
+    "stock": 45
+  },
+  {
+    "id": 36,
+    "title": "Product 36",
+    "description": "Description of product 36",
+    "price": 41,
+    "category": "groceries",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2036",
+    "rating": 4.6,
+    "stock": 46
+  },
+  {
+    "id": 37,
+    "title": "Product 37",
+    "description": "Description of product 37",
+    "price": 42,
+    "category": "beauty",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2037",
+    "rating": 4.7,
+    "stock": 47
+  },
+  {
+    "id": 38,
+    "title": "Product 38",
+    "description": "Description of product 38",
+    "price": 43,
+    "category": "fragrances",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2038",
+    "rating": 4.8,
+    "stock": 48
+  },
+  {
+    "id": 39,
+    "title": "Product 39",
+    "description": "Description of product 39",
+    "price": 44,
+    "category": "furniture",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2039",
+    "rating": 4.9,
+    "stock": 49
+  },
+  {
+    "id": 40,
+    "title": "Product 40",
+    "description": "Description of product 40",
+    "price": 45,
+    "category": "groceries",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2040",
+    "rating": 3,
+    "stock": 50
+  },
+  {
+    "id": 41,
+    "title": "Product 41",
+    "description": "Description of product 41",
+    "price": 46,
+    "category": "beauty",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2041",
+    "rating": 3.1,
+    "stock": 51
+  },
+  {
+    "id": 42,
+    "title": "Product 42",
+    "description": "Description of product 42",
+    "price": 47,
+    "category": "fragrances",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2042",
+    "rating": 3.2,
+    "stock": 52
+  },
+  {
+    "id": 43,
+    "title": "Product 43",
+    "description": "Description of product 43",
+    "price": 48,
+    "category": "furniture",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2043",
+    "rating": 3.3,
+    "stock": 53
+  },
+  {
+    "id": 44,
+    "title": "Product 44",
+    "description": "Description of product 44",
+    "price": 49,
+    "category": "groceries",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2044",
+    "rating": 3.4,
+    "stock": 54
+  },
+  {
+    "id": 45,
+    "title": "Product 45",
+    "description": "Description of product 45",
+    "price": 50,
+    "category": "beauty",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2045",
+    "rating": 3.5,
+    "stock": 55
+  },
+  {
+    "id": 46,
+    "title": "Product 46",
+    "description": "Description of product 46",
+    "price": 51,
+    "category": "fragrances",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2046",
+    "rating": 3.6,
+    "stock": 56
+  },
+  {
+    "id": 47,
+    "title": "Product 47",
+    "description": "Description of product 47",
+    "price": 52,
+    "category": "furniture",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2047",
+    "rating": 3.7,
+    "stock": 57
+  },
+  {
+    "id": 48,
+    "title": "Product 48",
+    "description": "Description of product 48",
+    "price": 53,
+    "category": "groceries",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2048",
+    "rating": 3.8,
+    "stock": 58
+  },
+  {
+    "id": 49,
+    "title": "Product 49",
+    "description": "Description of product 49",
+    "price": 54,
+    "category": "beauty",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2049",
+    "rating": 3.9,
+    "stock": 59
+  },
+  {
+    "id": 50,
+    "title": "Product 50",
+    "description": "Description of product 50",
+    "price": 55,
+    "category": "fragrances",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2050",
+    "rating": 4,
+    "stock": 10
+  },
+  {
+    "id": 51,
+    "title": "Product 51",
+    "description": "Description of product 51",
+    "price": 56,
+    "category": "furniture",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2051",
+    "rating": 4.1,
+    "stock": 11
+  },
+  {
+    "id": 52,
+    "title": "Product 52",
+    "description": "Description of product 52",
+    "price": 57,
+    "category": "groceries",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2052",
+    "rating": 4.2,
+    "stock": 12
+  },
+  {
+    "id": 53,
+    "title": "Product 53",
+    "description": "Description of product 53",
+    "price": 58,
+    "category": "beauty",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2053",
+    "rating": 4.3,
+    "stock": 13
+  },
+  {
+    "id": 54,
+    "title": "Product 54",
+    "description": "Description of product 54",
+    "price": 59,
+    "category": "fragrances",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2054",
+    "rating": 4.4,
+    "stock": 14
+  },
+  {
+    "id": 55,
+    "title": "Product 55",
+    "description": "Description of product 55",
+    "price": 60,
+    "category": "furniture",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2055",
+    "rating": 4.5,
+    "stock": 15
+  },
+  {
+    "id": 56,
+    "title": "Product 56",
+    "description": "Description of product 56",
+    "price": 61,
+    "category": "groceries",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2056",
+    "rating": 4.6,
+    "stock": 16
+  },
+  {
+    "id": 57,
+    "title": "Product 57",
+    "description": "Description of product 57",
+    "price": 62,
+    "category": "beauty",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2057",
+    "rating": 4.7,
+    "stock": 17
+  },
+  {
+    "id": 58,
+    "title": "Product 58",
+    "description": "Description of product 58",
+    "price": 63,
+    "category": "fragrances",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2058",
+    "rating": 4.8,
+    "stock": 18
+  },
+  {
+    "id": 59,
+    "title": "Product 59",
+    "description": "Description of product 59",
+    "price": 64,
+    "category": "furniture",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2059",
+    "rating": 4.9,
+    "stock": 19
+  },
+  {
+    "id": 60,
+    "title": "Product 60",
+    "description": "Description of product 60",
+    "price": 65,
+    "category": "groceries",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2060",
+    "rating": 3,
+    "stock": 20
+  },
+  {
+    "id": 61,
+    "title": "Product 61",
+    "description": "Description of product 61",
+    "price": 66,
+    "category": "beauty",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2061",
+    "rating": 3.1,
+    "stock": 21
+  },
+  {
+    "id": 62,
+    "title": "Product 62",
+    "description": "Description of product 62",
+    "price": 67,
+    "category": "fragrances",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2062",
+    "rating": 3.2,
+    "stock": 22
+  },
+  {
+    "id": 63,
+    "title": "Product 63",
+    "description": "Description of product 63",
+    "price": 68,
+    "category": "furniture",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2063",
+    "rating": 3.3,
+    "stock": 23
+  },
+  {
+    "id": 64,
+    "title": "Product 64",
+    "description": "Description of product 64",
+    "price": 69,
+    "category": "groceries",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2064",
+    "rating": 3.4,
+    "stock": 24
+  },
+  {
+    "id": 65,
+    "title": "Product 65",
+    "description": "Description of product 65",
+    "price": 70,
+    "category": "beauty",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2065",
+    "rating": 3.5,
+    "stock": 25
+  },
+  {
+    "id": 66,
+    "title": "Product 66",
+    "description": "Description of product 66",
+    "price": 71,
+    "category": "fragrances",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2066",
+    "rating": 3.6,
+    "stock": 26
+  },
+  {
+    "id": 67,
+    "title": "Product 67",
+    "description": "Description of product 67",
+    "price": 72,
+    "category": "furniture",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2067",
+    "rating": 3.7,
+    "stock": 27
+  },
+  {
+    "id": 68,
+    "title": "Product 68",
+    "description": "Description of product 68",
+    "price": 73,
+    "category": "groceries",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2068",
+    "rating": 3.8,
+    "stock": 28
+  },
+  {
+    "id": 69,
+    "title": "Product 69",
+    "description": "Description of product 69",
+    "price": 74,
+    "category": "beauty",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2069",
+    "rating": 3.9,
+    "stock": 29
+  },
+  {
+    "id": 70,
+    "title": "Product 70",
+    "description": "Description of product 70",
+    "price": 75,
+    "category": "fragrances",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2070",
+    "rating": 4,
+    "stock": 30
+  },
+  {
+    "id": 71,
+    "title": "Product 71",
+    "description": "Description of product 71",
+    "price": 76,
+    "category": "furniture",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2071",
+    "rating": 4.1,
+    "stock": 31
+  },
+  {
+    "id": 72,
+    "title": "Product 72",
+    "description": "Description of product 72",
+    "price": 77,
+    "category": "groceries",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2072",
+    "rating": 4.2,
+    "stock": 32
+  },
+  {
+    "id": 73,
+    "title": "Product 73",
+    "description": "Description of product 73",
+    "price": 78,
+    "category": "beauty",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2073",
+    "rating": 4.3,
+    "stock": 33
+  },
+  {
+    "id": 74,
+    "title": "Product 74",
+    "description": "Description of product 74",
+    "price": 79,
+    "category": "fragrances",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2074",
+    "rating": 4.4,
+    "stock": 34
+  },
+  {
+    "id": 75,
+    "title": "Product 75",
+    "description": "Description of product 75",
+    "price": 80,
+    "category": "furniture",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2075",
+    "rating": 4.5,
+    "stock": 35
+  },
+  {
+    "id": 76,
+    "title": "Product 76",
+    "description": "Description of product 76",
+    "price": 81,
+    "category": "groceries",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2076",
+    "rating": 4.6,
+    "stock": 36
+  },
+  {
+    "id": 77,
+    "title": "Product 77",
+    "description": "Description of product 77",
+    "price": 82,
+    "category": "beauty",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2077",
+    "rating": 4.7,
+    "stock": 37
+  },
+  {
+    "id": 78,
+    "title": "Product 78",
+    "description": "Description of product 78",
+    "price": 83,
+    "category": "fragrances",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2078",
+    "rating": 4.8,
+    "stock": 38
+  },
+  {
+    "id": 79,
+    "title": "Product 79",
+    "description": "Description of product 79",
+    "price": 84,
+    "category": "furniture",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2079",
+    "rating": 4.9,
+    "stock": 39
+  },
+  {
+    "id": 80,
+    "title": "Product 80",
+    "description": "Description of product 80",
+    "price": 85,
+    "category": "groceries",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2080",
+    "rating": 3,
+    "stock": 40
+  },
+  {
+    "id": 81,
+    "title": "Product 81",
+    "description": "Description of product 81",
+    "price": 86,
+    "category": "beauty",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2081",
+    "rating": 3.1,
+    "stock": 41
+  },
+  {
+    "id": 82,
+    "title": "Product 82",
+    "description": "Description of product 82",
+    "price": 87,
+    "category": "fragrances",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2082",
+    "rating": 3.2,
+    "stock": 42
+  },
+  {
+    "id": 83,
+    "title": "Product 83",
+    "description": "Description of product 83",
+    "price": 88,
+    "category": "furniture",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2083",
+    "rating": 3.3,
+    "stock": 43
+  },
+  {
+    "id": 84,
+    "title": "Product 84",
+    "description": "Description of product 84",
+    "price": 89,
+    "category": "groceries",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2084",
+    "rating": 3.4,
+    "stock": 44
+  },
+  {
+    "id": 85,
+    "title": "Product 85",
+    "description": "Description of product 85",
+    "price": 90,
+    "category": "beauty",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2085",
+    "rating": 3.5,
+    "stock": 45
+  },
+  {
+    "id": 86,
+    "title": "Product 86",
+    "description": "Description of product 86",
+    "price": 91,
+    "category": "fragrances",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2086",
+    "rating": 3.6,
+    "stock": 46
+  },
+  {
+    "id": 87,
+    "title": "Product 87",
+    "description": "Description of product 87",
+    "price": 92,
+    "category": "furniture",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2087",
+    "rating": 3.7,
+    "stock": 47
+  },
+  {
+    "id": 88,
+    "title": "Product 88",
+    "description": "Description of product 88",
+    "price": 93,
+    "category": "groceries",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2088",
+    "rating": 3.8,
+    "stock": 48
+  },
+  {
+    "id": 89,
+    "title": "Product 89",
+    "description": "Description of product 89",
+    "price": 94,
+    "category": "beauty",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2089",
+    "rating": 3.9,
+    "stock": 49
+  },
+  {
+    "id": 90,
+    "title": "Product 90",
+    "description": "Description of product 90",
+    "price": 95,
+    "category": "fragrances",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2090",
+    "rating": 4,
+    "stock": 50
+  },
+  {
+    "id": 91,
+    "title": "Product 91",
+    "description": "Description of product 91",
+    "price": 96,
+    "category": "furniture",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2091",
+    "rating": 4.1,
+    "stock": 51
+  },
+  {
+    "id": 92,
+    "title": "Product 92",
+    "description": "Description of product 92",
+    "price": 97,
+    "category": "groceries",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2092",
+    "rating": 4.2,
+    "stock": 52
+  },
+  {
+    "id": 93,
+    "title": "Product 93",
+    "description": "Description of product 93",
+    "price": 98,
+    "category": "beauty",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2093",
+    "rating": 4.3,
+    "stock": 53
+  },
+  {
+    "id": 94,
+    "title": "Product 94",
+    "description": "Description of product 94",
+    "price": 99,
+    "category": "fragrances",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2094",
+    "rating": 4.4,
+    "stock": 54
+  },
+  {
+    "id": 95,
+    "title": "Product 95",
+    "description": "Description of product 95",
+    "price": 100,
+    "category": "furniture",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2095",
+    "rating": 4.5,
+    "stock": 55
+  },
+  {
+    "id": 96,
+    "title": "Product 96",
+    "description": "Description of product 96",
+    "price": 101,
+    "category": "groceries",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2096",
+    "rating": 4.6,
+    "stock": 56
+  },
+  {
+    "id": 97,
+    "title": "Product 97",
+    "description": "Description of product 97",
+    "price": 102,
+    "category": "beauty",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2097",
+    "rating": 4.7,
+    "stock": 57
+  },
+  {
+    "id": 98,
+    "title": "Product 98",
+    "description": "Description of product 98",
+    "price": 103,
+    "category": "fragrances",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2098",
+    "rating": 4.8,
+    "stock": 58
+  },
+  {
+    "id": 99,
+    "title": "Product 99",
+    "description": "Description of product 99",
+    "price": 104,
+    "category": "furniture",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%2099",
+    "rating": 4.9,
+    "stock": 59
+  },
+  {
+    "id": 100,
+    "title": "Product 100",
+    "description": "Description of product 100",
+    "price": 105,
+    "category": "groceries",
+    "thumbnail": "https://dummyjson.com/image/200x200?text=Product%20100",
+    "rating": 3,
+    "stock": 10
+  }
+]

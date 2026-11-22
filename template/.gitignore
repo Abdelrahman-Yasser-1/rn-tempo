@@ -96,3 +96,6 @@ android/app/src/*/google-services.json
 
 # dev API state (`yarn api up`): pid, log, stored data and the control token
 .tempo-api/
+
+# Tempo local backend (`yarn backend`): the database, certificates and logs. Commit backend.json, seed/ and handlers/ only.
+backend/.data/

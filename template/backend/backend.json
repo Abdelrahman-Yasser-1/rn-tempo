@@ -1,0 +1,395 @@
+{
+  "name": "tempo-template",
+  "port": 8443,
+  "https": true,
+  "auth": {
+    "seedUsers": [
+      {
+        "username": "emilys",
+        "password": "emilyspass",
+        "email": "emily.johnson@x.dummyjson.com",
+        "firstName": "Emily",
+        "lastName": "Johnson",
+        "gender": "female",
+        "image": "https://dummyjson.com/icon/emilys/128"
+      }
+    ]
+  },
+  "content": {
+    "locales": [
+      "en",
+      "ar"
+    ],
+    "defaultLocale": "en"
+  },
+  "contentTypes": [
+    {
+      "name": "announcement",
+      "label": "Announcement",
+      "localized": true,
+      "fields": [
+        {
+          "name": "title",
+          "type": "string",
+          "label": "Title",
+          "required": true
+        },
+        {
+          "name": "body",
+          "type": "richText",
+          "label": "Body (Markdown)"
+        },
+        {
+          "name": "image",
+          "type": "media",
+          "label": "Image"
+        },
+        {
+          "name": "ctaLabel",
+          "type": "string",
+          "label": "Button label"
+        },
+        {
+          "name": "ctaUrl",
+          "type": "string",
+          "label": "Button link"
+        }
+      ],
+      "seed": [
+        {
+          "slug": "welcome",
+          "status": "published",
+          "values": {
+            "en": {
+              "title": "Welcome to Tempo",
+              "body": "This is a **local announcement** served by your Tempo Local Backend.\n\n- Edit it in the Content tab\n- Publish, schedule or unpublish it",
+              "ctaLabel": "Learn more",
+              "ctaUrl": "https://example.com/whats-new"
+            },
+            "ar": {
+              "title": "مرحبًا بك في Tempo",
+              "body": "هذا **إعلان محلي** يقدّمه Tempo Local Backend.\n\n- عدّله من تبويب المحتوى\n- انشره أو جدوِله أو ألغِ نشره",
+              "ctaLabel": "اعرف المزيد",
+              "ctaUrl": "https://example.com/whats-new"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "collections": [
+    {
+      "name": "products",
+      "fields": [
+        {
+          "name": "title",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        {
+          "name": "price",
+          "type": "number",
+          "required": true,
+          "default": 0
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        {
+          "name": "thumbnail",
+          "type": "string",
+          "required": true,
+          "default": "https://dummyjson.com/image/200x200?text=Product%20101"
+        },
+        {
+          "name": "rating",
+          "type": "number",
+          "required": true,
+          "default": 0
+        },
+        {
+          "name": "stock",
+          "type": "number",
+          "required": true,
+          "default": 0
+        }
+      ],
+      "seed": "products.json"
+    }
+  ],
+  "endpoints": [
+    {
+      "id": "auth.login",
+      "type": "auth",
+      "action": "login",
+      "method": "POST",
+      "path": "/auth/login",
+      "summary": "Sign in",
+      "tags": [
+        "auth"
+      ],
+      "wrap": "none"
+    },
+    {
+      "id": "auth.refresh",
+      "type": "auth",
+      "action": "refresh",
+      "method": "POST",
+      "path": "/auth/refresh",
+      "summary": "Trade a refresh token for new tokens",
+      "tags": [
+        "auth"
+      ],
+      "wrap": "none"
+    },
+    {
+      "id": "auth.me",
+      "type": "auth",
+      "action": "me",
+      "method": "GET",
+      "path": "/auth/me",
+      "auth": "bearer",
+      "summary": "The signed-in user",
+      "tags": [
+        "auth"
+      ],
+      "wrap": "none"
+    },
+    {
+      "id": "auth.forgotPassword",
+      "type": "auth",
+      "action": "forgotPassword",
+      "method": "POST",
+      "path": "/auth/forgot-password",
+      "summary": "Send a password reset code",
+      "tags": [
+        "auth"
+      ],
+      "wrap": "none"
+    },
+    {
+      "id": "auth.otpVerify",
+      "type": "auth",
+      "action": "otpVerify",
+      "method": "POST",
+      "path": "/auth/otp/verify",
+      "summary": "Check a one-time code",
+      "tags": [
+        "auth"
+      ],
+      "wrap": "none"
+    },
+    {
+      "id": "auth.otpResend",
+      "type": "auth",
+      "action": "otpResend",
+      "method": "POST",
+      "path": "/auth/otp/resend",
+      "summary": "Send a new one-time code",
+      "tags": [
+        "auth"
+      ],
+      "wrap": "none"
+    },
+    {
+      "id": "users.add",
+      "type": "users",
+      "action": "add",
+      "method": "POST",
+      "path": "/users/add",
+      "summary": "Register a user",
+      "tags": [
+        "users"
+      ],
+      "wrap": "none"
+    },
+    {
+      "id": "users.update",
+      "type": "users",
+      "action": "update",
+      "method": "PUT",
+      "path": "/users/:id",
+      "auth": "bearer",
+      "summary": "Update a user",
+      "tags": [
+        "users"
+      ],
+      "wrap": "none"
+    },
+    {
+      "type": "crud",
+      "collection": "products",
+      "tags": [
+        "products"
+      ],
+      "id": "products.search",
+      "action": "list",
+      "method": "GET",
+      "path": "/products/search",
+      "searchFields": [
+        "title"
+      ],
+      "summary": "Search products by title",
+      "wrap": "none"
+    },
+    {
+      "type": "crud",
+      "collection": "products",
+      "tags": [
+        "products"
+      ],
+      "id": "products.list",
+      "action": "list",
+      "method": "GET",
+      "path": "/products",
+      "summary": "List products",
+      "wrap": "none"
+    },
+    {
+      "type": "crud",
+      "collection": "products",
+      "tags": [
+        "products"
+      ],
+      "id": "products.get",
+      "action": "get",
+      "method": "GET",
+      "path": "/products/:id",
+      "summary": "Get one product",
+      "wrap": "none"
+    },
+    {
+      "type": "crud",
+      "collection": "products",
+      "tags": [
+        "products"
+      ],
+      "id": "products.create",
+      "action": "create",
+      "method": "POST",
+      "path": "/products",
+      "aliases": [
+        "/products/add"
+      ],
+      "unknownFields": "strip",
+      "summary": "Add a product",
+      "wrap": "none"
+    },
+    {
+      "id": "appConfig.get",
+      "type": "static",
+      "method": "GET",
+      "path": "/app-config",
+      "body": {
+        "minSupportedVersion": {
+          "ios": "0.0.0",
+          "android": "0.0.0"
+        },
+        "latestVersion": {
+          "ios": "1.0.0",
+          "android": "1.0.0"
+        },
+        "maintenance": {
+          "enabled": false
+        },
+        "flags": {},
+        "storeUrls": {
+          "ios": "https://apps.apple.com/app/id0000000000",
+          "android": "https://play.google.com/store/apps/details?id=com.rntempo.app"
+        }
+      },
+      "summary": "Remote app configuration",
+      "tags": [
+        "app-config"
+      ],
+      "scenarios": {
+        "maintenance": {
+          "body": {
+            "minSupportedVersion": {
+              "ios": "0.0.0",
+              "android": "0.0.0"
+            },
+            "latestVersion": {
+              "ios": "1.0.0",
+              "android": "1.0.0"
+            },
+            "maintenance": {
+              "enabled": true,
+              "message": "Back soon."
+            },
+            "flags": {},
+            "storeUrls": {
+              "ios": "https://apps.apple.com/app/id0000000000",
+              "android": "https://play.google.com/store/apps/details?id=com.rntempo.app"
+            }
+          }
+        },
+        "forceUpdate": {
+          "body": {
+            "minSupportedVersion": {
+              "ios": "99.0.0",
+              "android": "99.0.0"
+            },
+            "latestVersion": {
+              "ios": "1.0.0",
+              "android": "1.0.0"
+            },
+            "maintenance": {
+              "enabled": false
+            },
+            "flags": {},
+            "storeUrls": {
+              "ios": "https://apps.apple.com/app/id0000000000",
+              "android": "https://play.google.com/store/apps/details?id=com.rntempo.app"
+            }
+          }
+        }
+      },
+      "wrap": "none"
+    },
+    {
+      "id": "media.upload",
+      "type": "upload",
+      "method": "POST",
+      "path": "/media/upload",
+      "summary": "Upload a file",
+      "tags": [
+        "media"
+      ],
+      "wrap": "none"
+    },
+    {
+      "id": "media.download",
+      "type": "download",
+      "method": "GET",
+      "path": "/media/:id",
+      "summary": "Download a file",
+      "tags": [
+        "media"
+      ],
+      "wrap": "none"
+    },
+    {
+      "id": "stats.summary",
+      "type": "handler",
+      "method": "GET",
+      "path": "/stats/summary",
+      "file": "handlers/stats-summary.js",
+      "summary": "Counts of products and users (a handler example)",
+      "tags": [
+        "stats"
+      ],
+      "wrap": "none"
+    }
+  ]
+}
