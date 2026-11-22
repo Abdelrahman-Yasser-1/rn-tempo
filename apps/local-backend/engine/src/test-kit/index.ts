@@ -8,10 +8,11 @@ import { TEST_MODE_NOW } from '../constants.ts';
 import type { Row } from '../store.ts';
 import { loadTestSnapshotData, writeTestSnapshotFiles } from '../test-snapshot.ts';
 import { validateRecord } from '../values.ts';
+import { openSocket, openStream, postGraphql } from './live.ts';
 import { loadSource, type LoadedSource } from './source.ts';
 import type { TempoBackend, TempoBackendOptions } from './types.ts';
 
-export type { RecordedRequest, TempoBackend, TempoBackendOptions } from './types.ts';
+export type { RecordedRequest, SseEvent, TempoBackend, TempoBackendOptions, TestSocket, TestStream } from './types.ts';
 
 type Hook = (fn: () => void | Promise<void>, timeoutMs?: number) => void;
 interface JestGlobals {
@@ -210,6 +211,9 @@ export function setupTempoBackend(options: TempoBackendOptions = {}): TempoBacke
         return engine().store.remove(collection, id);
       },
     },
+    ws: (path, socketOptions) => openSocket(backend.url, path, socketOptions),
+    sse: (path, streamOptions) => openStream(backend.url, path, streamOptions),
+    graphql: (query, variables, graphqlOptions) => postGraphql(backend.url, query, variables, graphqlOptions),
     events: { on: (listener) => engine().events.on(listener) },
     requests: () => engine().requests.snapshot(requestsAfter),
     reset,
