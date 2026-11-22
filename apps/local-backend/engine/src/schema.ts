@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { MAX_DELAY_MS, MAX_TIMEOUT_MS } from './constants.ts';
 import { isIdentifier } from './names.ts';
+import { parseJsonPath } from './ws-rules.ts';
 import { checkContentShape, isSlug, SLUG_HELP } from './content-values.ts';
 import { containsBodyToken, isTemplateRef, TEMPLATE_NAME, WRAP_KEYWORDS } from './responses.ts';
 import { checkShape } from './values.ts';
@@ -267,6 +268,39 @@ const SseEndpoint = z.strictObject({
   bufferSize: z.number().int().min(0).max(1000).default(100).meta({ description: 'How many forwarded and broadcast messages are kept so a client can resume with `Last-Event-ID`.' }),
 });
 
+const WsRule = z
+  .strictObject({
+    match: z
+      .strictObject({
+        type: z.string().max(200).optional().meta({ description: 'The message is a JSON object whose `type` is this.' }),
+        jsonPath: z.string().max(200).refine((path) => parseJsonPath(path) !== undefined, { message: 'Use a path like $.user.name, $.items[0].id or $[\'a b\'].' }).optional().meta({ description: 'A path into the JSON message. Alone, it matches when the value exists.' }),
+        equals: z.unknown().optional().meta({ description: 'The value at `jsonPath` (or the whole message) equals this.' }),
+        contains: z.string().max(1000).optional().meta({ description: 'The text contains this. Plain text: regular expressions are not supported, because a crafted one could freeze the server.' }),
+        startsWith: z.string().max(1000).optional(),
+        endsWith: z.string().max(1000).optional(),
+      })
+      .refine((match) => Object.keys(match).length > 0, { message: 'A rule needs at least one condition: type, jsonPath, equals, contains, startsWith or endsWith.' }),
+    reply: z.unknown().meta({ description: 'What to send back. Text is sent as is, anything else as JSON. `{{message.x}}` reads a field of the message; `{{message}}` is the whole message.' }),
+    delayMs: z.number().int().min(0).max(MAX_DELAY_MS).optional().meta({ description: 'Wait this long before replying. Test mode makes it 0.' }),
+    broadcast: z.boolean().optional().meta({ description: 'Send the reply to every connected client, not only the sender.' }),
+  })
+  .meta({ title: 'WebSocketRule' });
+
+const WebsocketEndpoint = z.strictObject({
+  ...common,
+  type: z.literal('websocket'),
+  behavior: z.enum(['echo', 'rules']).default('echo').meta({ description: '`echo` sends every message back. `rules` answers with the first rule that matches (and says nothing when none does).' }),
+  rules: z.array(WsRule).max(200).default([]),
+  on: eventPatterns,
+  onConnect: z.unknown().optional().meta({ description: 'A welcome message sent when a client connects. Text is sent as is, anything else as JSON; placeholders are filled.' }),
+  subprotocols: z.array(z.string().regex(/^[A-Za-z0-9!#$%&'*+.^_`|~-]{1,100}$/, 'A subprotocol is a token such as "chat.v1".')).max(20).default([]).meta({ description: 'The subprotocols the endpoint speaks. The first one a client offers is chosen. A client that sends a token as `["bearer", "<token>"]` is answered with `bearer`.' }),
+  maxPayloadBytes: z.number().int().min(1).max(1_048_576).default(65_536).meta({ description: 'The largest message accepted; a client that sends more is closed with 1009.' }),
+  maxConnections: connectionLimit(100, 'The most clients connected at once; the next one gets 429.'),
+  maxConnectionsPerIp: connectionLimit(10, 'The most clients one address may hold at once; the next one gets 429.'),
+  pingIntervalMs: z.number().int().min(0).max(300_000).default(30_000).meta({ description: 'A ping this often; a client that never answers the previous one is dropped. 0 turns it off.' }),
+  maxBufferedBytes: z.number().int().min(1024).max(64 * 1024 * 1024).default(1_048_576).meta({ description: 'A client with more than this waiting to be sent is too slow and is closed with 1013.' }),
+});
+
 export const EndpointSchema = z.discriminatedUnion('type', [
   CrudEndpoint,
   StaticEndpoint,
@@ -276,6 +310,7 @@ export const EndpointSchema = z.discriminatedUnion('type', [
   HandlerEndpoint,
   UsersEndpoint,
   SseEndpoint,
+  WebsocketEndpoint,
 ]);
 
 export const CONTENT_FIELD_TYPES = ['string', 'text', 'richText', 'number', 'boolean', 'date', 'enum', 'media', 'json', 'list'] as const;
@@ -517,6 +552,7 @@ export const BackendSchema = z
       if (endpoint.type === 'download' && ![endpoint.path, ...(endpoint.aliases ?? [])].every((path) => path.split('/').includes(':id'))) {
         ctx.addIssue({ code: 'custom', path: at('path'), message: 'A download endpoint needs an ":id" segment, for example "/media/:id".' });
       }
+      if (endpoint.type === 'websocket' && endpoint.method !== 'GET') ctx.addIssue({ code: 'custom', path: at('method'), message: 'A websocket endpoint uses GET (the upgrade request).' });
       if (endpoint.type === 'sse' && endpoint.method !== 'GET') ctx.addIssue({ code: 'custom', path: at('method'), message: 'An sse endpoint uses GET.' });
       if (endpoint.type === 'upload' && endpoint.method !== 'POST') ctx.addIssue({ code: 'custom', path: at('method'), message: 'An upload endpoint uses POST.' });
       if (endpoint.type === 'download' && endpoint.method !== 'GET') ctx.addIssue({ code: 'custom', path: at('method'), message: 'A download endpoint uses GET.' });
@@ -570,6 +606,7 @@ export type AuthEndpoint = Extract<Endpoint, { type: 'auth' }>;
 export type UploadEndpoint = Extract<Endpoint, { type: 'upload' }>;
 export type HandlerEndpoint = Extract<Endpoint, { type: 'handler' }>;
 export type SseEndpoint = Extract<Endpoint, { type: 'sse' }>;
+export type WebsocketEndpoint = Extract<Endpoint, { type: 'websocket' }>;
 export type CrudEndpoint = Extract<Endpoint, { type: 'crud' }>;
 export type AuthConfigValue = z.infer<typeof AuthConfig>;
 export type ImportRecord = z.infer<typeof ImportRecordSchema>;

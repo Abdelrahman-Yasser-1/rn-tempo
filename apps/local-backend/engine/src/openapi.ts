@@ -286,6 +286,11 @@ function builtinOperation(endpoint: Exclude<Endpoint, { type: 'crud' | 'static' 
       responses['200'] = { description: 'A `text/event-stream` that stays open: server-sent events.', content: { 'text/event-stream': { schema: { type: 'string' } } } };
       responses['429'] = problem('Too many connections to this endpoint or from this address.');
       break;
+    case 'websocket':
+      responses['101'] = { description: 'Switching Protocols: the connection becomes a WebSocket (use ws:// or wss://). A plain GET answers 426.' };
+      responses['426'] = problem('This is a WebSocket endpoint.');
+      responses['429'] = problem('Too many connections to this endpoint or from this address.');
+      break;
     case 'handler':
       responses['200'] = { description: 'Whatever the handler returns.', content: { 'application/json': {} } };
       responses['500'] = problem('The handler threw.');

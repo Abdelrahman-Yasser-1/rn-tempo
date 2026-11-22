@@ -143,7 +143,7 @@ export function LivePanel({ backend, endpoint, onClose }: { backend: string; end
                   ))}
                 </select>
               </label>
-              {kind === 'sse' ? (
+              {kind !== 'graphql' ? (
                 <label>
                   Event name (optional)
                   <input

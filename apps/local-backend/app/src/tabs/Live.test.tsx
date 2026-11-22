@@ -12,6 +12,7 @@ const definition = {
   name: 'shop',
   collections: [{ name: 'products', fields: [{ name: 'title', type: 'string' }] }],
   endpoints: [
+    { id: 'get.ws', type: 'websocket', method: 'GET', path: '/ws', behavior: 'echo' },
     { id: 'get.live', type: 'sse', method: 'GET', path: '/live', script: [{ data: 'hi' }], on: ['products.created'], retryMs: 3000, heartbeatMs: 15000 },
     { id: 'get.products', type: 'crud', method: 'GET', path: '/products', collection: 'products', action: 'list' },
   ],
@@ -71,6 +72,48 @@ describe('SSE endpoint form', () => {
   });
 });
 
+describe('WebSocket endpoint form', () => {
+  it('AC-LP-7 adds a websocket endpoint with rules, and shows the rules editor only for rules', async () => {
+    const { calls } = setup();
+    await userEvent.click(await screen.findByRole('button', { name: 'Add endpoint' }));
+    const dialog = screen.getByRole('dialog', { name: 'Add endpoint' });
+    await userEvent.selectOptions(within(dialog).getByLabelText(/^What should it do/), 'websocket');
+    expect(within(dialog).getByLabelText(/^Path/)).toHaveValue('/ws');
+    expect(within(dialog).queryByLabelText('WebSocket rules')).not.toBeInTheDocument();
+    await userEvent.selectOptions(within(dialog).getByLabelText('What it does with a message'), 'rules');
+    fireEvent.change(within(dialog).getByLabelText('WebSocket rules'), { target: { value: '[{"match":{"contains":"hi"},"reply":"hello","broadcast":true}]' } });
+    fireEvent.change(within(dialog).getByLabelText('Welcome message'), { target: { value: '{"welcome":true}' } });
+    await userEvent.type(within(dialog).getByLabelText(/^Subprotocols/), 'chat.v1');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Add endpoint' }));
+    await waitFor(() => {
+      expect(calls.posts).toHaveLength(1);
+    });
+    expect(JSON.parse(calls.posts[0]?.body ?? '{}')).toMatchObject({
+      id: 'get.ws.2',
+      type: 'websocket',
+      method: 'GET',
+      path: '/ws',
+      behavior: 'rules',
+      rules: [{ match: { contains: 'hi' }, reply: 'hello', broadcast: true }],
+      onConnect: { welcome: true },
+      subprotocols: ['chat.v1'],
+      maxPayloadBytes: 65_536,
+    });
+  });
+
+  it('AC-LP-7 does not send rules that are not a list', async () => {
+    const { calls } = setup();
+    await userEvent.click(await screen.findByRole('button', { name: 'Add endpoint' }));
+    const dialog = screen.getByRole('dialog');
+    await userEvent.selectOptions(within(dialog).getByLabelText(/^What should it do/), 'websocket');
+    await userEvent.selectOptions(within(dialog).getByLabelText('What it does with a message'), 'rules');
+    fireEvent.change(within(dialog).getByLabelText('WebSocket rules'), { target: { value: '{"a":1}' } });
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Add endpoint' }));
+    expect(await within(dialog).findByText('The rules is a JSON list: [ ... ].')).toBeInTheDocument();
+    expect(calls.posts).toHaveLength(0);
+  });
+});
+
 describe('Live panel', () => {
   it('AC-LP-7 lists the clients, the recent messages, sends to everyone and disconnects a client', async () => {
     const { calls } = setup([{ id: 'abc12345', connectedAt: '2026-11-22T10:00:00.000Z', ipHash: '0123456789ab', messagesIn: 0, messagesOut: 2 }]);
@@ -107,6 +150,19 @@ describe('Live panel', () => {
       expect(calls.sends).toHaveLength(1);
     });
     expect(JSON.parse(calls.sends[0]?.body ?? '{}')).toEqual({ data: 'plain words', clientId: 'abc12345' });
+  });
+
+  it('AC-LP-7 a websocket endpoint has a Live panel with the send form too', async () => {
+    const { calls } = setup([{ id: 'sock0001', connectedAt: '2026-11-22T10:00:00.000Z', ipHash: '0123456789ab', protocol: 'chat', messagesIn: 3, messagesOut: 3 }]);
+    await userEvent.click(await screen.findByRole('button', { name: 'Live /ws' }));
+    const panel = await screen.findByRole('region', { name: 'Live' });
+    expect(await within(panel).findByRole('table', { name: 'Connected clients' })).toHaveTextContent('sock0001');
+    fireEvent.change(within(panel).getByLabelText(/^Message/), { target: { value: 'ping' } });
+    await userEvent.click(within(panel).getByRole('button', { name: 'Send' }));
+    await waitFor(() => {
+      expect(calls.sends).toHaveLength(1);
+    });
+    expect(calls.sends[0]?.path).toBe('/realtime/get.ws/send');
   });
 
   it('AC-LP-7 tells a person with nobody connected what to do', async () => {

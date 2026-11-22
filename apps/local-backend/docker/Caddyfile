@@ -13,6 +13,8 @@
 }
 
 # The public APIs of the backends (/b/<id>/...). A separate host, so what a backend answers never shares the dashboard's origin.
+# WebSocket upgrades and server-sent events (text/event-stream) pass through `reverse_proxy` as they are: Caddy forwards
+# the Upgrade handshake and flushes event streams at once, so nothing more is needed here.
 {$TEMPO_API_DOMAIN} {
 	import secure_headers
 	reverse_proxy tempo:8080

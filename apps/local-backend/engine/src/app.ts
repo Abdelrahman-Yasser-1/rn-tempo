@@ -15,7 +15,7 @@ import { Manager } from './manager.ts';
 import { adminRealtimeRoutes } from './admin-realtime.ts';
 import { adminImportRoutes } from './import/admin-import.ts';
 import { buildOpenApi } from './openapi.ts';
-import { certsDirOf, closeServer, createPublicHandler, createPublicServer, listenOn, readTls, type PublicHandler } from './server.ts';
+import { certsDirOf, closeServer, createPublicHandler, createPublicServer, createUpgradeHandler, listenOn, readTls, type PublicHandler, type UpgradeHandler } from './server.ts';
 
 export interface StartOptions extends EngineOptions {
   /** Overrides `port` of backend.json. `0` picks a free port (tests). */
@@ -63,6 +63,8 @@ export interface RunningBackend {
   readonly publicServer: Server;
   /** Answers one public request (the same code the public server runs); the team server calls it for `/b/<id>`. */
   readonly handlePublic: PublicHandler;
+  /** Answers one HTTP Upgrade (a WebSocket); the team server calls it for `/b/<id>` and `/s/<id>`. */
+  readonly handleUpgrade: UpgradeHandler;
   readonly scheme: 'http' | 'https';
   readonly port: number;
   /** Set when HTTPS was wanted but there is no certificate, so the server fell back to HTTP. */
@@ -96,6 +98,7 @@ export async function startBackend(dir: string, options: StartOptions = {}): Pro
   const publicOptions = options.accessKey === undefined ? {} : { accessKey: options.accessKey };
   const publicServer = createPublicServer(engine, docsHandler(engine), tls, publicOptions);
   const handlePublic = createPublicHandler(engine, docsHandler(engine), publicOptions);
+  const handleUpgrade = createUpgradeHandler(engine, publicOptions);
   const adminServer = createAdminServer(manager, {
     routes: [
       {
@@ -158,6 +161,7 @@ export async function startBackend(dir: string, options: StartOptions = {}): Pro
       adminRoutes: ['GET /events', ...adminServer.routes.map((route) => `${route.method} ${route.pattern}`)],
       publicServer,
       handlePublic,
+      handleUpgrade,
       scheme: tls === undefined ? 'http' : 'https',
       port,
       ...(notice === undefined ? {} : { notice }),

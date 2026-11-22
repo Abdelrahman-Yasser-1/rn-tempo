@@ -3,13 +3,14 @@ import { closeSync, constants, createReadStream, openSync } from 'node:fs';
 import { createServer as createHttpServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { createServer as createHttpsServer } from 'node:https';
 import { join, isAbsolute, resolve } from 'node:path';
-import { pipeline, Readable } from 'node:stream';
+import { pipeline, Readable, type Duplex } from 'node:stream';
 
 import { CERT_FILE, KEY_FILE } from '@rn-tempo/dev-api';
 
 import type { Engine } from './engine.ts';
 import { problemReply, type Reply, type RequestCtx } from './http.ts';
 import { paceRequest, ThrottleStream } from './network.ts';
+import { refuseUpgrade } from './websocket.ts';
 
 /** The most a request body may hold. Uploads (Y2) will stream past this on their own routes. */
 export const MAX_BODY_BYTES = 1024 * 1024;
@@ -190,6 +191,22 @@ export function createPublicHandler(engine: Engine, extra: (ctx: RequestCtx, res
   };
 }
 
+export type UpgradeHandler = (req: IncomingMessage, socket: Duplex, head: Buffer, meta?: { scheme?: 'http' | 'https'; ip?: string }) => void;
+
+/** The HTTP Upgrade requests of a backend (WebSocket endpoints): the access key is checked first, like on any public request. */
+export function createUpgradeHandler(engine: Engine, options: PublicOptions = {}): UpgradeHandler {
+  return (req, socket, head, meta) => {
+    if (engine.definition.publicAccess === 'key') {
+      const given = req.headers[ACCESS_KEY_HEADER];
+      if (options.accessKey === undefined || !options.accessKey(typeof given === 'string' ? given : undefined)) {
+        socket.on('error', () => undefined);
+        return refuseUpgrade(socket, 401, `This API needs a valid access key in the ${ACCESS_KEY_HEADER} header.`);
+      }
+    }
+    engine.handleUpgrade(req, socket, head, meta);
+  };
+}
+
 /** The public listener (one port per backend: desktop and local use). */
 export function createPublicServer(
   engine: Engine,
@@ -198,7 +215,10 @@ export function createPublicServer(
   options: PublicOptions = {},
 ): Server {
   const handler = createPublicHandler(engine, extra, options);
-  return tls === undefined ? createHttpServer((req, res) => handler(req, res)) : createHttpsServer(tls, (req, res) => handler(req, res));
+  const server = tls === undefined ? createHttpServer((req, res) => handler(req, res)) : createHttpsServer(tls, (req, res) => handler(req, res));
+  const upgrade = createUpgradeHandler(engine, options);
+  server.on('upgrade', (req, socket, head) => upgrade(req, socket, head));
+  return server;
 }
 
 export function listenOn(server: Server, port: number, host: string): Promise<number> {

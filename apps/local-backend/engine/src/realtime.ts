@@ -57,9 +57,21 @@ export interface BufferedMessage {
 const LOG_SIZE = 100;
 const MAX_LOG_TEXT = 500;
 
+/** A message that is JSON text is redacted by its keys (a password field); any other text only loses API keys. */
+export function redactedText(text: string): unknown {
+  if (text.length <= 64 * 1024 && /^\s*[[{]/.test(text)) {
+    try {
+      return redactDeep(JSON.parse(text) as unknown);
+    } catch {
+      // Not JSON after all: treated as text below.
+    }
+  }
+  return scrubKeys(text);
+}
+
 /** Message text for the log: redacted (secrets, keys), one line's worth, cut at a fixed length. */
 export function logText(data: unknown): string {
-  const redacted = typeof data === 'string' ? scrubKeys(data) : redactDeep(data);
+  const redacted = typeof data === 'string' ? redactedText(data) : redactDeep(data);
   const text = typeof redacted === 'string' ? redacted : (JSON.stringify(redacted) ?? '');
   return text.length > MAX_LOG_TEXT ? `${text.slice(0, MAX_LOG_TEXT)}...` : text;
 }
@@ -185,7 +197,7 @@ export function publicPayload(definition: Backend, event: BackendEvent): unknown
 
 /** The `on` list of an endpoint that forwards events (`sse`, `websocket`). */
 export function forwardsOf(endpoint: Endpoint | undefined): readonly string[] {
-  return endpoint !== undefined && endpoint.type === 'sse' ? endpoint.on : [];
+  return endpoint !== undefined && (endpoint.type === 'sse' || endpoint.type === 'websocket') ? endpoint.on : [];
 }
 
 export interface RealtimeOptions {

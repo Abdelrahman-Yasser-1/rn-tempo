@@ -369,6 +369,100 @@ export function EndpointDialog({ backend, collections, existingIds, templates = 
           </>
         ) : null}
 
+        {form.type === 'websocket' ? (
+          <>
+            {field(
+              'behavior',
+              'What it does with a message',
+              <select
+                value={form.behavior}
+                onChange={(event) => {
+                  set('behavior', event.target.value as EndpointForm['behavior']);
+                }}
+              >
+                <option value="echo">Echo: send every message back</option>
+                <option value="rules">Rules: answer by what the message says</option>
+              </select>,
+            )}
+            {form.behavior === 'rules' ? (
+              <div className="stack tight">
+                <div className="row">
+                  <span className="grow">
+                    Rules {problem('rules') === undefined ? null : <span className="error">{problem('rules')}</span>}{' '}
+                    <Hint text='The first rule whose match fits answers. A match uses type, jsonPath, equals, contains, startsWith and endsWith (all that are given must fit). The reply can use {{message.field}}; set broadcast to send it to everyone. Regular expressions are not supported: a crafted one could freeze the server.' />
+                  </span>
+                  <DynamicValuesHelp />
+                </div>
+                <ResponseEditor
+                  label="WebSocket rules"
+                  value={form.rules}
+                  onChange={(rules) => {
+                    set('rules', rules);
+                  }}
+                  invalid={problem('rules') !== undefined}
+                  height={160}
+                />
+              </div>
+            ) : null}
+            <div className="stack tight">
+              <span>
+                Welcome message (optional) {problem('onConnect') === undefined ? null : <span className="error">{problem('onConnect')}</span>}{' '}
+                <Hint text="Sent when an app connects. JSON, or text in quotes. Placeholders such as {{uuid}} and {{now}} are filled." />
+              </span>
+              <ResponseEditor
+                label="Welcome message"
+                value={form.onConnect}
+                onChange={(onConnect) => {
+                  set('onConnect', onConnect);
+                }}
+                invalid={problem('onConnect') !== undefined}
+                height={90}
+              />
+            </div>
+            {field(
+              'on',
+              'Send these data changes',
+              <textarea
+                rows={2}
+                value={form.on}
+                placeholder="products.created, products.updated"
+                aria-invalid={problem('on') !== undefined}
+                onChange={(event) => {
+                  set('on', event.target.value);
+                }}
+              />,
+              'Every connected app gets { "event": ..., "data": ... } when one of these happens. products.* means every change to products.',
+            )}
+            <div className="row">
+              {field(
+                'subprotocols',
+                'Subprotocols',
+                <input
+                  value={form.subprotocols}
+                  placeholder="chat.v1"
+                  onChange={(event) => {
+                    set('subprotocols', event.target.value);
+                  }}
+                />,
+                'Names the app may offer in new WebSocket(url, [...]). To sign in, an app sends ["bearer", token] (or ?token=...); the engine answers "bearer", never the token.',
+              )}
+              {field(
+                'maxPayloadKb',
+                'Largest message (KB)',
+                <input
+                  className="short"
+                  inputMode="numeric"
+                  value={form.maxPayloadKb}
+                  aria-invalid={problem('maxPayloadKb') !== undefined}
+                  onChange={(event) => {
+                    set('maxPayloadKb', event.target.value);
+                  }}
+                />,
+              )}
+            </div>
+          </>
+        ) : null}
+
         {form.type === 'sse' ? (
           <>
             <div className="stack tight">
