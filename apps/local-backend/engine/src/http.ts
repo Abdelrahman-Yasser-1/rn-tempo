@@ -17,6 +17,8 @@ export interface RequestCtx {
   query: URLSearchParams;
   headers: IncomingHttpHeaders;
   bodyText: string;
+  /** The client's address (after the trusted proxy, when there is one). Used for per-address limits; never logged as is. */
+  ip?: string;
   /** `scheme://host` the client used, for absolute URLs in answers. */
   origin?: string;
   /** The raw request, for upload endpoints only (their body is not read up front). */
@@ -48,6 +50,8 @@ export interface Reply {
   scenario?: string;
   /** Send the body at this many kilobits per second. */
   downloadKbps?: number;
+  /** An open stream (SSE) that lives as long as the client does: no throttling applies to it. */
+  live?: true;
   /** Close the connection without sending anything (the `timeout` preset). */
   close?: true;
   /** The client left while the engine was waiting: nothing is sent. */

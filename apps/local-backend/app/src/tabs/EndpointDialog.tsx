@@ -369,6 +369,73 @@ export function EndpointDialog({ backend, collections, existingIds, templates = 
           </>
         ) : null}
 
+        {form.type === 'sse' ? (
+          <>
+            <div className="stack tight">
+              <div className="row">
+                <span className="grow">
+                  Script {problem('script') === undefined ? null : <span className="error">{problem('script')}</span>}{' '}
+                  <Hint text="Messages sent, in order, to every app that connects: { event, data, delayMs, repeat }. Use {{seq}}, {{now}} and {{uuid}} in the data. A repeat sends the message several times, each after its delay." />
+                </span>
+                <DynamicValuesHelp />
+              </div>
+              <ResponseEditor
+                label="SSE script"
+                value={form.script}
+                onChange={(script) => {
+                  set('script', script);
+                }}
+                invalid={problem('script') !== undefined}
+                height={150}
+              />
+            </div>
+            {field(
+              'on',
+              'Send these data changes',
+              <textarea
+                rows={2}
+                value={form.on}
+                placeholder="products.created, products.updated"
+                aria-invalid={problem('on') !== undefined}
+                onChange={(event) => {
+                  set('on', event.target.value);
+                }}
+              />,
+              'Every app that is connected gets a message when one of these happens. products.* means every change to products; * means everything, including events your custom code sends with ctx.emit.',
+            )}
+            <div className="row">
+              {field(
+                'retryMs',
+                'Reconnect after (ms)',
+                <input
+                  className="short"
+                  inputMode="numeric"
+                  value={form.retryMs}
+                  aria-invalid={problem('retryMs') !== undefined}
+                  onChange={(event) => {
+                    set('retryMs', event.target.value);
+                  }}
+                />,
+                'The hint that tells an app how long to wait before it connects again.',
+              )}
+              {field(
+                'heartbeatMs',
+                'Heartbeat (ms)',
+                <input
+                  className="short"
+                  inputMode="numeric"
+                  value={form.heartbeatMs}
+                  aria-invalid={problem('heartbeatMs') !== undefined}
+                  onChange={(event) => {
+                    set('heartbeatMs', event.target.value);
+                  }}
+                />,
+                'A small comment sent this often so proxies keep an idle stream open. 0 turns it off.',
+              )}
+            </div>
+          </>
+        ) : null}
+
         <div className="row">
           {field(
             'method',

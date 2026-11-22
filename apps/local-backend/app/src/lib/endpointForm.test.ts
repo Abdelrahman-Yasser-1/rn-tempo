@@ -60,3 +60,37 @@ describe('endpoint form', () => {
     expect(newId('GET', '/a', new Set(['get.a', 'get.a.2']))).toBe('get.a.3');
   });
 });
+
+describe('live events (SSE) form', () => {
+  it('AC-LP-7 starts with GET /events, a sample script, and builds the endpoint from the text fields', () => {
+    const form = blankForm('sse', collections);
+    expect(form).toMatchObject({ method: 'GET', path: '/events', retryMs: '3000', heartbeatMs: '15000' });
+    const made = endpointFrom({ ...form, on: 'products.created, products.*\norders.shipped', script: '[{"data":"hi","repeat":2}]' }, 'get.events');
+    expect(made).toEqual({
+      id: 'get.events',
+      type: 'sse',
+      method: 'GET',
+      path: '/events',
+      auth: 'none',
+      script: [{ data: 'hi', repeat: 2 }],
+      on: ['products.created', 'products.*', 'orders.shipped'],
+      retryMs: 3000,
+      heartbeatMs: 15_000,
+    });
+  });
+
+  it('AC-LP-7 reads an endpoint back into text fields and keeps the limits the form does not show', () => {
+    const endpoint: EndpointDef = { id: 'a', type: 'sse', method: 'GET', path: '/live', script: [{ event: 'x', data: 1 }], on: ['a.b'], retryMs: 500, heartbeatMs: 0, maxConnections: 7 };
+    const form = formFrom(endpoint, collections);
+    expect(form).toMatchObject({ on: 'a.b', retryMs: '500', heartbeatMs: '0' });
+    expect(JSON.parse(form.script)).toEqual([{ event: 'x', data: 1 }]);
+    expect(endpointFrom(form, 'a', endpoint)).toMatchObject({ maxConnections: 7, on: ['a.b'] });
+  });
+
+  it('AC-LP-7 names what is wrong with the script, the events and the numbers', () => {
+    const form = { ...blankForm('sse', collections), script: '{"not":"a list"}', on: 'bad name!', retryMs: 'x', heartbeatMs: '-1' };
+    expect(problemsOf(form).map((problem) => problem.field).sort()).toEqual(['heartbeatMs', 'on', 'retryMs', 'script']);
+    expect(problemsOf({ ...form, script: 'nope' }).find((problem) => problem.field === 'script')?.message).toBe('The script is not valid JSON.');
+    expect(problemsOf(blankForm('sse', collections))).toEqual([]);
+  });
+});

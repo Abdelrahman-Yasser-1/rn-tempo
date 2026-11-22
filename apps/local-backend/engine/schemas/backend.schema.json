@@ -2224,6 +2224,328 @@
               "action"
             ],
             "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "description": "Stable id, for example `get.products.:id`. Scenarios and stats use it."
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "GET",
+                  "POST",
+                  "PUT",
+                  "PATCH",
+                  "DELETE"
+                ]
+              },
+              "path": {
+                "type": "string",
+                "pattern": "^\\/[^\\s?#]*$",
+                "description": "Express-style path with `:param` segments, for example `/products/:id`."
+              },
+              "aliases": {
+                "description": "Extra paths that serve the same endpoint, for example `/products/add`.",
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^\\/[^\\s?#]*$",
+                  "description": "Express-style path with `:param` segments, for example `/products/:id`."
+                }
+              },
+              "summary": {
+                "type": "string"
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "auth": {
+                "default": "none",
+                "type": "string",
+                "enum": [
+                  "none",
+                  "bearer"
+                ]
+              },
+              "latency": {
+                "description": "A delay for this endpoint, or `\"inherit\"` (the default) for the backend's `latency.default`.",
+                "anyOf": [
+                  {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "fixedMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60000,
+                            "description": "Wait exactly this long before answering."
+                          }
+                        },
+                        "required": [
+                          "fixedMs"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "minMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60000,
+                            "description": "The shortest wait."
+                          },
+                          "maxMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60000,
+                            "description": "The longest wait. A random value from `minMs` to `maxMs` is picked for each request."
+                          }
+                        },
+                        "required": [
+                          "minMs",
+                          "maxMs"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ],
+                    "title": "Latency",
+                    "description": "A fixed delay (`{ \"fixedMs\": 300 }`) or a random one (`{ \"minMs\": 100, \"maxMs\": 900 }`)."
+                  },
+                  {
+                    "type": "string",
+                    "const": "inherit"
+                  }
+                ]
+              },
+              "network": {
+                "description": "A network profile for this endpoint, or `\"inherit\"` (the default) for the backend's `network`.",
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "preset": {
+                        "type": "string",
+                        "enum": [
+                          "instant",
+                          "wifi",
+                          "4g",
+                          "3g-slow",
+                          "timeout",
+                          "custom"
+                        ],
+                        "description": "`instant` (no delay), `wifi` (20 ms, 30 Mbps down), `4g` (60 ms, 9 Mbps down), `3g-slow` (400 ms, 500 kbps), `timeout` (holds the answer, then closes the connection) or `custom` (only the numbers below)."
+                      },
+                      "downloadKbps": {
+                        "description": "Response speed in kilobits per second. Replaces the preset's own.",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 10000000
+                      },
+                      "uploadKbps": {
+                        "description": "Request body speed in kilobits per second. Replaces the preset's own.",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 10000000
+                      },
+                      "timeoutMs": {
+                        "description": "How long the `timeout` preset holds the request before closing the connection (default 30000).",
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 120000
+                      }
+                    },
+                    "required": [
+                      "preset"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Network"
+                  },
+                  {
+                    "type": "string",
+                    "const": "inherit"
+                  }
+                ]
+              },
+              "wrap": {
+                "description": "`\"inherit\"` (the default): the backend's success wrapper. `\"none\"`: no wrapper. Or the name of a response template whose body wraps this endpoint's body.",
+                "type": "string"
+              },
+              "headers": {
+                "description": "Headers added to every answer of this endpoint. They win over the backend's common headers.",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "scenarios": {
+                "default": {},
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "minimum": 100,
+                      "maximum": 599
+                    },
+                    "delayMs": {
+                      "description": "Wait this long before answering. It wins over every other delay setting.",
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 60000
+                    },
+                    "body": {
+                      "description": "Sent as the JSON body instead of the normal response."
+                    },
+                    "headers": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    },
+                    "description": {
+                      "description": "What the response is (from an imported API file).",
+                      "type": "string",
+                      "maxLength": 500
+                    },
+                    "schema": {
+                      "description": "JSON Schema of this response body (from an imported API file). Documentation only.",
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {}
+                    }
+                  },
+                  "additionalProperties": false,
+                  "title": "Scenario",
+                  "description": "A canned response, picked with the x-tempo-scenario header or the admin API."
+                }
+              },
+              "importedFrom": {
+                "description": "Fingerprint of the endpoint as an API file import made it. A different fingerprint now means someone edited it.",
+                "type": "string",
+                "maxLength": 100
+              },
+              "type": {
+                "type": "string",
+                "const": "sse"
+              },
+              "script": {
+                "default": [],
+                "description": "Messages sent, in order, to every client that connects (a client that resumes with `Last-Event-ID` gets what it missed instead).",
+                "maxItems": 200,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "event": {
+                      "description": "The SSE `event:` name. Without one, clients get the default `message` event.",
+                      "type": "string",
+                      "pattern": "^[^\\r\\n]{1,100}$"
+                    },
+                    "data": {
+                      "description": "The message. Text is sent as is, anything else as JSON. `{{placeholders}}` are filled for every message (`{{seq}}` counts the messages of the connection)."
+                    },
+                    "delayMs": {
+                      "description": "Wait this long before sending (before each repeat). Test mode makes it 0.",
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 60000
+                    },
+                    "repeat": {
+                      "description": "Send this message this many times (default 1).",
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 100000
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false,
+                  "title": "SseMessage"
+                }
+              },
+              "on": {
+                "default": [],
+                "description": "Data change events to forward to every connected client: `products.created`, `products.*`, `*`, or a custom event from `ctx.emit`.",
+                "maxItems": 50,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^(?:\\*|[A-Za-z][A-Za-z0-9_.:-]{0,63}\\*?)$"
+                }
+              },
+              "retryMs": {
+                "default": 3000,
+                "description": "The `retry:` hint: how long a client waits before it reconnects.",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 600000
+              },
+              "heartbeatMs": {
+                "default": 15000,
+                "description": "A comment line this often keeps proxies from closing an idle stream. 0 turns it off.",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 300000
+              },
+              "idleTimeoutMs": {
+                "default": 1800000,
+                "description": "Close a client that received no message (heartbeats do not count) for this long. 0 turns it off.",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 86400000
+              },
+              "maxConnections": {
+                "default": 100,
+                "description": "The most clients connected at once; the next one gets 429.",
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10000
+              },
+              "maxConnectionsPerIp": {
+                "default": 10,
+                "description": "The most clients one address may hold at once; the next one gets 429.",
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10000
+              },
+              "bufferSize": {
+                "default": 100,
+                "description": "How many forwarded and broadcast messages are kept so a client can resume with `Last-Event-ID`.",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000
+              }
+            },
+            "required": [
+              "id",
+              "method",
+              "path",
+              "type"
+            ],
+            "additionalProperties": false
           }
         ]
       }

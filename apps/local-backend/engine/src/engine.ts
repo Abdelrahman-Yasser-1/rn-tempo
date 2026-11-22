@@ -10,6 +10,8 @@ import { ContentService, modelOf } from './content.ts';
 import { handleContent } from './content-public.ts';
 import { crudHandler } from './crud.ts';
 import { EventBus } from './events.ts';
+import { Realtime } from './realtime.ts';
+import { sseHandler } from './sse.ts';
 import { createHandlerRpc } from './handler-host.ts';
 import { HandlerFileError, handlerFailure, HandlerPool, replyFromHandler, resolveHandlerFile } from './handlers.ts';
 import { readSeedFile, type BackendFolder } from './folder.ts';
@@ -84,6 +86,8 @@ export class Engine {
   readonly handlers: HandlerPool;
   /** Data change events (`products.created`, `content.published`, a handler's `ctx.emit`). Published after the write commits. */
   readonly events: EventBus;
+  /** The connected clients of SSE, WebSocket and GraphQL endpoints. */
+  readonly realtime: Realtime;
   private state: State;
   private readonly options: Required<Pick<EngineOptions, 'sleep' | 'now' | 'authorize'>> & Pick<EngineOptions, 'onRequest' | 'logger'>;
   /** Turns delays off for every request (`--test-mode`). */
@@ -111,6 +115,7 @@ export class Engine {
     this.content = content;
     this.handlers = new HandlerPool(options.logger);
     this.events = new EventBus(now);
+    this.realtime = new Realtime({ events: this.events, definition: () => this.state.definition, now });
     store.onChange = (change): void => this.events.emit(`${change.payload.collection}.${change.action}`, change.payload);
     content.onEvent = (name, payload): void => this.events.emit(name, payload);
     this.options = {
@@ -190,6 +195,7 @@ export class Engine {
 
   close(): void {
     clearInterval(this.dueTimer);
+    this.realtime.closeAll();
     void this.handlers.close();
     this.store.close();
   }
@@ -247,6 +253,8 @@ export class Engine {
           return this.staticReply(endpoint, ctx.values ?? this.placeholders(ctx, endpoint, params));
         };
       }
+      case 'sse':
+        return sseHandler(endpoint, { realtime: this.realtime, zeroed: (headers) => this.delaysZeroed(headers), now: this.options.now });
       case 'handler':
         return async (ctx, params) => {
           const label = endpoint.id;
@@ -318,6 +326,7 @@ export class Engine {
       this.options.logger?.info({ ops: plan.ops.map((op) => op.op) }, 'definition applied');
       const state = this.build(next);
       this.state = state;
+      this.realtime.reconcile(next);
       this.seedUsers();
       const ids = new Set(next.endpoints.map((endpoint) => endpoint.id));
       for (const id of this.scenarioPicks.keys()) if (!ids.has(id)) this.scenarioPicks.delete(id);
@@ -373,6 +382,11 @@ export class Engine {
     return { requestId, testMode, network };
   }
 
+  /** Whether delays are 0 for a request with these headers (test mode, unless it asks for its delays back). */
+  delaysZeroed(headers: IncomingHttpHeaders): boolean {
+    return testModeOf({ engine: this.testMode, definition: this.state.definition.testMode, headers }).zeroed;
+  }
+
   // ---- requests
 
   /** Answers one request and records it in the request log. Never throws. */
@@ -418,7 +432,7 @@ export class Engine {
         reply = problemReply(500, { detail: 'Unexpected server error.' });
       }
     }
-    if (outcome === 'ok' && plan.network.downloadKbps !== undefined) reply = { ...reply, downloadKbps: plan.network.downloadKbps };
+    if (outcome === 'ok' && plan.network.downloadKbps !== undefined && reply.live !== true) reply = { ...reply, downloadKbps: plan.network.downloadKbps };
     const ms = Math.round(Number(process.hrtime.bigint() - started) / 1e6);
     const network = noteOf(plan.network, outcome === 'closed' ? 'closed' : 'done');
     const entry = this.requests.record(

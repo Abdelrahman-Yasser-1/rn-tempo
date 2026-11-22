@@ -47,7 +47,7 @@ export function readBody(req: IncomingMessage, max = MAX_BODY_BYTES): Promise<{ 
  * The request as the engine sees it. `scheme` is the one the client used when a trusted proxy terminated TLS in front
  * (the team server decides that); otherwise it follows the socket.
  */
-export function toCtx(req: IncomingMessage, bodyText: string, scheme?: 'http' | 'https'): RequestCtx {
+export function toCtx(req: IncomingMessage, bodyText: string, scheme?: 'http' | 'https', ip?: string): RequestCtx {
   const url = req.url ?? '/';
   const parsed = new URL(url, 'http://local');
   const encrypted = scheme === undefined ? (req.socket as { encrypted?: boolean }).encrypted === true : scheme === 'https';
@@ -59,6 +59,7 @@ export function toCtx(req: IncomingMessage, bodyText: string, scheme?: 'http' | 
     query: parsed.searchParams,
     headers: req.headers,
     bodyText,
+    ip: ip ?? req.socket.remoteAddress ?? 'unknown',
     ...(host === undefined ? {} : { origin: `${encrypted ? 'https' : 'http'}://${host}` }),
   };
 }
@@ -138,7 +139,7 @@ export interface PublicOptions {
   accessKey?: (key: string | undefined) => boolean;
 }
 
-export type PublicHandler = (req: IncomingMessage, res: ServerResponse, meta?: { scheme?: 'http' | 'https' }) => void;
+export type PublicHandler = (req: IncomingMessage, res: ServerResponse, meta?: { scheme?: 'http' | 'https'; ip?: string }) => void;
 
 /** The public API of one backend as a request handler: the API, `/__health` and the docs. There is no admin route. */
 export function createPublicHandler(engine: Engine, extra: (ctx: RequestCtx, res: ServerResponse) => boolean, options: PublicOptions = {}): PublicHandler {
@@ -170,7 +171,7 @@ export function createPublicHandler(engine: Engine, extra: (ctx: RequestCtx, res
         return;
       }
       const head = req.method === 'HEAD';
-      const ctx = toCtx(req, body.text, meta?.scheme);
+      const ctx = toCtx(req, body.text, meta?.scheme, meta?.ip);
       ctx.plan = plan;
       ctx.signal = gone.signal;
       if (streaming) ctx.stream = req;

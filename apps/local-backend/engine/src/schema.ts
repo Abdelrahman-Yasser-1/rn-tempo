@@ -236,6 +236,37 @@ const HandlerEndpoint = z.strictObject({
   timeoutMs: z.number().int().positive().max(30_000).default(5000).meta({ description: 'The worker is terminated after this long (default 5000, at most 30000); the answer is 504.' }),
 });
 
+/** An event pattern of an endpoint's `on` list: a name (`products.created`), a prefix (`products.*`) or `*`. */
+export const EVENT_PATTERN = /^(?:\*|[A-Za-z][A-Za-z0-9_.:-]{0,63}\*?)$/;
+const eventPatterns = z
+  .array(z.string().regex(EVENT_PATTERN, 'An event is a name like "products.created", a prefix like "products.*" or "*".'))
+  .max(50)
+  .default([])
+  .meta({ description: 'Data change events to forward to every connected client: `products.created`, `products.*`, `*`, or a custom event from `ctx.emit`.' });
+const connectionLimit = (fallback: number, what: string) => z.number().int().min(1).max(10_000).default(fallback).meta({ description: what });
+
+const SseMessage = z
+  .strictObject({
+    event: z.string().regex(/^[^\r\n]{1,100}$/, 'An event name is one line.').optional().meta({ description: 'The SSE `event:` name. Without one, clients get the default `message` event.' }),
+    data: z.unknown().meta({ description: 'The message. Text is sent as is, anything else as JSON. `{{placeholders}}` are filled for every message (`{{seq}}` counts the messages of the connection).' }),
+    delayMs: z.number().int().min(0).max(MAX_DELAY_MS).optional().meta({ description: 'Wait this long before sending (before each repeat). Test mode makes it 0.' }),
+    repeat: z.number().int().min(1).max(100_000).optional().meta({ description: 'Send this message this many times (default 1).' }),
+  })
+  .meta({ title: 'SseMessage' });
+
+const SseEndpoint = z.strictObject({
+  ...common,
+  type: z.literal('sse'),
+  script: z.array(SseMessage).max(200).default([]).meta({ description: 'Messages sent, in order, to every client that connects (a client that resumes with `Last-Event-ID` gets what it missed instead).' }),
+  on: eventPatterns,
+  retryMs: z.number().int().min(0).max(600_000).default(3000).meta({ description: 'The `retry:` hint: how long a client waits before it reconnects.' }),
+  heartbeatMs: z.number().int().min(0).max(300_000).default(15_000).meta({ description: 'A comment line this often keeps proxies from closing an idle stream. 0 turns it off.' }),
+  idleTimeoutMs: z.number().int().min(0).max(86_400_000).default(1_800_000).meta({ description: 'Close a client that received no message (heartbeats do not count) for this long. 0 turns it off.' }),
+  maxConnections: connectionLimit(100, 'The most clients connected at once; the next one gets 429.'),
+  maxConnectionsPerIp: connectionLimit(10, 'The most clients one address may hold at once; the next one gets 429.'),
+  bufferSize: z.number().int().min(0).max(1000).default(100).meta({ description: 'How many forwarded and broadcast messages are kept so a client can resume with `Last-Event-ID`.' }),
+});
+
 export const EndpointSchema = z.discriminatedUnion('type', [
   CrudEndpoint,
   StaticEndpoint,
@@ -244,6 +275,7 @@ export const EndpointSchema = z.discriminatedUnion('type', [
   DownloadEndpoint,
   HandlerEndpoint,
   UsersEndpoint,
+  SseEndpoint,
 ]);
 
 export const CONTENT_FIELD_TYPES = ['string', 'text', 'richText', 'number', 'boolean', 'date', 'enum', 'media', 'json', 'list'] as const;
@@ -485,6 +517,7 @@ export const BackendSchema = z
       if (endpoint.type === 'download' && ![endpoint.path, ...(endpoint.aliases ?? [])].every((path) => path.split('/').includes(':id'))) {
         ctx.addIssue({ code: 'custom', path: at('path'), message: 'A download endpoint needs an ":id" segment, for example "/media/:id".' });
       }
+      if (endpoint.type === 'sse' && endpoint.method !== 'GET') ctx.addIssue({ code: 'custom', path: at('method'), message: 'An sse endpoint uses GET.' });
       if (endpoint.type === 'upload' && endpoint.method !== 'POST') ctx.addIssue({ code: 'custom', path: at('method'), message: 'An upload endpoint uses POST.' });
       if (endpoint.type === 'download' && endpoint.method !== 'GET') ctx.addIssue({ code: 'custom', path: at('method'), message: 'A download endpoint uses GET.' });
       if (endpoint.type !== 'crud') return;
@@ -536,6 +569,7 @@ export type UsersEndpoint = Extract<Endpoint, { type: 'users' }>;
 export type AuthEndpoint = Extract<Endpoint, { type: 'auth' }>;
 export type UploadEndpoint = Extract<Endpoint, { type: 'upload' }>;
 export type HandlerEndpoint = Extract<Endpoint, { type: 'handler' }>;
+export type SseEndpoint = Extract<Endpoint, { type: 'sse' }>;
 export type CrudEndpoint = Extract<Endpoint, { type: 'crud' }>;
 export type AuthConfigValue = z.infer<typeof AuthConfig>;
 export type ImportRecord = z.infer<typeof ImportRecordSchema>;

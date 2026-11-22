@@ -1008,3 +1008,16 @@ fieldset.plain-fieldset legend {
   flex-direction: column;
   gap: 8px;
 }
+
+.live-log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 220px;
+  overflow: auto;
+  font-size: 0.85rem;
+}
+.live-log li {
+  padding: 2px 0;
+  overflow-wrap: anywhere;
+}
