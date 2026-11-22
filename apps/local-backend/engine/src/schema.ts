@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { MAX_DELAY_MS, MAX_TIMEOUT_MS } from './constants.ts';
 import { isIdentifier } from './names.ts';
 import { checkContentShape, isSlug, SLUG_HELP } from './content-values.ts';
+import { containsBodyToken, isTemplateRef, TEMPLATE_NAME, WRAP_KEYWORDS } from './responses.ts';
 import { checkShape } from './values.ts';
 
 const identifier = z
@@ -93,6 +94,33 @@ export const NetworkSchema = z
   .meta({ title: 'Network' });
 export type Network = z.infer<typeof NetworkSchema>;
 
+const headerRecord = z.record(z.string(), z.string());
+
+export const ResponseTemplateSchema = z
+  .strictObject({
+    status: z.number().int().min(100).max(599).optional().meta({ description: 'The status when the endpoint or scenario that uses the template does not set its own.' }),
+    headers: headerRecord.optional(),
+    body: z.unknown().optional().meta({ description: 'The JSON body. `{{with.name}}` is filled from the `with` of the reference; the other placeholders work too.' }),
+  })
+  .meta({ title: 'ResponseTemplate', description: 'A reusable response. Use it as a body: `{ "template": "name", "with": { ... } }`.' });
+
+export const ResponsesSchema = z
+  .strictObject({
+    success: z.unknown().optional().meta({
+      description: 'The wrapper of every success answer, for example `{ "success": true, "data": "{{body}}", "message": null }`. The string `"{{body}}"` (the whole string) is replaced by the endpoint\'s body.',
+    }),
+    error: z
+      .strictObject({
+        format: z.enum(['problem', 'dummyjson', 'custom']).default('problem').meta({ description: '`problem`: RFC 9457 problem+json. `dummyjson`: `{ "message": "..." }`. `custom`: your own `template`.' }),
+        template: z.unknown().optional().meta({ description: 'For `custom`: the error body. `{{status}}`, `{{message}}` and `{{errors}}` are filled in.' }),
+      })
+      .optional(),
+    headers: headerRecord.optional().meta({ description: 'Headers added to every answer of every endpoint.' }),
+  })
+  .meta({ title: 'Responses', description: 'The shared shape of the backend\'s answers.' });
+export type Responses = z.infer<typeof ResponsesSchema>;
+export type ResponseTemplate = z.infer<typeof ResponseTemplateSchema>;
+
 export const ScenarioSchema = z
   .strictObject({
     status: z.number().int().min(100).max(599).optional(),
@@ -128,6 +156,8 @@ const common = {
   auth: z.enum(['none', 'bearer']).default('none'),
   latency: z.union([LatencySchema, z.literal('inherit')]).optional().meta({ description: 'A delay for this endpoint, or `"inherit"` (the default) for the backend\'s `latency.default`.' }),
   network: z.union([NetworkSchema, z.literal('inherit')]).optional().meta({ description: 'A network profile for this endpoint, or `"inherit"` (the default) for the backend\'s `network`.' }),
+  wrap: z.string().optional().meta({ description: '`"inherit"` (the default): the backend\'s success wrapper. `"none"`: no wrapper. Or the name of a response template whose body wraps this endpoint\'s body.' }),
+  headers: headerRecord.optional().meta({ description: 'Headers added to every answer of this endpoint. They win over the backend\'s common headers.' }),
   scenarios: z.record(z.string(), ScenarioSchema).default({}),
   importedFrom: z.string().max(100).optional().meta({ description: 'Fingerprint of the endpoint as an API file import made it. A different fingerprint now means someone edited it.' }),
 };
@@ -307,6 +337,33 @@ const AuthConfig = z.strictObject({
 
 const pathSegments = (path: string): string[] => path.split('/').filter((part) => part !== '');
 
+/** The wrapper holds `{{body}}`, a custom error has its template, and every `wrap` and `template` names a template that exists. */
+function checkResponses(def: { responses?: Responses | undefined; responseTemplates: Record<string, ResponseTemplate>; endpoints: Endpoint[] }, ctx: z.RefinementCtx): void {
+  const names = new Set(Object.keys(def.responseTemplates));
+  const hasBody = (name: string): boolean => containsBodyToken(def.responseTemplates[name]?.body);
+  if (def.responses?.success !== undefined && !containsBodyToken(def.responses.success)) {
+    ctx.addIssue({ code: 'custom', path: ['responses', 'success'], message: 'The success wrapper needs a "{{body}}" (the whole string) where the endpoint\'s body goes.' });
+  }
+  if (def.responses?.error?.format === 'custom' && def.responses.error.template === undefined) {
+    ctx.addIssue({ code: 'custom', path: ['responses', 'error', 'template'], message: 'A custom error format needs a template.' });
+  }
+  const missing = (name: string): string => `There is no response template named "${name}" (add it to responseTemplates).`;
+  def.endpoints.forEach((endpoint, index) => {
+    const at = (...rest: (string | number)[]): (string | number)[] => ['endpoints', index, ...rest];
+    const wrap = endpoint.wrap;
+    if (wrap !== undefined && !(WRAP_KEYWORDS as readonly string[]).includes(wrap)) {
+      if (!names.has(wrap)) ctx.addIssue({ code: 'custom', path: at('wrap'), message: `wrap must be "inherit", "none" or the name of a response template. ${missing(wrap)}` });
+      else if (!hasBody(wrap)) ctx.addIssue({ code: 'custom', path: at('wrap'), message: `The template "${wrap}" is used as a wrapper, so its body needs a "{{body}}".` });
+    }
+    const bodies: [(string | number)[], unknown][] = [];
+    if (endpoint.type === 'static') bodies.push([at('body'), endpoint.body]);
+    for (const [name, scenario] of Object.entries(endpoint.scenarios)) bodies.push([at('scenarios', name, 'body'), scenario.body]);
+    for (const [path, body] of bodies) {
+      if (isTemplateRef(body) && !names.has(body.template)) ctx.addIssue({ code: 'custom', path, message: missing(body.template) });
+    }
+  });
+}
+
 /** Locales, type names, seeds, and no endpoint under the content mount. */
 function checkContent(def: { content: z.infer<typeof ContentConfig>; contentTypes: ContentType[]; endpoints: Endpoint[] }, ctx: z.RefinementCtx): void {
   const { locales, defaultLocale, mount } = def.content;
@@ -375,6 +432,8 @@ export const BackendSchema = z
       .optional()
       .meta({ description: 'Delays. A scenario\'s `delayMs` wins over an endpoint\'s `latency`, which wins over this.' }),
     network: NetworkSchema.optional().meta({ description: 'The connection profile of every endpoint that does not set its own.' }),
+    responses: ResponsesSchema.optional(),
+    responseTemplates: z.record(z.string().regex(TEMPLATE_NAME, 'A template name starts with a letter and holds letters, digits, "-" and "_" (at most 64 characters).'), ResponseTemplateSchema).default({}),
     testMode: z.boolean().default(false).meta({ description: 'Zero every delay, throttle and timeout (and fix `{{now}}` and the random values). A request can opt back in with `x-tempo-test-delays: 1`.' }),
     auth: AuthConfig.default(() => AuthConfig.parse({})),
     media: z.strictObject({ maxBytes: z.number().int().positive().default(104_857_600) }).default({ maxBytes: 104_857_600 }),
@@ -400,6 +459,7 @@ export const BackendSchema = z
       });
     });
     checkContent(def, ctx);
+    checkResponses(def, ctx);
     const ids = new Set<string>();
     const routes = new Set<string>();
     def.endpoints.forEach((endpoint, index) => {

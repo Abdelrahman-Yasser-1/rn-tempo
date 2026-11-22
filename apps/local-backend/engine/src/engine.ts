@@ -1,4 +1,4 @@
-import { randomBytes } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import type { IncomingHttpHeaders } from 'node:http';
 import { join } from 'node:path';
 
@@ -10,15 +10,17 @@ import { ContentService, modelOf } from './content.ts';
 import { handleContent } from './content-public.ts';
 import { crudHandler } from './crud.ts';
 import { createHandlerRpc } from './handler-host.ts';
-import { HandlerFileError, handlerFailure, HandlerPool, replyFromHandler, resolveHandlerFile } from './handlers.ts';
+import { FORBIDDEN_HEADERS, HandlerFileError, handlerFailure, HandlerPool, replyFromHandler, resolveHandlerFile } from './handlers.ts';
 import { readSeedFile, type BackendFolder } from './folder.ts';
 import { jsonReply, loggableBody, problemReply, readJson, type Reply, type RequestCtx } from './http.ts';
 import type { EngineLogger } from './logs.ts';
 import { downloadReply, MediaService, uploadFailure, uploadJson } from './media.ts';
 import { Rng } from './import/generate.ts';
 import { noteOf, paceRequest, planNetwork, requestSeed, sleepFor, testModeOf, type NetworkPlan, type RequestPlan } from './network.ts';
-import { TEST_MODE_SEED } from './constants.ts';
-import { mountPath, Router, type Handler } from './router.ts';
+import { TEST_MODE_NOW, TEST_MODE_SEED } from './constants.ts';
+import { PlaceholderError, type PlaceholderContext } from './placeholders.ts';
+import { errorBody, expandTemplate, wrapBody, wrapperOf } from './responses.ts';
+import { mountPath, Router, type Handler, type Params } from './router.ts';
 import { buildRequestValidator, invalidRequest } from './import/request-validation.ts';
 import type { Backend, Collection, Endpoint, Scenario, StaticEndpoint } from './schema.ts';
 import { Stats } from './stats.ts';
@@ -83,6 +85,10 @@ export class Engine {
   readonly testMode: boolean;
   private readonly seed: string;
   private requestCounter = 0;
+  /** What `{{now}}` shows in test mode. A test kit can move it. */
+  testClock = new Date(TEST_MODE_NOW);
+  /** The `{{seq}}` counter of each endpoint (requests that reached it). Test kits reset it per session. */
+  private readonly sequences = new Map<string, number>();
   private readonly scenarioPicks = new Map<string, string>();
   private queue: Promise<unknown> = Promise.resolve();
   private readonly dueTimer: NodeJS.Timeout;
@@ -230,7 +236,7 @@ export class Engine {
             if (!Array.isArray(found)) return found;
             if (found.length > 0) return invalidRequest(found);
           }
-          return staticReply(endpoint);
+          return this.staticReply(endpoint, ctx.values ?? this.placeholders(ctx, endpoint, params));
         };
       }
       case 'handler':
@@ -307,6 +313,7 @@ export class Engine {
       this.seedUsers();
       const ids = new Set(next.endpoints.map((endpoint) => endpoint.id));
       for (const id of this.scenarioPicks.keys()) if (!ids.has(id)) this.scenarioPicks.delete(id);
+      for (const id of this.sequences.keys()) if (!ids.has(id)) this.sequences.delete(id);
       return plan;
     });
   }
@@ -382,20 +389,26 @@ export class Engine {
       } else if (outcome === 'abandoned') {
         reply = { status: 499, headers: {}, abandoned: true };
       } else if (publicContent !== undefined) {
-        reply = publicContent;
+        reply = this.finalize(publicContent, undefined, this.placeholders(ctx, undefined, {}));
       } else if (match?.kind === 'none') {
-        reply = problemReply(404, { detail: `No endpoint for ${ctx.method} ${ctx.path}.` });
+        reply = this.finalize(problemReply(404, { detail: `No endpoint for ${ctx.method} ${ctx.path}.` }), undefined, this.placeholders(ctx, undefined, {}));
       } else if (match?.kind === 'method') {
-        reply = problemReply(405, { detail: `${ctx.method} is not allowed here.`, headers: { allow: match.allowed.join(', ') } });
+        reply = this.finalize(problemReply(405, { detail: `${ctx.method} is not allowed here.`, headers: { allow: match.allowed.join(', ') } }), undefined, this.placeholders(ctx, undefined, {}));
       } else if (match?.kind === 'found') {
         const { endpoint } = match.route;
-        reply = await this.run(ctx, endpoint, () => match.route.handler(ctx, match.params));
+        const values = this.placeholders(ctx, endpoint, match.params);
+        ctx.values = values;
+        reply = this.finalize(await this.run(ctx, endpoint, values, () => match.route.handler(ctx, match.params)), endpoint, values);
       } else {
         reply = problemReply(500, { detail: 'Unexpected server error.' });
       }
     } catch (error) {
-      this.options.logger?.error({ err: error instanceof Error ? error.message : String(error), method: ctx.method, path: ctx.path }, 'request failed');
-      reply = problemReply(500, { detail: 'Unexpected server error.' });
+      if (error instanceof PlaceholderError) {
+        reply = problemReply(500, { detail: error.message });
+      } else {
+        this.options.logger?.error({ err: error instanceof Error ? error.message : String(error), method: ctx.method, path: ctx.path }, 'request failed');
+        reply = problemReply(500, { detail: 'Unexpected server error.' });
+      }
     }
     if (outcome === 'ok' && plan.network.downloadKbps !== undefined) reply = { ...reply, downloadKbps: plan.network.downloadKbps };
     const ms = Math.round(Number(process.hrtime.bigint() - started) / 1e6);
@@ -428,10 +441,12 @@ export class Engine {
   }
 
   /** Auth, then the scenario (header first, then the admin pick), then the endpoint itself. */
-  private async run(ctx: RequestCtx, endpoint: Endpoint, handle: () => Reply | Promise<Reply>): Promise<Reply> {
+  private async run(ctx: RequestCtx, endpoint: Endpoint, values: PlaceholderContext, handle: () => Reply | Promise<Reply>): Promise<Reply> {
     if (endpoint.auth === 'bearer' && !this.options.authorize(ctx, endpoint)) {
       return problemReply(401, { detail: 'Invalid or expired token' });
     }
+    // `placeholders` ran before the token was checked, so the user is added now.
+    values.user = ctx.user;
     const headerName = ctx.headers[SCENARIO_HEADER];
     const requested = typeof headerName === 'string' && headerName !== '' ? headerName : undefined;
     const name = requested ?? this.scenarioPicks.get(endpoint.id);
@@ -441,9 +456,13 @@ export class Engine {
     }
     if (scenario === undefined || name === undefined) return handle();
     ctx.scenario = name;
-    const status = scenario.status ?? 200;
     const extra = scenario.headers ?? {};
-    if (scenario.body !== undefined) return { ...jsonReply(status, scenario.body, extra), scenario: name };
+    if (scenario.body !== undefined) {
+      const expanded = expandTemplate(scenario.body, this.state.definition.responseTemplates, values);
+      const status = scenario.status ?? expanded.status ?? 200;
+      return { ...jsonReply(status, expanded.body, { ...expanded.headers, ...extra }), scenario: name };
+    }
+    const status = scenario.status ?? 200;
     if (scenario.status !== undefined && scenario.status >= 400) {
       const failure = problemReply(status, { headers: extra });
       return { ...failure, scenario: name };
@@ -451,14 +470,107 @@ export class Engine {
     if (scenario.status !== undefined) return { status, headers: { ...extra }, scenario: name };
     return { ...(await handle()), scenario: name };
   }
+
+  // ---- shared response shape
+
+  /** The static endpoint's answer: its body (a template reference is expanded first), status and headers. */
+  private staticReply(endpoint: StaticEndpoint, values: PlaceholderContext): Reply {
+    const expanded = endpoint.body === undefined ? { body: undefined } : expandTemplate(endpoint.body, this.state.definition.responseTemplates, values);
+    // A template's status applies when the endpoint leaves its own at the default (200).
+    const status = endpoint.status === 200 && 'status' in expanded && expanded.status !== undefined ? expanded.status : endpoint.status;
+    return {
+      status,
+      headers: { 'content-type': 'application/json; charset=utf-8', ...('headers' in expanded ? expanded.headers : undefined), ...endpoint.headers },
+      ...(expanded.body === undefined ? {} : { body: expanded.body }),
+    };
+  }
+
+  /** What the placeholders of one request can see. `user` is set after the token check. */
+  private placeholders(ctx: RequestCtx, endpoint: Endpoint | undefined, params: Params): PlaceholderContext {
+    const test = ctx.plan?.testMode === true;
+    const seq = endpoint === undefined ? 0 : this.nextSequence(endpoint.id);
+    const rng = new Rng(test ? `${TEST_MODE_SEED}:${endpoint?.id ?? ''}:${String(seq)}` : `${requestSeed(this.seed, ctx.plan?.requestId ?? 0)}:values`);
+    let parsed: { value: unknown } | undefined;
+    return {
+      params,
+      query: ctx.query,
+      headers: ctx.headers,
+      body: (): unknown => {
+        parsed ??= { value: requestJson(ctx) };
+        return parsed.value;
+      },
+      user: ctx.user,
+      now: () => (test ? this.testClock : this.options.now()),
+      uuid: () => (test ? seededUuid(rng) : randomUUID()),
+      seq: () => seq,
+      rng,
+    };
+  }
+
+  private nextSequence(endpointId: string): number {
+    const next = (this.sequences.get(endpointId) ?? 0) + 1;
+    this.sequences.set(endpointId, next);
+    return next;
+  }
+
+  /** Starts every endpoint's `{{seq}}` again at 1 (a new test session). */
+  resetSequences(): void {
+    this.sequences.clear();
+  }
+
+  /**
+   * The last step of every answer: the backend's error format for errors the engine made, the success wrapper for JSON
+   * success answers, and the common headers (the backend's, then the endpoint's, then the answer's own).
+   */
+  private finalize(reply: Reply, endpoint: Endpoint | undefined, values: PlaceholderContext): Reply {
+    const definition = this.state.definition;
+    let out = reply;
+    if (reply.problem === true) {
+      const body = isObject(reply.body) ? reply.body : {};
+      const custom = errorBody(definition, { status: reply.status, message: String(body.message ?? body.detail ?? body.title ?? ''), errors: Array.isArray(body.errors) ? body.errors : [] }, values);
+      if (custom !== undefined) {
+        const { problem: _problem, ...rest } = reply;
+        out = { ...rest, body: custom, headers: { ...reply.headers, 'content-type': 'application/json; charset=utf-8' } };
+      }
+    } else if (endpoint !== undefined && isWrappable(reply)) {
+      const wrapper = wrapperOf(definition, endpoint);
+      if (wrapper !== undefined) out = { ...reply, body: wrapBody(wrapper, reply.body, values) };
+    }
+    const common = { ...cleanHeaders(definition.responses?.headers), ...cleanHeaders(endpoint?.headers) };
+    return Object.keys(common).length === 0 ? out : { ...out, headers: { ...common, ...out.headers } };
+  }
 }
 
-function staticReply(endpoint: StaticEndpoint): Reply {
-  return {
-    status: endpoint.status,
-    headers: { 'content-type': 'application/json; charset=utf-8', ...endpoint.headers },
-    ...(endpoint.body === undefined ? {} : { body: endpoint.body }),
-  };
+const isObject = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/** A 2xx answer with a JSON body the engine holds (not a file, a stream or raw text). */
+function isWrappable(reply: Reply): boolean {
+  return reply.status >= 200 && reply.status < 300 && reply.body !== undefined && reply.raw === undefined && reply.file === undefined && reply.stream === undefined && /json/i.test(reply.headers['content-type'] ?? '');
+}
+
+/** Header names the engine may send, lower-cased, with hop-by-hop ones dropped. */
+function cleanHeaders(headers: Record<string, string> | undefined): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [name, value] of Object.entries(headers ?? {})) {
+    const key = name.toLowerCase();
+    if (/^[a-z0-9-]+$/.test(key) && !FORBIDDEN_HEADERS.has(key)) out[key] = value;
+  }
+  return out;
+}
+
+/** The parsed JSON body of a request, or `undefined` when there is none or it is not JSON. */
+function requestJson(ctx: RequestCtx): unknown {
+  if (ctx.bodyText.trim() === '' || !/json/i.test(String(ctx.headers['content-type'] ?? ''))) return undefined;
+  try {
+    return JSON.parse(ctx.bodyText) as unknown;
+  } catch {
+    return undefined;
+  }
+}
+
+/** A version 4 UUID from the seeded generator (test mode). */
+function seededUuid(rng: Rng): string {
+  return `${rng.hex(8)}-${rng.hex(4)}-4${rng.hex(3)}-a${rng.hex(3)}-${rng.hex(12)}`;
 }
 
 function seedRows(dir: string, collection: Collection): Record<string, unknown>[] {

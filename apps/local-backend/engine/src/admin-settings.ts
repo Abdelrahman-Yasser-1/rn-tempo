@@ -5,13 +5,14 @@ import type { Manager, RawDefinition } from './manager.ts';
 /** The keys of `backend.json` each settings page owns. A PUT replaces all of them: a key left out is removed. */
 export const SETTINGS_PAGES = {
   network: ['network', 'latency', 'testMode'],
+  responses: ['responses', 'responseTemplates'],
 } as const;
 type Page = keyof typeof SETTINGS_PAGES;
 
 const asObject = (value: unknown): Record<string, unknown> | undefined => (typeof value === 'object' && value !== null && !Array.isArray(value) ? (value as Record<string, unknown>) : undefined);
 
 /**
- * Admin routes for Settings → Network. They read and write the same `backend.json` keys the
+ * Admin routes for Settings → Network and Settings → Responses. They read and write the same `backend.json` keys the
  * definition holds, but through a route of their own so the role table can ask for the admin role and the audit log
  * names the page that changed (`PUT /settings/network`).
  */

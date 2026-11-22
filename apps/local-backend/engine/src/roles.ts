@@ -20,7 +20,7 @@ export const isKeyScope = (value: unknown): value is ApiKeyScope => typeof value
  *
  * - viewer: reads, including logs and "Try it".
  * - editor: imports API files (preview and apply), changes endpoints (including their own delays and wrapper), collections, data, scenarios, media, content and the backend's app users.
- * - admin: also the snapshot export (a backup) and the backend-wide settings (public access, delays and network presets). Members, API keys, settings and certificates are hub routes (below).
+ * - admin: also the snapshot export (a backup) and the backend-wide settings (public access, delays and network presets, the response wrapper, error format and templates). Members, API keys, settings and certificates are hub routes (below).
  */
 export const ADMIN_ROLE_TABLE: Readonly<Record<string, Role>> = {
   'GET /events': 'viewer',
@@ -94,6 +94,8 @@ export const ADMIN_ROLE_TABLE: Readonly<Record<string, Role>> = {
   'POST /content/entries/:id/revert': 'editor',
   'GET /settings/network': 'viewer',
   'PUT /settings/network': 'admin',
+  'GET /settings/responses': 'viewer',
+  'PUT /settings/responses': 'admin',
   'GET /stats': 'viewer',
   'POST /contract-check': 'viewer',
   'GET /snapshot': 'admin',
@@ -106,7 +108,7 @@ export const ADMIN_ROLE_TABLE: Readonly<Record<string, Role>> = {
 export const READ_DEFINITION_ROUTES: ReadonlySet<string> = new Set(['GET /definition', 'GET /snapshot']);
 
 /** Fields of `backend.json` that are settings, not content: changing them takes an admin. */
-const SETTINGS_FIELDS = ['publicAccess', 'port', 'https', 'certsDir', 'latency', 'network', 'testMode'] as const;
+const SETTINGS_FIELDS = ['publicAccess', 'port', 'https', 'certsDir', 'latency', 'network', 'testMode', 'responses', 'responseTemplates'] as const;
 const SETTINGS_DEFAULTS: Record<(typeof SETTINGS_FIELDS)[number], unknown> = {
   publicAccess: 'open',
   port: 8443,
@@ -115,6 +117,8 @@ const SETTINGS_DEFAULTS: Record<(typeof SETTINGS_FIELDS)[number], unknown> = {
   latency: undefined,
   network: undefined,
   testMode: false,
+  responses: undefined,
+  responseTemplates: {},
 };
 
 /** True when a new definition changes a setting (access, port, certificates, delays) compared with the current one. */
