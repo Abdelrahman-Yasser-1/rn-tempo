@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { BUILTIN_SCENARIOS, redactUrl, RequestLog, SCENARIO_HEADER } from '@rn-tempo/dev-api';
 
 import { Accounts } from './accounts.ts';
-import { authHandler, AuthService, usersHandler } from './auth.ts';
+import { authHandler, AuthService, notSignedIn, usersHandler } from './auth.ts';
 import { ContentService, modelOf } from './content.ts';
 import { handleContent } from './content-public.ts';
 import { crudHandler } from './crud.ts';
@@ -155,7 +155,10 @@ export class Engine {
     this.testMode = options.testMode === true;
     this.seed = options.seed ?? randomBytes(8).toString('hex');
     const now = options.now ?? ((): Date => new Date());
-    this.auth = new AuthService(new Accounts(store.db, now), loadJwtSecret(folder.dataDir), () => this.state.definition.auth, now);
+    this.auth = new AuthService(new Accounts(store.db, now), loadJwtSecret(folder.dataDir), () => this.state.definition.auth, now, () => {
+      const origins = this.state.definition.cors?.origins;
+      return origins === undefined || origins === '*' ? [] : origins;
+    });
     this.media = new MediaService(folder.dataDir, store.db, now);
     this.content = content;
     this.handlers = new HandlerPool(options.logger);
@@ -773,7 +776,7 @@ export class Engine {
   /** Auth, then the scenario (header first, then the admin pick), then the endpoint itself. */
   private async run(ctx: RequestCtx, endpoint: Endpoint, values: PlaceholderContext, handle: () => Reply | Promise<Reply>): Promise<Reply> {
     if (endpoint.auth === 'bearer' && !this.options.authorize(ctx, endpoint)) {
-      return problemReply(401, { detail: 'Invalid or expired token' });
+      return notSignedIn(ctx);
     }
     // `placeholders` ran before the token was checked, so the user is added now.
     values.user = ctx.user;

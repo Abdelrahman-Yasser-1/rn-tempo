@@ -202,22 +202,26 @@ describe('cookie session mode', () => {
       ...extra,
     }) as BackendInput;
   const login = (url: string): Promise<Response> => fetch(`${url}/auth/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: 'emilys', password: 'emilyspass' }) });
-  const cookieOf = (response: Response): string => response.headers.get('set-cookie')?.split(';')[0] ?? '';
+  const cookieOf = (response: Response): string => response.headers.getSetCookie()[0]?.split(';')[0] ?? '';
+  const csrfOf = (response: Response): string | undefined => /tempo_app_csrf=([^;]+)/.exec(response.headers.getSetCookie().join('\n'))?.[1];
 
   it('AC-LP-10 login sets an HttpOnly SameSite=Lax cookie scoped to the base path; a bearer endpoint accepts it; logout clears it', async () => {
     const { url } = await serve(cookieDef('cookie', { basePath: '/api' }));
     const answer = await login(`${url}/api`);
-    const header = answer.headers.get('set-cookie') ?? '';
+    const [header = '', csrfHeader = ''] = answer.headers.getSetCookie();
+    expect(csrfHeader).toMatch(/^tempo_app_csrf=[\w-]+; Path=\/api; SameSite=Lax; Max-Age=1800$/);
     expect(header).toMatch(new RegExp(`^${APP_SESSION_COOKIE}=[\\w-]+\\.[\\w-]+\\.[\\w-]+; Path=/api; HttpOnly; SameSite=Lax; Max-Age=1800$`));
     expect(header).not.toContain('Secure');
     // In cookie mode scripts get no token.
-    expect(await answer.json()).not.toHaveProperty('accessToken');
+    const parsed = (await answer.clone().json()) as Record<string, unknown>;
+    expect(parsed).not.toHaveProperty('accessToken');
+    expect(parsed.csrfToken).toBe(csrfOf(answer));
     const me = await fetch(`${url}/api/auth/me`, { headers: { cookie: cookieOf(answer) } });
     expect(me.status).toBe(200);
     expect(((await me.json()) as { username: string }).username).toBe('emilys');
     expect((await fetch(`${url}/api/auth/me`)).status).toBe(401);
-    const out = await fetch(`${url}/api/auth/logout`, { method: 'POST', headers: { cookie: cookieOf(answer), 'content-type': 'application/json' }, body: '{}' });
-    expect(out.headers.get('set-cookie')).toMatch(/^tempo_app_session=; Path=\/api; HttpOnly; SameSite=Lax; Max-Age=0/);
+    const out = await fetch(`${url}/api/auth/logout`, { method: 'POST', headers: { cookie: cookieOf(answer), 'content-type': 'application/json', 'x-tempo-csrf': String(csrfOf(answer)) }, body: '{}' });
+    expect(out.headers.getSetCookie()[0]).toMatch(/^tempo_app_session=; Path=\/api; HttpOnly; SameSite=Lax; Max-Age=0/);
   });
 
   it('AC-LP-10 mode bearer ignores the cookie and sets none; mode both takes either and keeps the tokens', async () => {
@@ -229,7 +233,7 @@ describe('cookie session mode', () => {
     expect((await fetch(`${bearer.url}/auth/me`, { headers: { authorization: `Bearer ${token}` } })).status).toBe(200);
     const both = await serve(cookieDef('both'));
     const answer = await login(both.url);
-    expect(answer.headers.get('set-cookie')).toContain(APP_SESSION_COOKIE);
+    expect(answer.headers.getSetCookie()[0]).toContain(APP_SESSION_COOKIE);
     const body = (await answer.json()) as { accessToken: string };
     expect((await fetch(`${both.url}/auth/me`, { headers: { authorization: `Bearer ${body.accessToken}` } })).status).toBe(200);
     expect((await fetch(`${both.url}/auth/me`, { headers: { cookie: cookieOf(answer) } })).status).toBe(200);
@@ -252,7 +256,8 @@ describe('cookie session mode', () => {
     const answer = await rawCall(site.team.port, { method: 'POST', path: '/b/demo/auth/login', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: 'emilys', password: 'emilyspass' }) });
     expect(answer.status, answer.body).toBe(200);
     const cookies = ([] as string[]).concat(answer.headers['set-cookie'] ?? []);
-    expect(cookies).toHaveLength(1);
+    expect(cookies).toHaveLength(2);
+    expect(cookies[1]).toMatch(/^tempo_app_csrf=[\w-]+; Path=\/b\/demo\/; SameSite=Lax/);
     expect(cookies[0]).toMatch(/^tempo_app_session=[\w.-]+; Path=\/b\/demo\/; HttpOnly; SameSite=Lax/);
     for (const path of ['/b/demo/evil1', '/b/demo/evil2', '/b/demo/evil3']) expect((await rawCall(site.team.port, { path })).headers['set-cookie'], path).toBeUndefined();
     // The token works on the mounted API as a cookie.
@@ -273,6 +278,8 @@ describe('cookie session mode', () => {
     expect(vetAppCookie('tempo_app_session=a; Path=/b/y/; HttpOnly', '/b/x/')).toBeUndefined();
     expect(vetAppCookie('other=a; Path=/b/x/', '/b/x/')).toBeUndefined();
     expect(vetAppCookie('tempo_session=a; Path=/b/x/', '/b/x/')).toBeUndefined();
+    expect(vetAppCookie('tempo_app_csrf=a; Path=/b/x/; SameSite=Lax', '/b/x/')).toBeDefined();
+    expect(vetAppCookie('tempo_app_csrf=a; Path=/', '/b/x/')).toBeUndefined();
   });
 });
 
@@ -283,5 +290,65 @@ describe('fault settings and roles', () => {
     expect(settingsChanged({ name: 'x' }, { name: 'x', cors: { origins: '*' } })).toBe(true);
     expect(settingsChanged({ name: 'x' }, { name: 'x', auth: { mode: 'cookie' } })).toBe(true);
     expect(settingsChanged({ name: 'x' }, { name: 'x', auth: { accessTtlMin: 5 } })).toBe(false);
+  });
+});
+
+describe('CSRF protection of cookie sessions', () => {
+  const cookieDef = (mode: string, cors?: Record<string, unknown>): BackendInput =>
+    ({
+      name: 'csrf',
+      auth: { mode, seedUsers: [{ username: 'emilys', password: 'emilyspass' }] },
+      ...(cors === undefined ? {} : { cors }),
+      collections: [{ name: 'notes', fields: [{ name: 'title', type: 'string' }] }],
+      endpoints: [
+        { id: 'post.login', type: 'auth', action: 'login', method: 'POST', path: '/auth/login' },
+        { id: 'post.notes', type: 'crud', collection: 'notes', action: 'create', method: 'POST', path: '/notes', auth: 'bearer' },
+        { id: 'get.notes', type: 'crud', collection: 'notes', action: 'list', method: 'GET', path: '/notes', auth: 'bearer' },
+      ],
+    }) as BackendInput;
+
+  async function session(mode = 'cookie', cors?: Record<string, unknown>) {
+    const running = await serve(cookieDef(mode, cors));
+    const login = await fetch(`${running.url}/auth/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: 'emilys', password: 'emilyspass' }) });
+    const cookie = login.headers.getSetCookie()[0]?.split(';')[0] ?? '';
+    const csrf = ((await login.json()) as { csrfToken: string }).csrfToken;
+    const post = (headers: Record<string, string>): Promise<Response> => fetch(`${running.url}/notes`, { method: 'POST', headers: { 'content-type': 'application/json', cookie, ...headers }, body: JSON.stringify({ title: 'a' }) });
+    return { ...running, cookie, csrf, post };
+  }
+
+  it('AC-LP-10 a cookie-authenticated unsafe request without the CSRF header or a same-origin Origin is refused with 403', async () => {
+    const { post, url, cookie } = await session();
+    const none = await post({});
+    expect(none.status).toBe(403);
+    expect(none.headers.get('content-type')).toContain('problem+json');
+    expect(await none.text()).toContain('x-tempo-csrf');
+    expect((await post({ origin: 'https://evil.test' })).status).toBe(403);
+    expect((await post({ origin: 'https://evil.test', 'sec-fetch-site': 'cross-site' })).status).toBe(403);
+    expect((await post({ 'x-tempo-csrf': 'wrong-token' })).status).toBe(403);
+    // Safe methods are not checked.
+    expect((await fetch(`${url}/notes`, { headers: { cookie } })).status).toBe(200);
+  });
+
+  it('AC-LP-10 the double-submit header (the login\'s csrfToken) or a same-origin Origin lets it through', async () => {
+    const { post, csrf, url } = await session();
+    expect((await post({ 'x-tempo-csrf': csrf })).status).toBe(201);
+    expect((await post({ origin: url })).status).toBe(201);
+    expect((await post({ origin: url, 'sec-fetch-site': 'same-origin' })).status).toBe(201);
+  });
+
+  it('AC-LP-10 an origin in the cors list is allowed; "*" does not allow anybody; another site stays refused', async () => {
+    const { post } = await session('cookie', { origins: ['https://app.test'], credentials: true });
+    expect((await post({ origin: 'https://app.test', 'sec-fetch-site': 'cross-site' })).status).toBe(201);
+    expect((await post({ origin: 'https://evil.test', 'sec-fetch-site': 'cross-site' })).status).toBe(403);
+    const star = await session('cookie', { origins: '*' });
+    expect((await star.post({ origin: 'https://evil.test' })).status).toBe(403);
+  });
+
+  it('AC-LP-10 a token for one session does not work for another, and a bearer request needs no CSRF header', async () => {
+    const a = await session('both');
+    const b = await session('both');
+    expect((await a.post({ 'x-tempo-csrf': b.csrf })).status).toBe(403);
+    const bearer = await fetch(`${a.url}/notes`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${a.cookie.split('=')[1] ?? ''}` }, body: JSON.stringify({ title: 'x' }) });
+    expect(bearer.status).toBe(201);
   });
 });

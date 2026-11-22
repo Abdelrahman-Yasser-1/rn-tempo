@@ -102,6 +102,7 @@ export function sendReply(res: ServerResponse, reply: Reply, headOnly = false): 
     res.writeHead(reply.status, {
       'x-content-type-options': 'nosniff',
       ...reply.headers,
+      ...(reply.cookies === undefined ? {} : { 'set-cookie': reply.cookies }),
       ...(payload === undefined ? {} : { 'content-length': String(Buffer.byteLength(payload)) }),
     });
   } catch {
