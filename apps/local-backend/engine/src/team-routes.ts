@@ -4,7 +4,7 @@ import type { Actor } from './audit.ts';
 import type { AuditLog } from './audit-log.ts';
 import { ConflictError, NotListedError, type BackendRegistry } from './hub-backends.ts';
 import { jsonReply, problemReply, readJson, type Reply, type RequestCtx } from './http.ts';
-import { isKeyScope, isMemberRole, type Role } from './roles.ts';
+import { atLeast, isKeyScope, isMemberRole, type Role } from './roles.ts';
 import { DefinitionError } from './schema.ts';
 import type { TeamAuth } from './team-auth.ts';
 import { emailOk, normalizeEmail } from './team-auth.ts';
@@ -321,6 +321,10 @@ export function teamRoutes(services: TeamServices): TeamRoute[] {
         const existing = store.accountByEmail(email);
         if (existing?.owner === true) return no('The server owner already has access to every backend.', 409);
         if (existing !== undefined) {
+          // An invitation never changes a role: that goes through the role route, with its checks (`manageable`).
+          if (store.membership(existing.id, id) !== undefined) return no('That person is already a member of this backend; change the role instead.', 409);
+          if (who.role === undefined || !atLeast(who.role, body.role)) return no('You cannot give a role higher than your own.', 403);
+          if (who.role !== 'owner' && store.memberships(existing.id).some((other) => other.role === 'admin')) return no('Only the server owner can add an admin of another backend.', 403);
           store.setMembership(existing.id, id, body.role);
           return jsonReply(200, { member: { ...accountJson(services, existing), role: body.role } });
         }
@@ -339,6 +343,7 @@ export function teamRoutes(services: TeamServices): TeamRoute[] {
         if (!isMemberRole(body.role)) return no('Choose a role: admin, editor or viewer.');
         const found = manageable(who, id, params.accountId);
         if ('status' in found) return found;
+        if (who.role === undefined || !atLeast(who.role, body.role)) return no('You cannot give a role higher than your own.', 403);
         store.setMembership(found.account.id, id, body.role);
         who.note(`${found.account.email} to ${body.role}`);
         return jsonReply(200, { ok: true, role: body.role });
