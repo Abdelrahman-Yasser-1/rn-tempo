@@ -32,7 +32,11 @@ ENV NODE_ENV=production \
 WORKDIR /app
 COPY --from=build /out/ /app/
 # `docker exec <container> tempo-local-backend server owner create --email you@example.com --password-stdin`
-RUN printf '#!/bin/sh\nexec node /app/dist/cli.mjs "$@"\n' > /usr/local/bin/tempo-local-backend \
+# The server needs only the node binary. npm, npx, corepack and yarn ship with the base image but are never used at
+# runtime, and their bundled dependencies are what vulnerability scans flag, so they are removed.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn-* \
+      /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg \
+ && printf '#!/bin/sh\nexec node /app/dist/cli.mjs "$@"\n' > /usr/local/bin/tempo-local-backend \
  && chmod 0755 /usr/local/bin/tempo-local-backend \
  && mkdir -p /data \
  && chown node:node /data
