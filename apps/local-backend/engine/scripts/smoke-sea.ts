@@ -4,7 +4,7 @@
 // touched and TLS verification stays on: the request trusts only that temporary CA).
 // Usage: node scripts/smoke-sea.ts [--binary <path>] [--require-https]
 import { type ChildProcess, execFileSync, spawn } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { request } from 'node:https';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -80,6 +80,23 @@ async function checkDashboard(work: string, env: NodeJS.ProcessEnv): Promise<voi
   child.kill('SIGTERM');
 }
 
+/** Sends one message to a WebSocket and returns the first message that comes back. */
+const echo = (url: string, text: string): Promise<string> =>
+  new Promise((done, fail) => {
+    const socket = new WebSocket(url);
+    const timer = setTimeout(() => fail(new Error('no WebSocket answer in 10 seconds')), 10_000);
+    socket.onopen = () => socket.send(text);
+    socket.onmessage = (event) => {
+      clearTimeout(timer);
+      socket.close();
+      done(String(event.data));
+    };
+    socket.onerror = () => {
+      clearTimeout(timer);
+      fail(new Error('the WebSocket failed'));
+    };
+  });
+
 async function stopAll(): Promise<void> {
   await Promise.all(
     children.splice(0).map(
@@ -120,6 +137,14 @@ async function main(): Promise<void> {
   const port = await freePort();
   execFileSync(binary, ['create', dir, '--name', 'smoke', '--preset', 'tempo-template', '--port', String(port)], { env, stdio: 'ignore' });
 
+  // A WebSocket echo and a GraphQL endpoint: `ws` and `graphql` must be inside the single executable and still work.
+  const file = join(dir, 'backend.json');
+  const definition = JSON.parse(readFileSync(file, 'utf8')) as { endpoints: unknown[] };
+  definition.endpoints.push(
+    { id: 'smoke.ws', type: 'websocket', method: 'GET', path: '/smoke-ws', behavior: 'echo' },
+    { id: 'smoke.graphql', type: 'graphql', method: 'POST', path: '/smoke-graphql' },
+  );
+  writeFileSync(file, JSON.stringify(definition));
   await startServing(dir, ['--http', '--no-watch'], env);
   const base = `http://127.0.0.1:${String(port)}`;
   const health = await fetch(`${base}/__health`);
@@ -128,6 +153,10 @@ async function main(): Promise<void> {
   check(css.status === 200 && (await css.text()).length > 1000, 'Swagger UI asset is served (SEA asset)');
   const stats = await fetch(`${base}/stats/summary`);
   check(stats.status === 200 && ((await stats.json()) as { products?: number }).products === 100, 'a handler runs in a worker and the database answers');
+  check((await echo(`ws://127.0.0.1:${String(port)}/smoke-ws`, 'hello from the smoke test')) === 'hello from the smoke test', 'a WebSocket endpoint echoes (ws is bundled)');
+  const answer = await fetch(`${base}/smoke-graphql`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ query: '{ products(limit: 2) { id title } }' }) });
+  const graphql = (await answer.json()) as { data?: { products?: unknown[] } };
+  check(answer.status === 200 && graphql.data?.products?.length === 2, 'a GraphQL query lists products (graphql is bundled)');
   await stopAll();
   await checkDashboard(work, env);
   await stopAll();
