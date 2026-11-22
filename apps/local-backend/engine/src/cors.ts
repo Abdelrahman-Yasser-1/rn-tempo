@@ -2,7 +2,7 @@ import type { IncomingHttpHeaders } from 'node:http';
 
 import type { Cors } from './schema.ts';
 
-const DEFAULT_REQUEST_HEADERS = ['content-type', 'authorization', 'accept', 'x-tempo-scenario', 'x-tempo-test-mode', 'x-tempo-test-delays', 'x-tempo-test-faults', 'x-tempo-access-key'];
+const DEFAULT_REQUEST_HEADERS = ['content-type', 'authorization', 'accept', 'x-tempo-scenario', 'x-tempo-test-mode', 'x-tempo-test-delays', 'x-tempo-test-faults', 'x-tempo-access-key', 'x-tempo-csrf'];
 const DEFAULT_EXPOSED = ['retry-after', 'ratelimit', 'ratelimit-limit', 'ratelimit-remaining', 'ratelimit-reset', 'ratelimit-policy'];
 
 export interface CorsResult {

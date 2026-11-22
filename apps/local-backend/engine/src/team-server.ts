@@ -21,7 +21,7 @@ import { teamRoutes, type TeamRoute, type TeamServices, type Who } from './team-
 import { loadServerSecret } from './team-secret.ts';
 import { TeamStore, type AccountRow } from './team-store.ts';
 import { ProxyTrust } from './trust-proxy.ts';
-import { APP_SESSION_COOKIE } from './constants.ts';
+import { APP_CSRF_COOKIE, APP_SESSION_COOKIE } from './constants.ts';
 import { trustedPages } from './server.ts';
 import { clearedCookie, CSRF_HEADER, csrfMatches, readCookie, SESSION_COOKIE, sessionCookie, Sessions, type Clock, type Session } from './web-auth.ts';
 
@@ -551,7 +551,7 @@ const ACTIVE_TYPES = /^(text\/html|application\/xhtml\+xml|image\/svg\+xml|text\
 export function vetAppCookie(cookie: string, path: string): string | undefined {
   const parts = cookie.split(';').map((part) => part.trim());
   const name = parts[0]?.slice(0, parts[0].indexOf('=')) ?? '';
-  if (name !== APP_SESSION_COOKIE) return undefined;
+  if (name !== APP_SESSION_COOKIE && name !== APP_CSRF_COOKIE) return undefined;
   const attributes = parts.slice(1).map((part) => part.toLowerCase());
   if (attributes.some((part) => part.startsWith('domain='))) return undefined;
   if (!attributes.includes(`path=${path.toLowerCase()}`)) return undefined;

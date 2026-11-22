@@ -1,4 +1,4 @@
-import { timingSafeEqual } from 'node:crypto';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 
 import type { FieldIssue } from '@rn-tempo/api-contract';
 import { z } from 'zod';
@@ -8,7 +8,7 @@ import { jsonReply, problemReply, readJson, type Reply, type RequestCtx } from '
 import type { Handler } from './router.ts';
 import type { AuthConfigValue, AuthEndpoint, UsersEndpoint } from './schema.ts';
 import { UniqueViolationError } from './store.ts';
-import { APP_SESSION_COOKIE } from './constants.ts';
+import { APP_CSRF_COOKIE, APP_CSRF_HEADER, APP_SESSION_COOKIE } from './constants.ts';
 import { readCookie } from './web-auth.ts';
 import { hashPassword, hashPasswordSync, MAX_PASSWORD_LENGTH, signAccessToken, verifyAccessToken, verifyPassword } from './tokens.ts';
 
@@ -80,6 +80,13 @@ const sameText = (a: string, b: string): boolean => {
 };
 
 const NO_TOKEN = 'Invalid or expired token';
+const UNSAFE = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
+/** The answer for a request that is not (or no longer) signed in: 403 when the CSRF check refused a cookie session, else 401. */
+export const notSignedIn = (ctx: RequestCtx): Reply =>
+  ctx.csrfRefused === true
+    ? problemReply(403, { title: 'Forbidden', detail: `This request was signed in by the session cookie but is not proven to come from your app. Send the ${APP_CSRF_HEADER} header (the csrfToken of the login), or an Origin that is this server or one of the cors origins.` })
+    : problemReply(401, { detail: NO_TOKEN });
 
 /** App users, tokens and the checks `auth: "bearer"` endpoints use. One per engine. */
 export class AuthService {
@@ -87,8 +94,10 @@ export class AuthService {
   private readonly secret: Buffer;
   private readonly settings: () => AuthConfigValue;
   private readonly now: () => Date;
+  private readonly corsOrigins: () => readonly string[];
 
-  constructor(accounts: Accounts, secret: Buffer, settings: () => AuthConfigValue, now: () => Date) {
+  constructor(accounts: Accounts, secret: Buffer, settings: () => AuthConfigValue, now: () => Date, corsOrigins: () => readonly string[] = () => []) {
+    this.corsOrigins = corsOrigins;
     this.accounts = accounts;
     this.secret = secret;
     this.settings = settings;
@@ -101,11 +110,35 @@ export class AuthService {
    */
   authenticate(ctx: RequestCtx): boolean {
     if (ctx.user !== undefined) return true;
-    const token = this.tokenOf(ctx);
-    const user = token === undefined ? undefined : this.userFromToken(token);
-    if (user === undefined) return false;
+    const found = this.tokenOf(ctx);
+    const user = found === undefined ? undefined : this.userFromToken(found.token);
+    if (found === undefined || user === undefined) return false;
+    // A cookie is sent by the browser on its own, so an unsafe request that rides on it must prove where it came from.
+    if (found.cookie && UNSAFE.has(ctx.method.toUpperCase()) && !this.csrfOk(ctx, found.token)) {
+      ctx.csrfRefused = true;
+      return false;
+    }
+    if (found.cookie) ctx.viaCookie = true;
     ctx.user = user;
     return true;
+  }
+
+  /** The double-submit token of a session: a keyed hash of the access token, so nothing is stored. */
+  csrfTokenFor(accessToken: string): string {
+    return createHmac('sha256', this.secret).update(`csrf:${accessToken}`).digest('base64url');
+  }
+
+  private csrfOk(ctx: RequestCtx, accessToken: string): boolean {
+    const header = ctx.headers[APP_CSRF_HEADER];
+    const given = Buffer.from(typeof header === 'string' ? header : '');
+    const want = Buffer.from(this.csrfTokenFor(accessToken));
+    if (given.length === want.length && timingSafeEqual(given, want)) return true;
+    const origin = typeof ctx.headers.origin === 'string' ? ctx.headers.origin : undefined;
+    // Native clients send no Origin and must use the header. A browser always sends one on an unsafe request.
+    if (origin === undefined) return false;
+    const allowed = origin === ctx.origin || this.corsOrigins().includes(origin);
+    if (ctx.headers['sec-fetch-site'] === 'cross-site' && !this.corsOrigins().includes(origin)) return false;
+    return allowed;
   }
 
   /** The user an access token belongs to, when it is good (any auth mode). */
@@ -124,15 +157,15 @@ export class AuthService {
   }
 
   /** The access token of a request: the `Authorization` header (modes bearer and both), else the session cookie (cookie and both). */
-  private tokenOf(ctx: RequestCtx): string | undefined {
+  private tokenOf(ctx: RequestCtx): { token: string; cookie: boolean } | undefined {
     const mode = this.mode;
     if (mode !== 'cookie') {
       const match = /^Bearer\s+(\S+)$/i.exec(String(ctx.headers.authorization ?? ''));
-      if (match?.[1] !== undefined) return match[1];
+      if (match?.[1] !== undefined) return { token: match[1], cookie: false };
     }
     if (mode === 'bearer') return undefined;
     const cookie = readCookie(typeof ctx.headers.cookie === 'string' ? ctx.headers.cookie : undefined, APP_SESSION_COOKIE);
-    return cookie === undefined || cookie === '' ? undefined : cookie;
+    return cookie === undefined || cookie === '' ? undefined : { token: cookie, cookie: true };
   }
 
   /** How long the session cookie lives: the access token's lifetime. */
@@ -209,12 +242,15 @@ export interface CookieSettings {
 
 const sessionCookie = (token: string, path: string, maxAge: number, secure: boolean): string =>
   `${APP_SESSION_COOKIE}=${token}; Path=${path}; HttpOnly; SameSite=Lax; Max-Age=${String(maxAge)}${secure ? '; Secure' : ''}`;
+/** The CSRF cookie is readable by scripts (no HttpOnly): that is how a page echoes it in a header. Same path and lifetime as the session. */
+const csrfCookie = (token: string, path: string, maxAge: number, secure: boolean): string =>
+  `${APP_CSRF_COOKIE}=${token}; Path=${path}; SameSite=Lax; Max-Age=${String(maxAge)}${secure ? '; Secure' : ''}`;
 
 export function authHandler(endpoint: AuthEndpoint, service: AuthService, cookies: CookieSettings = { path: () => '/' }): Handler {
-  const unauthorized = (): Reply => problemReply(401, { detail: NO_TOKEN });
+  const unauthorized = (ctx?: RequestCtx): Reply => (ctx === undefined ? problemReply(401, { detail: NO_TOKEN }) : notSignedIn(ctx));
   /** The signed-in user, or the reply to send. */
   const signedIn = (ctx: RequestCtx): { user: UserRecord } | { reply: Reply } => {
-    if (!service.authenticate(ctx) || ctx.user === undefined) return { reply: unauthorized() };
+    if (!service.authenticate(ctx) || ctx.user === undefined) return { reply: unauthorized(ctx) };
     const user = service.accounts.byId(ctx.user.id);
     return user === undefined ? { reply: unauthorized() } : { user };
   };
@@ -230,8 +266,10 @@ export function authHandler(endpoint: AuthEndpoint, service: AuthService, cookie
           const mode = service.mode;
           if (mode === 'bearer') return jsonReply(200, { ...publicUser(result.user), accessToken: result.accessToken, refreshToken: result.refreshToken });
           // The cookie holds the access token; in `cookie` mode scripts never see a token at all.
-          const cookie = sessionCookie(result.accessToken, cookies.path(), service.cookieMaxAgeSec(), ctx.origin?.startsWith('https:') === true);
-          return jsonReply(200, mode === 'cookie' ? publicUser(result.user) : { ...publicUser(result.user), accessToken: result.accessToken, refreshToken: result.refreshToken }, { 'set-cookie': cookie });
+          const secure = ctx.origin?.startsWith('https:') === true;
+          const csrf = service.csrfTokenFor(result.accessToken);
+          const cookie = sessionCookie(result.accessToken, cookies.path(), service.cookieMaxAgeSec(), secure);
+          return { ...jsonReply(200, { ...(mode === 'cookie' ? publicUser(result.user) : { ...publicUser(result.user), accessToken: result.accessToken, refreshToken: result.refreshToken }), csrfToken: csrf }), cookies: [cookie, csrfCookie(csrf, cookies.path(), service.cookieMaxAgeSec(), secure)] };
         }
         case 'refresh': {
           const body = parseBody(ctx, RefreshBody);
@@ -252,7 +290,9 @@ export function authHandler(endpoint: AuthEndpoint, service: AuthService, cookie
           // A refresh token of this user signs out that one session; none given signs out everywhere.
           if (owner !== undefined && owner.userId === who.user.id) service.accounts.revokeFamily(owner.family);
           else service.accounts.revokeUser(who.user.id);
-          return jsonReply(200, { success: true }, service.mode === 'bearer' ? {} : { 'set-cookie': `${sessionCookie('', cookies.path(), 0, ctx.origin?.startsWith('https:') === true)}` });
+          if (service.mode === 'bearer') return jsonReply(200, { success: true });
+          const secure = ctx.origin?.startsWith('https:') === true;
+          return { ...jsonReply(200, { success: true }), cookies: [sessionCookie('', cookies.path(), 0, secure), csrfCookie('', cookies.path(), 0, secure)] };
         }
         case 'register': {
           const body = parseBody(ctx, RegisterBody);
@@ -316,7 +356,7 @@ export function usersHandler(endpoint: UsersEndpoint, service: AuthService): Han
         }
         case 'get': {
           // Fail closed: a profile holds an email, so only its owner reads it (the schema also demands bearer).
-          if (!service.authenticate(ctx) || ctx.user === undefined) return problemReply(401, { detail: NO_TOKEN });
+          if (!service.authenticate(ctx) || ctx.user === undefined) return notSignedIn(ctx);
           const id = wantId(params.id);
           if (id !== undefined && ctx.user.id !== id) return problemReply(403, { detail: 'You can only read your own profile.' });
           const user = id === undefined ? undefined : service.accounts.byId(id);
@@ -324,7 +364,7 @@ export function usersHandler(endpoint: UsersEndpoint, service: AuthService): Han
         }
         case 'update': {
           // Fail closed: the caller must present a valid token, whatever the endpoint's `auth` says, and be the user.
-          if (!service.authenticate(ctx) || ctx.user === undefined) return problemReply(401, { detail: NO_TOKEN });
+          if (!service.authenticate(ctx) || ctx.user === undefined) return notSignedIn(ctx);
           const id = wantId(params.id);
           if (id !== undefined && ctx.user.id !== id) return problemReply(403, { detail: 'You can only change your own profile.' });
           if (id === undefined || service.accounts.byId(id) === undefined) return notFound(params.id);

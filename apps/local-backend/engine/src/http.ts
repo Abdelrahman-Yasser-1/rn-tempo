@@ -33,6 +33,10 @@ export interface RequestCtx {
   values?: PlaceholderContext;
   /** What the request log shows for a body the endpoint read itself (an inbox): a length, never the bytes. */
   bodyNote?: string;
+  /** The access token came from the session cookie, not an `Authorization` header (so CSRF rules apply). */
+  viaCookie?: boolean;
+  /** A cookie-authenticated unsafe request was refused by the CSRF check: answer 403, not 401. */
+  csrfRefused?: boolean;
   /** Aborts when the client goes away, so waiting stops at once. */
   signal?: AbortSignal;
 }
@@ -56,6 +60,8 @@ export interface Reply {
   downloadKbps?: number;
   /** An open stream (SSE) that lives as long as the client does: no throttling applies to it. */
   live?: true;
+  /** `Set-Cookie` values (a header that cannot be joined, so each is sent on its own line). */
+  cookies?: string[];
   /** Send part of the answer, then destroy the connection (the `dropRate` fault). */
   drop?: true;
   /** An answer the engine itself made as a page (the OAuth sign-in page): the team server keeps its strict policy. */

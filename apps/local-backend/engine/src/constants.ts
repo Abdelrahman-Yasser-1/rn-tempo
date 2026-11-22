@@ -13,6 +13,9 @@ export const TEST_FAULTS_HEADER = 'x-tempo-test-faults';
 
 /** The cookie an app user's browser session lives in (auth mode `cookie` or `both`). Never the dashboard's own cookie name. */
 export const APP_SESSION_COOKIE = 'tempo_app_session';
+/** The double-submit CSRF token that goes with the session cookie (readable by scripts, so they can echo it in `x-tempo-csrf`). */
+export const APP_CSRF_COOKIE = 'tempo_app_csrf';
+export const APP_CSRF_HEADER = 'x-tempo-csrf';
 
 /** The clock `{{now}}` shows in test mode (a fixed instant, so a test can assert on it). */
 export const TEST_MODE_NOW = '2025-01-01T00:00:00.000Z';
