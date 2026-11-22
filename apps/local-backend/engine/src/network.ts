@@ -4,6 +4,7 @@ import { Transform, type TransformCallback } from 'node:stream';
 import type { NetworkNote } from '@rn-tempo/dev-api';
 
 import { DEFAULT_TIMEOUT_MS, MAX_DELAY_MS, MAX_TIMEOUT_MS, TEST_DELAYS_HEADER, TEST_MODE_HEADER } from './constants.ts';
+import type { FaultPlan } from './faults.ts';
 import { Rng } from './import/generate.ts';
 import type { Backend, Endpoint, Latency, Network, NetworkPreset, Scenario } from './schema.ts';
 
@@ -52,6 +53,8 @@ export interface RequestPlan {
   requestId: number;
   testMode: boolean;
   network: NetworkPlan;
+  /** Simulated trouble for this request (rate limit, failure, drop, offline). */
+  faults: FaultPlan;
 }
 
 const off = (value: string | string[] | undefined): boolean => (Array.isArray(value) ? value[0] : value)?.trim() === '0';

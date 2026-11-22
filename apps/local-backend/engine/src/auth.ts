@@ -8,6 +8,8 @@ import { jsonReply, problemReply, readJson, type Reply, type RequestCtx } from '
 import type { Handler } from './router.ts';
 import type { AuthConfigValue, AuthEndpoint, UsersEndpoint } from './schema.ts';
 import { UniqueViolationError } from './store.ts';
+import { APP_SESSION_COOKIE } from './constants.ts';
+import { readCookie } from './web-auth.ts';
 import { hashPassword, hashPasswordSync, MAX_PASSWORD_LENGTH, signAccessToken, verifyAccessToken, verifyPassword } from './tokens.ts';
 
 /** The longest access token a client can ask for with `expiresInMins` (one day). */
@@ -99,16 +101,37 @@ export class AuthService {
    */
   authenticate(ctx: RequestCtx): boolean {
     if (ctx.user !== undefined) return true;
-    const header = String(ctx.headers.authorization ?? '');
-    const match = /^Bearer\s+(\S+)$/i.exec(header);
-    if (match === null) return false;
-    const verified = verifyAccessToken(this.secret, match[1] ?? '', this.now().getTime());
+    const token = this.tokenOf(ctx);
+    if (token === undefined) return false;
+    const verified = verifyAccessToken(this.secret, token, this.now().getTime());
     if (!verified.ok) return false;
     const id = Number(verified.claims.sub);
     const user = Number.isInteger(id) ? this.accounts.byId(id) : undefined;
     if (user === undefined || user.disabled || user.tokenVersion !== verified.claims.ver) return false;
     ctx.user = { id: user.id, username: user.username } satisfies AuthUser;
     return true;
+  }
+
+  /** `bearer`, `cookie` or `both`: where a request may carry its access token. */
+  get mode(): AuthConfigValue['mode'] {
+    return this.settings().mode;
+  }
+
+  /** The access token of a request: the `Authorization` header (modes bearer and both), else the session cookie (cookie and both). */
+  private tokenOf(ctx: RequestCtx): string | undefined {
+    const mode = this.mode;
+    if (mode !== 'cookie') {
+      const match = /^Bearer\s+(\S+)$/i.exec(String(ctx.headers.authorization ?? ''));
+      if (match?.[1] !== undefined) return match[1];
+    }
+    if (mode === 'bearer') return undefined;
+    const cookie = readCookie(typeof ctx.headers.cookie === 'string' ? ctx.headers.cookie : undefined, APP_SESSION_COOKIE);
+    return cookie === undefined || cookie === '' ? undefined : cookie;
+  }
+
+  /** How long the session cookie lives: the access token's lifetime. */
+  cookieMaxAgeSec(): number {
+    return Math.min(this.settings().accessTtlMin, this.settings().maxAccessTtlMin, MAX_EXPIRES_IN_MIN) * 60;
   }
 
   /** Seeds `auth.seedUsers`. Passwords are hashed here, so `backend.json` can hold a demo password. */
@@ -173,7 +196,15 @@ export class AuthService {
 }
 
 /** Builds the handler of one `auth` endpoint. */
-export function authHandler(endpoint: AuthEndpoint, service: AuthService): Handler {
+export interface CookieSettings {
+  /** The `Path` of the session cookie: `/b/<id>/` on the team server, else the base path (or `/`). */
+  path: () => string;
+}
+
+const sessionCookie = (token: string, path: string, maxAge: number, secure: boolean): string =>
+  `${APP_SESSION_COOKIE}=${token}; Path=${path}; HttpOnly; SameSite=Lax; Max-Age=${String(maxAge)}${secure ? '; Secure' : ''}`;
+
+export function authHandler(endpoint: AuthEndpoint, service: AuthService, cookies: CookieSettings = { path: () => '/' }): Handler {
   const unauthorized = (): Reply => problemReply(401, { detail: NO_TOKEN });
   /** The signed-in user, or the reply to send. */
   const signedIn = (ctx: RequestCtx): { user: UserRecord } | { reply: Reply } => {
@@ -189,7 +220,12 @@ export function authHandler(endpoint: AuthEndpoint, service: AuthService): Handl
           const body = parseBody(ctx, LoginBody);
           if (!body.ok) return body.reply;
           const result = await service.login(body.value.username, body.value.password, body.value.expiresInMins);
-          return result.ok ? jsonReply(200, { ...publicUser(result.user), accessToken: result.accessToken, refreshToken: result.refreshToken }) : result.reply;
+          if (!result.ok) return result.reply;
+          const mode = service.mode;
+          if (mode === 'bearer') return jsonReply(200, { ...publicUser(result.user), accessToken: result.accessToken, refreshToken: result.refreshToken });
+          // The cookie holds the access token; in `cookie` mode scripts never see a token at all.
+          const cookie = sessionCookie(result.accessToken, cookies.path(), service.cookieMaxAgeSec(), ctx.origin?.startsWith('https:') === true);
+          return jsonReply(200, mode === 'cookie' ? publicUser(result.user) : { ...publicUser(result.user), accessToken: result.accessToken, refreshToken: result.refreshToken }, { 'set-cookie': cookie });
         }
         case 'refresh': {
           const body = parseBody(ctx, RefreshBody);
@@ -210,7 +246,7 @@ export function authHandler(endpoint: AuthEndpoint, service: AuthService): Handl
           // A refresh token of this user signs out that one session; none given signs out everywhere.
           if (owner !== undefined && owner.userId === who.user.id) service.accounts.revokeFamily(owner.family);
           else service.accounts.revokeUser(who.user.id);
-          return jsonReply(200, { success: true });
+          return jsonReply(200, { success: true }, service.mode === 'bearer' ? {} : { 'set-cookie': `${sessionCookie('', cookies.path(), 0, ctx.origin?.startsWith('https:') === true)}` });
         }
         case 'register': {
           const body = parseBody(ctx, RegisterBody);

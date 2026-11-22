@@ -148,7 +148,51 @@ const EndpointPath = z
   .refine((path) => !path.split('/').includes('..'), { message: 'A path may not contain "..".' })
   .meta({ description: 'Express-style path with `:param` segments, for example `/products/:id`.' });
 
+const rate = z.number().min(0).max(1);
+export const FaultsSchema = z
+  .strictObject({
+    rateLimit: z
+      .strictObject({
+        requests: z.number().int().min(1).max(1_000_000),
+        perSeconds: z.number().int().min(1).max(86_400),
+        key: z.enum(['ip', 'user', 'global']).default('ip').meta({ description: 'Who is counted: each client address, each signed-in user (or address), or everybody together.' }),
+      })
+      .nullable()
+      .optional()
+      .meta({ description: 'More than `requests` in `perSeconds` answers 429 with `Retry-After` and `RateLimit-*` headers. `null` turns an inherited limit off.' }),
+    failureRate: rate.optional().meta({ description: 'The share of requests (0 to 1) that fail with `failureStatus` before reaching the endpoint.' }),
+    failureStatus: z.number().int().min(400).max(599).optional().meta({ description: 'The status of a simulated failure (default 500).' }),
+    failureBody: z.unknown().optional().meta({ description: 'The JSON body of a simulated failure (default a problem document).' }),
+    dropRate: rate.optional().meta({ description: 'The share of requests whose connection is destroyed in the middle of the answer.' }),
+    offline: z.boolean().optional().meta({ description: 'Close every connection at once, as if the network were gone.' }),
+    slowUpload: kbps.optional().meta({ description: 'Read request bodies at this many kilobits per second.' }),
+    slowDownload: kbps.optional().meta({ description: 'Send responses at this many kilobits per second.' }),
+  })
+  .meta({
+    title: 'Faults',
+    description: 'Simulated trouble. Random choices are seeded by the request number, so a run repeats. In test mode they are off unless a request sends `x-tempo-test-faults: 1`.',
+  });
+export type Faults = z.infer<typeof FaultsSchema>;
+
+const CORS_ORIGIN = /^https?:\/\/[A-Za-z0-9.[\]:-]+$/;
+const HEADER_TOKEN = /^[A-Za-z0-9!#$%&'*+.^_`|~-]{1,100}$/;
+export const CorsSchema = z
+  .strictObject({
+    origins: z.union([z.literal('*'), z.array(z.string().regex(CORS_ORIGIN, 'An origin looks like "https://app.example.com" (no path).')).min(1).max(100)]).default('*'),
+    methods: z.array(z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'])).min(1).default(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']),
+    headers: z.array(z.string().regex(HEADER_TOKEN)).max(50).optional().meta({ description: 'Request headers a page may send. Default: the usual ones and the `x-tempo-*` headers.' }),
+    exposeHeaders: z.array(z.string().regex(HEADER_TOKEN)).max(50).optional().meta({ description: 'Response headers a page may read. Default: `Retry-After` and the `RateLimit` headers.' }),
+    credentials: z.boolean().default(false).meta({ description: 'Allow cookies. Needs a list of origins: `*` with credentials is refused.' }),
+    maxAge: z.number().int().min(0).max(86_400).default(600).meta({ description: 'Seconds a browser may cache a preflight answer.' }),
+  })
+  .superRefine((cors, ctx) => {
+    if (cors.credentials && cors.origins === '*') ctx.addIssue({ code: 'custom', path: ['origins'], message: 'Credentials cannot be allowed for every origin ("*"). List the origins.' });
+  })
+  .meta({ title: 'Cors', description: 'Cross-origin rules of the public API, with preflight handling. Without it no CORS headers are sent (a browser app on another origin is blocked).' });
+export type Cors = z.infer<typeof CorsSchema>;
+
 const common = {
+  faults: FaultsSchema.optional().meta({ description: 'Faults for this endpoint. Each setting replaces the backend\'s.' }),
   id: z.string().min(1).max(200).meta({ description: 'Stable id, for example `get.products.:id`. Scenarios and stats use it.' }),
   method: z.enum(HTTP_METHODS),
   path: EndpointPath,
@@ -481,6 +525,7 @@ const AuthConfig = z.strictObject({
   accessTtlMin: z.number().int().positive().max(525_600).default(30).meta({ description: 'Access token lifetime in minutes.' }),
   maxAccessTtlMin: z.number().int().positive().max(525_600).default(60).meta({ description: 'The longest access token a client can get, even when it asks for more with `expiresInMins`.' }),
   refreshTtlDays: z.number().int().positive().max(3650).default(30).meta({ description: 'Refresh token lifetime in days.' }),
+  mode: z.enum(['bearer', 'cookie', 'both']).default('bearer').meta({ description: '`bearer`: tokens in the `Authorization` header (the default). `cookie`: login sets an HttpOnly session cookie (and the tokens are not in the answer). `both`: either works.' }),
   otpCode: z.string().min(1).max(32).default('123456').meta({ description: 'The one-time code `otpVerify` accepts.' }),
   otpResendSec: z.number().int().min(0).max(86_400).default(60).meta({ description: 'The `retryAfterSec` that `otpResend` answers.' }),
   seedUsers: z.array(SeedUser).default([]).meta({ description: 'App users created at start-up when their username does not exist yet (and was never seeded before).' }),
@@ -585,6 +630,8 @@ export const BackendSchema = z
     network: NetworkSchema.optional().meta({ description: 'The connection profile of every endpoint that does not set its own.' }),
     responses: ResponsesSchema.optional(),
     responseTemplates: z.record(z.string().regex(TEMPLATE_NAME, 'A template name starts with a letter and holds letters, digits, "-" and "_" (at most 64 characters).'), ResponseTemplateSchema).default({}),
+    faults: FaultsSchema.optional().meta({ description: 'Faults of every endpoint that does not set its own.' }),
+    cors: CorsSchema.optional(),
     testMode: z.boolean().default(false).meta({ description: 'Zero every delay, throttle and timeout (and fix `{{now}}` and the random values). A request can opt back in with `x-tempo-test-delays: 1`.' }),
     auth: AuthConfig.default(() => AuthConfig.parse({})),
     media: z.strictObject({ maxBytes: z.number().int().positive().default(104_857_600) }).default({ maxBytes: 104_857_600 }),

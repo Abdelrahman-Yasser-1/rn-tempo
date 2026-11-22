@@ -203,6 +203,169 @@
         "description": "A reusable response. Use it as a body: `{ \"template\": \"name\", \"with\": { ... } }`."
       }
     },
+    "faults": {
+      "description": "Faults of every endpoint that does not set its own.",
+      "type": "object",
+      "properties": {
+        "rateLimit": {
+          "description": "More than `requests` in `perSeconds` answers 429 with `Retry-After` and `RateLimit-*` headers. `null` turns an inherited limit off.",
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "requests": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 1000000
+                },
+                "perSeconds": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 86400
+                },
+                "key": {
+                  "default": "ip",
+                  "description": "Who is counted: each client address, each signed-in user (or address), or everybody together.",
+                  "type": "string",
+                  "enum": [
+                    "ip",
+                    "user",
+                    "global"
+                  ]
+                }
+              },
+              "required": [
+                "requests",
+                "perSeconds"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "failureRate": {
+          "description": "The share of requests (0 to 1) that fail with `failureStatus` before reaching the endpoint.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "failureStatus": {
+          "description": "The status of a simulated failure (default 500).",
+          "type": "integer",
+          "minimum": 400,
+          "maximum": 599
+        },
+        "failureBody": {
+          "description": "The JSON body of a simulated failure (default a problem document)."
+        },
+        "dropRate": {
+          "description": "The share of requests whose connection is destroyed in the middle of the answer.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "offline": {
+          "description": "Close every connection at once, as if the network were gone.",
+          "type": "boolean"
+        },
+        "slowUpload": {
+          "description": "Read request bodies at this many kilobits per second.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000000
+        },
+        "slowDownload": {
+          "description": "Send responses at this many kilobits per second.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000000
+        }
+      },
+      "additionalProperties": false,
+      "title": "Faults"
+    },
+    "cors": {
+      "type": "object",
+      "properties": {
+        "origins": {
+          "default": "*",
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "*"
+            },
+            {
+              "minItems": 1,
+              "maxItems": 100,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^https?:\\/\\/[A-Za-z0-9.[\\]:-]+$"
+              }
+            }
+          ]
+        },
+        "methods": {
+          "default": [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+            "OPTIONS"
+          ],
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "GET",
+              "POST",
+              "PUT",
+              "PATCH",
+              "DELETE",
+              "HEAD",
+              "OPTIONS"
+            ]
+          }
+        },
+        "headers": {
+          "description": "Request headers a page may send. Default: the usual ones and the `x-tempo-*` headers.",
+          "maxItems": 50,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9!#$%&'*+.^_`|~-]{1,100}$"
+          }
+        },
+        "exposeHeaders": {
+          "description": "Response headers a page may read. Default: `Retry-After` and the `RateLimit` headers.",
+          "maxItems": 50,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9!#$%&'*+.^_`|~-]{1,100}$"
+          }
+        },
+        "credentials": {
+          "default": false,
+          "description": "Allow cookies. Needs a list of origins: `*` with credentials is refused.",
+          "type": "boolean"
+        },
+        "maxAge": {
+          "default": 600,
+          "description": "Seconds a browser may cache a preflight answer.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 86400
+        }
+      },
+      "additionalProperties": false,
+      "title": "Cors",
+      "description": "Cross-origin rules of the public API, with preflight handling. Without it no CORS headers are sent (a browser app on another origin is blocked)."
+    },
     "testMode": {
       "default": false,
       "description": "Zero every delay, throttle and timeout (and fix `{{now}}` and the random values). A request can opt back in with `x-tempo-test-delays: 1`.",
@@ -213,6 +376,7 @@
         "accessTtlMin": 30,
         "maxAccessTtlMin": 60,
         "refreshTtlDays": 30,
+        "mode": "bearer",
         "otpCode": "123456",
         "otpResendSec": 60,
         "seedUsers": []
@@ -239,6 +403,16 @@
           "type": "integer",
           "exclusiveMinimum": 0,
           "maximum": 3650
+        },
+        "mode": {
+          "default": "bearer",
+          "description": "`bearer`: tokens in the `Authorization` header (the default). `cookie`: login sets an HttpOnly session cookie (and the tokens are not in the answer). `both`: either works.",
+          "type": "string",
+          "enum": [
+            "bearer",
+            "cookie",
+            "both"
+          ]
         },
         "otpCode": {
           "default": "123456",
@@ -419,6 +593,89 @@
           {
             "type": "object",
             "properties": {
+              "faults": {
+                "description": "Faults for this endpoint. Each setting replaces the backend's.",
+                "type": "object",
+                "properties": {
+                  "rateLimit": {
+                    "description": "More than `requests` in `perSeconds` answers 429 with `Retry-After` and `RateLimit-*` headers. `null` turns an inherited limit off.",
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "requests": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 1000000
+                          },
+                          "perSeconds": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 86400
+                          },
+                          "key": {
+                            "default": "ip",
+                            "description": "Who is counted: each client address, each signed-in user (or address), or everybody together.",
+                            "type": "string",
+                            "enum": [
+                              "ip",
+                              "user",
+                              "global"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "requests",
+                          "perSeconds"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "failureRate": {
+                    "description": "The share of requests (0 to 1) that fail with `failureStatus` before reaching the endpoint.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "failureStatus": {
+                    "description": "The status of a simulated failure (default 500).",
+                    "type": "integer",
+                    "minimum": 400,
+                    "maximum": 599
+                  },
+                  "failureBody": {
+                    "description": "The JSON body of a simulated failure (default a problem document)."
+                  },
+                  "dropRate": {
+                    "description": "The share of requests whose connection is destroyed in the middle of the answer.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "offline": {
+                    "description": "Close every connection at once, as if the network were gone.",
+                    "type": "boolean"
+                  },
+                  "slowUpload": {
+                    "description": "Read request bodies at this many kilobits per second.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10000000
+                  },
+                  "slowDownload": {
+                    "description": "Send responses at this many kilobits per second.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10000000
+                  }
+                },
+                "additionalProperties": false,
+                "title": "Faults"
+              },
               "id": {
                 "type": "string",
                 "minLength": 1,
@@ -732,6 +989,89 @@
           {
             "type": "object",
             "properties": {
+              "faults": {
+                "description": "Faults for this endpoint. Each setting replaces the backend's.",
+                "type": "object",
+                "properties": {
+                  "rateLimit": {
+                    "description": "More than `requests` in `perSeconds` answers 429 with `Retry-After` and `RateLimit-*` headers. `null` turns an inherited limit off.",
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "requests": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 1000000
+                          },
+                          "perSeconds": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 86400
+                          },
+                          "key": {
+                            "default": "ip",
+                            "description": "Who is counted: each client address, each signed-in user (or address), or everybody together.",
+                            "type": "string",
+                            "enum": [
+                              "ip",
+                              "user",
+                              "global"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "requests",
+                          "perSeconds"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "failureRate": {
+                    "description": "The share of requests (0 to 1) that fail with `failureStatus` before reaching the endpoint.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "failureStatus": {
+                    "description": "The status of a simulated failure (default 500).",
+                    "type": "integer",
+                    "minimum": 400,
+                    "maximum": 599
+                  },
+                  "failureBody": {
+                    "description": "The JSON body of a simulated failure (default a problem document)."
+                  },
+                  "dropRate": {
+                    "description": "The share of requests whose connection is destroyed in the middle of the answer.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "offline": {
+                    "description": "Close every connection at once, as if the network were gone.",
+                    "type": "boolean"
+                  },
+                  "slowUpload": {
+                    "description": "Read request bodies at this many kilobits per second.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10000000
+                  },
+                  "slowDownload": {
+                    "description": "Send responses at this many kilobits per second.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10000000
+                  }
+                },
+                "additionalProperties": false,
+                "title": "Faults"
+              },
               "id": {
                 "type": "string",
                 "minLength": 1,
@@ -1009,6 +1349,89 @@
           {
             "type": "object",
             "properties": {
+              "faults": {
+                "description": "Faults for this endpoint. Each setting replaces the backend's.",
+                "type": "object",
+                "properties": {
+                  "rateLimit": {
+                    "description": "More than `requests` in `perSeconds` answers 429 with `Retry-After` and `RateLimit-*` headers. `null` turns an inherited limit off.",
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "requests": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 1000000
+                          },
+                          "perSeconds": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 86400
+                          },
+                          "key": {
+                            "default": "ip",
+                            "description": "Who is counted: each client address, each signed-in user (or address), or everybody together.",
+                            "type": "string",
+                            "enum": [
+                              "ip",
+                              "user",
+                              "global"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "requests",
+                          "perSeconds"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "failureRate": {
+                    "description": "The share of requests (0 to 1) that fail with `failureStatus` before reaching the endpoint.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "failureStatus": {
+                    "description": "The status of a simulated failure (default 500).",
+                    "type": "integer",
+                    "minimum": 400,
+                    "maximum": 599
+                  },
+                  "failureBody": {
+                    "description": "The JSON body of a simulated failure (default a problem document)."
+                  },
+                  "dropRate": {
+                    "description": "The share of requests whose connection is destroyed in the middle of the answer.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "offline": {
+                    "description": "Close every connection at once, as if the network were gone.",
+                    "type": "boolean"
+                  },
+                  "slowUpload": {
+                    "description": "Read request bodies at this many kilobits per second.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10000000
+                  },
+                  "slowDownload": {
+                    "description": "Send responses at this many kilobits per second.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10000000
+                  }
+                },
+                "additionalProperties": false,
+                "title": "Faults"
+              },
               "id": {
                 "type": "string",
                 "minLength": 1,
@@ -1258,6 +1681,89 @@
           {
             "type": "object",
             "properties": {
+              "faults": {
+                "description": "Faults for this endpoint. Each setting replaces the backend's.",
+                "type": "object",
+                "properties": {
+                  "rateLimit": {
+                    "description": "More than `requests` in `perSeconds` answers 429 with `Retry-After` and `RateLimit-*` headers. `null` turns an inherited limit off.",
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "requests": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 1000000
+                          },
+                          "perSeconds": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 86400
+                          },
+                          "key": {
+                            "default": "ip",
+                            "description": "Who is counted: each client address, each signed-in user (or address), or everybody together.",
+                            "type": "string",
+                            "enum": [
+                              "ip",
+                              "user",
+                              "global"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "requests",
+                          "perSeconds"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "failureRate": {
+                    "description": "The share of requests (0 to 1) that fail with `failureStatus` before reaching the endpoint.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "failureStatus": {
+                    "description": "The status of a simulated failure (default 500).",
+                    "type": "integer",
+                    "minimum": 400,
+                    "maximum": 599
+                  },
+                  "failureBody": {
+                    "description": "The JSON body of a simulated failure (default a problem document)."
+                  },
+                  "dropRate": {
+                    "description": "The share of requests whose connection is destroyed in the middle of the answer.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "offline": {
+                    "description": "Close every connection at once, as if the network were gone.",
+                    "type": "boolean"
+                  },
+                  "slowUpload": {
+                    "description": "Read request bodies at this many kilobits per second.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10000000
+                  },
+                  "slowDownload": {
+                    "description": "Send responses at this many kilobits per second.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10000000
+                  }
+                },
+                "additionalProperties": false,
+                "title": "Faults"
+              },
               "id": {
                 "type": "string",
                 "minLength": 1,
@@ -1503,6 +2009,89 @@
           {
             "type": "object",
             "properties": {
+              "faults": {
+                "description": "Faults for this endpoint. Each setting replaces the backend's.",
+                "type": "object",
+                "properties": {
+                  "rateLimit": {
+                    "description": "More than `requests` in `perSeconds` answers 429 with `Retry-After` and `RateLimit-*` headers. `null` turns an inherited limit off.",
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "requests": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 1000000
+                          },
+                          "perSeconds": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 86400
+                          },
+                          "key": {
+                            "default": "ip",
+                            "description": "Who is counted: each client address, each signed-in user (or address), or everybody together.",
+                            "type": "string",
+                            "enum": [
+                              "ip",
+                              "user",
+                              "global"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "requests",
+                          "perSeconds"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "failureRate": {
+                    "description": "The share of requests (0 to 1) that fail with `failureStatus` before reaching the endpoint.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "failureStatus": {
+                    "description": "The status of a simulated failure (default 500).",
+                    "type": "integer",
+                    "minimum": 400,
+                    "maximum": 599
+                  },
+                  "failureBody": {
+                    "description": "The JSON body of a simulated failure (default a problem document)."
+                  },
+                  "dropRate": {
+                    "description": "The share of requests whose connection is destroyed in the middle of the answer.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "offline": {
+                    "description": "Close every connection at once, as if the network were gone.",
+                    "type": "boolean"
+                  },
+                  "slowUpload": {
+                    "description": "Read request bodies at this many kilobits per second.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10000000
+                  },
+                  "slowDownload": {
+                    "description": "Send responses at this many kilobits per second.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10000000
+                  }
+                },
+                "additionalProperties": false,
+                "title": "Faults"
+              },
               "id": {
                 "type": "string",
                 "minLength": 1,
@@ -1737,6 +2326,89 @@
           {
             "type": "object",
             "properties": {
+              "faults": {
+                "description": "Faults for this endpoint. Each setting replaces the backend's.",
+                "type": "object",
+                "properties": {
+                  "rateLimit": {
+                    "description": "More than `requests` in `perSeconds` answers 429 with `Retry-After` and `RateLimit-*` headers. `null` turns an inherited limit off.",
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "requests": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 1000000
+                          },
+                          "perSeconds": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 86400
+                          },
+                          "key": {
+                            "default": "ip",
+                            "description": "Who is counted: each client address, each signed-in user (or address), or everybody together.",
+                            "type": "string",
+                            "enum": [
+                              "ip",
+                              "user",
+                              "global"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "requests",
+                          "perSeconds"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "failureRate": {
+                    "description": "The share of requests (0 to 1) that fail with `failureStatus` before reaching the endpoint.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "failureStatus": {
+                    "description": "The status of a simulated failure (default 500).",
+                    "type": "integer",
+                    "minimum": 400,
+                    "maximum": 599
+                  },
+                  "failureBody": {
+                    "description": "The JSON body of a simulated failure (default a problem document)."
+                  },
+                  "dropRate": {
+                    "description": "The share of requests whose connection is destroyed in the middle of the answer.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "offline": {
+                    "description": "Close every connection at once, as if the network were gone.",
+                    "type": "boolean"
+                  },
+                  "slowUpload": {
+                    "description": "Read request bodies at this many kilobits per second.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10000000
+                  },
+                  "slowDownload": {
+                    "description": "Send responses at this many kilobits per second.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10000000
+                  }
+                },
+                "additionalProperties": false,
+                "title": "Faults"
+              },
               "id": {
                 "type": "string",
                 "minLength": 1,
@@ -1984,6 +2656,89 @@
           {
             "type": "object",
             "properties": {
+              "faults": {
+                "description": "Faults for this endpoint. Each setting replaces the backend's.",
+                "type": "object",
+                "properties": {
+                  "rateLimit": {
+                    "description": "More than `requests` in `perSeconds` answers 429 with `Retry-After` and `RateLimit-*` headers. `null` turns an inherited limit off.",
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "requests": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 1000000
+                          },
+                          "perSeconds": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 86400
+                          },
+                          "key": {
+                            "default": "ip",
+                            "description": "Who is counted: each client address, each signed-in user (or address), or everybody together.",
+                            "type": "string",
+                            "enum": [
+                              "ip",
+                              "user",
+                              "global"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "requests",
+                          "perSeconds"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "failureRate": {
+                    "description": "The share of requests (0 to 1) that fail with `failureStatus` before reaching the endpoint.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "failureStatus": {
+                    "description": "The status of a simulated failure (default 500).",
+                    "type": "integer",
+                    "minimum": 400,
+                    "maximum": 599
+                  },
+                  "failureBody": {
+                    "description": "The JSON body of a simulated failure (default a problem document)."
+                  },
+                  "dropRate": {
+                    "description": "The share of requests whose connection is destroyed in the middle of the answer.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "offline": {
+                    "description": "Close every connection at once, as if the network were gone.",
+                    "type": "boolean"
+                  },
+                  "slowUpload": {
+                    "description": "Read request bodies at this many kilobits per second.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10000000
+                  },
+                  "slowDownload": {
+                    "description": "Send responses at this many kilobits per second.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10000000
+                  }
+                },
+                "additionalProperties": false,
+                "title": "Faults"
+              },
               "id": {
                 "type": "string",
                 "minLength": 1,
@@ -2228,6 +2983,89 @@
           {
             "type": "object",
             "properties": {
+              "faults": {
+                "description": "Faults for this endpoint. Each setting replaces the backend's.",
+                "type": "object",
+                "properties": {
+                  "rateLimit": {
+                    "description": "More than `requests` in `perSeconds` answers 429 with `Retry-After` and `RateLimit-*` headers. `null` turns an inherited limit off.",
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "requests": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 1000000
+                          },
+                          "perSeconds": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 86400
+                          },
+                          "key": {
+                            "default": "ip",
+                            "description": "Who is counted: each client address, each signed-in user (or address), or everybody together.",
+                            "type": "string",
+                            "enum": [
+                              "ip",
+                              "user",
+                              "global"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "requests",
+                          "perSeconds"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "failureRate": {
+                    "description": "The share of requests (0 to 1) that fail with `failureStatus` before reaching the endpoint.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "failureStatus": {
+                    "description": "The status of a simulated failure (default 500).",
+                    "type": "integer",
+                    "minimum": 400,
+                    "maximum": 599
+                  },
+                  "failureBody": {
+                    "description": "The JSON body of a simulated failure (default a problem document)."
+                  },
+                  "dropRate": {
+                    "description": "The share of requests whose connection is destroyed in the middle of the answer.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "offline": {
+                    "description": "Close every connection at once, as if the network were gone.",
+                    "type": "boolean"
+                  },
+                  "slowUpload": {
+                    "description": "Read request bodies at this many kilobits per second.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10000000
+                  },
+                  "slowDownload": {
+                    "description": "Send responses at this many kilobits per second.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10000000
+                  }
+                },
+                "additionalProperties": false,
+                "title": "Faults"
+              },
               "id": {
                 "type": "string",
                 "minLength": 1,
@@ -2550,6 +3388,89 @@
           {
             "type": "object",
             "properties": {
+              "faults": {
+                "description": "Faults for this endpoint. Each setting replaces the backend's.",
+                "type": "object",
+                "properties": {
+                  "rateLimit": {
+                    "description": "More than `requests` in `perSeconds` answers 429 with `Retry-After` and `RateLimit-*` headers. `null` turns an inherited limit off.",
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "requests": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 1000000
+                          },
+                          "perSeconds": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 86400
+                          },
+                          "key": {
+                            "default": "ip",
+                            "description": "Who is counted: each client address, each signed-in user (or address), or everybody together.",
+                            "type": "string",
+                            "enum": [
+                              "ip",
+                              "user",
+                              "global"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "requests",
+                          "perSeconds"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "failureRate": {
+                    "description": "The share of requests (0 to 1) that fail with `failureStatus` before reaching the endpoint.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "failureStatus": {
+                    "description": "The status of a simulated failure (default 500).",
+                    "type": "integer",
+                    "minimum": 400,
+                    "maximum": 599
+                  },
+                  "failureBody": {
+                    "description": "The JSON body of a simulated failure (default a problem document)."
+                  },
+                  "dropRate": {
+                    "description": "The share of requests whose connection is destroyed in the middle of the answer.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "offline": {
+                    "description": "Close every connection at once, as if the network were gone.",
+                    "type": "boolean"
+                  },
+                  "slowUpload": {
+                    "description": "Read request bodies at this many kilobits per second.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10000000
+                  },
+                  "slowDownload": {
+                    "description": "Send responses at this many kilobits per second.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10000000
+                  }
+                },
+                "additionalProperties": false,
+                "title": "Faults"
+              },
               "id": {
                 "type": "string",
                 "minLength": 1,
@@ -2912,6 +3833,89 @@
           {
             "type": "object",
             "properties": {
+              "faults": {
+                "description": "Faults for this endpoint. Each setting replaces the backend's.",
+                "type": "object",
+                "properties": {
+                  "rateLimit": {
+                    "description": "More than `requests` in `perSeconds` answers 429 with `Retry-After` and `RateLimit-*` headers. `null` turns an inherited limit off.",
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "requests": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 1000000
+                          },
+                          "perSeconds": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 86400
+                          },
+                          "key": {
+                            "default": "ip",
+                            "description": "Who is counted: each client address, each signed-in user (or address), or everybody together.",
+                            "type": "string",
+                            "enum": [
+                              "ip",
+                              "user",
+                              "global"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "requests",
+                          "perSeconds"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "failureRate": {
+                    "description": "The share of requests (0 to 1) that fail with `failureStatus` before reaching the endpoint.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "failureStatus": {
+                    "description": "The status of a simulated failure (default 500).",
+                    "type": "integer",
+                    "minimum": 400,
+                    "maximum": 599
+                  },
+                  "failureBody": {
+                    "description": "The JSON body of a simulated failure (default a problem document)."
+                  },
+                  "dropRate": {
+                    "description": "The share of requests whose connection is destroyed in the middle of the answer.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "offline": {
+                    "description": "Close every connection at once, as if the network were gone.",
+                    "type": "boolean"
+                  },
+                  "slowUpload": {
+                    "description": "Read request bodies at this many kilobits per second.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10000000
+                  },
+                  "slowDownload": {
+                    "description": "Send responses at this many kilobits per second.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10000000
+                  }
+                },
+                "additionalProperties": false,
+                "title": "Faults"
+              },
               "id": {
                 "type": "string",
                 "minLength": 1,
@@ -3304,6 +4308,89 @@
           {
             "type": "object",
             "properties": {
+              "faults": {
+                "description": "Faults for this endpoint. Each setting replaces the backend's.",
+                "type": "object",
+                "properties": {
+                  "rateLimit": {
+                    "description": "More than `requests` in `perSeconds` answers 429 with `Retry-After` and `RateLimit-*` headers. `null` turns an inherited limit off.",
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "requests": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 1000000
+                          },
+                          "perSeconds": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 86400
+                          },
+                          "key": {
+                            "default": "ip",
+                            "description": "Who is counted: each client address, each signed-in user (or address), or everybody together.",
+                            "type": "string",
+                            "enum": [
+                              "ip",
+                              "user",
+                              "global"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "requests",
+                          "perSeconds"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "failureRate": {
+                    "description": "The share of requests (0 to 1) that fail with `failureStatus` before reaching the endpoint.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "failureStatus": {
+                    "description": "The status of a simulated failure (default 500).",
+                    "type": "integer",
+                    "minimum": 400,
+                    "maximum": 599
+                  },
+                  "failureBody": {
+                    "description": "The JSON body of a simulated failure (default a problem document)."
+                  },
+                  "dropRate": {
+                    "description": "The share of requests whose connection is destroyed in the middle of the answer.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "offline": {
+                    "description": "Close every connection at once, as if the network were gone.",
+                    "type": "boolean"
+                  },
+                  "slowUpload": {
+                    "description": "Read request bodies at this many kilobits per second.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10000000
+                  },
+                  "slowDownload": {
+                    "description": "Send responses at this many kilobits per second.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10000000
+                  }
+                },
+                "additionalProperties": false,
+                "title": "Faults"
+              },
               "id": {
                 "type": "string",
                 "minLength": 1,

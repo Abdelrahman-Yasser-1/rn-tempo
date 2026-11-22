@@ -7,6 +7,7 @@ import { pipeline, Readable, type Duplex } from 'node:stream';
 
 import { CERT_FILE, KEY_FILE } from '@rn-tempo/dev-api';
 
+import { corsFor } from './cors.ts';
 import type { Engine } from './engine.ts';
 import { problemReply, type Reply, type RequestCtx } from './http.ts';
 import { paceRequest, ThrottleStream } from './network.ts';
@@ -65,7 +66,11 @@ export function toCtx(req: IncomingMessage, bodyText: string, scheme?: 'http' | 
   };
 }
 
+/** Responses an engine page (the OAuth sign-in page) is sent on: the team server keeps the page's own strict policy for these. */
+export const trustedPages = new WeakSet<ServerResponse>();
+
 export function sendReply(res: ServerResponse, reply: Reply, headOnly = false): void {
+  if (reply.page === true) trustedPages.add(res);
   if (reply.abandoned === true || res.destroyed) {
     reply.stream?.destroy();
     return;
@@ -73,6 +78,14 @@ export function sendReply(res: ServerResponse, reply: Reply, headOnly = false): 
   if (reply.close === true) {
     // The `timeout` preset: no status line, no body, just a closed connection.
     res.destroy();
+    return;
+  }
+  if (reply.drop === true) {
+    // The `dropRate` fault: the head and half of the body go out, then the connection is destroyed.
+    const whole = reply.raw !== undefined ? reply.raw : reply.body === undefined ? undefined : JSON.stringify(reply.body);
+    if (whole === undefined || whole.length < 2) return void res.destroy();
+    res.writeHead(reply.status, { ...reply.headers, 'content-length': String(Buffer.byteLength(whole)) });
+    res.write(Buffer.from(whole).subarray(0, Math.ceil(Buffer.byteLength(whole) / 2)), () => res.destroy());
     return;
   }
   let fd: number | undefined;
@@ -148,6 +161,13 @@ export function createPublicHandler(engine: Engine, extra: (ctx: RequestCtx, res
     void (async (): Promise<void> => {
       // An upload streams its own body; every other request is read up front, with a small limit.
       const path = new URL(req.url ?? '/', 'http://local').pathname;
+      // CORS first: a preflight carries no access key, and the headers must be on every answer, errors included.
+      const cors = corsFor(engine.definition.cors, req.method ?? 'GET', req.headers);
+      for (const [name, value] of Object.entries(cors.headers)) res.setHeader(name, value);
+      if (cors.preflight) {
+        sendReply(res, { status: 204, headers: {} });
+        return;
+      }
       if (engine.definition.publicAccess === 'key' && path !== '/__health') {
         if (options.accessKey === undefined) {
           sendReply(res, problemReply(401, { detail: 'This backend needs an access key, which only the team server manages.' }));
@@ -165,6 +185,12 @@ export function createPublicHandler(engine: Engine, extra: (ctx: RequestCtx, res
       const plan = engine.planRequest(method, path, req.headers);
       const gone = new AbortController();
       res.once('close', () => gone.abort());
+      if (plan.faults.offline) {
+        // As if there were no network at all: the connection is closed before anything is read or answered.
+        engine.recordOffline(method, req.url ?? '/');
+        req.socket.destroy();
+        return;
+      }
       if (!streaming && plan.network.uploadKbps !== undefined) paceRequest(req, plan.network.uploadKbps);
       const body = streaming ? { ok: true as const, text: '' } : await readBody(req);
       if (!body.ok) {
