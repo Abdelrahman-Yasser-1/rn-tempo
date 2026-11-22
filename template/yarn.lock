@@ -5755,6 +5755,12 @@ __metadata:
   languageName: node
   linkType: soft
 
+"@rn-tempo/local-backend@link:../apps/local-backend/engine::locator=tempo-app%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@rn-tempo/local-backend@link:../apps/local-backend/engine::locator=tempo-app%40workspace%3A."
+  languageName: node
+  linkType: soft
+
 "@rn-tempo/prettier-config@link:../packages/prettier-config::locator=tempo-app%40workspace%3A.":
   version: 0.0.0-use.local
   resolution: "@rn-tempo/prettier-config@link:../packages/prettier-config::locator=tempo-app%40workspace%3A."
@@ -15332,6 +15338,7 @@ __metadata:
     "@rn-tempo/commitlint-config": "link:../packages/commitlint-config"
     "@rn-tempo/dev-api": "link:../packages/dev-api"
     "@rn-tempo/eslint-config": "link:../packages/eslint-config"
+    "@rn-tempo/local-backend": "link:../apps/local-backend/engine"
     "@rn-tempo/prettier-config": "link:../packages/prettier-config"
     "@rn-tempo/tsconfig": "link:../packages/tsconfig"
     "@rnx-kit/align-deps": "npm:5.0.1"

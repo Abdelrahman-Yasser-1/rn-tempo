@@ -17,7 +17,7 @@
     "preinstall": "node scripts/check-node.mjs",
     "prepare": "lefthook install",
     "backend:certs": "node packages/dev-api/dist/tempo-api.mjs certs --out docker/certs",
-    "build:tools": "yarn workspace @rn-tempo/dev-api build && yarn workspace create-tempo-app build",
+    "build:tools": "yarn workspace @rn-tempo/dev-api build && yarn workspace create-tempo-app build && yarn workspace @rn-tempo/local-backend build",
     "lint": "yarn workspaces foreach -A --exclude rn-tempo run lint",
     "test": "yarn workspaces foreach -A --exclude rn-tempo run test",
     "typecheck": "yarn workspaces foreach -A --exclude rn-tempo run typecheck",
