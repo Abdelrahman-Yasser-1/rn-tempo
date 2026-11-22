@@ -66,6 +66,9 @@ export default async function (ctx) {
 }
 `;
 
+type RawEndpoints = NonNullable<BackendInput['endpoints']>;
+const NO_WRAP = (endpoints: RawEndpoints): RawEndpoints => endpoints.map((endpoint) => ({ ...endpoint, wrap: 'none' }));
+
 function tempoTemplate(name: string): { definition: BackendInput; files: PresetFile[] } {
   const crud = { type: 'crud' as const, collection: 'products', tags: ['products'] };
   const definition: BackendInput = {
@@ -137,7 +140,8 @@ function tempoTemplate(name: string): { definition: BackendInput; files: PresetF
         seed: 'products.json',
       },
     ],
-    endpoints: [
+    // C13 answers are unwrapped: `wrap: "none"` keeps them so even when a backend-wide wrapper is added later.
+    endpoints: NO_WRAP([
       { id: 'auth.login', type: 'auth', action: 'login', method: 'POST', path: '/auth/login', summary: 'Sign in', tags: ['auth'] },
       { id: 'auth.refresh', type: 'auth', action: 'refresh', method: 'POST', path: '/auth/refresh', summary: 'Trade a refresh token for new tokens', tags: ['auth'] },
       { id: 'auth.me', type: 'auth', action: 'me', method: 'GET', path: '/auth/me', auth: 'bearer', summary: 'The signed-in user', tags: ['auth'] },
@@ -177,7 +181,7 @@ function tempoTemplate(name: string): { definition: BackendInput; files: PresetF
       { id: 'media.upload', type: 'upload', method: 'POST', path: '/media/upload', summary: 'Upload a file', tags: ['media'] },
       { id: 'media.download', type: 'download', method: 'GET', path: '/media/:id', summary: 'Download a file', tags: ['media'] },
       { id: 'stats.summary', type: 'handler', method: 'GET', path: '/stats/summary', file: 'handlers/stats-summary.js', summary: 'Counts of products and users (a handler example)', tags: ['stats'] },
-    ],
+    ]),
   };
   const products = Array.from({ length: CATALOG_SIZE }, (_, index) => templateProduct(index + 1));
   return {

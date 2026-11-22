@@ -5,6 +5,7 @@ import { problem, PROBLEM_CONTENT_TYPE, type FieldIssue } from '@rn-tempo/api-co
 
 import type { AuthUser } from './accounts.ts';
 import type { RequestPlan } from './network.ts';
+import type { PlaceholderContext } from './placeholders.ts';
 
 /** A request as the engine sees it: the listener has already read the (size-limited) body. */
 export interface RequestCtx {
@@ -26,6 +27,8 @@ export interface RequestCtx {
   scenario?: string;
   /** The delay and throttling of this request, worked out before its body was read. The engine makes one when it is missing. */
   plan?: RequestPlan;
+  /** What the placeholders of this request can see; the engine sets it once the endpoint is known. */
+  values?: PlaceholderContext;
   /** Aborts when the client goes away, so waiting stops at once. */
   signal?: AbortSignal;
 }
@@ -49,6 +52,8 @@ export interface Reply {
   close?: true;
   /** The client left while the engine was waiting: nothing is sent. */
   abandoned?: true;
+  /** An error the engine made itself (`problemReply`), which the backend's error format may reshape. */
+  problem?: true;
 }
 
 export const jsonReply = (status: number, body: unknown, headers: Record<string, string> = {}): Reply => ({
@@ -71,6 +76,7 @@ export function problemReply(
     status,
     headers: { 'content-type': PROBLEM_CONTENT_TYPE, ...options.headers },
     body: { ...body, message: body.detail ?? body.title, ...options.extra },
+    problem: true,
   };
 }
 

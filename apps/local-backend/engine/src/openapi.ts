@@ -1,6 +1,7 @@
 import { openApiPath, sortKeys, type Json } from '@rn-tempo/dev-api';
 
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from './content-public.ts';
+import { wrapperOf } from './responses.ts';
 import type { Backend, Collection, ContentField, CrudEndpoint, Endpoint, Field } from './schema.ts';
 
 type JsonObject = { [key: string]: Json };
@@ -290,7 +291,70 @@ function builtinOperation(endpoint: Exclude<Endpoint, { type: 'crud' | 'static' 
   return { ...(requestBody === undefined ? {} : { requestBody }), responses };
 }
 
-function operation(endpoint: Endpoint, collections: Map<string, Collection>): JsonObject {
+const BODY_TOKEN = /^\{\{\s*body\s*\}\}$/;
+const TOKEN = /^\{\{[^{}]*\}\}$/;
+
+/** The schema of a wrapper (or error) template: its literal parts typed, the whole-string `{{body}}` replaced by `inner`. */
+function templateSchema(template: unknown, inner: Json, tokens: Readonly<Record<string, Json>> = {}): Json {
+  if (typeof template === 'string') {
+    if (BODY_TOKEN.test(template)) return inner;
+    if (TOKEN.test(template)) return tokens[template.slice(2, -2).trim()] ?? {};
+    return str;
+  }
+  if (template === null) return { type: 'null' };
+  if (typeof template === 'number') return { type: 'number' };
+  if (typeof template === 'boolean') return { type: 'boolean' };
+  if (Array.isArray(template)) return template.length === 0 ? { type: 'array' } : { type: 'array', items: templateSchema(template[0], inner, tokens) };
+  if (typeof template === 'object') {
+    const entries = Object.entries(template as Record<string, unknown>);
+    return { type: 'object', properties: Object.fromEntries(entries.map(([key, value]) => [key, templateSchema(value, inner, tokens)])), required: entries.map(([key]) => key) };
+  }
+  return {};
+}
+
+/** The wrapper with `{{body}}` replaced by an example, the rest left as written. */
+function templateExample(template: unknown, inner: Json): Json {
+  if (typeof template === 'string') return BODY_TOKEN.test(template) ? inner : (template as Json);
+  if (Array.isArray(template)) return template.map((item) => templateExample(item, inner));
+  if (template !== null && typeof template === 'object') return Object.fromEntries(Object.entries(template as Record<string, unknown>).map(([key, value]) => [key, templateExample(value, inner)]));
+  return template as Json;
+}
+
+/** Puts every 2xx JSON answer inside the success wrapper (the schema and its example). */
+function wrapResponses(responses: JsonObject, wrapper: unknown): void {
+  if (wrapper === undefined) return;
+  for (const [status, response] of Object.entries(responses)) {
+    const content = (response as JsonObject).content as JsonObject | undefined;
+    const json = content?.['application/json'] as JsonObject | undefined;
+    if (!/^2\d\d$/.test(status) || json === undefined) continue;
+    const next: JsonObject = { schema: templateSchema(wrapper, (json.schema as Json | undefined) ?? {}) };
+    if (json.example !== undefined) next.example = templateExample(wrapper, json.example as Json);
+    (response as JsonObject).content = { ...content, 'application/json': next };
+  }
+}
+
+/** The error answers under the backend's format: the Problem schema is replaced, and non-problem formats are plain JSON. */
+function applyErrorFormat(definition: Backend, paths: JsonObject, schemas: JsonObject): void {
+  const error = definition.responses?.error;
+  if (error === undefined || error.format === 'problem') return;
+  if (error.format === 'dummyjson') schemas.Problem = object({ message: str }, ['message']);
+  else if (error.template !== undefined) schemas.Problem = { ...(templateSchema(error.template, {}, { status: { type: 'integer' }, message: str, errors: { type: 'array', items: {} } }) as JsonObject), description: 'The backend\'s custom error format.' };
+  else return;
+  for (const item of Object.values(paths)) {
+    for (const op of Object.values(item as JsonObject)) {
+      for (const response of Object.values(((op as JsonObject).responses ?? {}) as JsonObject)) {
+        const content = (response as JsonObject).content as JsonObject | undefined;
+        const problemContent = content?.['application/problem+json'];
+        if (content !== undefined && problemContent !== undefined) {
+          delete content['application/problem+json'];
+          content['application/json'] = problemContent;
+        }
+      }
+    }
+  }
+}
+
+function operation(endpoint: Endpoint, collections: Map<string, Collection>, definition: Backend): JsonObject {
   let body: JsonObject;
   if (endpoint.type === 'crud') {
     const collection = collections.get(endpoint.collection);
@@ -336,6 +400,7 @@ function operation(endpoint: Endpoint, collections: Map<string, Collection>): Js
   }
   const responses = body.responses as JsonObject;
   if (endpoint.auth === 'bearer') responses['401'] = problem('The access token is missing or wrong.');
+  wrapResponses(responses, wrapperOf(definition, endpoint));
   return {
     operationId: endpoint.id.replaceAll(':', '_'),
     ...(endpoint.summary === undefined ? {} : { summary: endpoint.summary }),
@@ -464,7 +529,7 @@ export function buildOpenApi(definition: Backend, options: { prefix?: string } =
     for (const path of [endpoint.path, ...(endpoint.aliases ?? [])]) {
       const key = openApiPath(path);
       const item = (paths[key] ?? {}) as JsonObject;
-      const op = operation(endpoint, collections);
+      const op = operation(endpoint, collections, definition);
       // An alias is the same operation; its id gets a suffix so ids stay unique.
       item[endpoint.method.toLowerCase()] = path === endpoint.path ? op : { ...op, operationId: `${String(op.operationId)}_alias` };
       paths[key] = item;
@@ -472,6 +537,7 @@ export function buildOpenApi(definition: Backend, options: { prefix?: string } =
     for (const tag of endpoint.tags ?? []) tags.add(tag);
   }
   if (definition.contentTypes.length > 0) contentPaths(definition, schemas, paths, tags);
+  applyErrorFormat(definition, paths, schemas);
   const document: JsonObject = {
     openapi: '3.1.0',
     info: {

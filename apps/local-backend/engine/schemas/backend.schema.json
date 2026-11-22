@@ -129,6 +129,80 @@
       "additionalProperties": false,
       "title": "Network"
     },
+    "responses": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "description": "The wrapper of every success answer, for example `{ \"success\": true, \"data\": \"{{body}}\", \"message\": null }`. The string `\"{{body}}\"` (the whole string) is replaced by the endpoint's body."
+        },
+        "error": {
+          "type": "object",
+          "properties": {
+            "format": {
+              "default": "problem",
+              "description": "`problem`: RFC 9457 problem+json. `dummyjson`: `{ \"message\": \"...\" }`. `custom`: your own `template`.",
+              "type": "string",
+              "enum": [
+                "problem",
+                "dummyjson",
+                "custom"
+              ]
+            },
+            "template": {
+              "description": "For `custom`: the error body. `{{status}}`, `{{message}}` and `{{errors}}` are filled in."
+            }
+          },
+          "additionalProperties": false
+        },
+        "headers": {
+          "description": "Headers added to every answer of every endpoint.",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "title": "Responses",
+      "description": "The shared shape of the backend's answers."
+    },
+    "responseTemplates": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "The status when the endpoint or scenario that uses the template does not set its own.",
+            "type": "integer",
+            "minimum": 100,
+            "maximum": 599
+          },
+          "headers": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "body": {
+            "description": "The JSON body. `{{with.name}}` is filled from the `with` of the reference; the other placeholders work too."
+          }
+        },
+        "additionalProperties": false,
+        "title": "ResponseTemplate",
+        "description": "A reusable response. Use it as a body: `{ \"template\": \"name\", \"with\": { ... } }`."
+      }
+    },
     "testMode": {
       "default": false,
       "description": "Zero every delay, throttle and timeout (and fix `{{now}}` and the random values). A request can opt back in with `x-tempo-test-delays: 1`.",
@@ -493,6 +567,20 @@
                   }
                 ]
               },
+              "wrap": {
+                "description": "`\"inherit\"` (the default): the backend's success wrapper. `\"none\"`: no wrapper. Or the name of a response template whose body wraps this endpoint's body.",
+                "type": "string"
+              },
+              "headers": {
+                "description": "Headers added to every answer of this endpoint. They win over the backend's common headers.",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
               "scenarios": {
                 "default": {},
                 "type": "object",
@@ -792,6 +880,20 @@
                   }
                 ]
               },
+              "wrap": {
+                "description": "`\"inherit\"` (the default): the backend's success wrapper. `\"none\"`: no wrapper. Or the name of a response template whose body wraps this endpoint's body.",
+                "type": "string"
+              },
+              "headers": {
+                "default": {},
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
               "scenarios": {
                 "default": {},
                 "type": "object",
@@ -893,16 +995,6 @@
                 "type": "integer",
                 "minimum": 100,
                 "maximum": 599
-              },
-              "headers": {
-                "default": {},
-                "type": "object",
-                "propertyNames": {
-                  "type": "string"
-                },
-                "additionalProperties": {
-                  "type": "string"
-                }
               },
               "body": {}
             },
@@ -1064,6 +1156,20 @@
                     "const": "inherit"
                   }
                 ]
+              },
+              "wrap": {
+                "description": "`\"inherit\"` (the default): the backend's success wrapper. `\"none\"`: no wrapper. Or the name of a response template whose body wraps this endpoint's body.",
+                "type": "string"
+              },
+              "headers": {
+                "description": "Headers added to every answer of this endpoint. They win over the backend's common headers.",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
               },
               "scenarios": {
                 "default": {},
@@ -1300,6 +1406,20 @@
                   }
                 ]
               },
+              "wrap": {
+                "description": "`\"inherit\"` (the default): the backend's success wrapper. `\"none\"`: no wrapper. Or the name of a response template whose body wraps this endpoint's body.",
+                "type": "string"
+              },
+              "headers": {
+                "description": "Headers added to every answer of this endpoint. They win over the backend's common headers.",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
               "scenarios": {
                 "default": {},
                 "type": "object",
@@ -1531,6 +1651,20 @@
                   }
                 ]
               },
+              "wrap": {
+                "description": "`\"inherit\"` (the default): the backend's success wrapper. `\"none\"`: no wrapper. Or the name of a response template whose body wraps this endpoint's body.",
+                "type": "string"
+              },
+              "headers": {
+                "description": "Headers added to every answer of this endpoint. They win over the backend's common headers.",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
               "scenarios": {
                 "default": {},
                 "type": "object",
@@ -1750,6 +1884,20 @@
                     "const": "inherit"
                   }
                 ]
+              },
+              "wrap": {
+                "description": "`\"inherit\"` (the default): the backend's success wrapper. `\"none\"`: no wrapper. Or the name of a response template whose body wraps this endpoint's body.",
+                "type": "string"
+              },
+              "headers": {
+                "description": "Headers added to every answer of this endpoint. They win over the backend's common headers.",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
               },
               "scenarios": {
                 "default": {},
@@ -1983,6 +2131,20 @@
                     "const": "inherit"
                   }
                 ]
+              },
+              "wrap": {
+                "description": "`\"inherit\"` (the default): the backend's success wrapper. `\"none\"`: no wrapper. Or the name of a response template whose body wraps this endpoint's body.",
+                "type": "string"
+              },
+              "headers": {
+                "description": "Headers added to every answer of this endpoint. They win over the backend's common headers.",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
               },
               "scenarios": {
                 "default": {},

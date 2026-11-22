@@ -37,9 +37,9 @@ export class Rng {
   }
 }
 
-const WORDS = ['alpha', 'bravo', 'cedar', 'delta', 'ember', 'fjord', 'glade', 'harbor', 'iris', 'juniper', 'kite', 'lumen', 'maple', 'nectar', 'orbit', 'pine'];
-const FIRST = ['Ada', 'Ben', 'Chloe', 'Dev', 'Eli', 'Fay', 'Gus', 'Hana'];
-const LAST = ['Rivera', 'Okafor', 'Lindqvist', 'Haddad', 'Moreau', 'Tanaka', 'Silva', 'Novak'];
+export const WORDS = ['alpha', 'bravo', 'cedar', 'delta', 'ember', 'fjord', 'glade', 'harbor', 'iris', 'juniper', 'kite', 'lumen', 'maple', 'nectar', 'orbit', 'pine'];
+export const FIRST = ['Ada', 'Ben', 'Chloe', 'Dev', 'Eli', 'Fay', 'Gus', 'Hana'];
+export const LAST = ['Rivera', 'Okafor', 'Lindqvist', 'Haddad', 'Moreau', 'Tanaka', 'Silva', 'Novak'];
 const MAX_NODES = 5_000;
 const MAX_DEPTH = 7;
 
