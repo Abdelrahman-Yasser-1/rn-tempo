@@ -2,6 +2,7 @@ import { lstatSync, realpathSync, statSync, watch, type FSWatcher } from 'node:f
 import { join, resolve, sep } from 'node:path';
 import { Worker } from 'node:worker_threads';
 
+import { FORBIDDEN_HEADERS } from './constants.ts';
 import type { Reply } from './http.ts';
 import { jsonReply, problemReply } from './http.ts';
 import type { EngineLogger } from './logs.ts';
@@ -327,7 +328,6 @@ export function resolveHandlerFile(dir: string, file: string): string {
 
 // ---- answers
 
-export const FORBIDDEN_HEADERS = new Set(['content-length', 'transfer-encoding', 'connection', 'keep-alive', 'upgrade', 'te', 'trailer']);
 
 const isPlain = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value) && !(value instanceof Uint8Array);

@@ -1,4 +1,5 @@
-import { fill, PlaceholderError, type PlaceholderContext } from './placeholders.ts';
+import { FORBIDDEN_HEADERS } from './constants.ts';
+import { fill, fillText, PlaceholderError, type PlaceholderContext } from './placeholders.ts';
 import type { Backend, Endpoint } from './schema.ts';
 
 /**
@@ -61,8 +62,22 @@ export function expandTemplate(body: unknown, templates: Templates, ctx: Placeho
   if (!isTemplateRef(body)) return { body };
   const found = Object.hasOwn(templates, body.template) ? templates[body.template] : undefined;
   if (found === undefined) throw new PlaceholderError(`There is no response template named "${body.template}".`);
-  const filled = fill(found.body, { ...ctx, vars: { ...ctx.vars, with: body.with ?? {} } });
-  return { ...(found.status === undefined ? {} : { status: found.status }), ...(found.headers === undefined ? {} : { headers: found.headers }), body: filled };
+  // The `with` values may use the request's placeholders (`"id": "{{params.id}}"`); the result is data, never filled again.
+  const inner = { ...ctx, vars: { ...ctx.vars, with: fill(body.with ?? {}, ctx) } };
+  return { ...(found.status === undefined ? {} : { status: found.status }), ...(found.headers === undefined ? {} : { headers: cleanHeaders(found.headers, inner) }), body: fill(found.body, inner) };
+}
+
+/**
+ * Header names the engine may send (lower-cased; hop-by-hop ones and anything that is not a plain token are dropped), with
+ * the placeholders of each value filled when a context is given.
+ */
+export function cleanHeaders(headers: Record<string, string> | undefined, ctx?: PlaceholderContext): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [name, value] of Object.entries(headers ?? {})) {
+    const key = name.toLowerCase();
+    if (/^[a-z0-9-]+$/.test(key) && !FORBIDDEN_HEADERS.has(key)) out[key] = ctx === undefined ? value : fillText(value, ctx);
+  }
+  return out;
 }
 
 /** The wrapper template an endpoint uses, or `undefined` for none. */
