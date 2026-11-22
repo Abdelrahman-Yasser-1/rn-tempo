@@ -19,11 +19,11 @@ describe('App', () => {
     expect(within(sidebar).getByRole('img', { name: 'error' })).toBeInTheDocument();
   });
 
-  it('shows the eight tabs of a selected backend and moves between them with the arrow keys', async () => {
+  it('shows the nine tabs of a selected backend and moves between them with the arrow keys', async () => {
     renderWithApi(<App />, makeApi({ listBackends: () => Promise.resolve([STOPPED]) }));
     await userEvent.click(await screen.findByRole('button', { name: /^stopped\s*shop$/ }));
     const tabs = screen.getAllByRole('tab').map((tab) => tab.textContent);
-    expect(tabs).toEqual(['Dashboard', 'Endpoints', 'Data', 'Media', 'Users', 'Content', 'Logs', 'Settings']);
+    expect(tabs).toEqual(['Dashboard', 'Endpoints', 'Data', 'Media', 'Users', 'Content', 'Logs', 'Inbox', 'Settings']);
     screen.getByRole('tab', { name: 'Dashboard' }).focus();
     await userEvent.keyboard('{ArrowRight}');
     expect(screen.getByRole('tab', { name: 'Endpoints' })).toHaveAttribute('aria-selected', 'true');

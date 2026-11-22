@@ -64,7 +64,7 @@ describe('team server: role based hiding (AC-LP-2)', () => {
     const api = teamApi(makeTeam());
     renderWithApi(<BackendView backend={SHOP} onOpen={vi.fn()} />, api);
     await waitFor(() => {
-      expect(tabNames()).toEqual(['Dashboard', 'Endpoints', 'Data', 'Media', 'Users', 'Content', 'Logs']);
+      expect(tabNames()).toEqual(['Dashboard', 'Endpoints', 'Data', 'Media', 'Users', 'Content', 'Logs', 'Inbox']);
     });
     expect(screen.queryByRole('button', { name: 'Stop' })).toBeNull();
     await userEvent.click(screen.getByRole('tab', { name: 'Endpoints' }));
@@ -98,7 +98,7 @@ describe('team server: role based hiding (AC-LP-2)', () => {
 
   it('AC-LP-2 leaves everything visible outside a team server (the desktop and the local web)', async () => {
     renderWithApi(<BackendView backend={SHOP} onOpen={vi.fn()} />, makeApi({ admin: teamApi(makeTeam()).admin }));
-    expect(tabNames()).toEqual(['Dashboard', 'Endpoints', 'Data', 'Media', 'Users', 'Content', 'Logs', 'Settings']);
+    expect(tabNames()).toEqual(['Dashboard', 'Endpoints', 'Data', 'Media', 'Users', 'Content', 'Logs', 'Inbox', 'Settings']);
     expect(await screen.findByRole('button', { name: 'Stop' })).toBeInTheDocument();
   });
 

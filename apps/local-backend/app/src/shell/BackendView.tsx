@@ -9,6 +9,7 @@ import { Content } from '../tabs/Content';
 import { Dashboard } from '../tabs/Dashboard';
 import { Data } from '../tabs/Data';
 import { Endpoints } from '../tabs/Endpoints';
+import { Inbox } from '../tabs/Inbox';
 import { Logs } from '../tabs/Logs';
 import { Media } from '../tabs/Media';
 import { Settings } from '../tabs/Settings';
@@ -16,7 +17,7 @@ import { TeamTab } from '../tabs/Team';
 import { Users } from '../tabs/Users';
 import { StatusDot } from '../ui/bits';
 
-export const TABS = ['Dashboard', 'Endpoints', 'Data', 'Media', 'Users', 'Content', 'Logs', 'Settings', 'Team'] as const;
+export const TABS = ['Dashboard', 'Endpoints', 'Data', 'Media', 'Users', 'Content', 'Logs', 'Inbox', 'Settings', 'Team'] as const;
 export type TabName = (typeof TABS)[number];
 
 /** The tabs that read the engine's admin API need a running backend; a stopped one gets one sentence. */
@@ -53,6 +54,7 @@ export function BackendView({ backend, onOpen, render }: { backend: BackendStatu
     Media: (b) => <BackendOnly backend={b} show={() => <Media backend={b} />} />,
     Users: (b) => <BackendOnly backend={b} show={(path) => <Users backend={path} />} />,
     Logs: (b) => <BackendOnly backend={b} show={() => <Logs backend={b} />} />,
+    Inbox: (b) => <BackendOnly backend={b} show={(path) => <Inbox backend={path} />} />,
     Settings: (b) => <Settings backend={b} onOpen={onOpen} />,
     Content: (b) => <BackendOnly backend={b} show={(path) => <Content backend={path} />} />,
     Endpoints: (b) => <BackendOnly backend={b} show={(path) => <Endpoints backend={path} />} />,
