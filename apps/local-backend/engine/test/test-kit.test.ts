@@ -30,6 +30,20 @@ const get = async (backend: TempoBackend, path: string, headers: Record<string, 
 };
 
 describe('the test kit', () => {
+  it('listens on the port it is given, so a project can know its address before the backend starts', async () => {
+    const { createServer } = await import('node:net');
+    const free = await new Promise<number>((done) => {
+      const probe = createServer().listen(0, '127.0.0.1', () => {
+        const { port } = probe.address() as { port: number };
+        probe.close(() => done(port));
+      });
+    });
+    const backend = kit({ port: free });
+    await backend.start();
+    expect(backend.url).toBe(`http://127.0.0.1:${String(free)}`);
+    expect((await get(backend, '/products?limit=1')).status).toBe(200);
+  });
+
   it('AC-LP-3 starts on a random loopback port with the seed, and answers over real HTTP', async () => {
     const backend = kit();
     expect(backend.url).toBe('');
