@@ -2,6 +2,7 @@ import type { IncomingMessage, Server, ServerResponse } from 'node:http';
 import { join } from 'node:path';
 
 import { snapshotStream } from './snapshot.ts';
+import { buildTestSnapshot, testSnapshotReply } from './test-snapshot.ts';
 import { createAdminServer, errorReply } from './admin.ts';
 import type { AdminAccess } from './roles.ts';
 import { docsHandler } from './docs.ts';
@@ -131,6 +132,12 @@ export async function startBackend(dir: string, options: StartOptions = {}): Pro
           headers: { 'content-type': 'application/zip', 'content-disposition': 'attachment; filename="backend-snapshot.zip"', 'cache-control': 'no-store' },
           stream: snapshotStream({ dir: engine.folder.dir, db: engine.store.db }),
         }),
+      },
+      {
+        // The test snapshot (JSON): definition, seed, handlers, data and small media. Never secrets, app users or sessions.
+        method: 'GET',
+        pattern: '/test-snapshot',
+        handler: (ctx) => testSnapshotReply(() => buildTestSnapshot({ dir: engine.folder.dir, db: engine.store.db, collections: engine.definition.collections.map((collection) => collection.name) }), ctx.headers['if-none-match']),
       },
       ...adminImportRoutes(manager, { allowPrivate: options.importUrls?.allowPrivate ?? options.mounted === undefined }),
       { method: 'GET', pattern: '/openapi', handler: () => jsonReply(200, buildOpenApi(engine.definition, { prefix: engine.publicPrefix })) },

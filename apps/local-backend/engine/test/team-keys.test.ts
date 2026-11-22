@@ -37,9 +37,11 @@ describe('AC-LP-2 API keys', () => {
     const def = await withKey(site, key, 'GET', '/__admin/b/demo/definition');
     expect(def.status).toBe(200);
     expect(def.json().name).toBe('Demo');
-    const snapshot = await withKey(site, key, 'GET', '/__admin/b/demo/snapshot');
+    const snapshot = await withKey(site, key, 'GET', '/__admin/b/demo/test-snapshot');
     expect(snapshot.status).toBe(200);
-    expect(String(snapshot.headers['content-type'])).toContain('zip');
+    expect(String(snapshot.headers['content-type'])).toContain('json');
+    // The backup holds the database (app users' hashes): not for a read-only key.
+    expect((await withKey(site, key, 'GET', '/__admin/b/demo/snapshot')).status).toBe(403);
     expect((await withKey(site, key, 'PUT', '/__admin/b/demo/definition', def.json())).status).toBe(403);
     expect((await withKey(site, key, 'POST', '/__admin/b/demo/data/products', { title: 'x' })).status).toBe(403);
     expect((await withKey(site, key, 'GET', '/__admin/b/demo/users')).status).toBe(403);
