@@ -8,5 +8,5 @@ export type { Backend, BackendInput, Collection, Endpoint, Field } from './schem
 export { MigrationConfirmError, MigrationError, Store } from './store.ts';
 export { presets } from './presets.ts';
 export type { PresetInfo } from './presets.ts';
-export { MAX_DELAY_MS, MAX_TIMEOUT_MS, TEST_DELAYS_HEADER, TEST_MODE_HEADER } from './constants.ts';
+export { MAX_DELAY_MS, MAX_TIMEOUT_MS, TEST_DELAYS_HEADER, TEST_FAULTS_HEADER, TEST_MODE_HEADER } from './constants.ts';
 export { PRESET_PROFILES } from './network.ts';
