@@ -74,6 +74,15 @@ export function originOk(req: IncomingMessage, secure: boolean): boolean {
   return origin === `${encrypted ? 'https' : 'http'}://${String(req.headers.host ?? '')}` && req.headers['sec-fetch-site'] !== 'cross-site';
 }
 
+/** Who may open a stream with a cookie: a page of this host (its `Origin`), or, where the browser sends no `Origin` on a same-origin GET, `Sec-Fetch-Site: same-origin`. */
+export function streamOriginOk(req: IncomingMessage, secure: boolean): boolean {
+  if (req.headers.origin === undefined) return req.headers['sec-fetch-site'] === 'same-origin';
+  return originOk(req, secure);
+}
+
+/** An event stream (`Accept: text/event-stream`) or a WebSocket upgrade: GETs that stay open, so no CSRF header can guard them. */
+export const isStream = (req: IncomingMessage): boolean => String(req.headers.accept ?? '').includes('text/event-stream') || String(req.headers.upgrade ?? '').toLowerCase() === 'websocket';
+
 export const isMutating = (method: string | undefined): boolean => !['GET', 'HEAD', 'OPTIONS'].includes(method ?? 'GET');
 
 /**
@@ -142,6 +151,9 @@ export function createHub(options: HubOptions = {}): Hub {
     if (mutating) {
       if (req.headers.origin === undefined || !originOk(req, secure)) return problemReply(403, { detail: 'A change must come from this page (Origin check).' });
       if (!csrfMatches(current.session, req.headers[CSRF_HEADER])) return problemReply(403, { detail: 'The CSRF token is missing or wrong.' });
+    } else if (isStream(req) && !streamOriginOk(req, secure)) {
+      // A stream is a GET, so it carries no CSRF token: another site must not be able to open one on the cookie.
+      return problemReply(403, { detail: 'A stream must be opened from this page (Origin check).' });
     }
     return undefined;
   }

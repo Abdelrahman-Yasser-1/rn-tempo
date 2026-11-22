@@ -88,6 +88,12 @@ type Held = 'ok' | 'closed' | 'abandoned';
 /** How often scheduled content is checked. */
 export const SCHEDULE_TICK_MS = 30_000;
 
+/** Refuses a WebSocket upgrade that is not signed in: 403 when the session cookie was refused for its Origin, else 401. */
+function refuseSignIn(socket: Duplex, ctx: RequestCtx): void {
+  if (ctx.csrfRefused === true) return refuseUpgrade(socket, 403, 'Origin not allowed for a cookie session');
+  refuseUpgrade(socket, 401, 'Invalid or expired token', { 'WWW-Authenticate': 'Bearer' });
+}
+
 /**
  * The running backend: a definition, its database, the route table built from it, the scenario picks and
  * the request log. `applyDefinition` swaps the route table in one assignment; a request holds the table it
@@ -564,7 +570,8 @@ export class Engine {
     if (found.kind !== 'found' || endpoint?.type !== 'websocket') return refuseUpgrade(socket, found.kind === 'none' ? 404 : 400, found.kind === 'none' ? 'No endpoint for this path.' : 'This endpoint is not a WebSocket endpoint.');
     const bearer = bearerFrom(req.headers, ctx.query);
     if (bearer !== undefined && ctx.headers.authorization === undefined) ctx.headers = { ...ctx.headers, authorization: `Bearer ${bearer.token}` };
-    if (endpoint.auth === 'bearer' && !this.options.authorize(ctx, endpoint)) return refuseUpgrade(socket, 401, 'Invalid or expired token', { 'WWW-Authenticate': 'Bearer' });
+    ctx.live = true;
+    if (endpoint.auth === 'bearer' && !this.options.authorize(ctx, endpoint)) return refuseSignIn(socket, ctx);
     const hub = this.realtime.hub(endpoint.id, 'websocket');
     this.realtime.track(endpoint);
     const ipHash = this.realtime.hashIp(ctx.ip);
@@ -595,11 +602,12 @@ export class Engine {
     const { endpoint, ctx, req, socket } = input;
     const runtime = this.state.graphql.get(endpoint.id);
     if (runtime === undefined) return refuseUpgrade(socket, 404, 'No endpoint for this path.');
+    ctx.live = true;
     const bearer = bearerFrom(req.headers, ctx.query);
     if (bearer !== undefined) {
       if (ctx.headers.authorization === undefined) ctx.headers = { ...ctx.headers, authorization: `Bearer ${bearer.token}` };
       // A bad token is refused here; a missing one may still come in `connection_init`.
-      if (!this.options.authorize(ctx, endpoint) && endpoint.auth === 'bearer') return refuseUpgrade(socket, 401, 'Invalid or expired token', { 'WWW-Authenticate': 'Bearer' });
+      if (!this.options.authorize(ctx, endpoint) && endpoint.auth === 'bearer') return refuseSignIn(socket, ctx);
     }
     const hub = this.realtime.hub(endpoint.id, 'graphql');
     this.realtime.track(endpoint);
@@ -775,6 +783,7 @@ export class Engine {
 
   /** Auth, then the scenario (header first, then the admin pick), then the endpoint itself. */
   private async run(ctx: RequestCtx, endpoint: Endpoint, values: PlaceholderContext, handle: () => Reply | Promise<Reply>): Promise<Reply> {
+    if (endpoint.type === 'sse') ctx.live = true;
     if (endpoint.auth === 'bearer' && !this.options.authorize(ctx, endpoint)) {
       return notSignedIn(ctx);
     }
