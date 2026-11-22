@@ -30,6 +30,8 @@ import { loadJwtSecret } from './tokens.ts';
 export interface EngineOptions {
   /** Waits for a delay. Tests pass a faster one. It must return early when `signal` aborts. */
   sleep?: (ms: number, signal?: AbortSignal) => Promise<void>;
+  /** Keep the database in memory (SQLite `:memory:`) instead of `.data/db.sqlite`. The test kit uses it; nothing survives `close()`. */
+  memory?: boolean;
   /** Test mode for every request: no delays, throttling or timeouts, a fixed clock and seeded random values. */
   testMode?: boolean;
   /** The seed of random delays (and of random values outside test mode). A fresh random one by default. */
@@ -125,7 +127,7 @@ export class Engine {
 
   /** Opens the database, migrates it to the folder's definition (seeding new collections) and builds the routes. */
   static start(folder: BackendFolder, options: EngineOptions = {}): Engine {
-    const store = Store.open(join(folder.dataDir, 'db.sqlite'));
+    const store = Store.open(options.memory === true ? ':memory:' : join(folder.dataDir, 'db.sqlite'));
     const content = new ContentService(store.db, options.now ?? ((): Date => new Date()));
     try {
       const contentPlan = content.plan(modelOf(folder.definition));

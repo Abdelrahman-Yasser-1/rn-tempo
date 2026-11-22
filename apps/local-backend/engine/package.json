@@ -26,13 +26,24 @@
     "README.md"
   ],
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./test": "./src/test-kit/index.ts"
   },
   "publishConfig": {
     "access": "public",
     "exports": {
       ".": {
         "default": "./dist/index.mjs"
+      },
+      "./test": {
+        "import": {
+          "types": "./dist/test.d.mts",
+          "default": "./dist/test.mjs"
+        },
+        "require": {
+          "types": "./dist/test.d.cts",
+          "default": "./dist/test.cjs"
+        }
       }
     }
   },
@@ -48,7 +59,8 @@
     "build:dashboard": "node scripts/build-dashboard.ts",
     "build:sea": "node scripts/build-sea.ts",
     "smoke:sea": "node scripts/smoke-sea.ts",
-    "prepack": "npm run build:dashboard && npm run build"
+    "prepack": "npm run build:dashboard && npm run build",
+    "test:kit": "node scripts/run-kit-fixture.ts"
   },
   "dependencies": {
     "busboy": "1.6.0",
