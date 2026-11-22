@@ -111,18 +111,23 @@ function resolve(doc: Json, value: unknown, warnings: string[], budget: Budget, 
  * The schema as JSON Schema 2020-12: 3.0's `nullable: true` becomes a `null` type, `exclusiveMinimum: true` becomes a
  * number, `example` becomes `examples`, and OpenAPI-only keys go.
  */
-export function toJsonSchema(value: unknown): Json {
-  if (Array.isArray(value)) return value.map(toJsonSchema) as unknown as Json;
+export function toJsonSchema(value: unknown, removed?: Set<string>): Json {
+  if (Array.isArray(value)) return value.map((item) => toJsonSchema(item, removed)) as unknown as Json;
   if (!isObject(value)) return value as Json;
   const out: Json = {};
   for (const [key, child] of Object.entries(value)) {
     if (OPENAPI_ONLY.includes(key)) continue;
+    // A regular expression from a file is checked against what callers send, which can make it run for ages (ReDoS).
+    if (key === 'pattern' || key === 'patternProperties') {
+      removed?.add(key === 'pattern' ? String(child).slice(0, 60) : `patternProperties ${Object.keys(isObject(child) ? child : {}).join(', ').slice(0, 60)}`);
+      continue;
+    }
     if (key === 'example') {
       out.examples = [child];
       continue;
     }
     // Property maps hold user names, which must never be mistaken for keywords.
-    out[key] = key === 'properties' && isObject(child) ? Object.fromEntries(Object.entries(child).map(([k, v]) => [k, toJsonSchema(v)])) : toJsonSchema(child);
+    out[key] = key === 'properties' && isObject(child) ? Object.fromEntries(Object.entries(child).map(([k, v]) => [k, toJsonSchema(v, removed)])) : toJsonSchema(child, removed);
   }
   for (const [flag, limit, bound] of [['exclusiveMinimum', 'minimum', 'exclusiveMinimum'], ['exclusiveMaximum', 'maximum', 'exclusiveMaximum']] as const) {
     if (out[flag] === true && typeof out[limit] === 'number') {
@@ -161,7 +166,7 @@ function expressPath(raw: string): { path: string; names: Record<string, string>
 const isJsonType = (type: string): boolean => /^application\/(.+\+)?json/i.test(type);
 
 /** The JSON media type of a `content` map: schema and the first example. */
-function pickJson(content: unknown): { schema?: Json; example?: unknown; hasOther: boolean } | undefined {
+function pickJson(content: unknown, removed: Set<string>): { schema?: Json; example?: unknown; hasOther: boolean } | undefined {
   if (!isObject(content)) return undefined;
   const types = Object.keys(content);
   const key = types.find(isJsonType) ?? types.find((type) => type === '*/*');
@@ -171,7 +176,7 @@ function pickJson(content: unknown): { schema?: Json; example?: unknown; hasOthe
   const first = examples.map((entry) => (isObject(entry) ? entry.value : undefined)).find((value) => value !== undefined);
   const schema = isObject(media.schema) ? media.schema : undefined;
   const example = media.example ?? first ?? (isObject(schema) ? schema.example : undefined);
-  return { ...(schema === undefined ? {} : { schema: toJsonSchema(schema) }), ...(example === undefined ? {} : { example }), hasOther: types.some((type) => type !== key) };
+  return { ...(schema === undefined ? {} : { schema: toJsonSchema(schema, removed) }), ...(example === undefined ? {} : { example }), hasOther: types.some((type) => type !== key) };
 }
 
 function parametersOf(pathItem: Json, operation: Json): Json[] {
@@ -185,14 +190,14 @@ function parametersOf(pathItem: Json, operation: Json): Json[] {
   return [...merged.values()];
 }
 
-function objectSchema(parameters: Json[], rename: Record<string, string>): Json | undefined {
+function objectSchema(parameters: Json[], rename: Record<string, string>, removed: Set<string>): Json | undefined {
   if (parameters.length === 0) return undefined;
   const properties: Json = {};
   const required: string[] = [];
   for (const parameter of parameters) {
     const original = String(parameter.name);
     const name = rename[original] ?? original;
-    properties[name] = isObject(parameter.schema) ? toJsonSchema(parameter.schema) : { type: 'string' };
+    properties[name] = isObject(parameter.schema) ? toJsonSchema(parameter.schema, removed) : { type: 'string' };
     if (parameter.required === true || parameter.in === 'path') required.push(name);
   }
   return { type: 'object', properties, ...(required.length === 0 ? {} : { required }) };
@@ -252,7 +257,7 @@ function statusOf(code: string): number | undefined {
   return code === 'default' ? 500 : undefined;
 }
 
-function scenariosOf(id: string, responses: unknown, label: string, warnings: string[]): { scenarios: Record<string, ScenarioOut>; names: string[] } {
+function scenariosOf(id: string, responses: unknown, label: string, warnings: string[], removed: Set<string>): { scenarios: Record<string, ScenarioOut>; names: string[] } {
   const scenarios: Record<string, ScenarioOut> = {};
   const names: string[] = [];
   if (!isObject(responses)) return { scenarios, names };
@@ -267,12 +272,12 @@ function scenariosOf(id: string, responses: unknown, label: string, warnings: st
     const suffix = camel(description).slice(0, 30);
     let name = suffix === '' ? code : `${code} ${suffix}`;
     for (let n = 2; scenarios[name] !== undefined; n += 1) name = `${code} ${suffix === '' ? '' : `${suffix} `}${String(n)}`.trim();
-    const picked = pickJson(response.content);
+    const picked = pickJson(response.content, removed);
     if (picked?.hasOther === true && picked.schema === undefined && picked.example === undefined) warnings.push(`${label} ${code} answers a type other than JSON; it is imported without a body.`);
     let body: unknown;
     if (status !== 204 && status !== 304) {
       body = picked?.example;
-      if (body === undefined && picked?.schema !== undefined) body = generateFromSchema(picked.schema, `${id}|${name}`);
+      if (body === undefined && picked?.schema !== undefined) body = generateFromSchema(picked.schema, `${id}|${name}`, warnings);
     }
     scenarios[name] = { status, ...(description === '' ? {} : { description: description.slice(0, 500) }), ...(picked?.schema === undefined ? {} : { schema: picked.schema }), ...(body === undefined ? {} : { body }) };
     names.push(name);
@@ -328,6 +333,7 @@ export function importApi(input: unknown, text: string): ImportedApi {
   const ids = new Set<string>();
   const routes = new Set<string>();
   const budget: Budget = { left: MAX_RESOLVED_NODES };
+  const removed = new Set<string>();
   let sawHeaders = false;
   let sawFormBody = false;
 
@@ -362,10 +368,10 @@ export function importApi(input: unknown, text: string): ImportedApi {
 
       const parameters = parametersOf(item, operation);
       if (parameters.some((parameter) => parameter.in === 'header' || parameter.in === 'cookie')) sawHeaders = true;
-      const params = objectSchema(parameters.filter((p) => p.in === 'path'), names);
-      const query = objectSchema(parameters.filter((p) => p.in === 'query'), {});
+      const params = objectSchema(parameters.filter((p) => p.in === 'path'), names, removed);
+      const query = objectSchema(parameters.filter((p) => p.in === 'query'), {}, removed);
       const requestBody = isObject(operation.requestBody) ? operation.requestBody : undefined;
-      const picked = pickJson(requestBody?.content);
+      const picked = pickJson(requestBody?.content, removed);
       if (requestBody !== undefined && picked?.schema === undefined && isObject(requestBody.content) && Object.keys(requestBody.content).length > 0) sawFormBody = true;
       const request = {
         ...(params === undefined ? {} : { params }),
@@ -373,7 +379,7 @@ export function importApi(input: unknown, text: string): ImportedApi {
         ...(picked?.schema === undefined ? {} : { body: picked.schema, ...(requestBody?.required === true ? { bodyRequired: true } : {}) }),
       };
 
-      const { scenarios, names: scenarioNames } = scenariosOf(id, operation.responses, label, warnings);
+      const { scenarios, names: scenarioNames } = scenariosOf(id, operation.responses, label, warnings, removed);
       const defaultName = scenarioNames.find((name) => {
         const status = scenarios[name]?.status ?? 0;
         return status >= 200 && status < 300;
@@ -406,6 +412,9 @@ export function importApi(input: unknown, text: string): ImportedApi {
       routes.add(route);
       endpoints.push({ ...draft, importedFrom: fingerprint(draft) } as ImportedEndpoint);
     }
+  }
+  if (removed.size > 0) {
+    warnings.push(`Regular expressions ("pattern") were removed from the schemas, because a pattern from a file can be made to run for a very long time on a request (${String(removed.size)}: ${[...removed].slice(0, 5).map((pattern) => `"${pattern}"`).join(', ')}${removed.size > 5 ? ', ...' : ''}).`);
   }
   if (sawHeaders) warnings.push('Header and cookie parameters are documented only; the backend does not check them.');
   if (sawFormBody) warnings.push('Request bodies that are not JSON (forms, files) are not validated.');

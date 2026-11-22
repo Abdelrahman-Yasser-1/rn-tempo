@@ -5,6 +5,7 @@ import { createBackend, DEFINITION_FILE, serializeDefinition, writeFileAtomic } 
 import type { RawDefinition } from '../manager.ts';
 import { DefinitionError, parseBackend } from '../schema.ts';
 
+import { safeImportUrl } from './admin-import.ts';
 import { fetchApiFile } from './fetch-url.ts';
 import { importApiText, MAX_IMPORT_BYTES, type ImportedApi } from './openapi.ts';
 import { applyImport, diffImport, type ApplyResult, type ImportDiff } from './sync.ts';
@@ -33,8 +34,7 @@ export async function importFromCli(dir: string, source: string, options: { prev
   if (isUrl(source)) {
     const got = await fetchApiFile(source, { allowPrivate: options.allowPrivate ?? true });
     text = got.text;
-    const url = new URL(got.url);
-    label = `${url.origin}${url.pathname}`;
+    label = safeImportUrl(got.url);
   } else {
     const file = resolve(source);
     let size: number;

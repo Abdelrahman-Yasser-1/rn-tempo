@@ -10,11 +10,46 @@ type Json = Record<string, unknown>;
 
 const isObject = (value: unknown): value is Json => typeof value === 'object' && value !== null && !Array.isArray(value);
 
+/** The most characters of one string a request may carry into the checks. */
+export const MAX_CHECKED_STRING = 10_000;
+const MAX_CHECKED_NODES = 20_000;
+
+/**
+ * The schema without `pattern` and `patternProperties`. A regular expression written in a file (or in a hand-edited
+ * backend.json) runs against what any caller sends, so a crafted one can freeze the server (ReDoS). Imports already
+ * leave them out; this also covers a definition that has them.
+ */
+export function withoutPatterns(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(withoutPatterns);
+  if (!isObject(value)) return value;
+  const out: Json = {};
+  for (const [key, child] of Object.entries(value)) {
+    if (key === 'pattern' || key === 'patternProperties') continue;
+    out[key] = key === 'properties' && isObject(child) ? Object.fromEntries(Object.entries(child).map(([name, entry]) => [name, withoutPatterns(entry)])) : withoutPatterns(child);
+  }
+  return out;
+}
+
+/** True when a value holds a string longer than the limit (looking at no more than a fixed number of nodes). */
+function hasLongString(value: unknown): boolean {
+  const stack: unknown[] = [value];
+  let seen = 0;
+  while (stack.length > 0 && seen < MAX_CHECKED_NODES) {
+    const item = stack.pop();
+    seen += 1;
+    if (typeof item === 'string') {
+      if (item.length > MAX_CHECKED_STRING) return true;
+    } else if (Array.isArray(item)) stack.push(...item);
+    else if (isObject(item)) stack.push(...Object.values(item));
+  }
+  return false;
+}
+
 /** A JSON Schema as Zod, using Zod's own reader. A schema it cannot read gives `undefined`, so the part is not checked. */
 export function jsonSchemaToZod(schema: unknown): Schema | undefined {
   if (!isObject(schema)) return undefined;
   try {
-    return z.fromJSONSchema(schema as Parameters<typeof z.fromJSONSchema>[0]);
+    return z.fromJSONSchema(withoutPatterns(schema) as Parameters<typeof z.fromJSONSchema>[0]);
   } catch {
     return undefined;
   }
@@ -83,6 +118,9 @@ export function buildRequestValidator(request: RequestSchemasValue | undefined):
   return {
     check(ctx, pathParams) {
       const issues: FieldIssue[] = [];
+      if (hasLongString(pathParams) || hasLongString(Object.fromEntries(ctx.query))) {
+        return [{ path: 'query', message: `A value is longer than ${String(MAX_CHECKED_STRING)} characters.` }];
+      }
       if (params !== undefined) {
         const result = params.safeParse(pathParams);
         if (!result.success) issues.push(...toIssues('params', result.error));
@@ -106,7 +144,8 @@ export function buildRequestValidator(request: RequestSchemasValue | undefined):
             readable = false;
             return problemReply(400, { detail: 'The request body is not valid JSON.' });
           }
-          if (readable) {
+          if (readable && hasLongString(parsed)) issues.push({ path: 'body', message: `A value is longer than ${String(MAX_CHECKED_STRING)} characters.` });
+          else if (readable) {
             const result = body.safeParse(parsed);
             if (!result.success) issues.push(...toIssues('body', result.error));
           }
