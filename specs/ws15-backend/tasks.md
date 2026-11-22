@@ -82,7 +82,7 @@ Spec: "Tier 1d" in `spec.md`. Stacked on Phase Y. One PR per step.
 - [x] **T15.Z3** (AC-LP-5) OpenAPI 3.x and Swagger 2.0 import, response scenarios, generated examples, sync diff.
 - [x] **T15.Z4** (AC-LP-6) Delays and network presets, shared base response and templates, dynamic values, the Monaco editor with Form/JSON tabs.
 - [x] **T15.Z5** (AC-LP-3, AC-LP-4) Test kit (in-memory engine, test mode, helpers, cache) and CI sessions.
-- [ ] **T15.Z6** (AC-LP-7) SSE, WebSocket and GraphQL.
+- [x] **T15.Z6** (AC-LP-7) SSE, WebSocket and GraphQL.
 - [ ] **T15.Z7** (AC-LP-8, AC-LP-9, AC-LP-10) Webhooks and inbox, the push test sender, fault and limit simulation, the OAuth2 mock.
 - [ ] **T15.Z8** The template uses the test kit and a URL (old mocks kept and marked deprecated in the docs); full verification; user guide update.
 - [ ] **T15.Z9** (after owner confirmation) Remove the old mocks, `packages/api-contract` and `packages/dev-api`.
