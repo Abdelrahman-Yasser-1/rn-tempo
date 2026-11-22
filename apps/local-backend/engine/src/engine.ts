@@ -38,6 +38,9 @@ import { loadJwtSecret } from './tokens.ts';
 import type { OutboundPolicy, Transport } from './outbound.ts';
 import { SecretStore } from './secrets.ts';
 import { WebhookService } from './webhooks.ts';
+import { Inbox } from './inbox.ts';
+import { httpTransport } from './outbound.ts';
+import { INBOX_MAX_BODY_BYTES } from './schema.ts';
 
 export interface EngineOptions {
   /** Waits for a delay. Tests pass a faster one. It must return early when `signal` aborts. */
@@ -111,6 +114,10 @@ export class Engine {
   readonly outbound: OutboundPolicy;
   /** Outgoing webhooks and their delivery log. */
   readonly webhooks: WebhookService;
+  /** What `inbox` endpoints captured. */
+  readonly inbox: Inbox;
+  /** Sends the calls people ask for by hand (a replay). Webhooks use the same one. */
+  readonly outboundTransport: Transport;
   private state: State;
   private readonly options: Required<Pick<EngineOptions, 'sleep' | 'now' | 'authorize'>> & Pick<EngineOptions, 'onRequest' | 'logger'>;
   /** Turns delays off for every request (`--test-mode`). */
@@ -142,6 +149,8 @@ export class Engine {
     this.realtime = new Realtime({ events: this.events, definition: () => this.state.definition, now });
     this.secrets = new SecretStore(folder.dataDir);
     this.outbound = { allowPrivate: options.outbound?.allowPrivate ?? true, requireHttps: options.outbound?.requireHttps ?? false, ...(options.outbound?.resolve === undefined ? {} : { resolve: options.outbound.resolve }) };
+    this.inbox = new Inbox(store.db, now);
+    this.outboundTransport = options.webhookTransport ?? httpTransport;
     this.webhooks = new WebhookService({
       db: store.db,
       definition: () => this.state.definition,
@@ -213,7 +222,7 @@ export class Engine {
   /** Whether the endpoint for this request reads its own body (uploads), so the listener must not. */
   streamsBody(method: string, path: string): boolean {
     const match = this.state.router.match(method, path);
-    return match.kind === 'found' && match.route.endpoint.type === 'upload';
+    return match.kind === 'found' && (match.route.endpoint.type === 'upload' || match.route.endpoint.type === 'inbox');
   }
 
   /** The URL a stored file is served from: the first `download` endpoint, else the conventional `/media/<id>`. */
@@ -295,6 +304,16 @@ export class Engine {
           return this.staticReply(endpoint, ctx.values ?? this.placeholders(ctx, endpoint, params));
         };
       }
+      case 'inbox':
+        return async (ctx) => {
+          const uploadKbps = ctx.plan?.network.uploadKbps;
+          if (uploadKbps !== undefined && ctx.stream !== undefined) paceRequest(ctx.stream, uploadKbps);
+          const read = ctx.stream === undefined ? { ok: true as const, bytes: Buffer.from(ctx.bodyText) } : await readRaw(ctx.stream, INBOX_MAX_BODY_BYTES);
+          if (!read.ok) return problemReply(413, { title: 'Payload Too Large', detail: `The inbox keeps bodies up to ${String(INBOX_MAX_BODY_BYTES)} bytes.` });
+          ctx.bodyNote = `[${String(read.bytes.length)} bytes captured by the inbox]`;
+          this.inbox.capture({ endpointId: endpoint.id, method: ctx.method, path: ctx.path, query: new URL(ctx.url, 'http://local').search.replace(/^\?/, ''), headers: ctx.headers, body: read.bytes, keep: endpoint.keep });
+          return this.staticReply(endpoint, ctx.values ?? this.placeholders(ctx, endpoint, {}));
+        };
       case 'sse':
         return sseHandler(endpoint, { realtime: this.realtime, zeroed: (headers) => this.delaysZeroed(headers), now: this.options.now });
       case 'graphql': {
@@ -717,7 +736,7 @@ export class Engine {
   // ---- shared response shape
 
   /** The static endpoint's answer: its body (a template reference is expanded first), status and headers. */
-  private staticReply(endpoint: StaticEndpoint, values: PlaceholderContext): Reply {
+  private staticReply(endpoint: Pick<StaticEndpoint, 'body' | 'status' | 'headers'>, values: PlaceholderContext): Reply {
     const expanded = endpoint.body === undefined ? { body: undefined } : this.bodyOf(endpoint.body, values);
     // A template's status applies when the endpoint leaves its own at the default (200).
     const status = endpoint.status === 200 && 'status' in expanded && expanded.status !== undefined ? expanded.status : endpoint.status;
@@ -787,6 +806,22 @@ export class Engine {
     const common = { ...cleanHeaders(definition.responses?.headers, values), ...cleanHeaders(endpoint?.headers, values) };
     return Object.keys(common).length === 0 ? out : { ...out, headers: { ...common, ...out.headers } };
   }
+}
+
+/** The raw bytes of a request body, up to `max`; a longer one is drained (not kept) and reported as too large. */
+function readRaw(req: NodeJS.ReadableStream, max: number): Promise<{ ok: true; bytes: Buffer } | { ok: false }> {
+  return new Promise((done) => {
+    const chunks: Buffer[] = [];
+    let size = 0;
+    req.on('data', (chunk: Buffer) => {
+      size += chunk.length;
+      if (size <= max) chunks.push(chunk);
+      // A body far beyond the limit is cut off instead of being read to the end.
+      else if (size > max * 16) (req as unknown as { destroy?: () => void }).destroy?.();
+    });
+    req.on('end', () => done(size > max ? { ok: false } : { ok: true, bytes: Buffer.concat(chunks) }));
+    req.on('error', () => done({ ok: false }));
+  });
 }
 
 const isObject = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);

@@ -31,6 +31,8 @@ export interface RequestCtx {
   plan?: RequestPlan;
   /** What the placeholders of this request can see; the engine sets it once the endpoint is known. */
   values?: PlaceholderContext;
+  /** What the request log shows for a body the endpoint read itself (an inbox): a length, never the bytes. */
+  bodyNote?: string;
   /** Aborts when the client goes away, so waiting stops at once. */
   signal?: AbortSignal;
 }
@@ -104,6 +106,7 @@ export function readJson(ctx: RequestCtx): JsonBody {
 
 /** What goes into the request log for a request body: parsed JSON, or a placeholder (never raw text). */
 export function loggableBody(ctx: RequestCtx): unknown {
+  if (ctx.bodyNote !== undefined) return ctx.bodyNote;
   if (ctx.bodyText === '') return undefined;
   try {
     return JSON.parse(ctx.bodyText) as unknown;
