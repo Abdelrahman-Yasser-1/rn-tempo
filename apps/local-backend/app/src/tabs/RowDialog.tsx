@@ -8,6 +8,7 @@ import { blankRow, formToRow, rowToForm, type RowForm } from '../lib/rows';
 import { errorMessage } from '../lib/errors';
 import { Modal } from '../ui/Modal';
 import { ErrorNote } from '../ui/bits';
+import { ResponseEditor } from '../ui/ResponseEditor';
 
 /** One form made from the collection's fields, for adding a record or editing one. */
 export function RowDialog({ backend, collection, row, onClose, onSaved }: { backend: string; collection: CollectionDef; row?: Record<string, unknown>; onClose: () => void; onSaved: () => void }) {
@@ -72,13 +73,14 @@ export function RowDialog({ backend, collection, row, onClose, onSaved }: { back
             );
           } else if (field.type === 'json') {
             control = (
-              <textarea
-                className="code-area"
-                rows={4}
+              <ResponseEditor
+                label={label}
                 value={typeof value === 'string' ? value : ''}
-                onChange={(event) => {
-                  set(field.name, event.target.value);
+                onChange={(text) => {
+                  set(field.name, text);
                 }}
+                invalid={problems[field.name] !== undefined}
+                height={120}
               />
             );
           } else {
@@ -96,10 +98,17 @@ export function RowDialog({ backend, collection, row, onClose, onSaved }: { back
           }
           return (
             <div key={field.name} className="stack tight">
-              <label className={field.type === 'boolean' ? 'check' : undefined}>
-                {label}
-                {control}
-              </label>
+              {field.type === 'json' ? (
+                <div className="stack tight">
+                  <span>{label}</span>
+                  {control}
+                </div>
+              ) : (
+                <label className={field.type === 'boolean' ? 'check' : undefined}>
+                  {label}
+                  {control}
+                </label>
+              )}
               {problems[field.name] === undefined ? null : <span className="error">{problems[field.name]}</span>}
             </div>
           );

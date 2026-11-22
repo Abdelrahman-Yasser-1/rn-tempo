@@ -8,6 +8,7 @@ import { useAdminQuery } from '../hooks/lb';
 import { METHODS } from '../lib/endpointForm';
 import { errorMessage } from '../lib/errors';
 import { ErrorNote } from '../ui/bits';
+import { ResponseEditor } from '../ui/ResponseEditor';
 
 function pretty(text: string): string {
   try {
@@ -96,18 +97,10 @@ export function TryIt({ backend, endpoint }: { backend: string; endpoint: Endpoi
             }}
           />
         </label>
-        <label>
-          JSON body (optional)
-          <textarea
-            className="code-area"
-            rows={4}
-            spellCheck={false}
-            value={body}
-            onChange={(event) => {
-              setBody(event.target.value);
-            }}
-          />
-        </label>
+        <div className="stack tight">
+          <span>JSON body (optional)</span>
+          <ResponseEditor label="JSON body (optional)" value={body} onChange={setBody} schema={endpoint?.type === 'static' ? endpoint.request?.body : undefined} height={110} />
+        </div>
         <div className="row">
           <label>
             Log in as…

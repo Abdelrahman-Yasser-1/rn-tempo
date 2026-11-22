@@ -6,10 +6,12 @@ import { keys, useAdminQuery } from '../hooks/lb';
 import { EmptyState, ErrorNote } from '../ui/bits';
 
 import { SettingsCertificates } from './SettingsCertificates';
+import { SettingsNetwork } from './SettingsNetwork';
+import { SettingsResponses } from './SettingsResponses';
 import { SettingsServer } from './SettingsServer';
 import { SettingsTools } from './SettingsTools';
 
-/** Port and HTTPS, certificates, token lifetimes, backup and the OpenAPI check. */
+/** Port and HTTPS, delays and network, response shape, certificates, token lifetimes, backup and the OpenAPI check. */
 export function Settings({ backend, onOpen }: { backend: BackendStatus; onOpen: (path: string) => void }) {
   const api = useApi();
   const running = backend.state === 'running';
@@ -24,7 +26,11 @@ export function Settings({ backend, onOpen }: { backend: BackendStatus; onOpen: 
         ) : definition.data === undefined ? (
           <p className="muted">Loading the settings…</p>
         ) : (
-          <SettingsServer key={JSON.stringify([definition.data.port, definition.data.https])} backend={backend} definition={definition.data} certs={certs.data} />
+          <>
+            <SettingsServer key={JSON.stringify([definition.data.port, definition.data.https])} backend={backend} definition={definition.data} certs={certs.data} />
+            <SettingsNetwork key={JSON.stringify([definition.data.latency, definition.data.network, definition.data.testMode])} backend={backend} definition={definition.data} />
+            <SettingsResponses key={JSON.stringify([definition.data.responses, definition.data.responseTemplates])} backend={backend} definition={definition.data} />
+          </>
         )
       ) : (
         <EmptyState>Start the backend on the Dashboard tab to change its port, HTTPS and token settings.</EmptyState>

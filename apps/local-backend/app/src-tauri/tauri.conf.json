@@ -24,8 +24,9 @@
       "csp": {
         "default-src": "'self'",
         "script-src": "'self'",
-        "style-src": "'self'",
+        "style-src": "'self' 'unsafe-inline'",
         "style-src-attr": "'unsafe-inline'",
+        "worker-src": "'self'",
         "img-src": "'self' data: blob:",
         "media-src": "'self' blob:",
         "connect-src": "ipc: http://ipc.localhost",
@@ -38,6 +39,7 @@
         "default-src": "'self'",
         "script-src": "'self'",
         "style-src": "'self' 'unsafe-inline'",
+        "worker-src": "'self'",
         "img-src": "'self' data: blob:",
         "media-src": "'self' blob:",
         "connect-src": "ipc: http://ipc.localhost ws://127.0.0.1:1420 http://127.0.0.1:1420",

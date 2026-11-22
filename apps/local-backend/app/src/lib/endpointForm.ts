@@ -1,4 +1,8 @@
-import type { CollectionDef, CrudAction, EndpointDef, EndpointType, HttpMethodName } from '../api/types';
+import type { CollectionDef, CrudAction, EndpointDef, EndpointType, HttpMethodName, Scenario } from '../api/types';
+import { headersFromRows, rowsFromHeaders, type HeaderRows } from '../ui/HeadersEditor';
+
+import { writeText } from './jsonForm';
+import { blankLatency, blankNetwork, latencyFormFrom, latencyFrom, MAX_DELAY_MS, networkFormFrom, networkFrom, type LatencyForm, type NetworkForm } from './network';
 
 export const ENDPOINT_TYPES: { value: EndpointType; label: string; hint: string }[] = [
   { value: 'crud', label: 'Collection (list, get, create...)', hint: 'Serves a collection of records from the database.' },
@@ -38,6 +42,17 @@ export const USER_ACTIONS: { value: 'add' | 'update' | 'get'; label: string; met
 
 export const METHODS: HttpMethodName[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
 
+/** One canned response of the endpoint, as text. `original` keeps what the form does not show (headers, description, schema). */
+export interface ScenarioForm {
+  name: string;
+  status: string;
+  delayMs: string;
+  body: string;
+  /** The saved body text, for "Show changes". */
+  savedBody: string | undefined;
+  original?: Scenario;
+}
+
 /** Everything the form edits, as text the inputs can hold. */
 export interface EndpointForm {
   type: EndpointType;
@@ -62,6 +77,13 @@ export interface EndpointForm {
   // custom code
   file: string;
   timeoutMs: string;
+  // every type: how the answer is shaped and how slow it is
+  /** `inherit` (the backend's wrapper), `none`, or the name of a response template. */
+  wrap: string;
+  headers: HeaderRows;
+  latency: LatencyForm;
+  network: NetworkForm;
+  scenarios: ScenarioForm[];
 }
 
 export function blankForm(type: EndpointType, collections: CollectionDef[]): EndpointForm {
@@ -83,6 +105,11 @@ export function blankForm(type: EndpointType, collections: CollectionDef[]): End
     multiple: false,
     file: 'handlers/hello.js',
     timeoutMs: '5000',
+    wrap: 'inherit',
+    headers: [],
+    latency: blankLatency('inherit'),
+    network: blankNetwork('inherit'),
+    scenarios: [],
   };
   return suggest({ ...form, path: '' }, true);
 }
@@ -125,11 +152,34 @@ export function suggest(form: EndpointForm, force = false): EndpointForm {
 export function changeType(form: EndpointForm, type: EndpointType, collections: CollectionDef[]): EndpointForm {
   const fresh = blankForm(type, collections);
   const action = type === 'auth' ? 'login' : type === 'users' ? 'add' : fresh.action;
-  return suggest({ ...fresh, action, summary: form.summary, auth: fresh.auth }, true);
+  // What every type shares (the answer's shape, speed and scenarios) survives the change.
+  const shared = { wrap: form.wrap, headers: form.headers, latency: form.latency, network: form.network, scenarios: form.scenarios };
+  return suggest({ ...fresh, ...shared, action, summary: form.summary, auth: fresh.auth }, true);
+}
+
+function scenarioFormFrom(name: string, scenario: Scenario): ScenarioForm {
+  const body = scenario.body === undefined ? '' : writeText(scenario.body);
+  return { name, status: scenario.status === undefined ? '' : String(scenario.status), delayMs: scenario.delayMs === undefined ? '' : String(scenario.delayMs), body, savedBody: scenario.body === undefined ? undefined : body, original: scenario };
+}
+
+export function blankScenario(name: string): ScenarioForm {
+  return { name, status: '', delayMs: '', body: '', savedBody: undefined };
 }
 
 export function formFrom(endpoint: EndpointDef, collections: CollectionDef[]): EndpointForm {
-  const form = { ...blankForm(endpoint.type, collections), type: endpoint.type, method: endpoint.method, path: endpoint.path, summary: endpoint.summary ?? '', auth: endpoint.auth ?? 'none' };
+  const form: EndpointForm = {
+    ...blankForm(endpoint.type, collections),
+    type: endpoint.type,
+    method: endpoint.method,
+    path: endpoint.path,
+    summary: endpoint.summary ?? '',
+    auth: endpoint.auth ?? 'none',
+    wrap: endpoint.wrap ?? 'inherit',
+    headers: rowsFromHeaders(endpoint.headers),
+    latency: latencyFormFrom(endpoint.latency, 'inherit'),
+    network: networkFormFrom(endpoint.network, 'inherit'),
+    scenarios: Object.entries(endpoint.scenarios ?? {}).map(([name, scenario]) => scenarioFormFrom(name, scenario)),
+  };
   switch (endpoint.type) {
     case 'crud':
       return {
@@ -181,6 +231,27 @@ export function problemsOf(form: EndpointForm): FormProblem[] {
     const timeout = Number(form.timeoutMs);
     if (!Number.isInteger(timeout) || timeout < 1 || timeout > 30000) found.push({ field: 'timeoutMs', message: 'The time limit is 1 to 30000 milliseconds.' });
   }
+  const latency = latencyFrom(form.latency);
+  if (!latency.ok) found.push({ field: 'latency', message: latency.message });
+  const network = networkFrom(form.network);
+  if (!network.ok) found.push({ field: 'network', message: network.message });
+  const seen = new Set<string>();
+  form.scenarios.forEach((scenario, index) => {
+    const at = (key: string): string => `scenarios.${String(index)}.${key}`;
+    const name = scenario.name.trim();
+    if (name === '') found.push({ field: at('name'), message: 'A scenario needs a name.' });
+    else if (seen.has(name)) found.push({ field: at('name'), message: `There is already a scenario named "${name}".` });
+    seen.add(name);
+    if (scenario.status.trim() !== '' && !(Number.isInteger(Number(scenario.status)) && Number(scenario.status) >= 100 && Number(scenario.status) <= 599)) found.push({ field: at('status'), message: 'The status is a number from 100 to 599.' });
+    if (scenario.delayMs.trim() !== '' && !(/^\d{1,6}$/.test(scenario.delayMs.trim()) && Number(scenario.delayMs) <= MAX_DELAY_MS)) found.push({ field: at('delayMs'), message: `The delay is a number of milliseconds from 0 to ${String(MAX_DELAY_MS)}.` });
+    if (scenario.body.trim() !== '') {
+      try {
+        JSON.parse(scenario.body);
+      } catch {
+        found.push({ field: at('body'), message: 'The body is not valid JSON.' });
+      }
+    }
+  });
   return found;
 }
 
@@ -192,6 +263,17 @@ export function newId(method: string, path: string, taken: ReadonlySet<string>):
     const candidate = `${base}.${String(n)}`;
     if (!taken.has(candidate)) return candidate;
   }
+}
+
+/** The scenario a form describes: what it edits on top of what it does not show. */
+function scenarioFrom(form: ScenarioForm): Scenario {
+  const kept = Object.fromEntries(Object.entries(form.original ?? {}).filter(([key]) => key !== 'status' && key !== 'delayMs' && key !== 'body'));
+  return {
+    ...kept,
+    ...(form.status.trim() === '' ? {} : { status: Number(form.status) }),
+    ...(form.delayMs.trim() === '' ? {} : { delayMs: Number(form.delayMs) }),
+    ...(form.body.trim() === '' ? {} : { body: JSON.parse(form.body) as unknown }),
+  };
 }
 
 /** Settings that belong to every type and survive a change of type. */
@@ -214,6 +296,14 @@ export function endpointFrom(form: EndpointForm, id: string, original?: Endpoint
     changes.set(key, value);
   };
   set('summary', form.summary.trim() === '' ? undefined : form.summary.trim());
+  set('wrap', form.wrap === 'inherit' ? undefined : form.wrap);
+  set('headers', headersFromRows(form.headers));
+  const latency = latencyFrom(form.latency);
+  set('latency', latency.ok ? latency.value : undefined);
+  const network = networkFrom(form.network);
+  set('network', network.ok ? network.value : undefined);
+  const scenarios = Object.fromEntries(form.scenarios.map((scenario) => [scenario.name.trim(), scenarioFrom(scenario)]));
+  set('scenarios', Object.keys(scenarios).length === 0 ? undefined : scenarios);
   switch (form.type) {
     case 'crud':
       set('collection', form.collection);

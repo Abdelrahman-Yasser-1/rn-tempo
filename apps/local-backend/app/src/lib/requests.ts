@@ -56,3 +56,15 @@ export function bodyText(value: unknown, truncated: boolean | undefined): string
   const text = typeof value === 'string' ? value : JSON.stringify(value, null, 2);
   return truncated === true ? `${text}\n… (cut by the server: the body is too long)` : text;
 }
+
+/** One line about the delay and throttle a request got ("delayed 734 ms, download 500 kbps"), or `null` when it got none. */
+export function networkNote(note: RequestEntry['network']): string | null {
+  if (note === undefined) return null;
+  const parts: string[] = [];
+  if (note.timedOut === true) parts.push(`held ${String(note.delayMs ?? 0)} ms, then the connection was closed without an answer`);
+  else if (note.delayMs !== undefined) parts.push(`delayed ${String(note.delayMs)} ms${note.delaySource === undefined ? '' : ` (${note.delaySource})`}`);
+  if (note.downloadKbps !== undefined) parts.push(`download ${String(note.downloadKbps)} kbps`);
+  if (note.uploadKbps !== undefined) parts.push(`upload ${String(note.uploadKbps)} kbps`);
+  if (note.testMode === true) parts.push('test mode: no delay or throttling');
+  return parts.length === 0 ? null : parts.join(', ');
+}

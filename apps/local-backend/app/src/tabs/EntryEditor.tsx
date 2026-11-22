@@ -10,6 +10,7 @@ import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { Markdown } from '../ui/Markdown';
 import { MediaPicker } from '../ui/MediaPicker';
 import { Modal } from '../ui/Modal';
+import { ResponseEditor } from '../ui/ResponseEditor';
 import { ErrorNote } from '../ui/bits';
 
 type Pending = { kind: 'unpublish' } | { kind: 'delete' } | { kind: 'revert'; version: number } | { kind: 'discard' };
@@ -42,7 +43,7 @@ function FieldControl({
         </>
       );
     case 'json':
-      return <textarea className="code-area" rows={5} value={value} aria-invalid={invalid} onChange={(event) => { onChange(event.target.value); }} />;
+      return <ResponseEditor label={label} value={value} onChange={onChange} invalid={invalid} height={130} />;
     case 'list':
       return <textarea rows={4} value={value} placeholder="One item on each line" aria-invalid={invalid} onChange={(event) => { onChange(event.target.value); }} />;
     case 'boolean':
@@ -241,7 +242,7 @@ function EntryForm({ backend, type, config, initial, onClose }: { backend: strin
           const shown = locale !== config.defaultLocale && type.localized === true && field.type !== 'media' ? (fallback[field.name] ?? '') : '';
           return (
             <div key={`${locale}-${field.name}`} className="stack tight">
-              {field.type === 'media' ? (
+              {field.type === 'media' || field.type === 'json' ? (
                 <>
                   <span>{label}</span>
                   <FieldControl backend={backend} field={field} label={name} value={active[field.name] ?? ''} placeholder="" invalid={problem !== undefined} onChange={(value) => { setForm((current) => ({ ...current, [locale]: { ...(current[locale] ?? blankLocale(type)), [field.name]: value } })); }} />

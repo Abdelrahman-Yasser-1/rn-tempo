@@ -128,12 +128,41 @@ export type HttpMethodName = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 export type EndpointType = 'crud' | 'static' | 'auth' | 'users' | 'upload' | 'download' | 'handler';
 export type CrudAction = 'list' | 'get' | 'create' | 'update' | 'delete';
 
+/** A wait before answering: fixed, or a random one inside a range. */
+export type LatencyDef = { fixedMs: number } | { minMs: number; maxMs: number };
+export type NetworkPresetName = 'instant' | 'wifi' | '4g' | '3g-slow' | 'timeout' | 'custom';
+export interface NetworkDef {
+  preset: NetworkPresetName;
+  downloadKbps?: number;
+  uploadKbps?: number;
+  timeoutMs?: number;
+}
+
+/** A reusable response: use it as a body with `{ "template": "name", "with": { ... } }`. */
+export interface ResponseTemplateDef {
+  status?: number;
+  headers?: Record<string, string>;
+  body?: unknown;
+}
+
+export interface ResponsesDef {
+  /** The wrapper of every success answer, with `"{{body}}"` where the endpoint's body goes. */
+  success?: unknown;
+  error?: { format?: 'problem' | 'dummyjson' | 'custom'; template?: unknown };
+  headers?: Record<string, string>;
+}
+
 interface EndpointBase {
   id: string;
   method: HttpMethodName;
   path: string;
   summary?: string;
   auth?: 'none' | 'bearer';
+  latency?: LatencyDef | 'inherit';
+  network?: NetworkDef | 'inherit';
+  /** `inherit` (default), `none`, or the name of a response template. */
+  wrap?: string;
+  headers?: Record<string, string>;
   aliases?: string[];
   tags?: string[];
   scenarios?: Record<string, Scenario>;
@@ -157,7 +186,7 @@ export type EndpointDef = EndpointBase &
         successStatus?: number;
         media?: 'id' | 'url' | 'object';
       }
-    | { type: 'static'; status?: number; headers?: Record<string, string>; body?: unknown; request?: RequestSchemas }
+    | { type: 'static'; status?: number; body?: unknown; request?: RequestSchemas }
     | { type: 'auth'; action: string }
     | { type: 'users'; action: 'add' | 'update' | 'get' }
     | { type: 'upload'; maxBytes?: number; multiple?: boolean }
@@ -180,6 +209,11 @@ export interface Definition {
     seedUsers?: unknown[];
   };
   media?: { maxBytes?: number };
+  latency?: { default?: LatencyDef };
+  network?: NetworkDef;
+  testMode?: boolean;
+  responses?: ResponsesDef;
+  responseTemplates?: Record<string, ResponseTemplateDef>;
   collections?: CollectionDef[];
   endpoints?: EndpointDef[];
   /** API files imported into this backend, newest last. */
@@ -349,6 +383,8 @@ export interface RequestEntry {
   status: number;
   ms: number;
   scenario?: string;
+  /** What the delay and throttle settings did to this request (absent when nothing). */
+  network?: { delayMs?: number; delaySource?: string; downloadKbps?: number; uploadKbps?: number; timedOut?: true; testMode?: true };
   req: { headers?: unknown } & BodyView;
   res: BodyView;
 }

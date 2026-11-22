@@ -3,10 +3,11 @@ import { useId, useState } from 'react';
 
 import { adminSend } from '../api/client';
 import { useApi } from '../api/context';
-import type { CollectionDef, EndpointDef, EndpointType } from '../api/types';
+import type { CollectionDef, EndpointDef, EndpointType, ResponseTemplateDef } from '../api/types';
 import {
   AUTH_ACTIONS,
   blankForm,
+  blankScenario,
   changeType,
   CRUD_ACTIONS,
   endpointFrom,
@@ -22,11 +23,17 @@ import {
 import { errorMessage } from '../lib/errors';
 import { Modal } from '../ui/Modal';
 import { ErrorNote, Hint } from '../ui/bits';
+import { DynamicValuesHelp } from '../ui/DynamicValuesHelp';
+import { HeadersEditor } from '../ui/HeadersEditor';
+import { LatencyFields, NetworkFields } from '../ui/NetworkFields';
+import { ResponseEditor } from '../ui/ResponseEditor';
 
 interface Props {
   backend: string;
   collections: CollectionDef[];
   existingIds: ReadonlySet<string>;
+  /** The backend's response templates, to wrap with or use as a body. */
+  templates?: Record<string, ResponseTemplateDef>;
   /** The endpoint being edited, or the one being copied (then `copy` is set). */
   endpoint?: EndpointDef;
   copy?: boolean;
@@ -34,8 +41,13 @@ interface Props {
   onSaved: () => void;
 }
 
+/** The schema an imported file documents for the answer with this status, when there is one. */
+function documentedSchema(endpoint: EndpointDef | undefined, status: string): Record<string, unknown> | undefined {
+  return Object.values(endpoint?.scenarios ?? {}).find((scenario) => (scenario.status ?? 200) === Number(status) && scenario.schema !== undefined)?.schema;
+}
+
 /** One form for every endpoint type: the fields below the type change with it. */
-export function EndpointDialog({ backend, collections, existingIds, endpoint, copy = false, onClose, onSaved }: Props) {
+export function EndpointDialog({ backend, collections, existingIds, templates = {}, endpoint, copy = false, onClose, onSaved }: Props) {
   const api = useApi();
   const ids = useId();
   const editing = endpoint !== undefined && !copy;
@@ -52,6 +64,7 @@ export function EndpointDialog({ backend, collections, existingIds, endpoint, co
   const problems = problemsOf(form);
   const problem = (field: string) => (shown ? problems.find((item) => item.field === field)?.message : undefined);
 
+  const savedBody = endpoint === undefined ? undefined : formFrom(endpoint, collections).body;
   const collection = collections.find((item) => item.name === form.collection);
   const searchable = (collection?.fields ?? []).filter((field) => field.type === 'string' || field.type === 'enum');
   const owners = (collection?.fields ?? []).filter((field) => field.type === 'number' || field.type === 'relation');
@@ -223,20 +236,40 @@ export function EndpointDialog({ backend, collections, existingIds, endpoint, co
                 }}
               />,
             )}
-            {field(
-              'body',
-              'JSON body',
-              <textarea
-                className="code-area"
-                rows={8}
-                spellCheck={false}
+            <div className="stack tight">
+              <div className="row">
+                <span className="grow">JSON body {problem('body') === undefined ? null : <span className="error">{problem('body')}</span>}</span>
+                {Object.keys(templates).length === 0 ? null : (
+                  <label>
+                    Use template
+                    <select
+                      value=""
+                      onChange={(event) => {
+                        if (event.target.value !== '') set('body', JSON.stringify({ template: event.target.value, with: {} }, null, 2));
+                      }}
+                    >
+                      <option value="">Pick a template…</option>
+                      {Object.keys(templates).map((name) => (
+                        <option key={name} value={name}>
+                          {name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+                <DynamicValuesHelp />
+              </div>
+              <ResponseEditor
+                label="JSON body"
                 value={form.body}
-                aria-invalid={problem('body') !== undefined}
-                onChange={(event) => {
-                  set('body', event.target.value);
+                onChange={(body) => {
+                  set('body', body);
                 }}
-              />,
-            )}
+                schema={documentedSchema(endpoint, form.status)}
+                {...(endpoint === undefined || copy ? {} : { saved: savedBody })}
+                invalid={problem('body') !== undefined}
+              />
+            </div>
           </>
         ) : null}
 
@@ -392,6 +425,128 @@ export function EndpointDialog({ backend, collections, existingIds, endpoint, co
             )}
           </div>
         </div>
+        <fieldset className="plain-fieldset" aria-label="Answer shape">
+          <legend>
+            Answer shape <Hint text="How this endpoint's answers are wrapped and which headers they carry. Settings, Responses holds the backend-wide wrapper and the templates." />
+          </legend>
+          <div className="row">
+            {field(
+              'wrap',
+              'Success wrapper',
+              <select
+                value={form.wrap}
+                onChange={(event) => {
+                  set('wrap', event.target.value);
+                }}
+              >
+                <option value="inherit">Same as the backend</option>
+                <option value="none">No wrapper</option>
+                {Object.entries(templates).map(([name]) => (
+                  <option key={name} value={name}>
+                    Template: {name}
+                  </option>
+                ))}
+                {form.wrap !== 'inherit' && form.wrap !== 'none' && templates[form.wrap] === undefined ? <option value={form.wrap}>{form.wrap} (missing)</option> : null}
+              </select>,
+              'The backend\'s wrapper puts the answer inside something like { success, data, message }. Choose No wrapper to send this endpoint\'s answer as it is.',
+            )}
+          </div>
+          <HeadersEditor label="Headers" rows={form.headers} onChange={(rows) => { set('headers', rows); }} />
+        </fieldset>
+        <fieldset className="plain-fieldset" aria-label="Speed">
+          <legend>
+            Speed <Hint text="Delay and network for this endpoint only. A scenario's own delay wins over these." />
+          </legend>
+          <LatencyFields form={form.latency} onChange={(next) => { set('latency', next); }} inheritLabel="Same as the backend" />
+          {problem('latency') === undefined ? null : <span className="error">{problem('latency')}</span>}
+          <NetworkFields form={form.network} onChange={(next) => { set('network', next); }} inheritLabel="Same as the backend" />
+          {problem('network') === undefined ? null : <span className="error">{problem('network')}</span>}
+        </fieldset>
+        <fieldset className="plain-fieldset" aria-label="Scenarios">
+          <legend>
+            Scenarios <Hint text="Canned answers you can switch to from the endpoint list or with the x-tempo-scenario header: errors, empty lists, slow answers." />
+          </legend>
+          {form.scenarios.length === 0 ? <span className="muted">None yet. Built-in ones (notFound, unauthorized, serverError, rateLimited...) are always there.</span> : null}
+          {form.scenarios.map((scenario, index) => {
+            const patch = (change: Partial<typeof scenario>): void => {
+              set('scenarios', form.scenarios.map((item, at) => (at === index ? { ...item, ...change } : item)));
+            };
+            const at = (key: string): string | undefined => problem(`scenarios.${String(index)}.${key}`);
+            return (
+              <div key={index} className="card stack tight" role="group" aria-label={`Scenario ${scenario.name || String(index + 1)}`}>
+                <div className="row">
+                  <label className="grow">
+                    Name
+                    <input
+                      aria-label={`Scenario ${String(index + 1)} name`}
+                      value={scenario.name}
+                      aria-invalid={at('name') !== undefined}
+                      onChange={(event) => {
+                        patch({ name: event.target.value });
+                      }}
+                    />
+                  </label>
+                  <label>
+                    Status
+                    <input
+                      className="short"
+                      aria-label={`Scenario ${String(index + 1)} status`}
+                      inputMode="numeric"
+                      placeholder="200"
+                      value={scenario.status}
+                      onChange={(event) => {
+                        patch({ status: event.target.value });
+                      }}
+                    />
+                  </label>
+                  <label>
+                    Delay (ms)
+                    <input
+                      className="short"
+                      aria-label={`Scenario ${String(index + 1)} delay`}
+                      inputMode="numeric"
+                      value={scenario.delayMs}
+                      onChange={(event) => {
+                        patch({ delayMs: event.target.value });
+                      }}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    className="ghost bad"
+                    aria-label={`Remove scenario ${scenario.name || String(index + 1)}`}
+                    onClick={() => {
+                      set('scenarios', form.scenarios.filter((_item, position) => position !== index));
+                    }}
+                  >
+                    Remove
+                  </button>
+                </div>
+                {['name', 'status', 'delayMs', 'body'].map((key) => (at(key) === undefined ? null : <span key={key} className="error">{at(key)}</span>))}
+                <ResponseEditor
+                  label={`Scenario ${String(index + 1)} body`}
+                  value={scenario.body}
+                  onChange={(body) => {
+                    patch({ body });
+                  }}
+                  schema={scenario.original?.schema}
+                  saved={scenario.savedBody}
+                  height={130}
+                />
+              </div>
+            );
+          })}
+          <div>
+            <button
+              type="button"
+              onClick={() => {
+                set('scenarios', [...form.scenarios, blankScenario('')]);
+              }}
+            >
+              Add scenario
+            </button>
+          </div>
+        </fieldset>
         <ErrorNote error={save.error === null ? null : errorMessage(save.error)} />
         <div className="row end">
           <button type="button" onClick={onClose}>
