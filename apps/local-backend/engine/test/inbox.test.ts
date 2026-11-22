@@ -5,7 +5,7 @@ import { DatabaseSync } from 'node:sqlite';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { Inbox, curlOf, maskHeaders, maskTail } from '../src/inbox.ts';
+import { Inbox, curlOf, maskHeaders, maskQuery, maskTail } from '../src/inbox.ts';
 import { ADMIN_ROLE_TABLE } from '../src/roles.ts';
 import type { BackendInput } from '../src/schema.ts';
 import type { Transport } from '../src/outbound.ts';
@@ -40,10 +40,10 @@ describe('inbox capture', () => {
     }
     const list = (await (await admin('/inbox')).json()) as { entries: { id: number; method: string; size: number; query: string }[]; count: number };
     expect(list.entries.map((entry) => entry.method)).toEqual(['GET', 'DELETE', 'PATCH', 'PUT', 'POST']);
-    expect(list.entries[4]?.query).toBe('x=1');
-    const detail = (await (await admin(`/inbox/${String(list.entries[4]?.id)}`)).json()) as { body: string; headers: Record<string, string>; curl: string };
+    const detail = (await (await admin(`/inbox/${String(list.entries[4]?.id)}`)).json()) as { body: string; headers: Record<string, string>; curl: string; query: string };
     expect(JSON.parse(detail.body)).toEqual({ n: 'POST' });
     expect(detail.headers['x-custom']).toBe('yes');
+    expect(detail.query).toBe('x=1');
     expect(detail.curl).toContain("-X POST 'https://localhost:");
     expect(detail.curl).toContain('/inbox/stripe?x=1');
   });
@@ -77,12 +77,13 @@ describe('inbox capture', () => {
       headers: { authorization: 'Bearer super-secret-token', cookie: 'sid=abc', 'stripe-signature': 't=1,v1=0123456789abcdef', 'content-type': 'application/json' },
       body: JSON.stringify({ card: '4242424242424242' }),
     });
-    const entries = ((await (await admin('/inbox')).json()) as { entries: { headers: Record<string, string> }[] }).entries;
-    const headers = entries[0]?.headers ?? {};
+    const entries = ((await (await admin('/inbox')).json()) as { entries: { id: number }[] }).entries;
+    const detail = (await (await admin(`/inbox/${String(entries[0]?.id)}`)).json()) as { headers: Record<string, string> };
+    const headers = detail.headers;
     expect(headers.authorization).toBe('[REDACTED]');
     expect(headers.cookie).toBe('[REDACTED]');
     expect(headers['stripe-signature']).toBe('****cdef');
-    expect(JSON.stringify(entries)).not.toContain('super-secret-token');
+    expect(JSON.stringify(detail)).not.toContain('super-secret-token');
     const log = JSON.stringify(backend.engine.requests.snapshot());
     expect(log).not.toContain('4242424242424242');
     expect(log).toMatch(/\d+ bytes captured/);
@@ -103,10 +104,45 @@ describe('inbox capture', () => {
   });
 });
 
+describe('inbox privacy', () => {
+  it('AC-LP-8 every credential-looking header form is hidden, signatures keep four characters, the rest is kept', () => {
+    const masked = maskHeaders({
+      authorization: 'Bearer a1', 'proxy-authorization': 'Basic b2', 'x-api-key': 'k3', 'x-auth-token': 't4', 'x-session-id': 's5', cookie: 'c6', 'set-cookie': 'c7',
+      'x-access-token': 't8', 'x-client-secret': 'z9', 'x-credentials': 'c0', 'x-password': 'p1', 'idempotency-key': 'i2', 'x-amz-security-token': 'a3',
+      'x-hub-signature-256': 'sha256=0123456789', 'stripe-signature': 't=1,v1=abcd1234',
+      'content-type': 'application/json', 'user-agent': 'node', 'x-request-id': 'req-1',
+    });
+    for (const name of ['authorization', 'proxy-authorization', 'x-api-key', 'x-auth-token', 'x-session-id', 'cookie', 'set-cookie', 'x-access-token', 'x-client-secret', 'x-credentials', 'x-password', 'idempotency-key', 'x-amz-security-token']) expect(masked[name], name).toBe('[REDACTED]');
+    expect(masked['x-hub-signature-256']).toBe('****6789');
+    expect(masked['stripe-signature']).toBe('****1234');
+    expect(masked['content-type']).toBe('application/json');
+    expect(masked['x-request-id']).toBe('req-1');
+  });
+
+  it('AC-LP-8 credential query parameters are redacted before storing, the others kept', () => {
+    expect(maskQuery('token=abc&page=2&api_key=k&sig=1&code=9&session=s&x=a%20b')).toBe(`token=[REDACTED]&page=2&api_key=[REDACTED]&sig=1&code=[REDACTED]&session=[REDACTED]&x=a%20b`);
+    expect(maskQuery('')).toBe('');
+  });
+
+  it('AC-LP-8 the list shows method, path, time, size and status only; the query is stored redacted; the detail masks credentials', async () => {
+    const { url, admin } = await start();
+    await fetch(`${url}/inbox/stripe?token=live-token-1&n=1`, { method: 'POST', headers: { 'x-api-key': 'key-value-1', 'x-session-id': 'sess-1', 'x-trace': 't' }, body: 'hello' });
+    const listText = await (await admin('/inbox')).text();
+    const list = JSON.parse(listText) as { entries: Record<string, unknown>[] };
+    expect(Object.keys(list.entries[0] ?? {}).sort()).toEqual(['at', 'endpointId', 'id', 'method', 'path', 'size', 'status']);
+    expect(list.entries[0]).toMatchObject({ method: 'POST', path: '/inbox/stripe', size: 5, status: 200 });
+    for (const secret of ['live-token-1', 'key-value-1', 'sess-1', 'hello']) expect(listText).not.toContain(secret);
+    const detailText = await (await admin(`/inbox/${String(list.entries[0]?.id)}`)).text();
+    for (const secret of ['live-token-1', 'key-value-1', 'sess-1']) expect(detailText, secret).not.toContain(secret);
+    expect(detailText).toContain('n=1');
+    expect(detailText).toContain('x-trace');
+  });
+});
+
 describe('inbox storage', () => {
   it('AC-LP-8 keeps the last N per endpoint (a ring) and does not touch another endpoint', () => {
     const inbox = new Inbox(new DatabaseSync(':memory:'), () => new Date('2025-01-01T00:00:00Z'));
-    const put = (endpointId: string, n: number): void => void inbox.capture({ endpointId, method: 'POST', path: '/x', query: '', headers: {}, body: Buffer.from(String(n)), keep: 3 });
+    const put = (endpointId: string, n: number): void => void inbox.capture({ endpointId, method: 'POST', path: '/x', query: '', headers: {}, body: Buffer.from(String(n)), keep: 3, status: 200 });
     for (let n = 0; n < 5; n += 1) put('a', n);
     put('b', 0);
     expect(inbox.list('a').map((entry) => inbox.get(entry.id)?.body)).toEqual(['4', '3', '2']);
@@ -120,7 +156,7 @@ describe('inbox storage', () => {
   });
 
   it('AC-LP-8 a curl command repeats the request without credentials', () => {
-    const entry = { id: 1, endpointId: 'e', at: '', method: 'POST', path: '/p', query: '', headers: { 'content-type': 'text/plain', authorization: '[REDACTED]', 'x-sig-signature': '****1234', host: 'h' }, size: 3, body: "it's", encoding: 'utf8' as const };
+    const entry = { id: 1, endpointId: 'e', at: '', method: 'POST', path: '/p', query: '', headers: { 'content-type': 'text/plain', authorization: '[REDACTED]', 'x-sig-signature': '****1234', host: 'h' }, size: 3, status: 200, body: "it's", encoding: 'utf8' as const };
     const curl = curlOf(entry, 'http://localhost:1/p');
     expect(curl).toBe("curl -X POST 'http://localhost:1/p' -H 'content-type: text/plain' --data-raw 'it'\\''s'");
   });

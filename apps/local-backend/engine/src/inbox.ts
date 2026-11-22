@@ -13,27 +13,44 @@ export function maskTail(value: string): string {
 }
 
 const SIGNATURE_NAME = /signature/i;
+/** Names that carry credentials or session identifiers. A signature is masked to its tail; everything else here is hidden. */
+const CREDENTIAL_NAME = /auth|token|key|secret|session|cookie|signature|credential|password/i;
 
-/** Headers as stored: credentials replaced, signature headers masked to their last four characters. */
+/** Whether a header or query parameter name looks like it holds a credential. */
+export const looksSensitive = (name: string): boolean => CREDENTIAL_NAME.test(name) || isSensitiveKey(name);
+
+/** Headers as stored: signature headers masked to their last four characters, every other credential-looking header replaced. */
 export function maskHeaders(headers: Record<string, string | string[] | undefined>): Record<string, string> {
   const out: Record<string, string> = {};
   for (const [name, raw] of Object.entries(headers)) {
     if (raw === undefined) continue;
     const value = Array.isArray(raw) ? raw.join(', ') : raw;
-    out[name] = isSensitiveKey(name) ? REDACTED : SIGNATURE_NAME.test(name) ? maskTail(value) : value;
+    out[name] = SIGNATURE_NAME.test(name) ? maskTail(value) : looksSensitive(name) ? REDACTED : value;
   }
   return out;
 }
 
-export interface InboxSummary {
+/** A query string with the value of every credential-looking parameter replaced (`token=[REDACTED]`). */
+export function maskQuery(query: string): string {
+  if (query === '') return '';
+  return [...new URLSearchParams(query)].map(([key, value]) => `${encodeURIComponent(key)}=${looksSensitive(key) ? REDACTED : encodeURIComponent(value)}`).join('&');
+}
+
+/** What the list shows: no headers, query or body. */
+export interface InboxListItem {
   id: number;
   endpointId: string;
   at: string;
   method: string;
   path: string;
+  size: number;
+  /** The status the sender was answered with. */
+  status: number;
+}
+
+export interface InboxSummary extends InboxListItem {
   query: string;
   headers: Record<string, string>;
-  size: number;
 }
 
 export interface InboxEntry extends InboxSummary {
@@ -51,10 +68,12 @@ interface Row {
   query: string;
   headers: string;
   size: number;
+  status: number;
   body?: Uint8Array;
 }
 
-const summaryOf = (row: Row): InboxSummary => ({ id: row.id, endpointId: row.endpoint_id, at: row.at, method: row.method, path: row.path, query: row.query, headers: JSON.parse(row.headers) as Record<string, string>, size: row.size });
+const itemOf = (row: Row): InboxListItem => ({ id: row.id, endpointId: row.endpoint_id, at: row.at, method: row.method, path: row.path, size: row.size, status: row.status });
+const summaryOf = (row: Row): InboxSummary => ({ ...itemOf(row), query: row.query, headers: JSON.parse(row.headers) as Record<string, string> });
 
 /**
  * The requests an `inbox` endpoint captured, in `_inbox`: the last N per endpoint (a ring), and a cap on the total size.
@@ -70,17 +89,17 @@ export class Inbox {
     this.now = now;
     db.exec(`CREATE TABLE IF NOT EXISTS _inbox (
       id INTEGER PRIMARY KEY AUTOINCREMENT, endpoint_id TEXT NOT NULL, at TEXT NOT NULL, method TEXT NOT NULL, path TEXT NOT NULL,
-      query TEXT NOT NULL, headers TEXT NOT NULL, size INTEGER NOT NULL, body BLOB NOT NULL
+      query TEXT NOT NULL, headers TEXT NOT NULL, size INTEGER NOT NULL, status INTEGER NOT NULL DEFAULT 200, body BLOB NOT NULL
     )`);
     db.exec('CREATE INDEX IF NOT EXISTS _inbox_endpoint ON _inbox (endpoint_id, id)');
   }
 
-  capture(input: { endpointId: string; method: string; path: string; query: string; headers: Record<string, string | string[] | undefined>; body: Uint8Array; keep: number }): InboxSummary {
+  capture(input: { endpointId: string; method: string; path: string; query: string; headers: Record<string, string | string[] | undefined>; body: Uint8Array; keep: number; status: number }): InboxSummary {
     if (input.body.length > INBOX_MAX_BODY_BYTES) throw new RangeError('The body is larger than the inbox keeps.');
     const headers = JSON.stringify(maskHeaders(input.headers));
     const result = this.db
-      .prepare('INSERT INTO _inbox (endpoint_id, at, method, path, query, headers, size, body) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-      .run(input.endpointId, this.now().toISOString(), input.method, input.path, input.query, headers, input.body.length, input.body);
+      .prepare('INSERT INTO _inbox (endpoint_id, at, method, path, query, headers, size, status, body) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .run(input.endpointId, this.now().toISOString(), input.method, input.path, maskQuery(input.query), headers, input.body.length, input.status, input.body);
     const id = Number(result.lastInsertRowid);
     // The ring: the oldest beyond `keep` go.
     this.db.prepare('DELETE FROM _inbox WHERE endpoint_id = ? AND id NOT IN (SELECT id FROM _inbox WHERE endpoint_id = ? ORDER BY id DESC LIMIT ?)').run(input.endpointId, input.endpointId, input.keep);
@@ -96,16 +115,16 @@ export class Inbox {
   }
 
   summary(id: number): InboxSummary | undefined {
-    const row = this.db.prepare('SELECT id, endpoint_id, at, method, path, query, headers, size FROM _inbox WHERE id = ?').get(id) as unknown as Row | undefined;
+    const row = this.db.prepare('SELECT id, endpoint_id, at, method, path, query, headers, size, status FROM _inbox WHERE id = ?').get(id) as unknown as Row | undefined;
     return row === undefined ? undefined : summaryOf(row);
   }
 
-  list(endpointId?: string, limit = 100): InboxSummary[] {
+  list(endpointId?: string, limit = 100): InboxListItem[] {
     const cap = Math.min(Math.max(limit, 1), 500);
     const rows = (endpointId === undefined
-      ? this.db.prepare('SELECT id, endpoint_id, at, method, path, query, headers, size FROM _inbox ORDER BY id DESC LIMIT ?').all(cap)
-      : this.db.prepare('SELECT id, endpoint_id, at, method, path, query, headers, size FROM _inbox WHERE endpoint_id = ? ORDER BY id DESC LIMIT ?').all(endpointId, cap)) as unknown as Row[];
-    return rows.map(summaryOf);
+      ? this.db.prepare('SELECT id, endpoint_id, at, method, path, size, status FROM _inbox ORDER BY id DESC LIMIT ?').all(cap)
+      : this.db.prepare('SELECT id, endpoint_id, at, method, path, size, status FROM _inbox WHERE endpoint_id = ? ORDER BY id DESC LIMIT ?').all(endpointId, cap)) as unknown as Row[];
+    return rows.map(itemOf);
   }
 
   get(id: number): InboxEntry | undefined {

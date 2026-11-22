@@ -311,7 +311,7 @@ export class Engine {
           const read = ctx.stream === undefined ? { ok: true as const, bytes: Buffer.from(ctx.bodyText) } : await readRaw(ctx.stream, INBOX_MAX_BODY_BYTES);
           if (!read.ok) return problemReply(413, { title: 'Payload Too Large', detail: `The inbox keeps bodies up to ${String(INBOX_MAX_BODY_BYTES)} bytes.` });
           ctx.bodyNote = `[${String(read.bytes.length)} bytes captured by the inbox]`;
-          this.inbox.capture({ endpointId: endpoint.id, method: ctx.method, path: ctx.path, query: new URL(ctx.url, 'http://local').search.replace(/^\?/, ''), headers: ctx.headers, body: read.bytes, keep: endpoint.keep });
+          this.inbox.capture({ endpointId: endpoint.id, method: ctx.method, path: ctx.path, query: new URL(ctx.url, 'http://local').search.replace(/^\?/, ''), headers: ctx.headers, body: read.bytes, keep: endpoint.keep, status: endpoint.status });
           return this.staticReply(endpoint, ctx.values ?? this.placeholders(ctx, endpoint, {}));
         };
       case 'sse':
