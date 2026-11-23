@@ -23,7 +23,7 @@ Guide for every contributor, human or AI agent, working on **this repo** (the te
 | Where | Command | Purpose |
 | --- | --- | --- |
 | root | `yarn install` | Install workspaces + git hooks |
-| root | `yarn build:tools` | Build the `tempo-api` and `tempo` CLIs that `template/` runs as `yarn api` and `yarn tempo` |
+| root | `yarn build:tools` | Build the `tempo` CLI and the local backend engine that `template/` runs as `yarn tempo` and `yarn backend` |
 | root | `yarn test` / `yarn lint` / `yarn typecheck` | All workspaces |
 | root | `node scripts/versions-report.mjs > VERSIONS.md` | Refresh the versions report |
 | `template/` | `yarn install && yarn pods` | Install the app (`yarn pods` arrives in WS2; until then `cd ios && bundle exec pod install`) |

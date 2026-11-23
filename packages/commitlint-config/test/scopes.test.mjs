@@ -3,7 +3,7 @@ import config, { createConfig, SCOPES } from '../index.mjs';
 
 describe('scopes', () => {
   it('includes the backend scopes', () => {
-    for (const scope of ['api', 'portal', 'api-contract', 'dev-api', 'backend', 'docker']) {
+    for (const scope of ['api', 'portal', 'backend', 'docker']) {
       expect(SCOPES).toContain(scope);
     }
   });
@@ -19,6 +19,6 @@ describe('scopes', () => {
   it('appends project scopes', () => {
     const scopes = createConfig({ extraScopes: ['wallet'] }).rules['scope-enum'][2];
     expect(scopes).toContain('wallet');
-    expect(scopes).toContain('dev-api');
+    expect(scopes).toContain('backend');
   });
 });

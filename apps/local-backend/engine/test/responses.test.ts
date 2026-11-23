@@ -229,7 +229,7 @@ describe('AC-LP-6 OpenAPI and the contract check see the wrapper', () => {
 });
 
 describe('AC-LP-6 the Tempo template preset stays unwrapped (C13)', () => {
-  const TEMPLATE_OPENAPI = resolve(import.meta.dirname, '../../../../template/api/generated/openapi.json');
+  const TEMPLATE_OPENAPI = resolve(import.meta.dirname, 'fixtures/template-openapi.json');
   const template = JSON.parse(readFileSync(TEMPLATE_OPENAPI, 'utf8')) as Record<string, unknown>;
 
   it('AC-LP-6 sets wrap: none on every endpoint, so a backend wrapper does not change it, and the contract check still passes', () => {

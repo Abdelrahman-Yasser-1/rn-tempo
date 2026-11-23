@@ -37,8 +37,6 @@ export const TEST_SUPPORT_ENTRIES = [
       ...TEST_FILES,
       '**/*.stories.tsx',
       'src/test-utils/**',
-      // Dev mock mode reuses the MSW route table; the file is stripped from release bundles.
-      'src/services/http/devMockAdapter.ts',
     ],
   },
 ];

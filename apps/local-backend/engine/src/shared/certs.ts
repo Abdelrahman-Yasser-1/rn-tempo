@@ -90,11 +90,11 @@ export function createCerts(options: CertsOptions, run: Runner, say: (line?: str
   say(`  ${join(options.outDir, CA_FILE)} is the public half, safe to copy to a device.`);
   say();
   say('Next steps, so the app trusts the CA:');
-  say('  iOS simulator:    yarn api trust ios');
-  say('  Android emulator: yarn api trust android   (then install it from Settings)');
+  say('  iOS simulator:    npx @rn-tempo/local-backend trust ios');
+  say('  Android emulator: npx @rn-tempo/local-backend trust android   (then install it from Settings)');
   say('  Physical devices: see the "Local HTTPS" page in the docs');
-  if (!options.install) say('  Browser on this machine (opt-in, asks for your password): yarn api certs --install');
-  say('Then start the server with `yarn api up` (HTTPS is used when the certificate exists).');
+  if (!options.install) say('  Browser on this machine (opt-in, asks for your password): mkcert -install');
+  say('Then start the server with `yarn backend` (HTTPS is used when the certificate exists).');
 }
 
 /** First non-internal IPv4 address, for the URL a phone on the same network can reach. */

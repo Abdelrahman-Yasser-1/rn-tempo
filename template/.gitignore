@@ -94,5 +94,8 @@ firebase/prod/
 # Copied from firebase/<env>/ by the syncFirebaseConfig<Flavor> Gradle task; a build artifact, never a source.
 android/app/src/*/google-services.json
 
+# State left by the removed dev API (`yarn api up`). Safe to delete; kept ignored for projects that still have it.
+.tempo-api/
+
 # Tempo local backend (`yarn backend`): the database, certificates and logs. Commit backend.json, seed/ and handlers/ only.
 backend/.data/

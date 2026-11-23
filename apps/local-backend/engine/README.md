@@ -60,7 +60,7 @@ List queries: `limit`/`skip` or `page`/`pageSize`, `sort=field` / `-field` (also
 filters `?field=value`, `q` search. Errors are `application/problem+json` naming the field.
 
 Scenarios (`status`, `delayMs`, `body`, `headers`) are picked with the `x-tempo-scenario` header or the admin
-API. The built-ins of dev-api (`notFound`, `serverError`, `slow`...) exist on every endpoint.
+API. The built-ins (`notFound`, `serverError`, `slow`...) exist on every endpoint.
 
 ## App users and auth
 
@@ -94,7 +94,7 @@ Built-in tables (their names start with `_`, which no collection name can) live 
   answer 404, and writes force the field to the caller's id.
 - **Admin routes**: `GET/POST /users`, `GET/PUT/PATCH/DELETE /users/:id`, `POST /users/:id/password`,
   `.../disable`, `.../enable`, `.../revoke`, `GET /sessions` (no hashes), `DELETE /sessions/:id`.
-- **Logs**: dev-api redacts `password`, `passwordHash`, `token`, `accessToken`, `refreshToken`, `secret`, `jwtSecret`,
+- **Logs**: the engine redacts `password`, `passwordHash`, `token`, `accessToken`, `refreshToken`, `secret`, `jwtSecret`,
   `code` and more by key name at any depth. `code` stays redacted (it is only the request log; the OTP check
   itself still sees it), because an OTP is a credential.
 
@@ -371,7 +371,7 @@ non-loopback `Host`. Admin routes: `definition` (get/put), `endpoints`, `collect
 
 - Admin changes and `backend.json` edits (debounced file watch) rebuild the route table in one assignment;
   requests already running finish on the old table.
-- Request log: ring buffer plus SSE, redacted with dev-api's redaction, and `.data/logs/requests-YYYY-MM-DD.jsonl`
+- Request log: ring buffer plus SSE, redacted by key name, and `.data/logs/requests-YYYY-MM-DD.jsonl`
   (7 days, 50 MB cap). Engine log: `.data/logs/engine.log`.
 - `/__docs` is Swagger UI and `/__docs/openapi.json` the OpenAPI 3.1 document, built from the running definition.
 

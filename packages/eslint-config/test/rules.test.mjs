@@ -23,7 +23,7 @@ async function lintFixture(name) {
     overrideConfigFile: true,
     overrideConfig: createConfig({ root: cwd, structure: true }),
   });
-  const results = await eslint.lintFiles(["src/**", "api/**"]);
+  const results = await eslint.lintFiles(["src/**"]);
   return Object.fromEntries(
     results.map((result) => [
       path.relative(cwd, result.filePath),
@@ -142,13 +142,8 @@ describe("eslint-config fixtures", () => {
       "i18next/no-literal-string",
     ],
     [
-      "an endpoint definition importing a feature barrel",
-      "api/endpoints/usesBarrel.ts",
-      "boundaries/dependencies",
-    ],
-    [
-      "msw imported outside test-utils and api/generated",
-      "api/endpoints/usesMsw.ts",
+      "msw imported outside test-utils",
+      "src/shared/utils/usesMsw.ts",
       "rn-tempo/dependency-owner",
     ],
     ["an import cycle", "src/shared/utils/cycleA.ts", "import-x/no-cycle"],

@@ -11,7 +11,7 @@ import { presets, templateProduct } from '../src/presets.ts';
 import { AppConfigSchema, BY_COMPONENT, CreatedItemSchema, ItemSchema, ItemsPageSchema, LoginResponseSchema, OtpResendResponseSchema, OtpVerifyResponseSchema, SuccessResponseSchema, TokensSchema, UserSchema } from './fixtures/template-schemas.ts';
 import { json, tempDir } from './helpers.ts';
 
-const TEMPLATE_OPENAPI = resolve(import.meta.dirname, '../../../../template/api/generated/openapi.json');
+const TEMPLATE_OPENAPI = resolve(import.meta.dirname, 'fixtures/template-openapi.json');
 
 const started: RunningBackend[] = [];
 afterEach(async () => {
