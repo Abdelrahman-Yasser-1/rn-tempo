@@ -152,4 +152,53 @@ describe('GraphQL form', () => {
     expect(problemsOf({ ...blankForm('graphql', collections), resolvers: 'nope' }).find((problem) => problem.field === 'resolvers')?.message).toBe('The resolvers are not valid JSON.');
     expect(problemsOf(blankForm('graphql', collections))).toEqual([]);
   });
+
+  describe('faults', () => {
+    const base: EndpointDef = { id: 'a', type: 'static', method: 'GET', path: '/ping', auth: 'none', status: 200, body: { ok: true } };
+    const roundTrip = (endpoint: EndpointDef): EndpointDef => endpointFrom(formFrom(endpoint, collections), endpoint.id, endpoint);
+
+    it('leaves faults out when none are set', () => {
+      expect(roundTrip(base)).not.toHaveProperty('faults');
+      expect(formFrom(base, collections).faults).toMatchObject({ limit: 'inherit', offline: 'inherit', failureRate: '', slowDownload: '' });
+    });
+
+    it.each<[string, NonNullable<Extract<EndpointDef, { type: 'static' }>['faults']>]>([
+      ['an own limit', { rateLimit: { requests: 10, perSeconds: 60, key: 'user' } }],
+      ['a limit turned off', { rateLimit: null }],
+      ['a kept failure body', { failureRate: 0.2, failureStatus: 503, failureBody: { error: 'down' } }],
+      ['offline off', { offline: false }],
+      ['offline on', { offline: true }],
+      ['a drop rate and speeds', { dropRate: 0.125, slowUpload: 64, slowDownload: 500 }],
+    ])('round-trips %s', (_name, faults) => {
+      expect(roundTrip({ ...base, faults })).toEqual({ ...base, faults });
+    });
+
+    it('builds faults from the form and drops blanks', () => {
+      const form = { ...formFrom(base, collections), faults: { ...blankForm('static', collections).faults, failureRate: '20', failureStatus: '503', limit: 'own' as const, requests: '5', perSeconds: '10', key: 'global' as const, offline: 'off' as const } };
+      expect(endpointFrom(form, 'a', base).faults).toEqual({ rateLimit: { requests: 5, perSeconds: 10, key: 'global' }, failureRate: 0.2, failureStatus: 503, offline: false });
+    });
+
+    it('keeps the faults when the type changes', () => {
+      const faults = { failureRate: 0.5 };
+      const form = changeType(formFrom({ ...base, faults }, collections), 'download', collections);
+      expect(endpointFrom(form, 'a', { ...base, faults }).faults).toEqual(faults);
+    });
+
+    it('checks the bounds', () => {
+      const messageFor = (patch: Partial<ReturnType<typeof blankForm>['faults']>): string | undefined =>
+        problemsOf({ ...blankForm('static', collections), path: '/x', faults: { ...blankForm('static', collections).faults, ...patch } }).find((item) => item.field === 'faults')?.message;
+      expect(messageFor({})).toBeUndefined();
+      expect(messageFor({ failureRate: '100', dropRate: '0' })).toBeUndefined();
+      expect(messageFor({ failureRate: '101' })).toMatch(/failure rate/);
+      expect(messageFor({ failureRate: 'abc' })).toMatch(/failure rate/);
+      expect(messageFor({ failureStatus: '399' })).toMatch(/400 to 599/);
+      expect(messageFor({ failureStatus: '600' })).toMatch(/400 to 599/);
+      expect(messageFor({ dropRate: '-1' })).toMatch(/dropped/);
+      expect(messageFor({ slowUpload: '0' })).toMatch(/upload speed/);
+      expect(messageFor({ slowDownload: '10000001' })).toMatch(/download speed/);
+      expect(messageFor({ limit: 'own', requests: '0' })).toMatch(/rate limit/);
+      expect(messageFor({ limit: 'own', perSeconds: '86401' })).toMatch(/rate limit/);
+      expect(messageFor({ limit: 'off', requests: '0' })).toBeUndefined();
+    });
+  });
 });

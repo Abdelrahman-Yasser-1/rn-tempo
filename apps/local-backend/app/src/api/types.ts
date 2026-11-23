@@ -168,6 +168,18 @@ export interface ResponsesDef {
   headers?: Record<string, string>;
 }
 
+/** Simulated trouble. On an endpoint, every key it sets replaces the backend's; `rateLimit: null` turns an inherited limit off. */
+export interface FaultsDef {
+  rateLimit?: { requests: number; perSeconds: number; key?: 'ip' | 'user' | 'global' } | null;
+  failureRate?: number;
+  failureStatus?: number;
+  failureBody?: unknown;
+  dropRate?: number;
+  offline?: boolean;
+  slowUpload?: number;
+  slowDownload?: number;
+}
+
 interface EndpointBase {
   id: string;
   method: HttpMethodName;
@@ -176,6 +188,7 @@ interface EndpointBase {
   auth?: 'none' | 'bearer';
   latency?: LatencyDef | 'inherit';
   network?: NetworkDef | 'inherit';
+  faults?: FaultsDef;
   /** `inherit` (default), `none`, or the name of a response template. */
   wrap?: string;
   headers?: Record<string, string>;
