@@ -13,7 +13,7 @@ Format: `- [ ] T<id> (AC…) <summary>: commit: <header>, docs: <page>`. Each ta
 ## Phase B: font scale (`ws16/b-font-scale`)
 - [x] T16.B1 (AC-F-2, AC-F-3) `fontScale` in the theme layer, persisted in `app.font-scale`, applied before the first render, and fed into typography. Commit: `feat(theme): add user font scale`.
 - [x] T16.B2 (AC-F-1, AC-F-4) Text size screen with a preview, route `settings/text-size`, and en/ar strings. Commit: `feat(settings): add text size screen`.
-- [ ] T16.B3 (AC-F-2) Audit fixed heights at Extra large, in Maestro and Storybook. Fix any clipping. Commit: `fix(ui): avoid clipping at large text sizes`. Docs: `features/settings` (text size).
+- [x] T16.B3 (AC-F-2) Audit fixed heights at Extra large, in Maestro and Storybook. Fix any clipping. Commit: `fix(ui): avoid clipping at large text sizes`. Docs: `features/settings` (text size).
 
 ## Phase C: languages (`ws16/c-languages`)
 - [ ] T16.C1 (AC-L-2) Add `es`, `de` and `fr` locale files for every namespace, plus `TRANSLATIONS.md` (AC-L-5). Commit: `feat(i18n): add spanish german and french`.

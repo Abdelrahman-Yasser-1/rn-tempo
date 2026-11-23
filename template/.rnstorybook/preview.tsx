@@ -7,14 +7,14 @@ import { i18n } from '@services/i18n/i18n';
 import type { Language } from '@services/i18n/languageManager';
 import { isRtlLanguage } from '@services/i18n/languageManager';
 import { Box, Chip, Row } from '@shared/components';
-import { PALETTE_NAMES, useAppTheme } from '@theme/index';
+import { FONT_SCALES, PALETTE_NAMES, useAppTheme } from '@theme/index';
 
 /**
  * On-device toolbar for every story. Language switches translations and mirrors the story with
  * `direction` instead of the app's restart-based RTL flip, so both directions can be compared live.
  */
 function StoryFrame({ children }: Readonly<{ children: ReactNode }>) {
-  const { theme, palette, setMode, setPalette } = useAppTheme();
+  const { theme, palette, fontScale, setMode, setPalette, setFontScale } = useAppTheme();
   const [language, setLanguage] = useState<Language>(i18n.language === 'ar' ? 'ar' : 'en');
 
   const selectLanguage = (next: Language) => {
@@ -42,6 +42,16 @@ function StoryFrame({ children }: Readonly<{ children: ReactNode }>) {
             selected={palette === name}
             onPress={() => {
               setPalette(name);
+            }}
+          />
+        ))}
+        {FONT_SCALES.map((scale) => (
+          <Chip
+            key={scale}
+            label={`${String(scale)}x`}
+            selected={fontScale === scale}
+            onPress={() => {
+              setFontScale(scale);
             }}
           />
         ))}

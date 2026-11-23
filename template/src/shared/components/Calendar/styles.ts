@@ -40,8 +40,9 @@ export const styles = StyleSheet.create((theme) => ({
   dayCircle: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: DAY_CIRCLE,
-    height: DAY_CIRCLE,
+    // Minimums, not fixed sizes: the day number grows with the text size and must not clip.
+    minWidth: DAY_CIRCLE,
+    minHeight: DAY_CIRCLE,
     borderRadius: theme.radii.full,
     borderWidth: 1,
     borderColor: 'transparent',

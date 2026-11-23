@@ -13,6 +13,11 @@ describe('Avatar', () => {
     expect(screen.getByText('AL')).toBeOnTheScreen();
   });
 
+  it('AC-F-2: the initials ignore the OS text scale so they stay inside the fixed circle', async () => {
+    await renderWithProviders(<Avatar name="ada lovelace" />);
+    expect(screen.getByText('AL')).toHaveProp('maxFontSizeMultiplier', 1);
+  });
+
   it('exposes the name as an image label', async () => {
     await renderWithProviders(<Avatar name="Ada Lovelace" />);
     expect(screen.getByRole('image', { name: 'Ada Lovelace' })).toBeOnTheScreen();

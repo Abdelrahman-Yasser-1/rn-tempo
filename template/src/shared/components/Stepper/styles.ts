@@ -29,8 +29,9 @@ export const styles = StyleSheet.create((theme) => ({
     return { flex: 1, height: CONNECTOR_HEIGHT, backgroundColor };
   },
   circle: {
-    width: CIRCLE,
-    height: CIRCLE,
+    // Minimums, not fixed sizes: the step number grows with the text size and must not clip.
+    minWidth: CIRCLE,
+    minHeight: CIRCLE,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: theme.radii.full,

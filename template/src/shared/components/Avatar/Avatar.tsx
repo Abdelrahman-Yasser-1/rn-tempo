@@ -42,6 +42,8 @@ function AvatarInitials({ name, testID }: Readonly<{ name?: string; testID?: str
       testID={testID ? `${testID}.initials` : undefined}
       variant="label"
       color="onPrimaryContainer"
+      // Fixed-size circle: initials follow the in-app text size but not the OS scale, so they never overflow it.
+      maxFontSizeMultiplier={1}
       importantForAccessibility="no"
     >
       {name === undefined ? '' : initials(name)}
