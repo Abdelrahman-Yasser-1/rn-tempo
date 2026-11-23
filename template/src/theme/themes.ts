@@ -3,8 +3,8 @@ import { Platform } from 'react-native';
 import { palette } from './palette';
 import { fontPx } from './scaling';
 import {
-  darkColors,
-  lightColors,
+  PALETTE_NAMES,
+  paletteColors,
   radii,
   shadows,
   spacing,
@@ -12,6 +12,8 @@ import {
   zIndex,
   type AppTheme,
   type ColorTokens,
+  type PaletteName,
+  type ThemeMode,
   type TypographyStyle,
   type TypographyVariant,
 } from './tokens';
@@ -47,8 +49,9 @@ const typography = Object.fromEntries(
   }),
 ) as Record<TypographyVariant, TypographyStyle>;
 
-const createTheme = (name: AppTheme['name'], colors: ColorTokens): AppTheme => ({
+const createTheme = (name: ThemeMode, paletteName: PaletteName, colors: ColorTokens): AppTheme => ({
   name,
+  paletteName,
   colors,
   palette,
   spacing,
@@ -58,5 +61,26 @@ const createTheme = (name: AppTheme['name'], colors: ColorTokens): AppTheme => (
   zIndex,
 });
 
-export const lightTheme = createTheme('light', lightColors);
-export const darkTheme = createTheme('dark', darkColors);
+export const lightTheme = createTheme('light', 'default', paletteColors.default.light);
+export const darkTheme = createTheme('dark', 'default', paletteColors.default.dark);
+
+/** Unistyles theme names: `light` and `dark` (default palette, required for adaptive themes), then one pair per brand. */
+export type ThemeKey = 'light' | 'dark' | `${Exclude<PaletteName, 'default'>}${'Light' | 'Dark'}`;
+
+/** The Unistyles theme name for a palette and mode. */
+export const themeKey = (paletteName: PaletteName, mode: ThemeMode): ThemeKey => {
+  if (paletteName === 'default') {
+    return mode;
+  }
+  return mode === 'light' ? `${paletteName}Light` : `${paletteName}Dark`;
+};
+
+/** Every theme variant (default light/dark plus three brand palettes x two modes), by Unistyles name. */
+export const appThemes: Record<ThemeKey, AppTheme> = Object.fromEntries(
+  PALETTE_NAMES.flatMap((paletteName) =>
+    (['light', 'dark'] as const).map((mode) => [
+      themeKey(paletteName, mode),
+      createTheme(mode, paletteName, paletteColors[paletteName][mode]),
+    ]),
+  ),
+) as Record<ThemeKey, AppTheme>;

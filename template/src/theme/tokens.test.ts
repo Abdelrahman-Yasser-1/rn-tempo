@@ -79,9 +79,9 @@ describe('themes', () => {
 
 describe('token sources', () => {
   const source = readFileSync(path.join(__dirname, 'tokens.ts'), 'utf8');
-  const flat = Object.values(palette).flatMap((value) =>
-    typeof value === 'string' ? [value] : Object.values(value),
-  );
+  const flatten = (value: unknown): string[] =>
+    typeof value === 'string' ? [value] : Object.values(value as object).flatMap(flatten);
+  const flat = flatten(palette);
 
   test('tokens.ts holds no raw hex literals', () => {
     expect(source).not.toMatch(/#[0-9a-f]{3,8}\b/i);
