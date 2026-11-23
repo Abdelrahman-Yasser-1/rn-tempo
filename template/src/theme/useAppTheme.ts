@@ -2,7 +2,15 @@ import { Appearance, type ColorSchemeName } from 'react-native';
 import { UnistylesRuntime, useUnistyles } from 'react-native-unistyles';
 import { create } from 'zustand';
 
-import { themeKey } from './themes';
+import {
+  appThemes,
+  buildTypography,
+  DEFAULT_FONT_SCALE,
+  parseFontScale,
+  themeKey,
+  type FontScale,
+  type ThemeKey,
+} from './themes';
 import { PALETTE_NAMES, type PaletteName, type ThemeMode } from './tokens';
 
 /** What the user picked for light/dark: a fixed mode, or follow the device. */
@@ -59,6 +67,8 @@ export type ThemePersistence = {
   loadPalette: () => string | undefined;
   saveMode: (mode: ThemeModePreference) => void;
   savePalette: (palette: ThemePalette) => void;
+  loadFontScale: () => string | undefined;
+  saveFontScale: (scale: FontScale) => void;
 };
 
 let persistence: ThemePersistence | undefined;
@@ -71,10 +81,26 @@ export function configureThemePersistence(next: ThemePersistence): void {
   persistence = next;
 }
 
+/**
+ * Rebuilds the typography of every registered theme for a user font scale. Unistyles' `updateTheme`
+ * swaps the theme object natively, so every stylesheet that reads `theme.typography` re-renders.
+ */
+function applyFontScale(scale: FontScale): void {
+  const typography = buildTypography(scale);
+  for (const key of Object.keys(appThemes) as ThemeKey[]) {
+    UnistylesRuntime.updateTheme(key, (current) => ({ ...current, typography }));
+  }
+}
+
 // Not persisted through zustand: the source of truth is MMKV (contract C15).
-const useChoiceStore = create<{ mode: ThemeModePreference; palette: ThemePalette }>(() => ({
+const useChoiceStore = create<{
+  mode: ThemeModePreference;
+  palette: ThemePalette;
+  fontScale: FontScale;
+}>(() => ({
   mode: 'system',
   palette: 'default',
+  fontScale: DEFAULT_FONT_SCALE,
 }));
 
 /**
@@ -82,15 +108,19 @@ const useChoiceStore = create<{ mode: ThemeModePreference; palette: ThemePalette
  *
  * Migration: before palettes, `app.theme` held `light`, `dark` or `system`, and it still does (it
  * is now the mode), so an old value stays valid as is. A missing `app.palette` means `default`,
- * and any unknown value falls back to `system` / `default`.
+ * a missing `app.font-scale` means 1, and any unknown value falls back to `system` / `default` / 1.
  */
 export function initTheme(): void {
   const storedMode = persistence?.loadMode();
   const storedPalette = persistence?.loadPalette();
   const mode = isMode(storedMode) ? storedMode : 'system';
   const palette = isPalette(storedPalette) ? storedPalette : 'default';
+  const fontScale = parseFontScale(persistence?.loadFontScale()) ?? DEFAULT_FONT_SCALE;
+  if (fontScale !== DEFAULT_FONT_SCALE) {
+    applyFontScale(fontScale);
+  }
   applyTheme(mode, palette);
-  useChoiceStore.setState({ mode, palette });
+  useChoiceStore.setState({ mode, palette, fontScale });
 }
 
 /** Persists and applies a mode. */
@@ -107,10 +137,18 @@ function setPalette(palette: ThemePalette): void {
   useChoiceStore.setState({ palette });
 }
 
-/** Current theme object plus the user's mode (light/dark/system) and palette, with their setters. */
+/** Persists and applies a text size without a restart. */
+function setFontScale(scale: FontScale): void {
+  persistence?.saveFontScale(scale);
+  applyFontScale(scale);
+  useChoiceStore.setState({ fontScale: scale });
+}
+
+/** Current theme object plus the user's mode (light/dark/system) and palette and text size, with their setters. */
 export function useAppTheme() {
   const { theme } = useUnistyles();
   const mode = useChoiceStore((state) => state.mode);
   const palette = useChoiceStore((state) => state.palette);
-  return { theme, mode, palette, setMode, setPalette };
+  const fontScale = useChoiceStore((state) => state.fontScale);
+  return { theme, mode, palette, fontScale, setMode, setPalette, setFontScale };
 }

@@ -30,6 +30,7 @@ async function currentMode() {
 
 let stored: string | undefined;
 let storedPalette: string | undefined;
+let storedScale: string | undefined;
 const save = jest.fn((mode: string) => {
   stored = mode;
 });
@@ -52,6 +53,8 @@ describe('ThemeScreen', () => {
       loadPalette: () => storedPalette,
       saveMode: save,
       savePalette,
+      loadFontScale: () => storedScale,
+      saveFontScale: jest.fn(),
     });
     // Back to the default (system) preference so each test starts from the same state.
     initTheme();

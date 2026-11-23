@@ -6,6 +6,8 @@ export const STORAGE_KEYS = {
   theme: 'app.theme',
   /** Brand palette: `default`, `ocean`, `forest` or `sunset`. */
   palette: 'app.palette',
+  /** Text size multiplier: `0.9`, `1`, `1.15` or `1.3`; absent means `1`. */
+  fontScale: 'app.font-scale',
   language: 'app.language',
   onboardingCompleted: 'app.onboarding-completed',
   /** Set on first launch; its absence with tokens present means a reinstall. */
