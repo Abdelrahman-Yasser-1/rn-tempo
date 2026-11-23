@@ -79,7 +79,7 @@ Also: check library APIs with context7 for the **pinned** version, never from me
 - [commits](../ai/rules/commits.md): Conventional Commits with required scope, commit size, and the AI session trailers.
 - [forms](../ai/rules/forms.md): Build forms with the dynamic-forms FormBuilder when that module is on; hand-written react-hook-form forms otherwise.
 - [generators](../ai/rules/generators.md): Create files with yarn tempo g generators, not by hand, so structure and tests stay valid.
-- [i18n](../ai/rules/i18n.md): Every UI string goes through i18next in en and ar; keys are nested camelCase per namespace.
+- [i18n](../ai/rules/i18n.md): Every UI string goes through i18next in all five languages (en, ar, es, de, fr); keys are nested camelCase per namespace.
 - [naming](../ai/rules/naming.md): File, folder, identifier and boolean naming rules enforced by ls-lint and ESLint.
 - [security](../ai/rules/security.md): Env access through ENV, no secrets in code or logs, secure token storage, SSL pinning and device integrity.
 - [specs](../ai/rules/specs.md): Spec-driven flow in specs/: spec.md, design.md, tasks.md, AC IDs and test linkage.

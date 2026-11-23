@@ -35,12 +35,32 @@ describe('LanguageScreen', () => {
     changeLanguageSpy.mockRestore();
   });
 
-  test('lists English and Arabic with the current language selected', async () => {
+  test('AC-L-1: lists all five languages in their own names with the current one selected', async () => {
     await renderLanguage();
 
+    expect(screen.getAllByRole('radio')).toHaveLength(5);
+    for (const name of ['English', ARABIC, 'Español', 'Deutsch', 'Français']) {
+      expect(screen.getByRole('radio', { name })).toBeOnTheScreen();
+    }
     expect(screen.getByRole('radio', { name: 'English' })).toBeChecked();
-    expect(screen.getByRole('radio', { name: ARABIC })).not.toBeChecked();
+    for (const name of [ARABIC, 'Español', 'Deutsch', 'Français']) {
+      expect(screen.getByRole('radio', { name })).not.toBeChecked();
+    }
   });
+
+  test.each(['Español', 'Deutsch', 'Français'])(
+    'AC-L-1: picking %s from English applies it at once, without a dialog',
+    async (name) => {
+      const { user } = await renderLanguage();
+
+      await user.press(screen.getByRole('radio', { name }));
+
+      await waitFor(() => {
+        expect(changeLanguageSpy).toHaveBeenCalledTimes(1);
+      });
+      expect(screen.queryByText('Change language?')).not.toBeOnTheScreen();
+    },
+  );
 
   test('AC-2: picking a different language asks for confirmation and does not apply it yet', async () => {
     const { user } = await renderLanguage();
