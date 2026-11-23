@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 
-import { caRoot, MKCERT_HINT, type Runner } from '@rn-tempo/dev-api';
+import { caRoot, MKCERT_HINT, type Runner } from './shared/certs.ts';
 
 /** Where the CA lands on an Android device; the user then installs it from Settings. */
 export const ANDROID_CA_PATH = '/sdcard/Download/tempo-dev-ca.pem';

@@ -1,4 +1,4 @@
-import { openApiPath, sortKeys, type Json } from '@rn-tempo/dev-api';
+import { openApiPath, sortKeys, type Json } from './shared/json.ts';
 
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from './content-public.ts';
 import { wrapperOf } from './responses.ts';

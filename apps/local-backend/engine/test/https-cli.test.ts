@@ -3,7 +3,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { request } from 'node:https';
 import { join } from 'node:path';
 
-import { createCerts, realRunner } from '@rn-tempo/dev-api';
+import { createCerts, realRunner } from '../src/shared/certs.ts';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { startBackend } from '../src/app.ts';

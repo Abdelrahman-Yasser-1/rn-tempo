@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-import { endpointId } from '@rn-tempo/api-contract';
+import { endpointId } from '../shared/problem.ts';
 import { parse as parseYaml } from 'yaml';
 
 import { DefinitionError, EndpointSchema, type HttpMethod } from '../schema.ts';

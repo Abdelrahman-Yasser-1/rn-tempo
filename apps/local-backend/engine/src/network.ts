@@ -1,7 +1,7 @@
 import type { IncomingHttpHeaders, IncomingMessage } from 'node:http';
 import { Transform, type TransformCallback } from 'node:stream';
 
-import type { NetworkNote } from '@rn-tempo/dev-api';
+import type { NetworkNote } from './shared/request-log.ts';
 
 import { DEFAULT_TIMEOUT_MS, MAX_DELAY_MS, MAX_TIMEOUT_MS, TEST_DELAYS_HEADER, TEST_MODE_HEADER } from './constants.ts';
 import type { FaultPlan } from './faults.ts';

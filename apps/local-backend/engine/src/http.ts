@@ -1,7 +1,7 @@
 import type { Readable } from 'node:stream';
 import type { IncomingHttpHeaders, IncomingMessage } from 'node:http';
 
-import { problem, PROBLEM_CONTENT_TYPE, type FieldIssue } from '@rn-tempo/api-contract';
+import { problem, PROBLEM_CONTENT_TYPE, type FieldIssue } from './shared/problem.ts';
 
 import type { AuthUser } from './accounts.ts';
 import type { RequestPlan } from './network.ts';

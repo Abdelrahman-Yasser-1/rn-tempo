@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { REDACTED, redactDeep, redactUrl, scrubKeys } from '@rn-tempo/dev-api';
+import { REDACTED, redactDeep, redactUrl, scrubKeys } from '../src/shared/redact.ts';
 
 import { member, rawCall, startSite, stopTeams, type Site } from './team-helpers.ts';
 

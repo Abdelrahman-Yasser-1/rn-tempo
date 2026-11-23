@@ -1,6 +1,6 @@
 import type { DatabaseSync } from 'node:sqlite';
 
-import { isSensitiveKey, REDACTED } from '@rn-tempo/dev-api';
+import { isSensitiveKey, REDACTED } from './shared/redact.ts';
 
 import { INBOX_MAX_BODY_BYTES } from './schema.ts';
 

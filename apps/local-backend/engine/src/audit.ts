@@ -1,4 +1,4 @@
-import { redactDeep } from '@rn-tempo/dev-api';
+import { redactDeep } from './shared/redact.ts';
 
 /** Who did something: an account (its email) or an API key (its display prefix, never the key). */
 export interface Actor {

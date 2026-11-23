@@ -1,7 +1,7 @@
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 
-import type { FieldIssue } from '@rn-tempo/api-contract';
+import type { FieldIssue } from './shared/problem.ts';
 
 import { adminAuthRoutes } from './admin-users.ts';
 import { adminContentRoutes, contentErrorReply } from './admin-content.ts';

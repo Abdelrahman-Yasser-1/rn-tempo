@@ -3,7 +3,7 @@ import { spawn } from 'node:child_process';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 
-import { createCerts, lanAddress, realRunner } from '@rn-tempo/dev-api';
+import { createCerts, lanAddress, realRunner } from './shared/certs.ts';
 
 import { startBackend } from './app.ts';
 import { checkContract, formatReport, parseOpenApi } from './contract.ts';

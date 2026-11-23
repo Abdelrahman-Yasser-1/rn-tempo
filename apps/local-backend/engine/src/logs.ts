@@ -1,7 +1,7 @@
 import { closeSync, fstatSync, readdirSync, renameSync, statSync, unlinkSync, writeSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { createLogger } from '@rn-tempo/dev-api';
+import { createLogger } from './shared/logger.ts';
 
 import { openAppendNoFollow } from './folder.ts';
 
