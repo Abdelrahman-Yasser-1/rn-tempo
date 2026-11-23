@@ -3,7 +3,7 @@ import { screen } from '@testing-library/react-native';
 import { Platform } from 'react-native';
 
 import { DebugMenuScreen } from '@app/screens/DebugMenuScreen/DebugMenuScreen';
-import { API_SOURCE_KEY, DEV_API_URL_KEY } from '@services/http/apiSource';
+import { API_SOURCE_KEY, BACKEND_URL_KEY } from '@services/http/apiSource';
 import { initStorage, storage } from '@services/storage/storage';
 import { renderWithProviders } from '@test-utils/renderWithProviders';
 
@@ -21,12 +21,11 @@ beforeEach(async () => {
 });
 
 describe('DebugMenuScreen API source', () => {
-  test('offers the three sources, with the build default selected', async () => {
+  test('offers the two sources, with the build default selected', async () => {
     await renderWithProviders(<DebugMenuScreen />);
 
     expect(screen.getByRole('header', { name: 'API source' })).toBeOnTheScreen();
     expect(screen.getByRole('radio', { name: 'Build default (env file)' })).toBeChecked();
-    expect(screen.getByRole('radio', { name: 'In-app mocks' })).not.toBeChecked();
     expect(screen.getByRole('radio', { name: 'Tempo backend' })).not.toBeChecked();
     expect(screen.queryByLabelText('Tempo backend URL')).not.toBeOnTheScreen();
   });
@@ -40,9 +39,9 @@ describe('DebugMenuScreen API source', () => {
   test('choosing a source stores it, and choosing the build default removes it', async () => {
     const { user } = await renderWithProviders(<DebugMenuScreen />);
 
-    await user.press(screen.getByRole('radio', { name: 'In-app mocks' }));
-    expect(storage.getString(API_SOURCE_KEY)).toBe('mocks');
-    expect(screen.getByRole('radio', { name: 'In-app mocks' })).toBeChecked();
+    await user.press(screen.getByRole('radio', { name: 'Tempo backend' }));
+    expect(storage.getString(API_SOURCE_KEY)).toBe('backend');
+    expect(screen.getByRole('radio', { name: 'Tempo backend' })).toBeChecked();
     expect(screen.getByText('Saved. Restart the app to apply.')).toBeOnTheScreen();
 
     await user.press(screen.getByRole('radio', { name: 'Build default (env file)' }));
@@ -50,7 +49,7 @@ describe('DebugMenuScreen API source', () => {
   });
 
   test('shows the stored source on open', async () => {
-    storage.setString(API_SOURCE_KEY, 'dev-api');
+    storage.setString(API_SOURCE_KEY, 'backend');
 
     await renderWithProviders(<DebugMenuScreen />);
 
@@ -63,25 +62,25 @@ describe('DebugMenuScreen API source', () => {
     const { user } = await renderWithProviders(<DebugMenuScreen />);
 
     await user.press(screen.getByRole('radio', { name: 'Tempo backend' }));
-    expect(storage.getString(API_SOURCE_KEY)).toBe('dev-api');
+    expect(storage.getString(API_SOURCE_KEY)).toBe('backend');
     expect(screen.getByLabelText('Tempo backend URL')).toHaveDisplayValue('https://localhost:8443');
 
     await user.clear(screen.getByLabelText('Tempo backend URL'));
     await user.type(screen.getByLabelText('Tempo backend URL'), ' https://192.168.1.20:8443 ');
     await user.press(screen.getByRole('button', { name: 'Save URL' }));
-    expect(storage.getString(DEV_API_URL_KEY)).toBe('https://192.168.1.20:8443');
+    expect(storage.getString(BACKEND_URL_KEY)).toBe('https://192.168.1.20:8443');
     expect(screen.getByLabelText('Tempo backend URL')).toHaveDisplayValue(
       'https://192.168.1.20:8443',
     );
 
     await user.press(screen.getByRole('button', { name: 'Use default' }));
-    expect(storage.getString(DEV_API_URL_KEY)).toBeUndefined();
+    expect(storage.getString(BACKEND_URL_KEY)).toBeUndefined();
     expect(screen.getByLabelText('Tempo backend URL')).toHaveDisplayValue('https://localhost:8443');
   });
 
   test('on Android the default URL is the emulator host alias', async () => {
     jest.replaceProperty(Platform, 'OS', 'android');
-    storage.setString(API_SOURCE_KEY, 'dev-api');
+    storage.setString(API_SOURCE_KEY, 'backend');
 
     await renderWithProviders(<ApiSourceControls />);
 
@@ -91,6 +90,6 @@ describe('DebugMenuScreen API source', () => {
   test('renders in Arabic', async () => {
     await renderWithProviders(<DebugMenuScreen />, { language: 'ar' });
 
-    expect(screen.getByRole('radio', { name: 'بيانات تجريبية داخل التطبيق' })).toBeOnTheScreen();
+    expect(screen.getByRole('radio', { name: 'خادم Tempo الخلفي' })).toBeOnTheScreen();
   });
 });

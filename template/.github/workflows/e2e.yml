@@ -1,8 +1,9 @@
 # @tempo-feature:maestro:start
 name: E2E
 
-# Maestro flows on an Android emulator against the mocked API (MSW). Runs for PRs labelled `e2e`, nightly,
-# and on demand.
+# Maestro flows on an Android emulator against an isolated, temporary copy of your Tempo backend (a CI session on
+# your team server). Needs the repository variable TEMPO_BACKEND_URL (https://<host>/b/<name>) and the secret
+# TEMPO_SESSIONS_KEY (a key with the `sessions` scope). Runs for PRs labelled `e2e`, nightly, and on demand.
 on:
   pull_request:
     types: [opened, synchronize, reopened, labeled]
@@ -51,11 +52,20 @@ jobs:
           unzip -q maestro.zip -d "$HOME/maestro"
           rm maestro.zip
           echo "$HOME/maestro/maestro/bin" >> "$GITHUB_PATH"
-      # The dev flavor reads .env.dev. Force API mocking so the flows never hit a real backend.
-      - name: Enable API mocking
+      # The dev flavor reads .env.dev. The flows run against a temporary copy of the team backend that only this run
+      # sees (see docs: Backend, "Test without mock data", CI sessions). It is deleted in the last step.
+      - name: Start a backend session
         if: steps.flows.outputs.found == 'true'
+        env:
+          TEMPO_BACKEND_URL: ${{ vars.TEMPO_BACKEND_URL }}
+          TEMPO_SESSIONS_KEY: ${{ secrets.TEMPO_SESSIONS_KEY }}
         run: |
-          if grep -q '^API_MOCKING=' .env.dev; then sed -i 's/^API_MOCKING=.*/API_MOCKING=true/' .env.dev; else echo 'API_MOCKING=true' >> .env.dev; fi
+          session=$(curl -sS --fail -X POST -H "Authorization: Bearer ${TEMPO_SESSIONS_KEY}" \
+            -H 'content-type: application/json' -d '{"ttlSeconds": 3600}' "${TEMPO_BACKEND_URL}/__sessions")
+          echo "TEMPO_SESSION_ID=$(echo "$session" | jq -r .id)" >> "$GITHUB_ENV"
+          url=$(echo "$session" | jq -r .url | sed 's#/$##')
+          echo "::add-mask::${url}"
+          if grep -q '^API_BASE_URL=' .env.dev; then sed -i "s#^API_BASE_URL=.*#API_BASE_URL=${url}#" .env.dev; else echo "API_BASE_URL=${url}" >> .env.dev; fi
       # A release build bundles only the icons the code names; the runner is ephemeral.
       - name: Prune unused icons
         if: steps.flows.outputs.found == 'true'
@@ -86,4 +96,10 @@ jobs:
           name: e2e-report
           path: e2e-report.xml
           if-no-files-found: warn
+      - name: Delete the backend session
+        if: always() && env.TEMPO_SESSION_ID != ''
+        env:
+          TEMPO_BACKEND_URL: ${{ vars.TEMPO_BACKEND_URL }}
+          TEMPO_SESSIONS_KEY: ${{ secrets.TEMPO_SESSIONS_KEY }}
+        run: curl -sS -X DELETE -H "Authorization: Bearer ${TEMPO_SESSIONS_KEY}" "${TEMPO_BACKEND_URL}/__sessions/${TEMPO_SESSION_ID}"
 # @tempo-feature:maestro:end

@@ -32,11 +32,18 @@ module.exports = {
   testPathIgnorePatterns: ['/node_modules/', '/scripts/', '/e2e/'],
   // Polyfills must exist before any module is evaluated.
   setupFiles: ['react-native-unistyles/mocks', '<rootDir>/src/theme/unistyles.ts'],
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  // jest.backend.setup.js starts a Tempo local backend (backend/) in memory for each test file, in test mode. The app's
+  // requests go to it; a test's `server.use(...)` override still wins (see src/test-utils/msw/server.ts).
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts', '<rootDir>/jest.backend.setup.js'],
   moduleNameMapper: {
     ...reactNativePreset.moduleNameMapper,
     ...jestModuleNameMapper(),
+    // The built test kit (CommonJS) of the linked package; `yarn build:tools` builds it.
+    '^@rn-tempo/local-backend/test$':
+      '<rootDir>/node_modules/@rn-tempo/local-backend/dist/test.cjs',
   },
+  // Starting a backend per test file adds time to a file's first test.
+  testTimeout: 15000,
   transform: {
     // MSW and its interceptors are ESM-only and use syntax the React Native Babel preset rejects
     // (static class blocks, `import.meta`), so they get a plain Node-targeted CommonJS conversion instead.

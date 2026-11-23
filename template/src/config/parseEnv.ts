@@ -9,7 +9,6 @@ const EnvSchema = z
     APP_ENV: z.enum(['dev', 'staging', 'prod']),
     API_BASE_URL: z.url(),
     API_TIMEOUT_MS: z.coerce.number().int().positive().default(15000),
-    API_MOCKING: bool.default(false),
     SSL_PINNING_ENABLED: bool.default(false),
     SSL_PINS: z
       .string()

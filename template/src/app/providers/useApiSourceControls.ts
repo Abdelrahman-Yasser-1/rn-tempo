@@ -1,19 +1,19 @@
 import { useState } from 'react';
 
 import {
-  defaultDevApiUrl,
+  defaultBackendUrl,
   isApiSource,
   readApiSource,
-  readDevApiUrl,
+  readBackendUrl,
   writeApiSource,
-  writeDevApiUrl,
+  writeBackendUrl,
   type ApiSource,
 } from '@services/http/apiSource';
 
-/** Logic of the debug menu's "API source" controls: the stored source and the dev API URL. Changes apply after a restart. */
+/** Logic of the debug menu's "API source" controls: the stored source and the backend URL. Changes apply after a restart. */
 export function useApiSourceControls() {
   const [source, setSource] = useState<ApiSource>(() => readApiSource());
-  const [url, setUrl] = useState(() => readDevApiUrl());
+  const [url, setUrl] = useState(() => readBackendUrl());
   const [isSaved, setIsSaved] = useState(false);
 
   const onSourceChange = (value: string): void => {
@@ -26,14 +26,14 @@ export function useApiSourceControls() {
   };
 
   const onUrlSave = (): void => {
-    writeDevApiUrl(url);
-    setUrl(readDevApiUrl());
+    writeBackendUrl(url);
+    setUrl(readBackendUrl());
     setIsSaved(true);
   };
 
   const onUrlReset = (): void => {
-    writeDevApiUrl('');
-    setUrl(defaultDevApiUrl());
+    writeBackendUrl('');
+    setUrl(defaultBackendUrl());
     setIsSaved(true);
   };
 
@@ -41,7 +41,7 @@ export function useApiSourceControls() {
     source,
     url,
     isSaved,
-    defaultUrl: defaultDevApiUrl(),
+    defaultUrl: defaultBackendUrl(),
     onSourceChange,
     onUrlChange: setUrl,
     onUrlSave,

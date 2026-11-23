@@ -3,7 +3,7 @@ const { join } = require('node:path');
 
 const { backendPort } = require('../jest.backend.port');
 
-// Parses the committed `.env.dev` so tests see the same values as the dev flavor.
+// Parses the committed `.env.dev` so tests see the same values as the dev flavor (API_BASE_URL is replaced below).
 function parseEnvFile(path) {
   const values = {};
   for (const line of readFileSync(path, 'utf8').split('\n')) {
@@ -20,11 +20,7 @@ function parseEnvFile(path) {
 }
 
 const values = parseEnvFile(join(__dirname, '..', '.env.dev'));
-if (process.env.TEMPO_TEST_SOURCE === 'backend') {
-  // `yarn test:backend`: the suite runs against a Tempo local backend that jest.backend.setup.js starts on this port.
-  values.API_BASE_URL = `http://127.0.0.1:${backendPort()}`;
-}
-// Tests mock the network with MSW, not the in-app dev adapter that API_MOCKING=true enables.
-values.API_MOCKING = 'false';
+// The suite runs against a Tempo local backend that jest.backend.setup.js starts on this port.
+values.API_BASE_URL = `http://127.0.0.1:${backendPort()}`;
 
 module.exports = { __esModule: true, default: values };

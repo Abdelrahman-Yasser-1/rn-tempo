@@ -6,12 +6,11 @@ import { useApiSourceControls } from './useApiSourceControls';
 
 const OPTIONS = [
   { source: 'env', labelKey: 'debug.apiSource.env' },
-  { source: 'mocks', labelKey: 'debug.apiSource.mocks' },
-  { source: 'dev-api', labelKey: 'debug.apiSource.devApi' },
+  { source: 'backend', labelKey: 'debug.apiSource.backend' },
 ] as const;
 
 /**
- * Dev builds only: where the app's requests go (the build's env setting, the in-app mocks or the
+ * Dev builds only: where the app's requests go (the build's env setting or the
  * Tempo backend). Loaded through a guarded `require` in `DebugMenuScreen`, so release bundles never
  * contain it.
  */
@@ -36,7 +35,7 @@ export function ApiSourceControls() {
           />
         ))}
       </RadioGroup>
-      {vm.source === 'dev-api' ? (
+      {vm.source === 'backend' ? (
         <>
           <TextField
             accessibilityLabel={t('debug.apiSource.urlLabel')}
@@ -45,18 +44,18 @@ export function ApiSourceControls() {
             keyboardType="url"
             onChangeText={vm.onUrlChange}
             placeholder={vm.defaultUrl}
-            testID="debug-menu.dev-api-url-input"
+            testID="debug-menu.backend-url-input"
             value={vm.url}
           />
           <Row gap="sm" wrap>
             <Button
               onPress={vm.onUrlSave}
-              testID="debug-menu.dev-api-url-save"
+              testID="debug-menu.backend-url-save"
               title={t('debug.apiSource.save')}
             />
             <Button
               onPress={vm.onUrlReset}
-              testID="debug-menu.dev-api-url-reset"
+              testID="debug-menu.backend-url-reset"
               title={t('debug.apiSource.reset')}
               variant="secondary"
             />

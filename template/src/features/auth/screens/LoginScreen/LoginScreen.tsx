@@ -1,10 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
-import { ENV } from '@config/env';
 import { FormError } from '@features/auth/components/FormError';
-import { DEV_HINT_CREDENTIALS } from '@features/auth/constants';
-import { AuthLayout, Button, FormTextField, Text } from '@shared/components';
+import { AuthLayout, Button, FormTextField } from '@shared/components';
 
 import { styles } from './styles';
 import { useLoginScreen } from './useLoginScreen';
@@ -33,11 +31,6 @@ export function LoginScreen() {
               testID="login.register-link"
             />
           </View>
-          {__DEV__ && ENV.API_MOCKING && (
-            <Text variant="caption" color="textSecondary" align="center" testID="login.dev-hint">
-              {t('login.devHint', DEV_HINT_CREDENTIALS)}
-            </Text>
-          )}
         </>
       }
       testID="login-screen"
