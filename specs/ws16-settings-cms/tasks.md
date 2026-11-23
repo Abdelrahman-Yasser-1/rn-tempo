@@ -18,7 +18,7 @@ Format: `- [ ] T<id> (AC…) <summary>: commit: <header>, docs: <page>`. Each ta
 ## Phase C: languages (`ws16/c-languages`)
 - [x] T16.C1 (AC-L-2) Add `es`, `de` and `fr` locale files for every namespace, plus `TRANSLATIONS.md` (AC-L-5). Commit: `feat(i18n): add spanish german and french`.
 - [x] T16.C2 (AC-L-1, AC-L-3) Language registry: native names, `isRTL` per language, detection and fallback. Only an LTR↔RTL switch restarts. Commit: `feat(i18n): support five languages`.
-- [ ] T16.C3 (AC-L-2, AC-L-4) Plural and Intl tests per language. Commit: `test(i18n): cover plurals and formats per language`.
+- [x] T16.C3 (AC-L-2, AC-L-4) Plural and Intl tests per language. Commit: `test(i18n): cover plurals and formats per language`.
 - [ ] T16.C4 (AC-L-1) Language screen lists all five. Docs: `features/i18n` (adding a language). Commit: `feat(settings): list all supported languages`.
 
 ## Phase D: app icon (`ws16/d-app-icon`)
