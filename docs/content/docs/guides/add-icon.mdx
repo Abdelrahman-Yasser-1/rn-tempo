@@ -38,3 +38,22 @@ Every Tabler icon is already in `src/assets/icons/`, and every name autocomplete
 ## RTL mirroring
 
 `Icon` mirrors every name in `ICON_MIRRORED_IN_RTL` (generated into `src/assets/generated/icons.rtl.ts`): arrows, chevrons, carets and corners that point left or right, plus `login`, `logout`, `send`, `reply`, `forward`, `undo` and `redo`. Never flip an icon by hand with `scaleX`, and never choose `chevron-left` or `chevron-right` by direction. Name a new directional icon the same way and it flips on its own. Check it in Arabic.
+
+## Change the launcher icon
+
+From the app directory, edit `src/assets/icons-source/svg/default.svg` or one of
+`ocean.svg`, `forest.svg` and `sunset.svg` beside it. Keep the solid, full-canvas
+`<rect id="background" ... />` behind the mark. Android uses its colour for the
+adaptive background and draws the mark on a separate transparent layer.
+
+1. Run `yarn icons:render` to render the 1024×1024 PNG sources. The primary is
+   `icons-source/app-icon.png` and the alternates are `icons-source/alternates/<name>.png`.
+   The same command renders the 432×432 adaptive layers in `app-icon-foreground.png`
+   and `alternates/foreground/<name>.png`.
+2. Run `yarn icons` to regenerate the native resources. Dev and staging get their
+   DEV and STG ribbons. Production keeps the plain artwork.
+
+On iOS, append the capitalized alternate name to the primary set for the environment.
+For Ocean, the resulting names are `AppIcon-Ocean`, `AppIcon-Dev-Ocean`, and
+`AppIcon-Staging-Ocean`. On Android each flavor has `@mipmap/ic_launcher` and
+`@mipmap/ic_launcher_<name>`, with corresponding `_round` resources.

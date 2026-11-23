@@ -3,5 +3,6 @@
 PRODUCT_BUNDLE_IDENTIFIER = com.rntempo.app
 APP_DISPLAY_NAME = Tempo
 ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon
+#include? "AlternateIcons.xcconfig"
 APP_URL_SCHEME = tempo
 APP_ENV = prod

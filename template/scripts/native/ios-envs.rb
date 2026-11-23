@@ -180,6 +180,7 @@ envs.each do |env|
     PRODUCT_BUNDLE_IDENTIFIER = #{meta[:bundle_id]}
     APP_DISPLAY_NAME = #{meta[:display_name]}
     ASSETCATALOG_COMPILER_APPICON_NAME = #{meta[:icon]}
+    #include? "AlternateIcons.xcconfig"
     APP_URL_SCHEME = #{meta[:url_scheme]}
     APP_ENV = #{env[:key]}
   XCCONFIG
