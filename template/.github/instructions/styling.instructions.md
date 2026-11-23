@@ -18,7 +18,7 @@ Style with `StyleSheet.create` from `react-native-unistyles` and theme tokens. N
 - Scaling helpers in `@theme/scaling` (base design 390x844): `px`, `pxH` (clamped at 1.2), `fontPx` (clamped at 1.15), `pxM(size, factor = 0.5)`.
 - RTL-safe: use `start` / `end` (`marginStart`, `paddingEnd`, `start: 0`), never `left` / `right`.
 - Variants for size and appearance use `variants` plus `styles.useVariants({...})`, called **before** reading `styles`; pass `{}` for defaults.
-- Text scaling is capped: the shared `Text` sets `maxFontSizeMultiplier = 1.5`.
+- Text scaling is capped: the shared `Text` sets `maxFontSizeMultiplier = 1.5`. The user's text size (`useAppTheme().setFontScale`, 0.9 to 1.3, MMKV `app.font-scale`) is baked into `theme.typography`, so size and `lineHeight` already include it and the OS scale comes on top: use `minHeight`/`minWidth`, never a fixed `height`/`width`, around text, and read sizes from `theme.typography`, never a literal.
 - Compose UI from `@shared/components` (`Text`, `Box`, `Row`, `Column`, `Spacer`, `Screen`, `Button`, `TextField`, ...). Raw RN `Text`, `Image`, `Button`, `TextInput` and Touchables are lint errors outside `src/shared/components/**`.
 
 ```tsx

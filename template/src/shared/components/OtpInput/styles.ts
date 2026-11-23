@@ -15,7 +15,8 @@ export const styles = StyleSheet.create((theme) => ({
   },
   cell: {
     width: MIN_TOUCH_TARGET,
-    height: theme.spacing.xxxl + theme.spacing.xs,
+    // Minimum, not fixed: the digit grows with the text size and must not clip.
+    minHeight: theme.spacing.xxxl + theme.spacing.xs,
     textAlign: 'center',
     borderWidth: 1,
     borderRadius: theme.radii.md,
