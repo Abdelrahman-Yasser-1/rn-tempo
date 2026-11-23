@@ -5,11 +5,9 @@
     "src/app/App.tsx",
     "src/app/providers/DevTools.tsx",
     "src/**/index.ts",
-    "api/tempo-api.config.ts",
-    "api/generated/msw-handlers.ts",
     "src/assets/icons.keep.ts"
   ],
-  "project": ["src/**/*.{ts,tsx}", "api/**/*.ts"],
+  "project": ["src/**/*.{ts,tsx}"],
   "ignoreDependencies": ["babel-jest"],
   "ignoreBinaries": ["tempo", "adb"],
   "ignoreExportsUsedInFile": true,

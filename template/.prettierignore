@@ -13,6 +13,5 @@ yarn.lock
 ai/skills/react-native-best-practices
 ai/skills/typescript-advanced-types
 # @tempo-feature:ai-vendored-skills:end
-api/generated/*.json
 # Written by the Tempo local backend engine and its app.
 backend

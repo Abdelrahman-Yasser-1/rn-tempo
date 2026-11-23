@@ -5,9 +5,9 @@ import { useAuthStore } from '@features/auth/store/auth.store';
 import { useNetworkStore } from '@services/network/network';
 import { tokenStore } from '@services/secure-storage/tokenStore';
 import { fillFields } from '@test-utils/form';
-import { MOCK_ACCESS_TOKEN, MOCK_CREDENTIALS } from '@test-utils/seed';
 import { server } from '@test-utils/msw/server';
 import { renderHookWithProviders } from '@test-utils/renderWithProviders';
+import { MOCK_ACCESS_TOKEN, MOCK_CREDENTIALS } from '@test-utils/seed';
 
 import { useLoginScreen } from './useLoginScreen';
 

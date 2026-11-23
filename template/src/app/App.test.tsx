@@ -8,13 +8,8 @@ import { ENV } from '@config/env';
 import { useAuthStore } from '@features/auth';
 import { queryClient } from '@services/http/queryClient';
 import { tokenStore } from '@services/secure-storage/tokenStore';
-import {
-  MOCK_ACCESS_TOKEN,
-  MOCK_REFRESH_TOKEN,
-  mockAppConfig,
-  mockUser,
-} from '@test-utils/seed';
 import { server } from '@test-utils/msw/server';
+import { MOCK_ACCESS_TOKEN, MOCK_REFRESH_TOKEN, mockAppConfig, mockUser } from '@test-utils/seed';
 
 import { App } from './App';
 import { defaultSteps } from './bootstrap/bootstrap';
