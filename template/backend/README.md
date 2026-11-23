@@ -1,6 +1,6 @@
 # Tempo local backend
 
-This folder is the app's backend as a [Tempo Local Backend](https://github.com/Abdelrahman-Yasser-1/rn-tempo) folder: a real HTTP API (sign-in, refresh, profile, users, 100 products, OTP, app config, media upload, a stats handler and a "What's new" content type) that you edit in an app instead of in code. It answers the same C13 contract as `api/` and it is checked against it (`yarn backend:check`, part of `yarn verify`).
+This folder is the app's backend as a [Tempo Local Backend](https://github.com/Abdelrahman-Yasser-1/rn-tempo) folder: a real HTTP API (sign-in, refresh, profile, users, 100 products, OTP, app config, media upload, a stats handler and a "What's new" content type) that you edit in an app instead of in code.
 
 Sign in as `emilys` / `emilyspass`.
 
@@ -21,6 +21,6 @@ Sign in as `emilys` / `emilyspass`.
 
 ## Tests
 
-`yarn test:backend` runs the whole Jest suite against this folder, in memory and in test mode (no delays, no random faults, a fixed clock). Each test file gets its own copy, so tests never share data. `yarn test` (the default) still uses the old MSW handlers from `api/`, which are deprecated.
+`yarn test` runs the whole Jest suite against this folder, in memory and in test mode (no delays, no random faults, a fixed clock). Each test file gets its own copy, so tests never share data. A test that needs a special answer overrides one route with MSW's `server.use(...)`.
 
 Point the tests at another backend with `TEMPO_BACKEND=<folder or https://host/b/name>` and, for a team server, `TEMPO_BACKEND_KEY=<read-definition key>`.

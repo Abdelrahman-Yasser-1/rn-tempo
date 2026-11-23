@@ -16,7 +16,7 @@ Read, Grep, Glob, Edit, Write, Bash (`yarn jest <path>`, `yarn verify:changed`).
 ## Checklist
 
 - Read `ai/rules/testing.md` and the spec (`specs/<feature>/spec.md`) if one exists.
-- Use `renderWithProviders`, `getByRole`, MSW handlers and factories; `await` render and user events.
+- Use `renderWithProviders`, `getByRole`, the local backend (one route overridden with `server.use` when a test needs a special answer) and factories; `await` render and user events.
 - Name spec'd tests `AC-n: ...`.
 - Cover happy path, loading, empty, error, and a11y role and state.
 - Run the tests and `yarn verify:changed`; fix test failures at the cause.

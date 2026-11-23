@@ -70,7 +70,7 @@ specs/          product.md, tech.md, one folder per feature
 scripts/        ai-log, ai-sync, assets and icons-add, native helpers, verify-changed, spec-check
 ```
 
-Aliases: `@app` `@navigation` `@features` `@shared` `@services` `@theme` `@assets` `@locales` `@config` `@test-utils`, each mapping to `src/<name>`, and `@api` (the root `api/` folder, for the endpoint definitions and generated mocks). They live in `tsconfig.json` `paths` only (Babel, Jest and ESLint read them); import through them, never through `../`. Barrels name their exports (`export { A } from './A'`), never `export *`. A new runtime dependency needs an ownership entry in `eslint.config.mjs` (`yarn lint:deps`).
+Aliases: `@app` `@navigation` `@features` `@shared` `@services` `@theme` `@assets` `@locales` `@config` `@test-utils`, each mapping to `src/<name>`. They live in `tsconfig.json` `paths` only (Babel, Jest and ESLint read them); import through them, never through `../`. Barrels name their exports (`export { A } from './A'`), never `export *`. A new runtime dependency needs an ownership entry in `eslint.config.mjs` (`yarn lint:deps`).
 
 ## Golden rules
 
@@ -86,7 +86,7 @@ Aliases: `@app` `@navigation` `@features` `@shared` `@services` `@theme` `@asset
 10. Server data lives in TanStack Query, client state in Zustand; tokens never go in stores or MMKV.
 11. All HTTP goes through `request()` with a Zod schema; env through `ENV` from `@config/env`; storage through `@services/storage`.
 12. Accessibility props, 44x44 targets and `testID` conventions on every interactive component.
-13. Every new util, hook, store, service, component and screen has a test. Query with `getByRole`; mock the network with MSW; spec'd tests start with `AC-n:`.
+13. Every new util, hook, store, service, component and screen has a test. Query with `getByRole`; tests run against the local backend in `backend/`, and one route is overridden with MSW's `server.use`; spec'd tests start with `AC-n:`.
 14. Use generators (`yarn tempo g ...`) instead of hand-creating files when available.
 15. Small Conventional Commits `type(scope): subject` (scope required, about 200 lines max, each one green); never `--no-verify`.
 16. Run `yarn verify:changed` before finishing and `yarn verify` before pushing; never claim done with failing checks.
@@ -127,7 +127,7 @@ Also: check library APIs with context7 for the **pinned** version, never from me
 
 ## Testing
 
-Rules and examples: `ai/rules/testing.md`. RNTL 14 API: <https://callstack.github.io/react-native-testing-library/>. Test behaviour through roles and labels, mock the network with MSW, name spec'd tests `AC-n: ...`.
+Rules and examples: `ai/rules/testing.md`. RNTL 14 API: <https://callstack.github.io/react-native-testing-library/>. Test behaviour through roles and labels, the network is the local backend (`backend/`) with MSW `server.use` overrides, name spec'd tests `AC-n: ...`.
 
 ## Where the rules live
 

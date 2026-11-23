@@ -14,7 +14,7 @@ description: Review a pull request or the current diff against this project's ch
    - UI: tokens only, i18n keys in `en` and `ar`, a11y props, RTL-safe, `testID` convention.
    - State and API: server data in Query, `request()` with Zod, keys factory, mutations invalidate, no tokens in stores.
    - Security: no secrets, `ENV` only, no `console`.
-   - Tests: new code covered, `getByRole`, MSW, AC-prefixed names for spec'd behavior.
+   - Tests: new code covered, `getByRole`, the local backend with `server.use` overrides, AC-prefixed names for spec'd behavior.
    - Commits: Conventional with scope, small, trailers present, checkboxes ticked.
    - Dependencies: no unplanned adds or bumps; pins exact.
    - PR: description complete, screenshots for UI (iOS + Android, light + dark, en + ar).

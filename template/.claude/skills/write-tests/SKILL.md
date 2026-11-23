@@ -9,7 +9,7 @@ description: Write Jest and React Native Testing Library tests for a component, 
 1. Read `ai/rules/testing.md`.
 2. Put the test next to the source (`X.test.tsx` / `x.test.ts`).
 3. Components and screens: `await renderWithProviders(<X />)`, query with `screen.getByRole(..., { name })`, interact with `await user.press/type(...)`, assert with RNTL matchers (`toBeOnTheScreen`).
-4. Network: add or reuse MSW handlers in `src/test-utils/msw/handlers/<domain>.ts` and data from `@test-utils/factories/*`. Never mock axios.
+4. Network: the Tempo local backend (`backend/`) answers by default, in test mode. For a special answer (an error, a slow reply) override one route with `server.use(...)` from `@test-utils/msw/server`. Data: `@test-utils/factories/*` and the seeded values in `@test-utils/seed`. Never mock axios or fetch.
 5. Cover happy path, loading, empty, error, and a11y role and state.
 6. When a spec exists, start test names with the AC ID: `it('AC-3: ...')`. Check coverage with `yarn spec:check`.
 7. Hooks: `renderHook`; stores: call actions and assert state. Pure utils: table-driven tests.
