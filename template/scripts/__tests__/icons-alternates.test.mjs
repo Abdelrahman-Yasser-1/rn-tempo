@@ -41,6 +41,10 @@ it('AC-I-3: SVG rendering reproduces the flat sources and transparent adaptive l
   const out = await mkdtemp(path.join(tmpdir(), 'tempo-icon-art-'));
   t.after(() => rm(out, { recursive: true, force: true }));
   await renderSources(path.join(sources, 'svg'), out);
+  for (const name of ['default', ...names]) {
+    const preview = await sharp(path.join(out, 'previews', name + '.png')).metadata();
+    assert.deepEqual([preview.width, preview.height], [96, 96]);
+  }
   for (const [relative, hash] of Object.entries(await hashes(out))) {
     assert.equal(
       hash,

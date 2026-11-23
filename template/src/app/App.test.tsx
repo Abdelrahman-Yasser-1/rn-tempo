@@ -42,6 +42,7 @@ jest.mock('@features/settings', () => {
     SettingsScreen: () => <MockText>Settings</MockText>,
     LanguageScreen: () => <MockText>Language</MockText>,
     ThemeScreen: () => <MockText>Theme</MockText>,
+    AppIconScreen: () => <MockText>App icon</MockText>,
     TextSizeScreen: () => <MockText>Text size</MockText>,
     AboutScreen: () => <MockText>About</MockText>,
   };

@@ -74,6 +74,7 @@ jest.mock('@features/settings', () => {
     SettingsScreen: () => <MockText>{'screen:Settings'}</MockText>,
     LanguageScreen: () => <MockText>{'screen:Language'}</MockText>,
     ThemeScreen: () => <MockText>{'screen:Theme'}</MockText>,
+    AppIconScreen: () => <MockText>{'screen:AppIcon'}</MockText>,
     TextSizeScreen: () => <MockText>{'screen:TextSize'}</MockText>,
     AboutScreen: () => <MockText>{'screen:About'}</MockText>,
   };
@@ -141,6 +142,7 @@ describe('RootNavigator', () => {
   test.each([
     [`${SCHEME}settings`, 'screen:Settings'],
     [`${SCHEME}settings/theme`, 'screen:Theme'],
+    [`${SCHEME}settings/app-icon`, 'screen:AppIcon'],
     [`${SCHEME}settings/text-size`, 'screen:TextSize'],
     [`${SCHEME}profile/edit`, 'screen:EditProfile'],
     [`${SCHEME}items/42`, 'screen:ItemDetails'], // @tempo-feature:samples

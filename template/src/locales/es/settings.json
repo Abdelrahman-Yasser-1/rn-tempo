@@ -6,6 +6,17 @@
     "title": "Acerca de",
     "version": "Versión"
   },
+  "appIcon": {
+    "androidNote": "El icono puede tardar unos segundos en actualizarse. Es posible que se eliminen los accesos directos de la pantalla de inicio.",
+    "changeError": "No se pudo cambiar el icono de la aplicación.",
+    "default": "Predeterminado",
+    "forest": "Bosque",
+    "ocean": "Océano",
+    "readError": "No se pudo cargar el icono actual.",
+    "sunset": "Atardecer",
+    "title": "Icono de la aplicación",
+    "unsupported": "Este dispositivo no permite cambiar el icono de la aplicación."
+  },
   "crashReports": {
     "description": "Envía informes de fallos anónimos para que los problemas se corrijan antes.",
     "title": "Compartir informes de fallos"

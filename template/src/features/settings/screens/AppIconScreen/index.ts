@@ -1,0 +1,1 @@
+export { AppIconScreen } from './AppIconScreen';

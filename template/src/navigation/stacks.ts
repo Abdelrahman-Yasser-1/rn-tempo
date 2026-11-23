@@ -9,6 +9,7 @@ import {
   AboutScreen,
   LanguageScreen,
   SettingsScreen,
+  AppIconScreen,
   TextSizeScreen,
   ThemeScreen,
 } from '@features/settings';
@@ -59,6 +60,7 @@ export function createSettingsStack() {
       Settings: { screen: SettingsScreen, linking: LINK_PATHS.Settings },
       Language: { screen: LanguageScreen, linking: LINK_PATHS.Language },
       Theme: { screen: ThemeScreen, linking: LINK_PATHS.Theme },
+      AppIcon: { screen: AppIconScreen, linking: LINK_PATHS.AppIcon },
       TextSize: { screen: TextSizeScreen, linking: LINK_PATHS.TextSize },
       About: { screen: AboutScreen, linking: LINK_PATHS.About },
     },

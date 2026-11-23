@@ -11,6 +11,8 @@ const sourceDir = fileURLToPath(new URL('../../src/assets/icons-source/', import
 export async function renderSources(inputDir = path.join(sourceDir, 'svg'), outputDir = sourceDir) {
   const layers = path.join(outputDir, 'alternates/foreground');
   await mkdir(layers, { recursive: true });
+  const previews = path.join(outputDir, 'previews');
+  await mkdir(previews, { recursive: true });
   for (const file of (await readdir(inputDir)).filter((name) => name.endsWith('.svg')).sort()) {
     const name = path.basename(file, '.svg');
     const primary = name === 'default';
@@ -26,6 +28,11 @@ export async function renderSources(inputDir = path.join(sourceDir, 'svg'), outp
       .removeAlpha()
       .png()
       .toFile(path.join(outputDir, flatFile));
+    await sharp(Buffer.from(svg))
+      .resize(96, 96)
+      .removeAlpha()
+      .png()
+      .toFile(path.join(previews, name + '.png'));
     // Inset the mark into the adaptive canvas so the lower ribbon clears the stem.
     const mark = await sharp(Buffer.from(foreground)).resize(360, 360).png().toBuffer();
     await sharp(mark)

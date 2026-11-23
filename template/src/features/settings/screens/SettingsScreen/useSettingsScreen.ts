@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import { useLogout } from '@features/auth';
 import { TEXT_SIZE_OPTIONS } from '@features/settings/constants';
+import { useCurrentAppIcon } from '@features/settings/hooks/useCurrentAppIcon';
 import type { SettingsStackParamList } from '@navigation/types';
 import { useLanguage } from '@services/i18n/useLanguage';
 import { useAppTheme } from '@theme/index';
@@ -15,6 +16,7 @@ export function useSettingsScreen() {
   const { mode, fontScale } = useAppTheme();
   const fontScaleId =
     TEXT_SIZE_OPTIONS.find((option) => option.scale === fontScale)?.id ?? 'default';
+  const { value, names } = useCurrentAppIcon();
   const logout = useLogout();
   const [isLogoutVisible, setIsLogoutVisible] = useState(false);
 
@@ -51,6 +53,10 @@ export function useSettingsScreen() {
     language,
     mode,
     fontScaleId,
+    appIconLabel: value ? names[value] : undefined,
+    onAppIcon: () => {
+      navigation.navigate('AppIcon');
+    },
     isLogoutVisible,
     onLanguage,
     onTheme,

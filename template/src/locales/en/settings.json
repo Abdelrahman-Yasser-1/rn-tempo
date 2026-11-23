@@ -6,6 +6,17 @@
     "title": "About",
     "version": "Version"
   },
+  "appIcon": {
+    "androidNote": "The icon may take a few seconds to update. Home screen shortcuts may be removed.",
+    "changeError": "Couldn’t change the app icon.",
+    "default": "Default",
+    "forest": "Forest",
+    "ocean": "Ocean",
+    "readError": "Couldn’t read the current icon.",
+    "sunset": "Sunset",
+    "title": "App icon",
+    "unsupported": "This device doesn’t support changing the app icon."
+  },
   "crashReports": {
     "description": "Send anonymous crash reports so problems get fixed faster.",
     "title": "Share crash reports"
