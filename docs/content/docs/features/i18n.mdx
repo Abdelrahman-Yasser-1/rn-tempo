@@ -1,0 +1,43 @@
+---
+title: Languages
+description: The five shipped languages (English, Arabic, Spanish, German and French), how the language is chosen and switched, and how to add another one.
+---
+
+## What it is
+
+The app ships five languages: English (`en`, the source and fallback), Arabic (`ar`, right-to-left), Spanish (`es`), German (`de`) and French (`fr`). Every language has every namespace with an identical key set, and `yarn i18n:check` enforces it.
+
+- **First launch:** the device language if it is one of the five (a region such as `fr-CA` counts as `fr`), otherwise English.
+- **Settings > Language:** lists each language in its own name (English, العربية, Español, Deutsch, Français). The choice is stored in MMKV `app.language`.
+- **Switching between two left-to-right languages** (for example English to French) applies live, with no dialog and no restart.
+- **Switching between left-to-right and right-to-left** (to or from Arabic) asks for confirmation, then restarts the app to apply the layout direction.
+
+Dates, numbers and currency format through `Intl` in the active language, both inside sentences (`{{amount, currency(USD)}}`) and through the helpers in `@shared/utils/format`.
+
+## Translation status
+
+Arabic is maintained with the template. Spanish, German and French start as **draft machine translations**. `src/locales/TRANSLATIONS.md` lists the status of every language with a reviewer column; a native speaker reviews the files and signs the language off there before a release that ships it.
+
+## Plural forms
+
+Write one key per plural form that the language needs, using the i18next suffixes. The forms come from CLDR through `Intl.PluralRules`:
+
+| Language | Forms                                         |
+| -------- | --------------------------------------------- |
+| en, de   | `_one`, `_other`                              |
+| es, fr   | `_one`, `_many`, `_other`                     |
+| ar       | `_zero`, `_one`, `_two`, `_few`, `_many`, `_other` |
+
+`many` in Spanish and French applies to large round numbers (one million and up), and some languages need a preposition there (`1 000 000 d'articles`). `yarn i18n:check` fails when a required form is missing.
+
+## Adding a language
+
+1. **Locale files.** Create `src/locales/<code>/` with one JSON file per namespace, with the same keys as `en/`. Keep `{{placeholders}}`, formatter options and plural suffixes intact. Use the plural forms the language needs (see above).
+2. **Register the resources.** Import the files in `src/services/i18n/resources.ts` and add the language block next to the others. Keep the `// @tempo-feature:samples` marker on the `items` lines.
+3. **Registry entry.** Add `{ code, nativeName, isRTL }` to `LANGUAGES` in `src/services/i18n/languages.ts`. The Language screen, the detection and the restart rule all read from it.
+4. **i18next config.** Add the code to `locales` and `secondaryLanguages` in `i18next.config.ts` so `yarn i18n:check` covers it.
+5. **Feature manifests.** For every entry in `.tempo/features/*.json` that removes keys from `src/locales/<other>/...`, add the same entry for the new language, so `tempo feature remove` leaves no orphans. Entries with a glob such as `src/locales/*/items.json` already cover it. Add a `{{feature}}.json.tmpl` for it under `packages/cli/templates/feature/src/locales/<code>/` if you use the CLI generators from source.
+6. **TRANSLATIONS.md.** Add a row with the status `draft (machine)` and an empty reviewer, and replace it after a native review.
+7. **Check.** Run `yarn i18n:check`, then `yarn verify`. Look at the app in the new language: long words in buttons and tabs are the usual problem.
+
+For a language that is written right to left, set `isRTL: true` and test the layout on a device; switching to or from it restarts the app.
