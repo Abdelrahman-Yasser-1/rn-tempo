@@ -6,6 +6,17 @@
     "title": "Über",
     "version": "Version"
   },
+  "appIcon": {
+    "androidNote": "Das Symbol wird eventuell erst nach einigen Sekunden aktualisiert. Verknüpfungen auf dem Startbildschirm können dabei verloren gehen.",
+    "changeError": "Das App-Symbol konnte nicht geändert werden.",
+    "default": "Standard",
+    "forest": "Wald",
+    "ocean": "Ozean",
+    "readError": "Das aktuelle Symbol konnte nicht geladen werden.",
+    "sunset": "Sonnenuntergang",
+    "title": "App-Symbol",
+    "unsupported": "Dieses Gerät unterstützt das Ändern des App-Symbols nicht."
+  },
   "crashReports": {
     "description": "Sende anonyme Absturzberichte, damit Probleme schneller behoben werden.",
     "title": "Absturzberichte teilen"

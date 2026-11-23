@@ -28,6 +28,7 @@ export type SettingsStackParamList = {
   Theme: undefined;
   TextSize: undefined;
   About: undefined;
+  AppIcon: undefined;
 };
 
 export type MainTabsParamList = {

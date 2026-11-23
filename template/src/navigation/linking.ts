@@ -19,6 +19,7 @@ export const LINK_PATHS = {
   Settings: 'settings',
   Language: 'settings/language',
   Theme: 'settings/theme',
+  AppIcon: 'settings/app-icon',
   TextSize: 'settings/text-size',
   About: 'settings/about',
   DebugMenu: 'debug',

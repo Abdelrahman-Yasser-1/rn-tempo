@@ -4,13 +4,15 @@ English (`en`) is the source language. Arabic (`ar`) is maintained with the temp
 
 ## Status per language
 
-| Language | Code | Status                     | Reviewer | Date |
-| -------- | ---- | -------------------------- | -------- | ---- |
-| English  | en   | source                     |          |      |
-| Arabic   | ar   | reviewed with the template |          |      |
-| Spanish  | es   | draft (machine)            |          |      |
-| German   | de   | draft (machine)            |          |      |
-| French   | fr   | draft (machine)            |          |      |
+| Language | Code | Status                    | Reviewer | Date |
+| -------- | ---- | ------------------------- | -------- | ---- |
+| English  | en   | source                    |          |      |
+| Arabic   | ar   | draft (new app icon keys) |          |      |
+| Spanish  | es   | draft (machine)           |          |      |
+| German   | de   | draft (machine)           |          |      |
+| French   | fr   | draft (machine)           |          |      |
+
+The new `settings.appIcon` strings need review in Arabic, Spanish, German and French.
 
 ## Signing off a language
 

@@ -6,6 +6,17 @@
     "title": "À propos",
     "version": "Version"
   },
+  "appIcon": {
+    "androidNote": "L’icône peut mettre quelques secondes à changer. Les raccourcis de l’écran d’accueil peuvent disparaître.",
+    "changeError": "Impossible de changer l’icône de l’application.",
+    "default": "Par défaut",
+    "forest": "Forêt",
+    "ocean": "Océan",
+    "readError": "Impossible de charger l’icône actuelle.",
+    "sunset": "Coucher de soleil",
+    "title": "Icône de l’application",
+    "unsupported": "Cet appareil ne permet pas de changer l’icône de l’application."
+  },
   "crashReports": {
     "description": "Envoyez des rapports de plantage anonymes pour que les problèmes soient corrigés plus vite.",
     "title": "Partager les rapports de plantage"
