@@ -3,6 +3,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useState } from 'react';
 
 import { useLogout } from '@features/auth';
+import { TEXT_SIZE_OPTIONS } from '@features/settings/constants';
 import type { SettingsStackParamList } from '@navigation/types';
 import { useLanguage } from '@services/i18n/useLanguage';
 import { useAppTheme } from '@theme/index';
@@ -11,7 +12,9 @@ import { useAppTheme } from '@theme/index';
 export function useSettingsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<SettingsStackParamList, 'Settings'>>();
   const { language } = useLanguage();
-  const { mode } = useAppTheme();
+  const { mode, fontScale } = useAppTheme();
+  const fontScaleId =
+    TEXT_SIZE_OPTIONS.find((option) => option.scale === fontScale)?.id ?? 'default';
   const logout = useLogout();
   const [isLogoutVisible, setIsLogoutVisible] = useState(false);
 
@@ -21,6 +24,10 @@ export function useSettingsScreen() {
 
   const onTheme = () => {
     navigation.navigate('Theme');
+  };
+
+  const onTextSize = () => {
+    navigation.navigate('TextSize');
   };
 
   const onAbout = () => {
@@ -43,9 +50,11 @@ export function useSettingsScreen() {
   return {
     language,
     mode,
+    fontScaleId,
     isLogoutVisible,
     onLanguage,
     onTheme,
+    onTextSize,
     onAbout,
     onLogoutPress,
     onLogoutCancel,

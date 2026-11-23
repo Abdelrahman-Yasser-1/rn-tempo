@@ -5,7 +5,13 @@ import { HomeScreen } from '@features/home';
 import { ItemCreateScreen, ItemDetailsScreen, ItemsListScreen } from '@features/items';
 // @tempo-feature:samples:end
 import { EditProfileScreen, ProfileScreen } from '@features/profile';
-import { AboutScreen, LanguageScreen, SettingsScreen, ThemeScreen } from '@features/settings';
+import {
+  AboutScreen,
+  LanguageScreen,
+  SettingsScreen,
+  TextSizeScreen,
+  ThemeScreen,
+} from '@features/settings';
 
 import { LINK_PATHS } from './linking';
 import { ScreenErrorLayout } from './ScreenErrorLayout';
@@ -53,6 +59,7 @@ export function createSettingsStack() {
       Settings: { screen: SettingsScreen, linking: LINK_PATHS.Settings },
       Language: { screen: LanguageScreen, linking: LINK_PATHS.Language },
       Theme: { screen: ThemeScreen, linking: LINK_PATHS.Theme },
+      TextSize: { screen: TextSizeScreen, linking: LINK_PATHS.TextSize },
       About: { screen: AboutScreen, linking: LINK_PATHS.About },
     },
   });

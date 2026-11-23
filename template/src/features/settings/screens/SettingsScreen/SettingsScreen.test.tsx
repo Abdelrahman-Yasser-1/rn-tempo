@@ -46,6 +46,9 @@ describe('SettingsScreen', () => {
     await user.press(screen.getByText('Theme'));
     expect(mockNavigation.navigate).toHaveBeenLastCalledWith('Theme');
 
+    await user.press(screen.getByText('Text size'));
+    expect(mockNavigation.navigate).toHaveBeenLastCalledWith('TextSize');
+
     await user.press(screen.getByText('About'));
     expect(mockNavigation.navigate).toHaveBeenLastCalledWith('About');
   });

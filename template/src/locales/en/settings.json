@@ -29,6 +29,14 @@
     "on": "On",
     "title": "Notifications"
   },
+  "textSize": {
+    "default": "Default",
+    "extraLarge": "Extra large",
+    "large": "Large",
+    "preview": "The quick brown fox jumps over the lazy dog.",
+    "small": "Small",
+    "title": "Text size"
+  },
   "theme": {
     "dark": "Dark",
     "light": "Light",

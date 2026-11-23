@@ -26,6 +26,7 @@ export type SettingsStackParamList = {
   Settings: undefined;
   Language: undefined;
   Theme: undefined;
+  TextSize: undefined;
   About: undefined;
 };
 

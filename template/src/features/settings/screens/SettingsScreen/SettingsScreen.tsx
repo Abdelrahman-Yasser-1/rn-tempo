@@ -14,6 +14,13 @@ export function SettingsScreen() {
   const languageNames = { en: t('language.english'), ar: t('language.arabic') };
   const themeNames = { system: t('theme.system'), light: t('theme.light'), dark: t('theme.dark') };
 
+  const textSizeNames = {
+    small: t('textSize.small'),
+    default: t('textSize.default'),
+    large: t('textSize.large'),
+    extraLarge: t('textSize.extraLarge'),
+  };
+
   return (
     <Screen preset="scroll" contentContainerStyle={styles.content} testID="settings-screen">
       <Header title={t('title')} testID="settings.header" />
@@ -36,6 +43,16 @@ export function SettingsScreen() {
         accessibilityRole="button"
         onPress={vm.onTheme}
         testID="settings.theme"
+      />
+      <ListItem
+        title={t('textSize.title')}
+        subtitle={textSizeNames[vm.fontScaleId]}
+        left={<Icon name="abc" />}
+        showChevron
+        showDivider
+        accessibilityRole="button"
+        onPress={vm.onTextSize}
+        testID="settings.text-size"
       />
       {/* @tempo-feature:push-notifications:start */}
       <NotificationsRow />
