@@ -3608,6 +3608,7 @@ __metadata:
     busboy: "npm:1.6.0"
     graphql: "npm:17.1.0"
     jest: "npm:30.5.2"
+    pino: "npm:10.4.0"
     swagger-ui-dist: "npm:5.34.1"
     tsdown: "npm:0.23.2"
     typescript: "npm:6.0.3"
