@@ -1,0 +1,159 @@
+{
+  "debug": {
+    "apiSource": {
+      "backend": "Backend de Tempo",
+      "env": "Valor de compilación (archivo env)",
+      "hint": "Se aplica al reiniciar la app. El backend de Tempo es tu Tempo Local Backend: la app de Mac, `yarn backend` o un servidor de equipo en https://<host>/b/<name>. En un teléfono usa su URL de red local.",
+      "reset": "Usar el valor predeterminado",
+      "save": "Guardar URL",
+      "saved": "Guardado. Reinicia la app para aplicarlo.",
+      "title": "Origen de la API",
+      "urlLabel": "URL del backend de Tempo"
+    },
+    "apiUrl": {
+      "clear": "Borrar",
+      "hint": "Se guarda en el almacenamiento. Se aplica al reiniciar la app. Déjalo vacío para usar el valor de compilación.",
+      "save": "Guardar",
+      "title": "URL base de la API (anulación)"
+    },
+    "crash": {
+      "hint": "Envía un error de prueba a tu proveedor de informes de fallos. Las compilaciones de depuración nunca informan; usa una versión de staging.",
+      "send": "Enviar error de prueba",
+      "title": "Informes de fallos"
+    },
+    "data": {
+      "clearQueryCache": "Borrar caché de consultas",
+      "clearStorage": "Borrar almacenamiento",
+      "clearTokens": "Borrar tokens (cerrar sesión)",
+      "title": "Datos"
+    },
+    "done": "Listo",
+    "env": {
+      "apiBaseUrl": "URL base de la API",
+      "appEnv": "Entorno",
+      "bundleId": "ID del paquete",
+      "platform": "Plataforma",
+      "title": "Entorno",
+      "version": "Versión"
+    },
+    "flags": {
+      "reset": "Restablecer anulaciones",
+      "title": "Indicadores de funciones"
+    },
+    "forms": {
+      "hint": "Dos flujos de demostración: uno desde una configuración en código y otro desde JSON incluido.",
+      "openCode": "Abrir la demo de configuración en código",
+      "openJson": "Abrir la demo JSON",
+      "title": "Formularios dinámicos"
+    },
+    "networkLog": {
+      "hint": "Solicitudes realizadas por esta app. Las de inicio de sesión, token y perfil están ocultas. Todo lo demás se muestra tal como se envió, incluida la cabecera Authorization, así que es solo para compilaciones de desarrollo y staging.",
+      "open": "Abrir registro de red",
+      "title": "Registro de red"
+    },
+    "pushToken": {
+      "placeholder": "Aún no disponible. Las notificaciones push no forman parte de la plantilla.",
+      "title": "Token push"
+    },
+    "shake": {
+      "hint": "Agita el dispositivo para abrir este menú desde cualquier parte de la app."
+    },
+    "storybook": {
+      "hint": "Define STORYBOOK_ENABLED=true en el archivo env y reinicia para abrir Storybook en lugar de la app.",
+      "title": "Storybook"
+    }
+  },
+  "forceUpdate": {
+    "message": "Esta versión de la app ya no es compatible. Actualiza para continuar.",
+    "title": "Actualización necesaria",
+    "updateButton": "Actualizar"
+  },
+  "formsDemo": {
+    "code": {
+      "addDependant": "Añadir dependiente",
+      "cities": {
+        "cairo": "El Cairo",
+        "giza": "Guiza",
+        "jeddah": "Yeda",
+        "riyadh": "Riad"
+      },
+      "city": "Ciudad",
+      "companyName": "Nombre de la empresa",
+      "countries": {
+        "eg": "Egipto",
+        "sa": "Arabia Saudí"
+      },
+      "country": "País",
+      "dependantItem": "Dependiente",
+      "dependantName": "Nombre",
+      "dependants": "Dependientes",
+      "email": "Correo electrónico",
+      "fullName": "Nombre completo",
+      "hasCompany": "Trabajo para una empresa",
+      "password": "Contraseña",
+      "price": "Precio unitario",
+      "quantity": "Cantidad",
+      "steps": {
+        "about": "Sobre ti",
+        "family": "Familia",
+        "order": "Pedido",
+        "work": "Trabajo"
+      },
+      "total": "Total (calculado)",
+      "username": "Usuario (prueba \"taken\")",
+      "usernameTaken": "Este nombre de usuario ya está en uso."
+    }
+  },
+  "linking": {
+    "openFailed": "No pudimos abrir ese enlace."
+  },
+  "maintenance": {
+    "message": "La app está en mantenimiento. Inténtalo de nuevo en unos minutos.",
+    "retryButton": "Reintentar",
+    "title": "Volvemos enseguida"
+  },
+  "notFound": {
+    "homeButton": "Ir al inicio",
+    "message": "La página que buscas no existe o se ha movido.",
+    "title": "Página no encontrada"
+  },
+  "onboarding": {
+    "getStarted": "Empezar",
+    "next": "Siguiente",
+    "pageLabel": "Página {{current}} de {{total}}",
+    "skip": "Omitir",
+    "slide1": {
+      "body": "Un punto de partida listo para producción para tu próxima app.",
+      "title": "Te damos la bienvenida"
+    },
+    "slide2": {
+      "body": "Elige entre cinco idiomas, con compatibilidad total de derecha a izquierda.",
+      "title": "Tu idioma, a tu manera"
+    },
+    "slide3": {
+      "body": "Inicia sesión o crea una cuenta para empezar.",
+      "title": "Todo listo"
+    }
+  },
+  "security": {
+    "closeButton": "Cerrar",
+    "message": "Para tu protección, la app no puede continuar en este dispositivo.",
+    "reason": {
+      "debugMode": "Hay un depurador conectado a la app.",
+      "hookDetected": "Se detectó manipulación en tiempo de ejecución.",
+      "jailbroken": "Este dispositivo parece tener root o jailbreak.",
+      "ssl": "No se pudo verificar la conexión con el servidor."
+    },
+    "title": "Problema de seguridad detectado"
+  },
+  "startupError": {
+    "message": "La app no pudo iniciarse. Inténtalo de nuevo.",
+    "retryButton": "Intentar de nuevo",
+    "title": "Algo salió mal"
+  },
+  "tabs": {
+    "home": "Inicio",
+    "profile": "Perfil",
+    "settings": "Ajustes"
+  }
+}

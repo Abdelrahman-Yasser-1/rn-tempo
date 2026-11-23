@@ -1,0 +1,10 @@
+{
+  "forbidden": "No tienes permiso para hacer esto.",
+  "network": "Sin conexión a internet. Comprueba tu red e inténtalo de nuevo.",
+  "notFound": "No encontramos lo que buscabas.",
+  "server": "Algo salió mal por nuestra parte. Inténtalo de nuevo más tarde.",
+  "timeout": "La solicitud tardó demasiado. Inténtalo de nuevo.",
+  "unauthorized": "Tu sesión ha caducado. Inicia sesión de nuevo.",
+  "unknown": "Algo salió mal. Inténtalo de nuevo.",
+  "validation": "Parte de la información que introdujiste no es válida."
+}

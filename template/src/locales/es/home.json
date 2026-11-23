@@ -1,0 +1,9 @@
+{
+  "browseItems": "Explorar artículos",
+  "browseItemsHint": "Descubre el catálogo de ejemplo.",
+  "greeting": "Hola, {{name}}",
+  "greeting_female": "Hola, {{name}}",
+  "greeting_male": "Hola, {{name}}",
+  "greetingFallback": "Hola",
+  "title": "Inicio"
+}

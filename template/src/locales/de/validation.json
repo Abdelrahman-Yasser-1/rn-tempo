@@ -1,0 +1,55 @@
+{
+  "date": {
+    "invalid": "Gib ein gültiges Datum ein."
+  },
+  "email": {
+    "invalid": "Gib eine gültige E-Mail-Adresse ein.",
+    "required": "Gib deine E-Mail-Adresse ein."
+  },
+  "formBuilder": {
+    "alphanumeric": "Verwende nur Buchstaben und Zahlen.",
+    "digits": "Verwende nur Ziffern.",
+    "email": "Gib eine gültige E-Mail-Adresse ein.",
+    "iban": "Gib eine gültige IBAN ein.",
+    "invalid": "Dieser Wert ist ungültig.",
+    "letters": "Verwende nur Buchstaben.",
+    "noSpaces": "Verwende keine Leerzeichen.",
+    "pattern": "Dieser Wert entspricht nicht dem erwarteten Format.",
+    "phone": "Gib eine gültige Telefonnummer mit Ländervorwahl ein.",
+    "postalCode": "Gib eine gültige Postleitzahl ein.",
+    "required": "Dieses Feld ist erforderlich.",
+    "tooBig": "Diese Zahl ist zu groß.",
+    "tooFewItems": "Füge weitere Einträge hinzu.",
+    "tooLong": "Dieser Text ist zu lang.",
+    "tooManyItems": "Entferne einige Einträge.",
+    "tooShort": "Dieser Text ist zu kurz.",
+    "tooSmall": "Diese Zahl ist zu klein."
+  },
+  "item": {
+    "categoryRequired": "Gib eine Kategorie ein.",
+    "descriptionRequired": "Gib eine Beschreibung ein.",
+    "priceInvalid": "Gib einen Preis größer als 0 ein.",
+    "quantityInvalid": "Gib eine Menge von mindestens 1 ein.",
+    "titleRequired": "Gib einen Titel ein."
+  },
+  "name": {
+    "tooLong": "Verwende höchstens 50 Zeichen.",
+    "tooShort": "Gib mindestens 2 Zeichen ein."
+  },
+  "otp": {
+    "invalid": "Gib den 6-stelligen Code ein."
+  },
+  "password": {
+    "mismatch": "Die Passwörter stimmen nicht überein.",
+    "needsLetter": "Verwende mindestens einen Buchstaben.",
+    "needsNumber": "Verwende mindestens eine Zahl.",
+    "required": "Gib dein Passwort ein.",
+    "tooShort": "Verwende mindestens 8 Zeichen."
+  },
+  "phone": {
+    "invalid": "Gib eine gültige Telefonnummer mit Ländervorwahl ein."
+  },
+  "username": {
+    "required": "Gib deinen Benutzernamen ein."
+  }
+}

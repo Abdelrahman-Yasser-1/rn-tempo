@@ -1,0 +1,42 @@
+{
+  "create": {
+    "attachment": "Anhang",
+    "availableFrom": "Verfügbar ab",
+    "category": "Kategorie",
+    "description": "Beschreibung",
+    "optional": "(optional)",
+    "pickupLocation": "Abholort",
+    "pickupSlot": "Abholzeitfenster",
+    "price": "Preis (USD)",
+    "quantity": "Menge",
+    "submit": "Artikel erstellen",
+    "success": "Artikel erstellt",
+    "tagOptions": {
+      "eco": "Umweltfreundlich",
+      "new": "Neu",
+      "popular": "Beliebt",
+      "sale": "Im Angebot"
+    },
+    "tags": "Tags",
+    "title": "Neuer Artikel",
+    "titleLabel": "Titel",
+    "unavailable": "Artikel können derzeit nicht erstellt werden."
+  },
+  "details": {
+    "category": "Kategorie: {{category}}",
+    "openProduct": "Produktseite öffnen",
+    "rating": "Bewertung: {{rating, number}} / 5",
+    "stock": "Auf Lager: {{stock, number}}",
+    "title": "Artikel"
+  },
+  "list": {
+    "count_one": "{{count, number}} Artikel",
+    "count_other": "{{count, number}} Artikel",
+    "create": "Artikel erstellen",
+    "emptyMessage": "Versuche eine andere Suche.",
+    "emptyTitle": "Keine Artikel gefunden",
+    "searchLabel": "Artikel suchen",
+    "searchPlaceholder": "Artikel suchen",
+    "title": "Artikel"
+  }
+}

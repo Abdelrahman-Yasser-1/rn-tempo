@@ -1,0 +1,43 @@
+{
+  "create": {
+    "attachment": "Pièce jointe",
+    "availableFrom": "Disponible à partir du",
+    "category": "Catégorie",
+    "description": "Description",
+    "optional": "(facultatif)",
+    "pickupLocation": "Lieu de retrait",
+    "pickupSlot": "Créneau de retrait",
+    "price": "Prix (USD)",
+    "quantity": "Quantité",
+    "submit": "Créer l'article",
+    "success": "Article créé",
+    "tagOptions": {
+      "eco": "Écologique",
+      "new": "Nouveau",
+      "popular": "Populaire",
+      "sale": "En promotion"
+    },
+    "tags": "Étiquettes",
+    "title": "Nouvel article",
+    "titleLabel": "Titre",
+    "unavailable": "La création d'articles n'est pas disponible pour le moment."
+  },
+  "details": {
+    "category": "Catégorie : {{category}}",
+    "openProduct": "Ouvrir la page du produit",
+    "rating": "Note : {{rating, number}} / 5",
+    "stock": "En stock : {{stock, number}}",
+    "title": "Article"
+  },
+  "list": {
+    "count_one": "{{count, number}} article",
+    "count_many": "{{count, number}} d'articles",
+    "count_other": "{{count, number}} articles",
+    "create": "Créer l'article",
+    "emptyMessage": "Essayez une autre recherche.",
+    "emptyTitle": "Aucun article trouvé",
+    "searchLabel": "Rechercher des articles",
+    "searchPlaceholder": "Rechercher des articles",
+    "title": "Articles"
+  }
+}

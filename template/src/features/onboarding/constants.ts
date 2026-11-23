@@ -11,7 +11,7 @@ export type Slide = Readonly<{
 // t('onboarding.slide1.title', { ns: 'app', defaultValue: 'Welcome' })
 // t('onboarding.slide1.body', { ns: 'app', defaultValue: 'A production-ready starting point for your next app.' })
 // t('onboarding.slide2.title', { ns: 'app', defaultValue: 'Your language, your way' })
-// t('onboarding.slide2.body', { ns: 'app', defaultValue: 'Switch between English and Arabic, with full right-to-left support.' })
+// t('onboarding.slide2.body', { ns: 'app', defaultValue: 'Choose from five languages, with full right-to-left support.' })
 // t('onboarding.slide3.title', { ns: 'app', defaultValue: 'Ready to go' })
 // t('onboarding.slide3.body', { ns: 'app', defaultValue: 'Sign in or create an account to get started.' })
 export const SLIDES: readonly Slide[] = [

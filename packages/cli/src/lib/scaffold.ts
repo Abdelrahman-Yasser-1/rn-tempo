@@ -4,7 +4,7 @@ import path from 'node:path';
 import { CliError } from './errors.ts';
 import { pathExists } from './fs-utils.ts';
 import { buildVars, renderTemplateDir, toKebab, toPascal, type TemplateVars } from './generate.ts';
-import { registerNamespace, registerRoute, type RegisterResult } from './register.ts';
+import { readLocaleLanguages, registerNamespace, registerRoute, type RegisterResult } from './register.ts';
 import { readTempoJson } from './tempo-json.ts';
 
 export type ScaffoldOptions = {
@@ -83,7 +83,7 @@ async function mergeLocaleKey(file: string, keyPath: readonly string[], value: s
 
 async function addScreenLocale(projectDir: string, vars: TemplateVars, dryRun: boolean): Promise<string[]> {
   const updated: string[] = [];
-  for (const lang of ['en', 'ar']) {
+  for (const lang of await readLocaleLanguages(projectDir)) {
     const rel = `src/locales/${lang}/${vars.feature}.json`;
     if (await mergeLocaleKey(path.join(projectDir, rel), ['screens', vars.name, 'title'], vars.Name, dryRun)) updated.push(rel);
   }

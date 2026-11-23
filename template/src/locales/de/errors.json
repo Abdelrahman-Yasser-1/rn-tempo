@@ -1,0 +1,10 @@
+{
+  "forbidden": "Dafür hast du keine Berechtigung.",
+  "network": "Keine Internetverbindung. Prüfe dein Netzwerk und versuche es erneut.",
+  "notFound": "Wir konnten nicht finden, wonach du gesucht hast.",
+  "server": "Bei uns ist etwas schiefgelaufen. Bitte versuche es später erneut.",
+  "timeout": "Die Anfrage hat zu lange gedauert. Bitte versuche es erneut.",
+  "unauthorized": "Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.",
+  "unknown": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+  "validation": "Einige deiner Angaben sind ungültig."
+}

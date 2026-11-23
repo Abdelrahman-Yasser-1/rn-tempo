@@ -1,0 +1,220 @@
+{
+  "a11y": {
+    "hidePassword": "Passwort verbergen",
+    "showPassword": "Passwort anzeigen"
+  },
+  "calendar": {
+    "chooseMonthYear": "Monat und Jahr wählen",
+    "nextMonth": "Nächster Monat",
+    "previousMonth": "Vorheriger Monat"
+  },
+  "connection": {
+    "message": "Dieser Bildschirm benötigt Internet. Stelle die Verbindung wieder her, um fortzufahren.",
+    "retry": "Erneut prüfen",
+    "title": "Keine Verbindung"
+  },
+  "countryPicker": {
+    "close": "Schließen",
+    "label": "Land",
+    "searchLabel": "Länder suchen",
+    "searchPlaceholder": "Nach Name oder Code suchen",
+    "title": "Land auswählen"
+  },
+  "datePicker": {
+    "placeholder": "Datum auswählen",
+    "title": "Datum auswählen"
+  },
+  "dialog": {
+    "cancel": "Abbrechen",
+    "confirm": "Bestätigen"
+  },
+  "errorBoundary": {
+    "goBack": "Zurück",
+    "restart": "App neu starten",
+    "screenTitle": "Auf diesem Bildschirm ist ein Problem aufgetreten",
+    "tryAgain": "Erneut versuchen"
+  },
+  "errorState": {
+    "retry": "Erneut versuchen",
+    "title": "Etwas ist schiefgelaufen"
+  },
+  "field": {
+    "characterCount": "{{current}} von {{max}} Zeichen",
+    "hideHint": "Hinweis ausblenden",
+    "required": "erforderlich",
+    "showHint": "Hinweis anzeigen"
+  },
+  "filePicker": {
+    "add": "Dateien hinzufügen",
+    "browse": "Dateien durchsuchen",
+    "camera": "Foto aufnehmen",
+    "cameraUnavailable": "Auf diesem Gerät ist keine Kamera verfügbar.",
+    "count": "{{current}} von {{max}} Dateien",
+    "errorSize": "Die Datei ist größer als {{max}} MB.",
+    "errorType": "Dieser Dateityp ist nicht erlaubt.",
+    "failed": "Die Datei konnte nicht abgerufen werden. Versuche es erneut.",
+    "library": "Aus Fotos auswählen",
+    "maxFiles": "Du kannst bis zu {{max}} Dateien hinzufügen.",
+    "openSettings": "Einstellungen öffnen",
+    "permissionDenied": "Erlaube den Zugriff in den Einstellungen, um die Kamera oder deine Fotos zu verwenden.",
+    "placeholder": "Datei auswählen",
+    "remove": "{{name}} entfernen",
+    "replace": "Datei ersetzen",
+    "sheetTitle": "Datei hinzufügen",
+    "units": {
+      "b": "{{size}} B",
+      "gb": "{{size}} GB",
+      "kb": "{{size}} KB",
+      "mb": "{{size}} MB"
+    }
+  },
+  "filterBar": {
+    "filters": "Filter",
+    "filtersActive": "Filter, {{active}} aktiv"
+  },
+  "formBuilder": {
+    "flow": {
+      "back": "Zurück",
+      "header": "Formular",
+      "next": "Weiter",
+      "stepOf": "Schritt {{current}} von {{total}}",
+      "submit": "Absenden",
+      "submitted": "Formular abgesendet",
+      "unknown": "Dieses Formular existiert nicht."
+    },
+    "repeat": {
+      "add": "Eintrag hinzufügen",
+      "itemHeading": "{{label}} {{index}}",
+      "itemLabel": "Eintrag",
+      "remove": "{{label}} {{index}} entfernen"
+    },
+    "review": {
+      "empty": "Nicht angegeben",
+      "no": "Nein",
+      "nothing": "Es gibt nichts zu überprüfen.",
+      "stepFallback": "Schritt {{index}}",
+      "title": "Antworten überprüfen",
+      "yes": "Ja"
+    }
+  },
+  "formReview": {
+    "edit": "Bearbeiten",
+    "editSection": "{{section}} bearbeiten"
+  },
+  "header": {
+    "back": "Zurück"
+  },
+  "inlineMessage": {
+    "close": "Meldung schließen"
+  },
+  "listLoadingMore": {
+    "label": "Weitere werden geladen"
+  },
+  "loader": {
+    "label": "Wird geladen"
+  },
+  "mapPicker": {
+    "coordinates": "{{latitude}}, {{longitude}}",
+    "mapLabel": "Karte",
+    "openSettings": "Einstellungen öffnen",
+    "permissionDenied": "Erlaube den Standortzugriff in den Einstellungen, um zu deinem Standort zu springen.",
+    "placeholder": "Ort auswählen",
+    "title": "Ort auswählen",
+    "useMyLocation": "Meinen Standort verwenden"
+  },
+  "modal": {
+    "close": "Schließen"
+  },
+  "monthYearPicker": {
+    "placeholder": "Monat und Jahr auswählen",
+    "title": "Monat und Jahr auswählen"
+  },
+  "multiSelect": {
+    "clear": "Leeren",
+    "done": "Fertig",
+    "limit": "Wähle bis zu {{max}}",
+    "placeholder": "Optionen auswählen",
+    "remove": "{{label}} entfernen",
+    "selectAll": "Alle auswählen",
+    "selected": "{{selected}} ausgewählt"
+  },
+  "numberInput": {
+    "decrease": "Verringern",
+    "increase": "Erhöhen"
+  },
+  "offline": {
+    "banner": "Du bist offline"
+  },
+  "otp": {
+    "digit": "Ziffer {{index}} von {{total}}"
+  },
+  "paginatedList": {
+    "emptyTitle": "Nichts anzuzeigen"
+  },
+  "pagination": {
+    "next": "Nächste Seite",
+    "page": "Seite {{page}}",
+    "previous": "Vorherige Seite"
+  },
+  "select": {
+    "close": "Schließen",
+    "empty": {
+      "message": "Versuche es mit einem anderen Suchbegriff.",
+      "title": "Keine Ergebnisse"
+    },
+    "placeholder": "Option auswählen",
+    "searchLabel": "Optionen suchen",
+    "searchPlaceholder": "Suchen"
+  },
+  "sheet": {
+    "close": "Schließen"
+  },
+  "stepper": {
+    "current": "Aktueller Schritt",
+    "done": "Abgeschlossen",
+    "progress": "Schritt {{current}} von {{total}}",
+    "upcoming": "Ausstehend"
+  },
+  "stepperLayout": {
+    "back": "Zurück",
+    "next": "Weiter",
+    "submit": "Absenden"
+  },
+  "timeline": {
+    "current": "Aktueller Schritt",
+    "done": "Abgeschlossen",
+    "upcoming": "Ausstehend"
+  },
+  "timePicker": {
+    "placeholder": "Uhrzeit auswählen",
+    "title": "Uhrzeit auswählen"
+  },
+  "timeSlot": {
+    "empty": {
+      "message": "Es stehen keine Zeitfenster zur Auswahl.",
+      "title": "Keine Zeitfenster"
+    },
+    "period": {
+      "afternoon": "Nachmittag",
+      "evening": "Abend",
+      "morning": "Morgen"
+    },
+    "placeholder": "Zeitfenster auswählen",
+    "title": "Zeitfenster auswählen",
+    "titleOnDate": "Zeitfenster am {{date, datetime(dateStyle: medium; numberingSystem: latn)}}"
+  },
+  "toast": {
+    "close": "Benachrichtigung schließen"
+  },
+  "tooltip": {
+    "close": "Tooltip schließen"
+  },
+  "webView": {
+    "errorMessage": "Die Seite konnte nicht geladen werden. Prüfe deine Verbindung und versuche es erneut.",
+    "errorTitle": "Seite nicht verfügbar",
+    "loading": "Seite wird geladen",
+    "openInBrowser": "Im Browser öffnen",
+    "reload": "Neu laden",
+    "unsafe": "Dieser Link kann hier nicht geöffnet werden."
+  }
+}

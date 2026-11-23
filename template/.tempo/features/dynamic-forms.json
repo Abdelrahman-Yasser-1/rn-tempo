@@ -27,6 +27,21 @@
       "path": "/formBuilder"
     },
     {
+      "file": "src/locales/es/common.json",
+      "op": "remove",
+      "path": "/formBuilder"
+    },
+    {
+      "file": "src/locales/de/common.json",
+      "op": "remove",
+      "path": "/formBuilder"
+    },
+    {
+      "file": "src/locales/fr/common.json",
+      "op": "remove",
+      "path": "/formBuilder"
+    },
+    {
       "file": "src/locales/en/validation.json",
       "op": "remove",
       "path": "/formBuilder"
@@ -37,12 +52,42 @@
       "path": "/formBuilder"
     },
     {
+      "file": "src/locales/es/validation.json",
+      "op": "remove",
+      "path": "/formBuilder"
+    },
+    {
+      "file": "src/locales/de/validation.json",
+      "op": "remove",
+      "path": "/formBuilder"
+    },
+    {
+      "file": "src/locales/fr/validation.json",
+      "op": "remove",
+      "path": "/formBuilder"
+    },
+    {
       "file": "src/locales/en/app.json",
       "op": "remove",
       "path": "/debug/forms"
     },
     {
       "file": "src/locales/ar/app.json",
+      "op": "remove",
+      "path": "/debug/forms"
+    },
+    {
+      "file": "src/locales/es/app.json",
+      "op": "remove",
+      "path": "/debug/forms"
+    },
+    {
+      "file": "src/locales/de/app.json",
+      "op": "remove",
+      "path": "/debug/forms"
+    },
+    {
+      "file": "src/locales/fr/app.json",
       "op": "remove",
       "path": "/debug/forms"
     },
@@ -53,6 +98,21 @@
     },
     {
       "file": "src/locales/ar/app.json",
+      "op": "remove",
+      "path": "/formsDemo"
+    },
+    {
+      "file": "src/locales/es/app.json",
+      "op": "remove",
+      "path": "/formsDemo"
+    },
+    {
+      "file": "src/locales/de/app.json",
+      "op": "remove",
+      "path": "/formsDemo"
+    },
+    {
+      "file": "src/locales/fr/app.json",
       "op": "remove",
       "path": "/formsDemo"
     }

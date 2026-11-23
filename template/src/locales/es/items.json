@@ -1,0 +1,43 @@
+{
+  "create": {
+    "attachment": "Adjunto",
+    "availableFrom": "Disponible desde",
+    "category": "Categoría",
+    "description": "Descripción",
+    "optional": "(opcional)",
+    "pickupLocation": "Lugar de recogida",
+    "pickupSlot": "Franja de recogida",
+    "price": "Precio (USD)",
+    "quantity": "Cantidad",
+    "submit": "Crear artículo",
+    "success": "Artículo creado",
+    "tagOptions": {
+      "eco": "Ecológico",
+      "new": "Nuevo",
+      "popular": "Popular",
+      "sale": "En oferta"
+    },
+    "tags": "Etiquetas",
+    "title": "Nuevo artículo",
+    "titleLabel": "Título",
+    "unavailable": "Crear artículos no está disponible ahora mismo."
+  },
+  "details": {
+    "category": "Categoría: {{category}}",
+    "openProduct": "Abrir página del producto",
+    "rating": "Valoración: {{rating, number}} / 5",
+    "stock": "En stock: {{stock, number}}",
+    "title": "Artículo"
+  },
+  "list": {
+    "count_one": "{{count, number}} artículo",
+    "count_many": "{{count, number}} de artículos",
+    "count_other": "{{count, number}} artículos",
+    "create": "Crear artículo",
+    "emptyMessage": "Prueba con otra búsqueda.",
+    "emptyTitle": "No se encontraron artículos",
+    "searchLabel": "Buscar artículos",
+    "searchPlaceholder": "Buscar artículos",
+    "title": "Artículos"
+  }
+}

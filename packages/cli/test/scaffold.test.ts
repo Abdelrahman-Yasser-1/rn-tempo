@@ -38,7 +38,10 @@ const FEATURE_WALLET_FILES = [
   'src/features/wallet/screens/WalletScreen/useWalletScreen.ts',
   'src/features/wallet/types/index.ts',
   'src/locales/ar/wallet.json',
+  'src/locales/de/wallet.json',
   'src/locales/en/wallet.json',
+  'src/locales/es/wallet.json',
+  'src/locales/fr/wallet.json',
 ];
 
 describe('scaffold generators', () => {
@@ -71,7 +74,10 @@ describe('scaffold generators', () => {
       expect(sorted(result.updated)).toEqual([
         'src/features/wallet/index.ts',
         'src/locales/ar/wallet.json',
+        'src/locales/de/wallet.json',
         'src/locales/en/wallet.json',
+        'src/locales/es/wallet.json',
+        'src/locales/fr/wallet.json',
         'src/navigation/types.ts',
         'src/services/i18n/resources.ts',
       ]);
@@ -82,7 +88,8 @@ describe('scaffold generators', () => {
       expect(resources).toContain("import enWallet from '@locales/en/wallet.json';");
       expect(resources).toContain("import arWallet from '@locales/ar/wallet.json';");
       expect(resources).toMatch(/en: \{[\s\S]*\bwallet: enWallet,\n[\s\S]*\},\n  ar: \{/);
-      expect(resources).toMatch(/ar: \{[\s\S]*\bwallet: arWallet,\n[\s\S]*\},\n\};/);
+      expect(resources).toMatch(/ar: \{[\s\S]*\bwallet: arWallet,\n[\s\S]*\},\n  es: \{/);
+      expect(resources).toMatch(/fr: \{[\s\S]*\bwallet: frWallet,\n[\s\S]*\},\n\};/);
 
       expect(JSON.parse(await read('src/locales/en/wallet.json'))).toEqual({ screens: { wallet: { title: 'Wallet' } } });
       expect(await read('src/features/wallet/index.ts')).toContain("export { WalletScreen } from './screens/WalletScreen';");
@@ -137,7 +144,10 @@ describe('scaffold generators', () => {
       expect(sorted(result.updated)).toEqual([
         'src/features/items/index.ts',
         'src/locales/ar/items.json',
+        'src/locales/de/items.json',
         'src/locales/en/items.json',
+        'src/locales/es/items.json',
+        'src/locales/fr/items.json',
         'src/navigation/types.ts',
       ]);
       expect(JSON.parse(await read('src/locales/en/items.json')).screens.detail.title).toBe('Detail');
@@ -269,7 +279,10 @@ describe('scaffold generators', () => {
       expect(sorted(preview.updated)).toEqual([
         'src/features/items/index.ts',
         'src/locales/ar/items.json',
+        'src/locales/de/items.json',
         'src/locales/en/items.json',
+        'src/locales/es/items.json',
+        'src/locales/fr/items.json',
         'src/navigation/linking.ts',
         'src/navigation/stacks.ts',
         'src/navigation/types.ts',

@@ -1,0 +1,55 @@
+{
+  "about": {
+    "environment": "Environnement",
+    "os": "Système d'exploitation",
+    "reactNative": "React Native",
+    "title": "À propos",
+    "version": "Version"
+  },
+  "crashReports": {
+    "description": "Envoyez des rapports de plantage anonymes pour que les problèmes soient corrigés plus vite.",
+    "title": "Partager les rapports de plantage"
+  },
+  "language": {
+    "arabic": "العربية",
+    "english": "English",
+    "restartMessage": "L'app peut redémarrer pour appliquer la nouvelle langue et le sens de lecture.",
+    "restartTitle": "Changer de langue ?",
+    "title": "Langue"
+  },
+  "logout": {
+    "confirm": "Se déconnecter",
+    "dialogMessage": "Vous devrez vous reconnecter.",
+    "dialogTitle": "Se déconnecter ?",
+    "title": "Se déconnecter"
+  },
+  "notifications": {
+    "blocked": "Désactivées dans les réglages du système",
+    "off": "Désactivées",
+    "on": "Activées",
+    "title": "Notifications"
+  },
+  "textSize": {
+    "default": "Par défaut",
+    "extraLarge": "Très grand",
+    "large": "Grand",
+    "preview": "Portez ce vieux whisky au juge blond qui fume.",
+    "small": "Petit",
+    "title": "Taille du texte"
+  },
+  "theme": {
+    "dark": "Sombre",
+    "light": "Clair",
+    "mode": "Mode",
+    "palette": {
+      "default": "Par défaut",
+      "forest": "Forêt",
+      "ocean": "Océan",
+      "sunset": "Coucher de soleil",
+      "title": "Palette"
+    },
+    "system": "Système",
+    "title": "Thème"
+  },
+  "title": "Réglages"
+}

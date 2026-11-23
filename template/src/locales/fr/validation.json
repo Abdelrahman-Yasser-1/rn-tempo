@@ -1,0 +1,55 @@
+{
+  "date": {
+    "invalid": "Saisissez une date valide."
+  },
+  "email": {
+    "invalid": "Saisissez une adresse e-mail valide.",
+    "required": "Saisissez votre adresse e-mail."
+  },
+  "formBuilder": {
+    "alphanumeric": "Utilisez uniquement des lettres et des chiffres.",
+    "digits": "Utilisez uniquement des chiffres.",
+    "email": "Saisissez une adresse e-mail valide.",
+    "iban": "Saisissez un IBAN valide.",
+    "invalid": "Cette valeur n'est pas valide.",
+    "letters": "Utilisez uniquement des lettres.",
+    "noSpaces": "N'utilisez pas d'espaces.",
+    "pattern": "Cette valeur ne correspond pas au format attendu.",
+    "phone": "Saisissez un numéro de téléphone valide avec l'indicatif du pays.",
+    "postalCode": "Saisissez un code postal valide.",
+    "required": "Ce champ est obligatoire.",
+    "tooBig": "Ce nombre est trop grand.",
+    "tooFewItems": "Ajoutez d'autres éléments.",
+    "tooLong": "Ce texte est trop long.",
+    "tooManyItems": "Supprimez quelques éléments.",
+    "tooShort": "Ce texte est trop court.",
+    "tooSmall": "Ce nombre est trop petit."
+  },
+  "item": {
+    "categoryRequired": "Saisissez une catégorie.",
+    "descriptionRequired": "Saisissez une description.",
+    "priceInvalid": "Saisissez un prix supérieur à 0.",
+    "quantityInvalid": "Saisissez une quantité d'au moins 1.",
+    "titleRequired": "Saisissez un titre."
+  },
+  "name": {
+    "tooLong": "Utilisez 50 caractères au maximum.",
+    "tooShort": "Saisissez au moins 2 caractères."
+  },
+  "otp": {
+    "invalid": "Saisissez le code à 6 chiffres."
+  },
+  "password": {
+    "mismatch": "Les mots de passe ne correspondent pas.",
+    "needsLetter": "Incluez au moins une lettre.",
+    "needsNumber": "Incluez au moins un chiffre.",
+    "required": "Saisissez votre mot de passe.",
+    "tooShort": "Utilisez au moins 8 caractères."
+  },
+  "phone": {
+    "invalid": "Saisissez un numéro de téléphone valide avec l'indicatif du pays."
+  },
+  "username": {
+    "required": "Saisissez votre nom d'utilisateur."
+  }
+}

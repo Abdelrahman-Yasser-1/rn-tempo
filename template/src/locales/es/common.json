@@ -1,0 +1,220 @@
+{
+  "a11y": {
+    "hidePassword": "Ocultar contraseña",
+    "showPassword": "Mostrar contraseña"
+  },
+  "calendar": {
+    "chooseMonthYear": "Elegir mes y año",
+    "nextMonth": "Mes siguiente",
+    "previousMonth": "Mes anterior"
+  },
+  "connection": {
+    "message": "Esta pantalla necesita internet. Vuelve a conectarte para continuar.",
+    "retry": "Comprobar de nuevo",
+    "title": "Sin conexión"
+  },
+  "countryPicker": {
+    "close": "Cerrar",
+    "label": "País",
+    "searchLabel": "Buscar países",
+    "searchPlaceholder": "Buscar por nombre o código",
+    "title": "Selecciona un país"
+  },
+  "datePicker": {
+    "placeholder": "Selecciona una fecha",
+    "title": "Selecciona una fecha"
+  },
+  "dialog": {
+    "cancel": "Cancelar",
+    "confirm": "Confirmar"
+  },
+  "errorBoundary": {
+    "goBack": "Volver",
+    "restart": "Reiniciar app",
+    "screenTitle": "Esta pantalla ha tenido un problema",
+    "tryAgain": "Intentar de nuevo"
+  },
+  "errorState": {
+    "retry": "Reintentar",
+    "title": "Algo salió mal"
+  },
+  "field": {
+    "characterCount": "{{current}} de {{max}} caracteres",
+    "hideHint": "Ocultar ayuda",
+    "required": "obligatorio",
+    "showHint": "Mostrar ayuda"
+  },
+  "filePicker": {
+    "add": "Añadir archivos",
+    "browse": "Explorar archivos",
+    "camera": "Hacer una foto",
+    "cameraUnavailable": "No hay ninguna cámara disponible en este dispositivo.",
+    "count": "{{current}} de {{max}} archivos",
+    "errorSize": "El archivo supera los {{max}} MB.",
+    "errorType": "Este tipo de archivo no está permitido.",
+    "failed": "No se pudo obtener el archivo. Inténtalo de nuevo.",
+    "library": "Elegir de las fotos",
+    "maxFiles": "Puedes añadir hasta {{max}} archivos.",
+    "openSettings": "Abrir ajustes",
+    "permissionDenied": "Permite el acceso en Ajustes para usar la cámara o tus fotos.",
+    "placeholder": "Elige un archivo",
+    "remove": "Quitar {{name}}",
+    "replace": "Reemplazar archivo",
+    "sheetTitle": "Añadir un archivo",
+    "units": {
+      "b": "{{size}} B",
+      "gb": "{{size}} GB",
+      "kb": "{{size}} KB",
+      "mb": "{{size}} MB"
+    }
+  },
+  "filterBar": {
+    "filters": "Filtros",
+    "filtersActive": "Filtros, {{active}} activos"
+  },
+  "formBuilder": {
+    "flow": {
+      "back": "Atrás",
+      "header": "Formulario",
+      "next": "Siguiente",
+      "stepOf": "Paso {{current}} de {{total}}",
+      "submit": "Enviar",
+      "submitted": "Formulario enviado",
+      "unknown": "Este formulario no existe."
+    },
+    "repeat": {
+      "add": "Añadir elemento",
+      "itemHeading": "{{label}} {{index}}",
+      "itemLabel": "Elemento",
+      "remove": "Quitar {{label}} {{index}}"
+    },
+    "review": {
+      "empty": "No indicado",
+      "no": "No",
+      "nothing": "No hay nada que revisar.",
+      "stepFallback": "Paso {{index}}",
+      "title": "Revisa tus respuestas",
+      "yes": "Sí"
+    }
+  },
+  "formReview": {
+    "edit": "Editar",
+    "editSection": "Editar {{section}}"
+  },
+  "header": {
+    "back": "Atrás"
+  },
+  "inlineMessage": {
+    "close": "Descartar mensaje"
+  },
+  "listLoadingMore": {
+    "label": "Cargando más"
+  },
+  "loader": {
+    "label": "Cargando"
+  },
+  "mapPicker": {
+    "coordinates": "{{latitude}}, {{longitude}}",
+    "mapLabel": "Mapa",
+    "openSettings": "Abrir ajustes",
+    "permissionDenied": "Permite el acceso a la ubicación en Ajustes para ir a donde estás.",
+    "placeholder": "Elige una ubicación",
+    "title": "Elige una ubicación",
+    "useMyLocation": "Usar mi ubicación"
+  },
+  "modal": {
+    "close": "Cerrar"
+  },
+  "monthYearPicker": {
+    "placeholder": "Selecciona mes y año",
+    "title": "Selecciona mes y año"
+  },
+  "multiSelect": {
+    "clear": "Borrar",
+    "done": "Listo",
+    "limit": "Elige hasta {{max}}",
+    "placeholder": "Selecciona opciones",
+    "remove": "Quitar {{label}}",
+    "selectAll": "Seleccionar todo",
+    "selected": "{{selected}} seleccionados"
+  },
+  "numberInput": {
+    "decrease": "Disminuir",
+    "increase": "Aumentar"
+  },
+  "offline": {
+    "banner": "Sin conexión"
+  },
+  "otp": {
+    "digit": "Dígito {{index}} de {{total}}"
+  },
+  "paginatedList": {
+    "emptyTitle": "Nada que mostrar"
+  },
+  "pagination": {
+    "next": "Página siguiente",
+    "page": "Página {{page}}",
+    "previous": "Página anterior"
+  },
+  "select": {
+    "close": "Cerrar",
+    "empty": {
+      "message": "Prueba con otro término de búsqueda.",
+      "title": "Sin resultados"
+    },
+    "placeholder": "Selecciona una opción",
+    "searchLabel": "Buscar opciones",
+    "searchPlaceholder": "Buscar"
+  },
+  "sheet": {
+    "close": "Cerrar"
+  },
+  "stepper": {
+    "current": "Paso actual",
+    "done": "Completado",
+    "progress": "Paso {{current}} de {{total}}",
+    "upcoming": "Pendiente"
+  },
+  "stepperLayout": {
+    "back": "Atrás",
+    "next": "Siguiente",
+    "submit": "Enviar"
+  },
+  "timeline": {
+    "current": "Paso actual",
+    "done": "Completado",
+    "upcoming": "Pendiente"
+  },
+  "timePicker": {
+    "placeholder": "Selecciona una hora",
+    "title": "Selecciona una hora"
+  },
+  "timeSlot": {
+    "empty": {
+      "message": "No hay franjas horarias para elegir.",
+      "title": "Sin franjas horarias"
+    },
+    "period": {
+      "afternoon": "Tarde",
+      "evening": "Noche",
+      "morning": "Mañana"
+    },
+    "placeholder": "Selecciona una franja horaria",
+    "title": "Selecciona una franja horaria",
+    "titleOnDate": "Franjas para el {{date, datetime(dateStyle: medium; numberingSystem: latn)}}"
+  },
+  "toast": {
+    "close": "Descartar notificación"
+  },
+  "tooltip": {
+    "close": "Cerrar sugerencia"
+  },
+  "webView": {
+    "errorMessage": "No se pudo cargar la página. Comprueba tu conexión e inténtalo de nuevo.",
+    "errorTitle": "Página no disponible",
+    "loading": "Cargando página",
+    "openInBrowser": "Abrir en el navegador",
+    "reload": "Recargar",
+    "unsafe": "Este enlace no se puede abrir aquí."
+  }
+}
