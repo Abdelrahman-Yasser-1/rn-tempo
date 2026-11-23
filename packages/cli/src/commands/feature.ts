@@ -9,7 +9,7 @@ import { loadManifests, planRemoval } from '../lib/manifest.ts';
 import { commonArgs, resolveCommon, runGuarded, type Reporter } from '../lib/output.ts';
 import { installPods, yarnRun } from '../lib/pm.ts';
 import { answer, isInteractive } from '../lib/prompt.ts';
-import { removeFeatures } from '../lib/remove-feature.ts';
+import { deletedRequestCode, removeFeatures } from '../lib/remove-feature.ts';
 import { readTempoJson, writeTempoJson } from '../lib/tempo-json.ts';
 
 function asFeature(name: string): FeatureName {
@@ -68,13 +68,9 @@ const remove = defineCommand({
         if (result.postRemove.includes('assets-sync')) await yarnRun(common.cwd, 'assets', [], { json: common.json });
       }
       reporter.success(`Removed ${plan.remove.join(', ')}. Run yarn install to refresh the lockfile.`);
-      // Removing a feature never edits backend/backend.json, so its endpoints and collections stay there.
-      if (result.deletedPaths.some((deleted) => deleted.startsWith('src/features/') || deleted.startsWith('api/endpoints/'))) {
+      // Removing a feature never edits backend/backend.json, so the endpoints and collections it called stay there.
+      if (deletedRequestCode(result.deletedPaths)) {
         reporter.info('backend/backend.json is not changed: delete the endpoints and collections the app no longer calls there.');
-      }
-      // The generated OpenAPI, Postman and MSW files still describe the removed endpoints.
-      if (result.deletedPaths.some((deleted) => deleted.startsWith('api/endpoints/'))) {
-        reporter.info('Endpoint definitions were removed: run yarn api generate to refresh api/generated.');
       }
       reporter.result({ ok: true, removed: plan.remove, ...result });
     });
