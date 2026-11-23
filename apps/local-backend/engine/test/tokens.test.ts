@@ -3,7 +3,7 @@ import { mkdtempSync, statSync, symlinkSync, writeFileSync, readFileSync } from 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { redactDeep } from '@rn-tempo/dev-api';
+import { redactDeep } from '../src/shared/redact.ts';
 import { describe, expect, it } from 'vitest';
 
 import { hashPassword, hashPasswordSync, loadJwtSecret, signAccessToken, verifyAccessToken, verifyPassword } from '../src/tokens.ts';

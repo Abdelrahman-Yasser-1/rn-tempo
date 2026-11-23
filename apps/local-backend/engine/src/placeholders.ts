@@ -1,6 +1,6 @@
 import type { IncomingHttpHeaders } from 'node:http';
 
-import { isSensitiveKey } from '@rn-tempo/dev-api';
+import { isSensitiveKey } from './shared/redact.ts';
 
 import { FIRST, LAST, Rng, WORDS } from './import/generate.ts';
 

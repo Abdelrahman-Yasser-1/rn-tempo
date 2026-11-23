@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
-import type { FieldIssue } from '@rn-tempo/api-contract';
+import type { FieldIssue } from './shared/problem.ts';
 import { z } from 'zod';
 
 import { publicUser, type Accounts, type AuthUser, type NewUser, type UserPatch, type UserRecord } from './accounts.ts';

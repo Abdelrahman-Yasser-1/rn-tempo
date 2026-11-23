@@ -1,6 +1,6 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 
-import { redactDeep, scrubKeys } from '@rn-tempo/dev-api';
+import { redactDeep, scrubKeys } from './shared/redact.ts';
 
 import { matchesEvent, type BackendEvent, type EventBus } from './events.ts';
 import type { Backend, Endpoint } from './schema.ts';

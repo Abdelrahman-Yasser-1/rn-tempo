@@ -3,7 +3,9 @@ import type { IncomingHttpHeaders, IncomingMessage } from 'node:http';
 import type { Duplex } from 'node:stream';
 import { join } from 'node:path';
 
-import { BUILTIN_SCENARIOS, redactUrl, RequestLog, SCENARIO_HEADER } from '@rn-tempo/dev-api';
+import { redactUrl } from './shared/redact.ts';
+import { RequestLog } from './shared/request-log.ts';
+import { BUILTIN_SCENARIOS, SCENARIO_HEADER } from './shared/scenarios.ts';
 
 import { Accounts } from './accounts.ts';
 import { authHandler, AuthService, notSignedIn, usersHandler } from './auth.ts';

@@ -1,4 +1,4 @@
-import type { FieldIssue } from '@rn-tempo/api-contract';
+import type { FieldIssue } from '../shared/problem.ts';
 import { z } from 'zod';
 
 import type { RequestCtx } from '../http.ts';

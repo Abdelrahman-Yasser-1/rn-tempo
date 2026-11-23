@@ -1,4 +1,4 @@
-import { redactDeep } from '@rn-tempo/dev-api';
+import { redactDeep } from './shared/redact.ts';
 
 import { EVENT_NAME } from './events.ts';
 import type { MediaService } from './media.ts';

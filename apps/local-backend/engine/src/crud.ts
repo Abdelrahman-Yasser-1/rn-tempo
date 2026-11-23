@@ -1,4 +1,4 @@
-import type { FieldIssue } from '@rn-tempo/api-contract';
+import type { FieldIssue } from './shared/problem.ts';
 
 import { jsonReply, problemReply, readJson, type Reply } from './http.ts';
 import type { Handler } from './router.ts';

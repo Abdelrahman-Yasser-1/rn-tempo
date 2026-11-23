@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Runner, RunResult } from '@rn-tempo/dev-api';
+import type { Runner, RunResult } from '../src/shared/certs.ts';
 
 import { ANDROID_CA_PATH, trustAndroid, trustIos, trustMac } from '../src/trust.ts';
 

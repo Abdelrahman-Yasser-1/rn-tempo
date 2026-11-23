@@ -5,7 +5,7 @@ import { createServer as createHttpsServer } from 'node:https';
 import { join, isAbsolute, resolve } from 'node:path';
 import { pipeline, Readable, type Duplex } from 'node:stream';
 
-import { CERT_FILE, KEY_FILE } from '@rn-tempo/dev-api';
+import { CERT_FILE, KEY_FILE } from './shared/certs.ts';
 
 import { corsFor } from './cors.ts';
 import type { Engine } from './engine.ts';

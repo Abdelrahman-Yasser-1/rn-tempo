@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as sea from 'node:sea';
 
-import { swaggerDir } from '@rn-tempo/dev-api';
+import { swaggerDir } from './shared/swagger.ts';
 
 /** The two places a bundled file can come from. Passed in by tests; the defaults are the real ones. */
 export interface AssetSources {

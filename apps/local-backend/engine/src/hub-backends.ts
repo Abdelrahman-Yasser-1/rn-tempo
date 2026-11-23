@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 
-import { createCerts, lanAddress, realRunner } from '@rn-tempo/dev-api';
+import { createCerts, lanAddress, realRunner } from './shared/certs.ts';
 
 import { startBackend, type RunningBackend, type StartOptions } from './app.ts';
 import { errorReply } from './admin.ts';
