@@ -11,7 +11,7 @@ Format: `- [ ] T<id> (AC…) <summary>: commit: <header>, docs: <page>`. Each ta
 - [x] T16.A4 (AC-T-1, AC-T-4) Theme screen gets a palette picker with swatches; the Storybook toolbar lists the variants. Commit: `feat(settings): add palette picker`. Docs: `features/theming`.
 
 ## Phase B: font scale (`ws16/b-font-scale`)
-- [ ] T16.B1 (AC-F-2, AC-F-3) `fontScale` in the theme layer, persisted in `app.font-scale`, applied before the first render, and fed into typography. Commit: `feat(theme): add user font scale`.
+- [x] T16.B1 (AC-F-2, AC-F-3) `fontScale` in the theme layer, persisted in `app.font-scale`, applied before the first render, and fed into typography. Commit: `feat(theme): add user font scale`.
 - [ ] T16.B2 (AC-F-1, AC-F-4) Text size screen with a preview, route `settings/text-size`, and en/ar strings. Commit: `feat(settings): add text size screen`.
 - [ ] T16.B3 (AC-F-2) Audit fixed heights at Extra large, in Maestro and Storybook. Fix any clipping. Commit: `fix(ui): avoid clipping at large text sizes`. Docs: `features/settings` (text size).
 

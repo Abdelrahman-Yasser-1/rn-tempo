@@ -35,19 +35,37 @@ const FONT_FAMILY: Record<FontWeight, string> = {
 
 const fontFamilyFor = (weight: FontWeight): string => FONT_FAMILY[weight];
 
-const typography = Object.fromEntries(
-  (Object.keys(typeScale) as TypographyVariant[]).map((variant) => {
-    const { fontSize, lineHeight, fontWeight } = typeScale[variant];
-    const style: TypographyStyle = {
-      fontFamily: fontFamilyFor(fontWeight),
-      fontSize: fontPx(fontSize),
-      lineHeight: fontPx(lineHeight),
-      fontWeight: Platform.OS === 'android' ? '400' : fontWeight,
-      letterSpacing: 0,
-    };
-    return [variant, style];
-  }),
-) as Record<TypographyVariant, TypographyStyle>;
+/** Text sizes the user can pick (Settings > Text size), as multipliers of the design sizes. */
+export const FONT_SCALES = [0.9, 1, 1.15, 1.3] as const;
+export type FontScale = (typeof FONT_SCALES)[number];
+export const DEFAULT_FONT_SCALE: FontScale = 1;
+
+/** Narrows a stored value (MMKV string or number) to a known scale; anything else is `undefined`. */
+export const parseFontScale = (value: unknown): FontScale | undefined => {
+  const candidate = typeof value === 'string' ? Number(value) : value;
+  return FONT_SCALES.find((scale) => scale === candidate);
+};
+
+/**
+ * The type scale for a user font scale: `fontPx(base)` (the device-width cap) times `userScale`.
+ * The OS font scale is applied on top by React Native, capped by `maxFontSizeMultiplier` (1.5).
+ */
+export const buildTypography = (
+  userScale: number = DEFAULT_FONT_SCALE,
+): Record<TypographyVariant, TypographyStyle> =>
+  Object.fromEntries(
+    (Object.keys(typeScale) as TypographyVariant[]).map((variant) => {
+      const { fontSize, lineHeight, fontWeight } = typeScale[variant];
+      const style: TypographyStyle = {
+        fontFamily: fontFamilyFor(fontWeight),
+        fontSize: Math.round(fontPx(fontSize) * userScale),
+        lineHeight: Math.round(fontPx(lineHeight) * userScale),
+        fontWeight: Platform.OS === 'android' ? '400' : fontWeight,
+        letterSpacing: 0,
+      };
+      return [variant, style];
+    }),
+  ) as Record<TypographyVariant, TypographyStyle>;
 
 const createTheme = (name: ThemeMode, paletteName: PaletteName, colors: ColorTokens): AppTheme => ({
   name,
@@ -56,7 +74,7 @@ const createTheme = (name: ThemeMode, paletteName: PaletteName, colors: ColorTok
   palette,
   spacing,
   radii,
-  typography,
+  typography: buildTypography(),
   shadows,
   zIndex,
 });
