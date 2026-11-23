@@ -37,4 +37,4 @@ None.
 ## Risks
 
 - dummyjson does not persist created items, so a refetch after create will not show them; the invalidation still demonstrates the pattern.
-- The mock API (`API_MOCKING=true`) serves 100 deterministic items for offline development and tests.
+- The Tempo local backend (`backend/`) serves 100 deterministic items for offline development and tests.

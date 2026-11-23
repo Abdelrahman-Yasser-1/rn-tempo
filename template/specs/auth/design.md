@@ -19,8 +19,8 @@ Every call goes through `request(config, ZodSchema)`.
 - `POST /auth/forgot-password` `{email}`, `POST /auth/otp/verify` `{target, code, purpose}`,
   `POST /auth/otp/resend` → `{success, retryAfterSec}`.
 
-dummyjson has no forgot-password or OTP endpoints. These flows need `API_MOCKING=true`
-(in-app mock adapter); the mock accepts the code `123456`.
+dummyjson has no forgot-password or OTP endpoints. These flows need the Tempo local backend
+(`backend/`), which accepts the code `123456`.
 
 ## State
 

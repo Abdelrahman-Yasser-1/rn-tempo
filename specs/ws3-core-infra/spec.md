@@ -282,6 +282,7 @@ None. If anything is ambiguous, STOP and ask the integrator.
 - **`index.js`:**
   - import `./src/theme/unistyles` first, then the polyfills needed by MSW when `ENV.API_MOCKING` is true.
   - start MSW native (`server.listen({ onUnhandledRequest: 'bypass' })`) only if `__DEV__ && ENV.API_MOCKING`.
+  - _Superseded by T15.Z9: the in-app mock mode, `API_MOCKING` and the default MSW handlers are removed. Tests run against the Tempo local backend, and MSW stays for `server.use` overrides._
   - then `AppRegistry.registerComponent`.
   - **Storybook switch:** if `ENV.STORYBOOK_ENABLED && !isProd`, register the Storybook root instead of App (`storybook` markers).
 - **MSW handlers:** live in `src/test-utils/msw/handlers/` and are shared by tests and the dev mock mode. WS3 writes the `auth` and `app-config` handlers; WS9 adds the others.
