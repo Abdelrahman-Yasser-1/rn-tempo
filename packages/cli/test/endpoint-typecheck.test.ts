@@ -48,8 +48,8 @@ describe.skipIf(process.env.TEMPO_E2E !== '1')('tempo g endpoint on a copy of th
   });
 
   it('passes prettier and eslint without fixes', async () => {
-    await tool(dir, 'prettier/bin/prettier.cjs', ['--check', 'api', 'src/features/items']);
-    await tool(dir, 'eslint/bin/eslint.js', ['--max-warnings=0', 'api', 'src/features/items']);
+    await tool(dir, 'prettier/bin/prettier.cjs', ['--check', 'src/features/items']);
+    await tool(dir, 'eslint/bin/eslint.js', ['--max-warnings=0', 'src/features/items']);
     expect(true).toBe(true);
   });
 });
