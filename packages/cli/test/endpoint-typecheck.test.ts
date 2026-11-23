@@ -30,7 +30,7 @@ describe.skipIf(process.env.TEMPO_E2E !== '1')('tempo g endpoint on a copy of th
     ({ dir, cleanup } = await makeTempDir('tempo-endpoint-tsc'));
     await cp(TEMPLATE_DIR, dir, {
       recursive: true,
-      filter: (source) => !/(^|\/)(node_modules|ios|android|coverage|\.ai|\.tempo-api)(\/|$)/.test(path.relative(TEMPLATE_DIR, source)),
+      filter: (source) => !/(^|\/)(node_modules|ios|android|coverage|\.ai)(\/|$)/.test(path.relative(TEMPLATE_DIR, source)),
     });
     await symlink(path.join(TEMPLATE_DIR, 'node_modules'), path.join(dir, 'node_modules'), 'dir');
     const date = new Date('2026-03-04T12:00:00Z');

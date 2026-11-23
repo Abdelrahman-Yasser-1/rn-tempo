@@ -23,6 +23,14 @@ export type RemoveResult = {
 
 type JsonObject = Record<string, unknown>;
 
+/**
+ * Whether the removal deleted request code: a whole feature folder or a feature's `api/` folder, where
+ * `tempo g endpoint` writes its schemas, request functions and hooks (`src/features/<name>/api`).
+ */
+export function deletedRequestCode(deletedPaths: readonly string[]): boolean {
+  return deletedPaths.some((deleted) => /^src\/features\/[^/]+(?:\/api(?:\/.*)?)?$/.test(deleted));
+}
+
 /** Removes entries matching the manifests' `deleteGlobs`; returns the deleted project-relative paths. */
 export async function deleteGlobs(root: string, globs: readonly string[]): Promise<string[]> {
   for (const glob of globs) assertInsideProject(glob, 'deleteGlobs entry');

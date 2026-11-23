@@ -5,9 +5,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const PACKAGES = ['api-contract', 'commitlint-config', 'contracts', 'dev-api', 'eslint-config', 'prettier-config', 'tsconfig'];
+const PACKAGES = ['commitlint-config', 'contracts', 'eslint-config', 'prettier-config', 'tsconfig'];
 // Packages that live outside packages/, as a path from the repository root. The template links the engine for
-// `yarn backend` and `yarn test:backend`; like dev-api it has no published version yet, so a new project gets 0.0.0.
+// `yarn backend` and the test kit that `yarn test` uses; it has no published version yet, so a new project gets 0.0.0.
 const OTHER_PACKAGES = ['apps/local-backend/engine'];
 
 const dirs = [...PACKAGES.map((dir) => path.join(root, dir)), ...OTHER_PACKAGES.map((dir) => path.join(root, '..', dir))];

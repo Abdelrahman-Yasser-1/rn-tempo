@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { applyJsonRemove, removeFeatures } from '../src/lib/remove-feature.ts';
+import { applyJsonRemove, deletedRequestCode, removeFeatures } from '../src/lib/remove-feature.ts';
 import { loadManifests, planRemoval } from '../src/lib/manifest.ts';
 import { pathExists } from '../src/lib/fs-utils.ts';
 import { copyFixtureProject, makeTempDir } from './helpers.ts';
@@ -86,5 +86,36 @@ describe('applyJsonRemove', () => {
     expect(applyJsonRemove(doc, '/a/list/1')).toBe(true);
     expect(doc).toEqual({ a: { list: [1, 3] } });
     expect(applyJsonRemove(doc, '/missing/x')).toBe(false);
+  });
+});
+
+describe('deletedRequestCode', () => {
+  it('is true when a feature folder or a feature api folder was deleted', () => {
+    expect(deletedRequestCode(['src/locales/en/items.json', 'src/features/items'])).toBe(true);
+    expect(deletedRequestCode(['src/features/orders/api'])).toBe(true);
+    expect(deletedRequestCode(['src/features/orders/api/orders.api.ts'])).toBe(true);
+  });
+
+  it('is false for removals that touch no request code', () => {
+    expect(deletedRequestCode([])).toBe(false);
+    expect(deletedRequestCode(['src/services/security/pinning', 'e2e', '.github/workflows/e2e.yml'])).toBe(false);
+    expect(deletedRequestCode(['src/features/settings/components/NotificationsRow'])).toBe(false);
+    expect(deletedRequestCode(['src/features/orders/apiary.ts'])).toBe(false);
+  });
+
+  it('fires for removing samples and stays quiet for ssl-pinning', async () => {
+    const { dir, cleanup } = await makeTempDir('tempo-remove-hint');
+    try {
+      await copyFixtureProject(dir);
+      const manifests = await loadManifests(dir);
+      const enabled = [...manifests.keys()];
+      const pinning = await removeFeatures(dir, manifests, planRemoval(manifests, enabled, ['ssl-pinning']).remove, enabled.filter((name) => name !== 'ssl-pinning'));
+      expect(deletedRequestCode(pinning.deletedPaths)).toBe(false);
+      const samplesPlan = planRemoval(manifests, enabled, ['samples']);
+      const samples = await removeFeatures(dir, manifests, samplesPlan.remove, samplesPlan.keep);
+      expect(deletedRequestCode(samples.deletedPaths)).toBe(true);
+    } finally {
+      await cleanup();
+    }
   });
 });
