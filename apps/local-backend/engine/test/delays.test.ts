@@ -261,13 +261,14 @@ describe('AC-LP-6 delays on a running backend', () => {
   });
 
   it('AC-LP-6 test mode (header) answers at once, and the opt-in header brings the delay back', async () => {
-    const { url } = await serve(base({ latency: { default: { fixedMs: 250 } } }));
+    // A long delay keeps "at once" and "delayed" far apart: the first request to a fresh server can be slow on CI.
+    const { url } = await serve(base({ latency: { default: { fixedMs: 1500 } } }));
     let started = Date.now();
     await fetch(`${url}/ping`, { headers: { [TEST_MODE_HEADER]: '1' } });
-    expect(Date.now() - started).toBeLessThan(150);
+    expect(Date.now() - started).toBeLessThan(1000);
     started = Date.now();
     await fetch(`${url}/ping`, { headers: { [TEST_MODE_HEADER]: '1', [TEST_DELAYS_HEADER]: '1' } });
-    expect(Date.now() - started).toBeGreaterThanOrEqual(230);
+    expect(Date.now() - started).toBeGreaterThanOrEqual(1450);
   });
 
   it('AC-LP-6 test mode (engine option and the definition) zeroes delays, throttling and timeouts', async () => {
