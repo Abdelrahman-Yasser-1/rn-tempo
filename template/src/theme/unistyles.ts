@@ -1,9 +1,7 @@
 import { StyleSheet } from 'react-native-unistyles';
 
 import { breakpoints } from './breakpoints';
-import { darkTheme, lightTheme } from './themes';
-
-const appThemes = { light: lightTheme, dark: darkTheme };
+import { appThemes } from './themes';
 
 type AppThemes = typeof appThemes;
 type AppBreakpoints = typeof breakpoints;
@@ -17,7 +15,9 @@ declare module 'react-native-unistyles' {
 }
 
 // Must run before any StyleSheet.create: index.js imports this file first.
-// adaptiveThemes follows the OS scheme; useAppTheme turns it off for an explicit preference.
+// All eight variants are registered (`light`/`dark` plus `<palette>Light`/`<palette>Dark`).
+// adaptiveThemes follows the OS scheme for the default palette (it needs `light` and `dark`);
+// useAppTheme turns it off for an explicit mode or a brand palette and picks the theme itself.
 StyleSheet.configure({
   themes: appThemes,
   breakpoints,

@@ -1,28 +1,22 @@
 import type { Decorator, Preview } from '@storybook/react-native';
 import { useState, type ReactNode } from 'react';
-import { StyleSheet, UnistylesRuntime } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { AppProviders } from '@app/providers/AppProviders';
 import { i18n } from '@services/i18n/i18n';
 import type { Language } from '@services/i18n/languageManager';
 import { isRtlLanguage } from '@services/i18n/languageManager';
 import { Box, Chip, Row } from '@shared/components';
-
-type ThemeName = 'light' | 'dark';
+import { useAppTheme } from '@theme/index';
 
 /**
  * On-device toolbar for every story. Language switches translations and mirrors the story with
  * `direction` instead of the app's restart-based RTL flip, so both directions can be compared live.
  */
 function StoryFrame({ children }: Readonly<{ children: ReactNode }>) {
-  const [theme, setTheme] = useState<ThemeName>(UnistylesRuntime.themeName ?? 'light');
+  const { theme, setMode } = useAppTheme();
   const [language, setLanguage] = useState<Language>(i18n.language === 'ar' ? 'ar' : 'en');
 
-  const selectTheme = (next: ThemeName) => {
-    UnistylesRuntime.setAdaptiveThemes(false);
-    UnistylesRuntime.setTheme(next);
-    setTheme(next);
-  };
   const selectLanguage = (next: Language) => {
     void i18n.changeLanguage(next);
     setLanguage(next);
@@ -35,9 +29,9 @@ function StoryFrame({ children }: Readonly<{ children: ReactNode }>) {
           <Chip
             key={name}
             label={name}
-            selected={theme === name}
+            selected={theme.name === name}
             onPress={() => {
-              selectTheme(name);
+              setMode(name);
             }}
           />
         ))}

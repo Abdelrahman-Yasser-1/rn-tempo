@@ -2,7 +2,10 @@ import { APP_BUNDLE_ID } from '@config/constants';
 
 /** MMKV keys (contract C15). Renaming a shipped key needs a migration. */
 export const STORAGE_KEYS = {
+  /** Theme mode: `system`, `light` or `dark`. */
   theme: 'app.theme',
+  /** Brand palette: `default`, `ocean`, `forest` or `sunset`. */
+  palette: 'app.palette',
   language: 'app.language',
   onboardingCompleted: 'app.onboarding-completed',
   /** Set on first launch; its absence with tokens present means a reinstall. */

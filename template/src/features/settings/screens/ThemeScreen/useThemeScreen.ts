@@ -3,21 +3,21 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { THEME_OPTIONS } from '@features/settings/constants';
 import type { SettingsStackParamList } from '@navigation/types';
-import { useAppTheme, type ThemePreference } from '@theme/index';
+import { useAppTheme, type ThemeModePreference } from '@theme/index';
 
-const isThemePreference = (value: string): value is ThemePreference =>
+const isThemeModePreference = (value: string): value is ThemeModePreference =>
   THEME_OPTIONS.some((option) => option === value);
 
-/** Logic of the theme screen: current preference and validated changes. */
+/** Logic of the theme screen: current mode and validated changes. */
 export function useThemeScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<SettingsStackParamList, 'Theme'>>();
-  const { preference, setPreference } = useAppTheme();
+  const { mode, setMode } = useAppTheme();
 
   const onChange = (value: string) => {
-    if (isThemePreference(value)) {
-      setPreference(value);
+    if (isThemeModePreference(value)) {
+      setMode(value);
     }
   };
 
-  return { preference, onChange, onBack: navigation.goBack };
+  return { mode, onChange, onBack: navigation.goBack };
 }

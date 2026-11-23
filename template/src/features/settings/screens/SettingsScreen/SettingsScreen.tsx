@@ -29,7 +29,7 @@ export function SettingsScreen() {
       />
       <ListItem
         title={t('theme.title')}
-        subtitle={themeNames[vm.preference]}
+        subtitle={themeNames[vm.mode]}
         left={<Icon name="moon" />}
         showChevron
         showDivider
