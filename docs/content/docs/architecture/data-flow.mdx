@@ -53,6 +53,10 @@ const { data } = useItemQuery(itemId, { notifyOnChangeProps });
 
 On launch `useBootstrap` runs the steps in `app/bootstrap` in order: security checks, auth restore, remote config, i18n. The remote config comes from `GET /app-config` and falls back to safe local defaults, so a failing endpoint never blocks startup ([ADR-010](/docs/adr/010-app-config-endpoint)). The splash hides when bootstrap ends.
 
+## Where the data comes from
+
+In development the app calls the Tempo local backend in `backend/` (see [Local Backend](/docs/backend/local-backend)). In tests, each Jest file starts the same backend in memory, in test mode, and the app talks to it with its normal HTTP client. A test that needs a special answer, such as an error, overrides one route with MSW's `server.use(...)`. There are no mock files and no in-app mock mode. See [Test without mock data](/docs/backend/test-without-mocks).
+
 ## Environment
 
 Configuration is read once, validated by Zod and exported as `ENV`. See [Run the environments](/docs/getting-started/run-envs).

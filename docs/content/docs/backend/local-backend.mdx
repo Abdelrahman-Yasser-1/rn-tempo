@@ -9,7 +9,7 @@ description: A step-by-step guide to Tempo Local Backend, a desktop app that run
 
 A **backend** is a folder. The app serves that folder as a real API: HTTPS, a database, sign-in for app users, file uploads, a small CMS and a request log. Your app talks to it like a real server. You change it from a window with eight tabs.
 
-This guide takes you from nothing to the template app logged in against your own backend. Code-defined mocks still live in the [dev API](/docs/backend/dev-api): run them with `yarn api`.
+This guide takes you from nothing to the template app logged in against your own backend. The template's tests run against the same kind of backend, see [Test without mock data](/docs/backend/test-without-mocks).
 
 ## 1. Install
 
@@ -632,7 +632,7 @@ Never commit `.data/`. It holds the database, uploaded files, secrets, certifica
 
 ## 13. Troubleshooting
 
-**The port is in use.** The Dashboard says so and offers **Try another port**. Or stop the other program, or set another port in **Settings**, then **Restart now**. The program on port `8443` may be a dev API you started with `yarn api up`.
+**The port is in use.** The Dashboard says so and offers **Try another port**. Or stop the other program, or set another port in **Settings**, then **Restart now**. The program on port `8443` may be another backend you started with `yarn backend`.
 
 **Certificate errors.** The target does not trust the certificate yet. See step 3.1 for the target, then restart the template app.
 

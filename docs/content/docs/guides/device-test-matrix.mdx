@@ -26,4 +26,4 @@ Unit tests pass on bugs that only a device shows: a bottom sheet that screen rea
 
 ## Automated flows
 
-Maestro flows cover the core journeys against the mocked API. They live in `e2e/flows/` when the Maestro feature is enabled, and the `e2e` workflow runs them on an Android emulator for pull requests labelled `e2e` and nightly. See [ADR 006](/docs/adr/006-maestro). They do not replace this matrix: they cannot judge layout, RTL or accessibility.
+Maestro flows cover the core journeys against a temporary copy of your Tempo backend. They live in `e2e/flows/` when the Maestro feature is enabled, and the `e2e` workflow runs them on an Android emulator for pull requests labelled `e2e` and nightly. See [ADR 006](/docs/adr/006-maestro). They do not replace this matrix: they cannot judge layout, RTL or accessibility.

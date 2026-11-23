@@ -9,5 +9,8 @@ description: "Remote app config via an HTTP endpoint, Firebase as a recipe"
 Force-update, maintenance mode and feature flags need remote values. Firebase Remote Config needs real config files per env, so a template build without them would fail.
 
 ## Decision
-- `GET /app-config` returns `{ minSupportedVersion, latestVersion, maintenance, flags, storeUrls }`. It is mocked by MSW, falls back to safe local defaults, and never blocks startup.
+- `GET /app-config` returns `{ minSupportedVersion, latestVersion, maintenance, flags, storeUrls }`. The committed Tempo local backend serves it in development and in tests (a test can override the answer with an MSW `server.use`). The app falls back to safe local defaults, and the endpoint never blocks startup.
+
 - Firebase Remote Config is a docs recipe that implements the same interface.
+
+> Updated by T15.Z9: the endpoint was first mocked by MSW handlers and an in-app mock adapter. Those are removed. The Tempo local backend answers instead.
