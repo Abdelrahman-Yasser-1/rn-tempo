@@ -1,14 +1,12 @@
 {
   "title": "Backend",
-  "description": "The dev API for local work and the optional full backend with an admin portal.",
+  "description": "The Tempo local backend for development and tests, and the team server.",
   "icon": "server",
   "pages": [
     "index",
-    "dev-api",
     "local-https",
     "local-backend",
     "team-server",
-    "test-without-mocks",
-    "migrate-from-dev-api"
+    "test-without-mocks"
   ]
 }

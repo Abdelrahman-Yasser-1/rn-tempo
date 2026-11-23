@@ -1,25 +1,23 @@
 ---
 title: Backend
-description: "Two tiers of backend for an RN-TEMPO app, a dev API every project gets and a full backend you can opt into."
+description: "The Tempo local backend gives an RN-TEMPO app a real API for development and tests, and a team server shares it."
 ---
 
-An RN-TEMPO app talks to an HTTP API. The template gives you two ways to have one, and both are built from the same endpoint definitions.
+An RN-TEMPO app talks to an HTTP API. While the real API does not exist, the app talks to a Tempo local backend: a real HTTP server, with a database, that runs from a folder (`backend/` in the template).
 
-## The two tiers
+## What you get
 
-| | Tier 1: dev API | Tier 2: backend and portal |
-| --- | --- | --- |
-| Package | `@rn-tempo/dev-api` | `backend/api`, `backend/portal` |
-| Who gets it | Every project, as a dev dependency | Projects created with `--with-backend` |
-| Data | Seeded random data from your Zod schemas, or data you fix | PostgreSQL through Prisma |
-| Auth | A mock login for the public test user | Real accounts, hashed passwords, rotating refresh tokens |
-| Use it for | Building screens, demos and tests before a real API exists | A real API, an admin portal and a CMS |
-| Runs in production | Never | Yes |
+| | What it is |
+| --- | --- |
+| [Local Backend](/docs/backend/local-backend) | A desktop app and a CLI that serve the folder over HTTPS: sign-in, data, file upload, a small CMS and a request log. |
+| [Local HTTPS](/docs/backend/local-https) | A certificate for the simulator, the emulator and real devices. |
+| [Team server](/docs/backend/team-server) | The same backends on one server, with accounts, roles and API keys. |
+| [Test without mock data](/docs/backend/test-without-mocks) | Jest and CI run against the same backend, in memory. |
 
-Start with tier 1. When the app needs real data, tier 2 mounts the same definitions under `/api/v1`, so your request and response shapes do not change.
+## One definition
 
-## One contract
+The backend is described by `backend/backend.json`, plus seed data and handler files. You edit it in the app, or in a text editor. The development app, the Jest tests and the CI end-to-end run all read that one folder.
 
-Both tiers read endpoint definitions written with `@rn-tempo/api-contract`. A definition is a method, a path and Zod schemas for the params, query, body and response. The dev API serves it, and later phases generate OpenAPI, Postman collections and MSW handlers from the same file.
+There are no mock files in the template and no mock mode in the app. A test that needs a special answer overrides one route with MSW's `server.use(...)`.
 
-Start with [Dev API](/docs/backend/dev-api).
+Start with [Local Backend](/docs/backend/local-backend).

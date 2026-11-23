@@ -1,51 +1,45 @@
 ---
 title: Local HTTPS
-description: Serve the dev API over HTTPS with mkcert and make the iOS simulator, the Android emulator and real devices trust it.
+description: Serve your local backend over HTTPS with mkcert and make the iOS simulator, the Android emulator and real devices trust it.
 ---
 
 <Callout title="Development only" type="warn">
   The certificate authority (CA) you create here can sign a certificate for any site. Its private key stays on your machine, is never committed and is never copied to a device. Only the public `rootCA.pem` is installed on devices.
 </Callout>
 
-<Callout title="Using Tempo Local Backend?">
-  The [Local Backend guide](/docs/backend/local-backend) has a button for each step on this page (create the certificate, trust it on a simulator, send it to an emulator) and a QR code for a phone. This page shows the same steps in a terminal for the dev API.
+<Callout title="Using the Tempo Local Backend app?">
+  The [Local Backend guide](/docs/backend/local-backend) has a button for each step on this page (create the certificate, trust it on a simulator, send it to an emulator) and a QR code for a phone. This page shows the same steps in a terminal.
 </Callout>
 
 ## Why HTTPS locally
 
-iOS App Transport Security, Android's network security config and SSL pinning all expect HTTPS. Testing against plain HTTP hides problems that appear on a real network. [mkcert](https://github.com/FiloSottile/mkcert) creates a local CA and a certificate signed by it, so the app can call the dev API the way it calls a real server.
+iOS App Transport Security, Android's network security config and SSL pinning all expect HTTPS. Testing against plain HTTP hides problems that appear on a real network. [mkcert](https://github.com/FiloSottile/mkcert) creates a local CA and a certificate signed by it, so the app can call your local backend the way it calls a real server.
 
 ## 1. Create the certificate
 
 Install mkcert once (`brew install mkcert` on macOS; see the [mkcert installation notes](https://github.com/FiloSottile/mkcert#installation) for Linux and Windows). The CLI never downloads anything for you.
 
 ```sh
-yarn api certs
+npx @rn-tempo/local-backend certs backend
 ```
 
-This writes `cert.pem`, `key.pem` and a copy of the public `rootCA.pem` to `.tempo-api/certs` (already gitignored). The certificate covers `localhost`, `127.0.0.1`, `::1`, `10.0.2.2` (the Android emulator's name for your computer), `dev-api.tempo.test`, `api.tempo.test`, `portal.tempo.test` and your current LAN IP. Add names with `--host my.test` (repeat the flag or use a comma list). `yarn api certs` does **not** change any trust store.
-
-To let a browser on this computer trust Swagger at `/docs`, run `yarn api certs --install`. It runs `mkcert -install`, adds the CA to this computer's trust stores and asks for the system password. It is off by default.
-
-In the rn-tempo repository, `yarn backend:certs` writes the same certificate to `docker/certs` (gitignored) for Caddy. Both use one mkcert CA, so a phone trusts one CA for everything.
+This writes `cert.pem`, `key.pem` and a copy of the public `rootCA.pem` to `backend/.data/certs` (the backend's `.data/` folder is already gitignored). The certificate covers `localhost`, `127.0.0.1`, `::1`, `10.0.2.2` (the Android emulator's name for your computer) and your current LAN IP. It does **not** change any trust store.
 
 ## 2. Start the server
 
 ```sh
-yarn api up
+yarn backend
 ```
 
-The server uses HTTPS when `cert.pem` and `key.pem` exist, and says so in the URLs it prints. `yarn api up --http` forces plain HTTP. Without a certificate it serves HTTP and prints one line: "No certificate: serving HTTP. Run `yarn api certs` for HTTPS."
-
-`status`, `down`, `scenario` and `reset` keep working over HTTPS. They call `127.0.0.1` and trust only the generated `rootCA.pem`; certificate checks are not switched off.
+The server uses HTTPS when `cert.pem` and `key.pem` exist, and says so in the URLs it prints. `yarn backend --http` forces plain HTTP. Without a certificate it serves HTTP.
 
 ## 3. Trust the CA on each target
 
 ### iOS simulator
 
 ```sh
-yarn api trust ios                   # the booted simulator
-yarn api trust ios --device <udid>   # a specific one
+npx @rn-tempo/local-backend trust ios                   # the booted simulator
+npx @rn-tempo/local-backend trust ios --device <udid>   # a specific one
 ```
 
 This runs `xcrun simctl keychain <device> add-root-cert`, which changes the simulator only. No `Info.plist` change is needed: `NSAllowsArbitraryLoads` stays `false`, and HTTPS to any host passes App Transport Security once the simulator trusts the CA. Restart the app afterwards.
@@ -53,11 +47,10 @@ This runs `xcrun simctl keychain <device> add-root-cert`, which changes the simu
 ### Android emulator
 
 ```sh
-yarn api trust android          # prints the steps
-yarn api trust android --push   # also runs adb push
+npx @rn-tempo/local-backend trust android --serial <id>   # a specific emulator
 ```
 
-1. Push `rootCA.pem` to `/sdcard/Download/` (`--push` does only this).
+1. The command pushes `rootCA.pem` to `/sdcard/Download/` with `adb`.
 2. On the emulator open **Settings, Security, Encryption & credentials, Install a certificate, CA certificate**, accept the warning and pick the file.
 
 ### Physical iPhone
@@ -72,40 +65,33 @@ Copy `rootCA.pem` to the device (`adb push`, a cable or a cloud drive) and insta
 
 ### Android builds that trust it
 
-Only the **devDebug** variant (the dev flavor, debug build type) trusts user-installed CAs. `android/app/src/devDebug` holds a `network_security_config.xml` that adds `<certificates src="user"/>` next to the system CAs and keeps cleartext allowed, so Metro and the HTTP dev API still work. devRelease, staging and prod have no such file and trust system CAs only. This is stricter than "the dev flavor" so a release-signed dev build cannot be tricked by a user-installed CA.
+Only the **devDebug** variant (the dev flavor, debug build type) trusts user-installed CAs. `android/app/src/devDebug` holds a `network_security_config.xml` that adds `<certificates src="user"/>` next to the system CAs and keeps cleartext allowed, so Metro and a plain-HTTP backend still work. devRelease, staging and prod have no such file and trust system CAs only. This is stricter than "the dev flavor" so a release-signed dev build cannot be tricked by a user-installed CA.
 
 ## 4. Point the app at it
 
-Set the base URL in `.env.dev` (the lines are in the file, commented out) and turn mocking off so requests leave the app:
+Set the base URL in `.env.dev` (the lines are in `.env.example`, commented out):
 
 | Target | `API_BASE_URL` |
 | --- | --- |
 | iOS simulator | `https://localhost:8443` |
 | Android emulator | `https://10.0.2.2:8443` |
-| Physical device | `https://<your LAN IP>:8443` (the LAN URL `yarn api up` prints) |
-
-```ini
-API_MOCKING=false
-```
-
-With `API_MOCKING=true` the in-app mock answers matching requests and nothing reaches the server.
+| Physical device | `https://<your LAN IP>:8443` (the LAN URL `yarn backend` prints) |
 
 ## API source switch
 
 You can also switch a dev build to the local server from the app, without editing `.env.dev` or rebuilding. Open the debug menu (shake, or the `debug` deep link) and pick **API source**:
 
-- **Build default**: today's behavior from the env file.
-- **In-app mocks**: the in-app mock adapter, even if `API_MOCKING=false`.
-- **Tempo backend** (named **Local dev API** before): no mocks, and requests go to the URL in the field. For a backend on a team server, enter `https://<host>/b/<name>`. It starts as `https://localhost:8443` on iOS and `https://10.0.2.2:8443` on Android. On a physical phone, enter the LAN URL (`https://<your LAN IP>:8443`).
+- **Build default**: the `API_BASE_URL` of the env file.
+- **Tempo backend**: requests go to the URL in the field. For a backend on a team server, enter `https://<host>/b/<name>`. It starts as `https://localhost:8443` on iOS and `https://10.0.2.2:8443` on Android. On a physical phone, enter the LAN URL (`https://<your LAN IP>:8443`).
 
-The choice is saved in the app (`app.api-source`, `app.dev-api-url`) and applies after you close and reopen the app. It only exists in dev builds (`__DEV__` and not prod); release bundles do not contain it. The simulator or emulator must still trust the CA (steps 3 above), and on Android only the **devDebug** variant does.
+The choice is saved in the app (`app.api-source`, `app.backend-url`) and applies after you close and reopen the app. It only exists in dev builds (`__DEV__` and not prod); release bundles do not contain it. The simulator or emulator must still trust the CA (steps 3 above), and on Android only the **devDebug** variant does.
 
 ## SSL pinning
 
 Keep `SSL_PINNING_ENABLED=false` in dev (the default). To test pinning against the local server, pin the SPKI hash of the mkcert leaf certificate and a second pin (the app requires two):
 
 ```sh
-openssl x509 -in .tempo-api/certs/cert.pem -pubkey -noout \
+openssl x509 -in backend/.data/certs/cert.pem -pubkey -noout \
   | openssl pkey -pubin -outform der \
   | openssl dgst -sha256 -binary | openssl base64
 ```
@@ -114,22 +100,22 @@ Put the result in `SSL_PINS`. The pin changes every time you regenerate the cert
 
 ## When your LAN IP changes
 
-`up` tells you when the certificate does not cover the current LAN IP. Run `yarn api certs` again, then `yarn api down && yarn api up`. The CA stays the same, so devices need no change.
+If the certificate does not cover the current LAN IP, run the `certs` command again, then restart `yarn backend`. The CA stays the same, so devices need no change.
 
 ## Troubleshooting
 
 | Symptom | Cause and fix |
 | --- | --- |
-| Browser shows `ERR_CERT_AUTHORITY_INVALID` | The browser does not trust the CA. Run `yarn api certs --install`, or open Swagger from a device that has the CA. |
+| Browser shows `ERR_CERT_AUTHORITY_INVALID` | The browser does not trust the CA. Run `mkcert -install` on this computer (it adds the CA to this computer's trust stores and asks for the system password), or open Swagger from a device that has the CA. |
 | Android: "Trust anchor for certification path not found" | The CA is not installed on the emulator or device, or the build is not devDebug. Install the CA (see above) and run the dev flavor's debug build. |
-| iOS: error -1202 ("server certificate is untrusted") | The simulator does not trust the CA (run `yarn api trust ios`), or on a real iPhone the **Certificate Trust Settings** switch is off. |
-| Certificate error only on the LAN URL | The certificate was made for another IP. Run `yarn api certs` again. |
+| iOS: error -1202 ("server certificate is untrusted") | The simulator does not trust the CA (run the `trust ios` command above), or on a real iPhone the **Certificate Trust Settings** switch is off. |
+| Certificate error only on the LAN URL | The certificate was made for another IP. Run the `certs` command again and restart the backend. |
 | Connection refused | Wrong host for the target: use `10.0.2.2` on the Android emulator, `localhost` on the iOS simulator. |
 | `mkcert is not installed` | `brew install mkcert`. |
 
 ## Security
 
 - `rootCA-key.pem` stays in the folder `mkcert -CAROOT` prints. Never commit it, share it or copy it to a device.
-- `.tempo-api/` and `docker/certs/` are gitignored, and `key.pem` is owner-readable only.
+- `backend/.data/` is gitignored, and `key.pem` is owner-readable only.
 - Only devDebug builds trust user CAs.
 - To remove the CA from this computer later, run `mkcert -uninstall`.
