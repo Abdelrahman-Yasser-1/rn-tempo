@@ -47,6 +47,9 @@ describe('useSettingsScreen', () => {
     result.current.onTheme();
     expect(mockNavigation.navigate).toHaveBeenLastCalledWith('Theme');
 
+    result.current.onTextSize();
+    expect(mockNavigation.navigate).toHaveBeenLastCalledWith('TextSize');
+
     result.current.onAbout();
     expect(mockNavigation.navigate).toHaveBeenLastCalledWith('About');
   });
