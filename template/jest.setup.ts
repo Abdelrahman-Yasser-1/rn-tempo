@@ -236,3 +236,12 @@ afterAll(() => {
   queryClient.clear();
   server.close();
 });
+
+jest.mock('@services/app-icon/NativeAppIcon', () => ({
+  __esModule: true,
+  default: {
+    isSupported: jest.fn(() => true),
+    getIcon: jest.fn(() => Promise.resolve(null)),
+    setIcon: jest.fn(() => Promise.resolve()),
+  },
+}));
