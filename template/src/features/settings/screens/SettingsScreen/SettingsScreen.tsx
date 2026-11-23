@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 
 import { CrashReportsRow } from '@features/settings/components/CrashReportsRow';
 import { NotificationsRow } from '@features/settings/components/NotificationsRow'; // @tempo-feature:push-notifications
+import { getNativeName } from '@services/i18n/languages';
 import { Dialog, Header, Icon, ListItem, Screen } from '@shared/components';
 
 import { styles } from './styles';
@@ -11,7 +12,6 @@ export function SettingsScreen() {
   const { t } = useTranslation('settings');
   const vm = useSettingsScreen();
 
-  const languageNames = { en: t('language.english'), ar: t('language.arabic') };
   const themeNames = { system: t('theme.system'), light: t('theme.light'), dark: t('theme.dark') };
 
   const textSizeNames = {
@@ -26,7 +26,7 @@ export function SettingsScreen() {
       <Header title={t('title')} testID="settings.header" />
       <ListItem
         title={t('language.title')}
-        subtitle={languageNames[vm.language]}
+        subtitle={getNativeName(vm.language)}
         left={<Icon name="globe" />}
         showChevron
         showDivider

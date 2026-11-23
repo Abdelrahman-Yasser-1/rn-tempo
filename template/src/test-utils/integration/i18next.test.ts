@@ -19,7 +19,7 @@ describe('integration: i18next', () => {
 
   test('falls back to en for an unsupported language', async () => {
     await initI18nInstance('en');
-    await i18n.changeLanguage('fr');
+    await i18n.changeLanguage('it');
 
     expect(translate('common:a11y.showPassword')).toBe('Show password');
   });

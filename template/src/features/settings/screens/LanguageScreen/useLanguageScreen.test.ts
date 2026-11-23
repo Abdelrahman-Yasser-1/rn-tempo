@@ -65,9 +65,33 @@ describe('useLanguageScreen', () => {
   test('picking an unsupported value does nothing', async () => {
     const { result } = await renderHookWithProviders(() => useLanguageScreen());
 
-    await pick(result, 'fr');
+    await pick(result, 'it');
 
     expect(result.current.isConfirmVisible).toBe(false);
+    expect(changeLanguageSpy).not.toHaveBeenCalled();
+  });
+
+  test.each(['es', 'de', 'fr'])(
+    'AC-L-1: picking %s from en applies live with no confirmation',
+    async (value) => {
+      const { result } = await renderHookWithProviders(() => useLanguageScreen());
+
+      await pick(result, value);
+
+      expect(result.current.isConfirmVisible).toBe(false);
+      expect(changeLanguageSpy).toHaveBeenCalledWith(value);
+    },
+  );
+
+  test('AC-L-1: picking an LTR language from ar asks for confirmation', async () => {
+    const { result } = await renderHookWithProviders(() => useLanguageScreen(), {
+      language: 'ar',
+    });
+
+    await pick(result, 'fr');
+
+    expect(result.current.isConfirmVisible).toBe(true);
+    expect(changeLanguageSpy).not.toHaveBeenCalled();
   });
 
   test('confirming applies the pending language and closes the dialog', async () => {
