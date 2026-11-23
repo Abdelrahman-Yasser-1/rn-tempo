@@ -33,12 +33,42 @@
       "path": "/filePicker"
     },
     {
+      "file": "src/locales/es/common.json",
+      "op": "remove",
+      "path": "/filePicker"
+    },
+    {
+      "file": "src/locales/de/common.json",
+      "op": "remove",
+      "path": "/filePicker"
+    },
+    {
+      "file": "src/locales/fr/common.json",
+      "op": "remove",
+      "path": "/filePicker"
+    },
+    {
       "file": "src/locales/en/items.json",
       "op": "remove",
       "path": "/create/attachment"
     },
     {
       "file": "src/locales/ar/items.json",
+      "op": "remove",
+      "path": "/create/attachment"
+    },
+    {
+      "file": "src/locales/es/items.json",
+      "op": "remove",
+      "path": "/create/attachment"
+    },
+    {
+      "file": "src/locales/de/items.json",
+      "op": "remove",
+      "path": "/create/attachment"
+    },
+    {
+      "file": "src/locales/fr/items.json",
       "op": "remove",
       "path": "/create/attachment"
     }

@@ -1,0 +1,220 @@
+{
+  "a11y": {
+    "hidePassword": "Masquer le mot de passe",
+    "showPassword": "Afficher le mot de passe"
+  },
+  "calendar": {
+    "chooseMonthYear": "Choisir le mois et l'année",
+    "nextMonth": "Mois suivant",
+    "previousMonth": "Mois précédent"
+  },
+  "connection": {
+    "message": "Cet écran nécessite internet. Reconnectez-vous pour continuer.",
+    "retry": "Vérifier à nouveau",
+    "title": "Aucune connexion"
+  },
+  "countryPicker": {
+    "close": "Fermer",
+    "label": "Pays",
+    "searchLabel": "Rechercher des pays",
+    "searchPlaceholder": "Rechercher par nom ou code",
+    "title": "Sélectionnez un pays"
+  },
+  "datePicker": {
+    "placeholder": "Sélectionnez une date",
+    "title": "Sélectionnez une date"
+  },
+  "dialog": {
+    "cancel": "Annuler",
+    "confirm": "Confirmer"
+  },
+  "errorBoundary": {
+    "goBack": "Retour",
+    "restart": "Redémarrer l'app",
+    "screenTitle": "Cet écran a rencontré un problème",
+    "tryAgain": "Réessayer"
+  },
+  "errorState": {
+    "retry": "Réessayer",
+    "title": "Une erreur s'est produite"
+  },
+  "field": {
+    "characterCount": "{{current}} sur {{max}} caractères",
+    "hideHint": "Masquer l'aide",
+    "required": "obligatoire",
+    "showHint": "Afficher l'aide"
+  },
+  "filePicker": {
+    "add": "Ajouter des fichiers",
+    "browse": "Parcourir les fichiers",
+    "camera": "Prendre une photo",
+    "cameraUnavailable": "Aucun appareil photo n'est disponible sur cet appareil.",
+    "count": "{{current}} fichiers sur {{max}}",
+    "errorSize": "Le fichier dépasse {{max}} Mo.",
+    "errorType": "Ce type de fichier n'est pas autorisé.",
+    "failed": "Impossible de récupérer le fichier. Réessayez.",
+    "library": "Choisir dans les photos",
+    "maxFiles": "Vous pouvez ajouter jusqu'à {{max}} fichiers.",
+    "openSettings": "Ouvrir les réglages",
+    "permissionDenied": "Autorisez l'accès dans les Réglages pour utiliser l'appareil photo ou vos photos.",
+    "placeholder": "Choisissez un fichier",
+    "remove": "Supprimer {{name}}",
+    "replace": "Remplacer le fichier",
+    "sheetTitle": "Ajouter un fichier",
+    "units": {
+      "b": "{{size}} o",
+      "gb": "{{size}} Go",
+      "kb": "{{size}} Ko",
+      "mb": "{{size}} Mo"
+    }
+  },
+  "filterBar": {
+    "filters": "Filtres",
+    "filtersActive": "Filtres, {{active}} actifs"
+  },
+  "formBuilder": {
+    "flow": {
+      "back": "Retour",
+      "header": "Formulaire",
+      "next": "Suivant",
+      "stepOf": "Étape {{current}} sur {{total}}",
+      "submit": "Envoyer",
+      "submitted": "Formulaire envoyé",
+      "unknown": "Ce formulaire n'existe pas."
+    },
+    "repeat": {
+      "add": "Ajouter un élément",
+      "itemHeading": "{{label}} {{index}}",
+      "itemLabel": "Élément",
+      "remove": "Supprimer {{label}} {{index}}"
+    },
+    "review": {
+      "empty": "Non renseigné",
+      "no": "Non",
+      "nothing": "Il n'y a rien à vérifier.",
+      "stepFallback": "Étape {{index}}",
+      "title": "Vérifiez vos réponses",
+      "yes": "Oui"
+    }
+  },
+  "formReview": {
+    "edit": "Modifier",
+    "editSection": "Modifier {{section}}"
+  },
+  "header": {
+    "back": "Retour"
+  },
+  "inlineMessage": {
+    "close": "Ignorer le message"
+  },
+  "listLoadingMore": {
+    "label": "Chargement de la suite"
+  },
+  "loader": {
+    "label": "Chargement"
+  },
+  "mapPicker": {
+    "coordinates": "{{latitude}}, {{longitude}}",
+    "mapLabel": "Carte",
+    "openSettings": "Ouvrir les réglages",
+    "permissionDenied": "Autorisez l'accès à la position dans les Réglages pour aller là où vous êtes.",
+    "placeholder": "Choisissez un lieu",
+    "title": "Choisissez un lieu",
+    "useMyLocation": "Utiliser ma position"
+  },
+  "modal": {
+    "close": "Fermer"
+  },
+  "monthYearPicker": {
+    "placeholder": "Sélectionnez le mois et l'année",
+    "title": "Sélectionnez le mois et l'année"
+  },
+  "multiSelect": {
+    "clear": "Effacer",
+    "done": "Terminé",
+    "limit": "Choisissez jusqu'à {{max}}",
+    "placeholder": "Sélectionnez des options",
+    "remove": "Supprimer {{label}}",
+    "selectAll": "Tout sélectionner",
+    "selected": "{{selected}} sélectionnés"
+  },
+  "numberInput": {
+    "decrease": "Diminuer",
+    "increase": "Augmenter"
+  },
+  "offline": {
+    "banner": "Vous êtes hors ligne"
+  },
+  "otp": {
+    "digit": "Chiffre {{index}} sur {{total}}"
+  },
+  "paginatedList": {
+    "emptyTitle": "Rien à afficher"
+  },
+  "pagination": {
+    "next": "Page suivante",
+    "page": "Page {{page}}",
+    "previous": "Page précédente"
+  },
+  "select": {
+    "close": "Fermer",
+    "empty": {
+      "message": "Essayez un autre terme de recherche.",
+      "title": "Aucun résultat"
+    },
+    "placeholder": "Sélectionnez une option",
+    "searchLabel": "Rechercher des options",
+    "searchPlaceholder": "Rechercher"
+  },
+  "sheet": {
+    "close": "Fermer"
+  },
+  "stepper": {
+    "current": "Étape en cours",
+    "done": "Terminée",
+    "progress": "Étape {{current}} sur {{total}}",
+    "upcoming": "À venir"
+  },
+  "stepperLayout": {
+    "back": "Retour",
+    "next": "Suivant",
+    "submit": "Envoyer"
+  },
+  "timeline": {
+    "current": "Étape en cours",
+    "done": "Terminée",
+    "upcoming": "À venir"
+  },
+  "timePicker": {
+    "placeholder": "Sélectionnez une heure",
+    "title": "Sélectionnez une heure"
+  },
+  "timeSlot": {
+    "empty": {
+      "message": "Aucun créneau n'est disponible.",
+      "title": "Aucun créneau"
+    },
+    "period": {
+      "afternoon": "Après-midi",
+      "evening": "Soir",
+      "morning": "Matin"
+    },
+    "placeholder": "Sélectionnez un créneau",
+    "title": "Sélectionnez un créneau",
+    "titleOnDate": "Créneaux du {{date, datetime(dateStyle: medium; numberingSystem: latn)}}"
+  },
+  "toast": {
+    "close": "Ignorer la notification"
+  },
+  "tooltip": {
+    "close": "Fermer l'info-bulle"
+  },
+  "webView": {
+    "errorMessage": "La page n'a pas pu être chargée. Vérifiez votre connexion et réessayez.",
+    "errorTitle": "Page indisponible",
+    "loading": "Chargement de la page",
+    "openInBrowser": "Ouvrir dans le navigateur",
+    "reload": "Recharger",
+    "unsafe": "Ce lien ne peut pas être ouvert ici."
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "forbidden": "Vous n'avez pas l'autorisation de faire cela.",
+  "network": "Aucune connexion internet. Vérifiez votre réseau et réessayez.",
+  "notFound": "Nous n'avons pas trouvé ce que vous cherchiez.",
+  "server": "Un problème est survenu de notre côté. Veuillez réessayer plus tard.",
+  "timeout": "La requête a pris trop de temps. Veuillez réessayer.",
+  "unauthorized": "Votre session a expiré. Veuillez vous reconnecter.",
+  "unknown": "Une erreur s'est produite. Veuillez réessayer.",
+  "validation": "Certaines informations saisies ne sont pas valides."
+}

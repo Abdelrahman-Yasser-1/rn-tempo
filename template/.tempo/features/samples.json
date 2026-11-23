@@ -29,6 +29,21 @@
       "file": "src/locales/ar/validation.json",
       "op": "remove",
       "path": "/item"
+    },
+    {
+      "file": "src/locales/es/validation.json",
+      "op": "remove",
+      "path": "/item"
+    },
+    {
+      "file": "src/locales/de/validation.json",
+      "op": "remove",
+      "path": "/item"
+    },
+    {
+      "file": "src/locales/fr/validation.json",
+      "op": "remove",
+      "path": "/item"
     }
   ],
   "postRemove": [],

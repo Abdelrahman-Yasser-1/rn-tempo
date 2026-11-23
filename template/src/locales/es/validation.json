@@ -1,0 +1,55 @@
+{
+  "date": {
+    "invalid": "Introduce una fecha válida."
+  },
+  "email": {
+    "invalid": "Introduce un correo electrónico válido.",
+    "required": "Introduce tu correo electrónico."
+  },
+  "formBuilder": {
+    "alphanumeric": "Usa solo letras y números.",
+    "digits": "Usa solo dígitos.",
+    "email": "Introduce un correo electrónico válido.",
+    "iban": "Introduce un IBAN válido.",
+    "invalid": "Este valor no es válido.",
+    "letters": "Usa solo letras.",
+    "noSpaces": "No uses espacios.",
+    "pattern": "Este valor no coincide con el formato esperado.",
+    "phone": "Introduce un teléfono válido con prefijo de país.",
+    "postalCode": "Introduce un código postal válido.",
+    "required": "Este campo es obligatorio.",
+    "tooBig": "Este número es demasiado grande.",
+    "tooFewItems": "Añade más elementos.",
+    "tooLong": "Este texto es demasiado largo.",
+    "tooManyItems": "Quita algunos elementos.",
+    "tooShort": "Este texto es demasiado corto.",
+    "tooSmall": "Este número es demasiado pequeño."
+  },
+  "item": {
+    "categoryRequired": "Introduce una categoría.",
+    "descriptionRequired": "Introduce una descripción.",
+    "priceInvalid": "Introduce un precio mayor que 0.",
+    "quantityInvalid": "Introduce una cantidad de al menos 1.",
+    "titleRequired": "Introduce un título."
+  },
+  "name": {
+    "tooLong": "Usa como máximo 50 caracteres.",
+    "tooShort": "Introduce al menos 2 caracteres."
+  },
+  "otp": {
+    "invalid": "Introduce el código de 6 dígitos."
+  },
+  "password": {
+    "mismatch": "Las contraseñas no coinciden.",
+    "needsLetter": "Incluye al menos una letra.",
+    "needsNumber": "Incluye al menos un número.",
+    "required": "Introduce tu contraseña.",
+    "tooShort": "Usa al menos 8 caracteres."
+  },
+  "phone": {
+    "invalid": "Introduce un teléfono válido con prefijo de país."
+  },
+  "username": {
+    "required": "Introduce tu usuario."
+  }
+}

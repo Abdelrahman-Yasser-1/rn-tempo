@@ -1,0 +1,55 @@
+{
+  "about": {
+    "environment": "Entorno",
+    "os": "Sistema operativo",
+    "reactNative": "React Native",
+    "title": "Acerca de",
+    "version": "Versión"
+  },
+  "crashReports": {
+    "description": "Envía informes de fallos anónimos para que los problemas se corrijan antes.",
+    "title": "Compartir informes de fallos"
+  },
+  "language": {
+    "arabic": "العربية",
+    "english": "English",
+    "restartMessage": "Puede que la app se reinicie para aplicar el nuevo idioma y la dirección del diseño.",
+    "restartTitle": "¿Cambiar de idioma?",
+    "title": "Idioma"
+  },
+  "logout": {
+    "confirm": "Cerrar sesión",
+    "dialogMessage": "Tendrás que iniciar sesión de nuevo.",
+    "dialogTitle": "¿Cerrar sesión?",
+    "title": "Cerrar sesión"
+  },
+  "notifications": {
+    "blocked": "Desactivadas en los ajustes del sistema",
+    "off": "Desactivadas",
+    "on": "Activadas",
+    "title": "Notificaciones"
+  },
+  "textSize": {
+    "default": "Predeterminado",
+    "extraLarge": "Muy grande",
+    "large": "Grande",
+    "preview": "El veloz murciélago hindú comía feliz cardillo y kiwi.",
+    "small": "Pequeño",
+    "title": "Tamaño del texto"
+  },
+  "theme": {
+    "dark": "Oscuro",
+    "light": "Claro",
+    "mode": "Modo",
+    "palette": {
+      "default": "Predeterminada",
+      "forest": "Bosque",
+      "ocean": "Océano",
+      "sunset": "Atardecer",
+      "title": "Paleta"
+    },
+    "system": "Sistema",
+    "title": "Tema"
+  },
+  "title": "Ajustes"
+}

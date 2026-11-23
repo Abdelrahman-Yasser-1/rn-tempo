@@ -1,14 +1,14 @@
 import { defineConfig } from 'i18next-cli';
 
 export default defineConfig({
-  locales: ['en', 'ar'],
+  locales: ['en', 'ar', 'es', 'de', 'fr'],
   extract: {
     input: ['src/**/*.{ts,tsx}'],
     ignore: ['src/**/*.test.{ts,tsx}', 'src/**/*.stories.tsx'],
     output: 'src/locales/{{language}}/{{namespace}}.json',
     defaultNS: 'common',
     primaryLanguage: 'en',
-    secondaryLanguages: ['ar'],
+    secondaryLanguages: ['ar', 'es', 'de', 'fr'],
     // Stale keys and conflicting defaults fail `extract --ci`; keys sort alphabetically.
     removeUnusedKeys: true,
     warnOnConflicts: 'error',

@@ -1,0 +1,159 @@
+{
+  "debug": {
+    "apiSource": {
+      "backend": "Backend Tempo",
+      "env": "Valeur de build (fichier env)",
+      "hint": "S'applique après le redémarrage de l'app. Le backend Tempo est votre Tempo Local Backend : l'app Mac, `yarn backend` ou un serveur d'équipe sur https://<host>/b/<name>. Sur un téléphone, utilisez son URL de réseau local.",
+      "reset": "Utiliser la valeur par défaut",
+      "save": "Enregistrer l'URL",
+      "saved": "Enregistré. Redémarrez l'app pour appliquer.",
+      "title": "Source de l'API",
+      "urlLabel": "URL du backend Tempo"
+    },
+    "apiUrl": {
+      "clear": "Effacer",
+      "hint": "Enregistré dans le stockage. S'applique après le redémarrage de l'app. Laissez vide pour utiliser la valeur de build.",
+      "save": "Enregistrer",
+      "title": "Remplacement de l'URL de base de l'API"
+    },
+    "crash": {
+      "hint": "Envoie une erreur de test à votre fournisseur de rapports de plantage. Les builds de débogage ne remontent jamais rien ; utilisez un build de release de staging.",
+      "send": "Envoyer une erreur de test",
+      "title": "Rapports de plantage"
+    },
+    "data": {
+      "clearQueryCache": "Vider le cache des requêtes",
+      "clearStorage": "Vider le stockage",
+      "clearTokens": "Effacer les jetons (se déconnecter)",
+      "title": "Données"
+    },
+    "done": "Terminé",
+    "env": {
+      "apiBaseUrl": "URL de base de l'API",
+      "appEnv": "Environnement",
+      "bundleId": "ID du bundle",
+      "platform": "Plateforme",
+      "title": "Environnement",
+      "version": "Version"
+    },
+    "flags": {
+      "reset": "Réinitialiser les remplacements",
+      "title": "Indicateurs de fonctionnalité"
+    },
+    "forms": {
+      "hint": "Deux parcours de démonstration : l'un depuis une configuration typée en code, l'autre depuis du JSON intégré.",
+      "openCode": "Ouvrir la démo de configuration en code",
+      "openJson": "Ouvrir la démo JSON",
+      "title": "Formulaires dynamiques"
+    },
+    "networkLog": {
+      "hint": "Requêtes effectuées par cette app. Les requêtes de connexion, de jeton et de profil sont masquées. Tout le reste est affiché tel qu'envoyé, en-tête Authorization compris ; à réserver aux builds de développement et de staging.",
+      "open": "Ouvrir le journal réseau",
+      "title": "Journal réseau"
+    },
+    "pushToken": {
+      "placeholder": "Pas encore disponible. Les notifications push ne font pas partie du modèle.",
+      "title": "Jeton push"
+    },
+    "shake": {
+      "hint": "Secouez l'appareil pour ouvrir ce menu depuis n'importe où dans l'app."
+    },
+    "storybook": {
+      "hint": "Définissez STORYBOOK_ENABLED=true dans le fichier env et redémarrez pour lancer Storybook à la place de l'app.",
+      "title": "Storybook"
+    }
+  },
+  "forceUpdate": {
+    "message": "Cette version de l'app n'est plus prise en charge. Veuillez la mettre à jour pour continuer.",
+    "title": "Mise à jour requise",
+    "updateButton": "Mettre à jour"
+  },
+  "formsDemo": {
+    "code": {
+      "addDependant": "Ajouter une personne à charge",
+      "cities": {
+        "cairo": "Le Caire",
+        "giza": "Gizeh",
+        "jeddah": "Djeddah",
+        "riyadh": "Riyad"
+      },
+      "city": "Ville",
+      "companyName": "Nom de l'entreprise",
+      "countries": {
+        "eg": "Égypte",
+        "sa": "Arabie saoudite"
+      },
+      "country": "Pays",
+      "dependantItem": "Personne à charge",
+      "dependantName": "Nom",
+      "dependants": "Personnes à charge",
+      "email": "E-mail",
+      "fullName": "Nom complet",
+      "hasCompany": "Je travaille pour une entreprise",
+      "password": "Mot de passe",
+      "price": "Prix unitaire",
+      "quantity": "Quantité",
+      "steps": {
+        "about": "À propos de vous",
+        "family": "Famille",
+        "order": "Commande",
+        "work": "Travail"
+      },
+      "total": "Total (calculé)",
+      "username": "Nom d'utilisateur (essayez \"taken\")",
+      "usernameTaken": "Ce nom d'utilisateur est déjà pris."
+    }
+  },
+  "linking": {
+    "openFailed": "Nous n'avons pas pu ouvrir ce lien."
+  },
+  "maintenance": {
+    "message": "L'app est en maintenance. Veuillez réessayer dans quelques minutes.",
+    "retryButton": "Réessayer",
+    "title": "Nous revenons bientôt"
+  },
+  "notFound": {
+    "homeButton": "Retour à l'accueil",
+    "message": "La page que vous cherchez n'existe pas ou a été déplacée.",
+    "title": "Page introuvable"
+  },
+  "onboarding": {
+    "getStarted": "Commencer",
+    "next": "Suivant",
+    "pageLabel": "Page {{current}} sur {{total}}",
+    "skip": "Passer",
+    "slide1": {
+      "body": "Un point de départ prêt pour la production pour votre prochaine app.",
+      "title": "Bienvenue"
+    },
+    "slide2": {
+      "body": "Choisissez parmi cinq langues, avec une prise en charge complète de l'écriture de droite à gauche.",
+      "title": "Votre langue, à votre façon"
+    },
+    "slide3": {
+      "body": "Connectez-vous ou créez un compte pour commencer.",
+      "title": "Tout est prêt"
+    }
+  },
+  "security": {
+    "closeButton": "Fermer",
+    "message": "Pour votre protection, l'app ne peut pas continuer sur cet appareil.",
+    "reason": {
+      "debugMode": "Un débogueur est attaché à l'app.",
+      "hookDetected": "Une altération à l'exécution a été détectée.",
+      "jailbroken": "Cet appareil semble être rooté ou jailbreaké.",
+      "ssl": "La connexion au serveur n'a pas pu être vérifiée."
+    },
+    "title": "Problème de sécurité détecté"
+  },
+  "startupError": {
+    "message": "L'app n'a pas pu démarrer. Veuillez réessayer.",
+    "retryButton": "Réessayer",
+    "title": "Une erreur s'est produite"
+  },
+  "tabs": {
+    "home": "Accueil",
+    "profile": "Profil",
+    "settings": "Réglages"
+  }
+}

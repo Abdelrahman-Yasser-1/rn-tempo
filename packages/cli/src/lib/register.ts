@@ -235,6 +235,22 @@ export async function registerRoute(options: RegisterOptions): Promise<RegisterR
 
 const RESOURCES_FILE = 'src/services/i18n/resources.ts';
 
+/** Languages `resources.ts` already registers (en first), so every shipped language gets the new namespace. */
+export function localeLanguages(resourcesText: string): string[] {
+  const found = new Set<string>(['en']);
+  for (const match of resourcesText.matchAll(/^import ([a-z]{2,3})[A-Z]\w* from '@locales\/\1\//gm)) {
+    if (match[1] !== undefined) found.add(match[1]);
+  }
+  return [...found];
+}
+
+/** Languages a project ships, read from its `resources.ts`; en and ar when that file is missing. */
+export async function readLocaleLanguages(projectDir: string): Promise<string[]> {
+  const file = path.join(projectDir, RESOURCES_FILE);
+  if (!(await pathExists(file))) return ['en', 'ar'];
+  return localeLanguages(await readFile(file, 'utf8'));
+}
+
 /**
  * Registers a feature's locale files as an i18n namespace in `resources.ts` so `t()` keys are typed.
  * Idempotent; returns a note instead of failing when the file is not in the expected shape.
@@ -246,7 +262,7 @@ export async function registerNamespace(projectDir: string, namespace: string, p
   let text = await readFile(file, 'utf8');
   const importLine = (lang: string) => `import ${lang}${pascal} from '@locales/${lang}/${namespace}.json';`;
   if (text.includes(importLine('en'))) return { updated: [], notes: [] };
-  for (const lang of ['en', 'ar']) {
+  for (const lang of localeLanguages(text)) {
     const lines = text.split('\n');
     const last = lines.findLastIndex((value) => value.startsWith(`import ${lang}`) && value.includes(`'@locales/${lang}/`));
     const block = findBlock(text, new RegExp(`^  ${lang}:\\s*\\{`, 'm'));

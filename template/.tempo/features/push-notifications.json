@@ -33,6 +33,21 @@
       "file": "src/locales/ar/settings.json",
       "op": "remove",
       "path": "/notifications"
+    },
+    {
+      "file": "src/locales/es/settings.json",
+      "op": "remove",
+      "path": "/notifications"
+    },
+    {
+      "file": "src/locales/de/settings.json",
+      "op": "remove",
+      "path": "/notifications"
+    },
+    {
+      "file": "src/locales/fr/settings.json",
+      "op": "remove",
+      "path": "/notifications"
     }
   ],
   "postRemove": [

@@ -1,0 +1,55 @@
+{
+  "about": {
+    "environment": "Umgebung",
+    "os": "Betriebssystem",
+    "reactNative": "React Native",
+    "title": "Über",
+    "version": "Version"
+  },
+  "crashReports": {
+    "description": "Sende anonyme Absturzberichte, damit Probleme schneller behoben werden.",
+    "title": "Absturzberichte teilen"
+  },
+  "language": {
+    "arabic": "العربية",
+    "english": "English",
+    "restartMessage": "Die App wird möglicherweise neu gestartet, um die neue Sprache und Layoutrichtung anzuwenden.",
+    "restartTitle": "Sprache ändern?",
+    "title": "Sprache"
+  },
+  "logout": {
+    "confirm": "Abmelden",
+    "dialogMessage": "Du musst dich erneut anmelden.",
+    "dialogTitle": "Abmelden?",
+    "title": "Abmelden"
+  },
+  "notifications": {
+    "blocked": "In den Systemeinstellungen deaktiviert",
+    "off": "Aus",
+    "on": "Ein",
+    "title": "Benachrichtigungen"
+  },
+  "textSize": {
+    "default": "Standard",
+    "extraLarge": "Sehr groß",
+    "large": "Groß",
+    "preview": "Zwölf Boxkämpfer jagen Viktor quer über den großen Sylter Deich.",
+    "small": "Klein",
+    "title": "Textgröße"
+  },
+  "theme": {
+    "dark": "Dunkel",
+    "light": "Hell",
+    "mode": "Modus",
+    "palette": {
+      "default": "Standard",
+      "forest": "Wald",
+      "ocean": "Ozean",
+      "sunset": "Sonnenuntergang",
+      "title": "Farbpalette"
+    },
+    "system": "System",
+    "title": "Design"
+  },
+  "title": "Einstellungen"
+}
