@@ -25,6 +25,7 @@ import { Modal } from '../ui/Modal';
 import { ErrorNote, Hint } from '../ui/bits';
 import { DynamicValuesHelp } from '../ui/DynamicValuesHelp';
 import { HeadersEditor } from '../ui/HeadersEditor';
+import { FaultsFields } from '../ui/FaultsFields';
 import { LatencyFields, NetworkFields } from '../ui/NetworkFields';
 import { ResponseEditor } from '../ui/ResponseEditor';
 
@@ -748,6 +749,13 @@ export function EndpointDialog({ backend, collections, existingIds, templates = 
           {problem('latency') === undefined ? null : <span className="error">{problem('latency')}</span>}
           <NetworkFields form={form.network} onChange={(next) => { set('network', next); }} inheritLabel="Same as the backend" />
           {problem('network') === undefined ? null : <span className="error">{problem('network')}</span>}
+        </fieldset>
+        <fieldset className="plain-fieldset" aria-label="Faults">
+          <legend>
+            Faults <Hint text="Trouble on purpose, for this endpoint only. Each setting you fill in replaces the backend's. In test mode faults are off unless a request sends x-tempo-test-faults: 1." />
+          </legend>
+          <FaultsFields form={form.faults} onChange={(next) => { set('faults', next); }} />
+          {problem('faults') === undefined ? null : <span className="error">{problem('faults')}</span>}
         </fieldset>
         <fieldset className="plain-fieldset" aria-label="Scenarios">
           <legend>

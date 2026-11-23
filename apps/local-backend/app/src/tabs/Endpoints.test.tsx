@@ -149,6 +149,45 @@ describe('Endpoints', () => {
     expect(JSON.parse(calls.puts[0]?.body ?? '{}')).toMatchObject({ id: 'get.app-config', status: 503, body: { maintenance: false } });
   });
 
+  it('edits the faults of an endpoint and keeps a failure body from the JSON', async () => {
+    const withFaults = { ...definition, endpoints: [{ ...definition.endpoints[1], faults: { failureBody: { error: 'down' }, rateLimit: null } }, definition.endpoints[0]] };
+    const { calls } = setup({ 'GET /definition': () => withFaults });
+    await userEvent.click(await screen.findByRole('button', { name: 'Edit GET /app-config' }));
+    const dialog = screen.getByRole('dialog', { name: 'Edit endpoint' });
+    const faults = within(dialog).getByRole('group', { name: 'Faults' });
+    expect(within(faults).getByLabelText('Rate limit')).toHaveValue('off');
+    await userEvent.selectOptions(within(faults).getByLabelText('Rate limit'), 'own');
+    await userEvent.clear(within(faults).getByLabelText('Requests'));
+    await userEvent.type(within(faults).getByLabelText('Requests'), '10');
+    await userEvent.type(within(faults).getByLabelText('Failure rate (%)'), '20');
+    await userEvent.type(within(faults).getByLabelText('Failure status'), '503');
+    await userEvent.selectOptions(within(faults).getByLabelText('Offline'), 'off');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save endpoint' }));
+    await waitFor(() => {
+      expect(calls.puts).toHaveLength(1);
+    });
+    expect(JSON.parse(calls.puts[0]?.body ?? '{}')).toMatchObject({
+      faults: { rateLimit: { requests: 10, perSeconds: 60, key: 'ip' }, failureRate: 0.2, failureStatus: 503, failureBody: { error: 'down' }, offline: false },
+    });
+  });
+
+  it('shows a faults problem and does not save', async () => {
+    const { calls } = setup();
+    await userEvent.click(await screen.findByRole('button', { name: 'Edit GET /app-config' }));
+    const dialog = screen.getByRole('dialog', { name: 'Edit endpoint' });
+    await userEvent.type(within(dialog).getByLabelText('Failure status'), '700');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save endpoint' }));
+    expect(await within(dialog).findByText(/400 to 599/)).toBeInTheDocument();
+    expect(calls.puts).toHaveLength(0);
+  });
+
+  it('summarises own faults on the endpoint details', async () => {
+    const withFaults = { ...definition, endpoints: [{ ...definition.endpoints[1], faults: { failureRate: 0.2, failureStatus: 503, rateLimit: { requests: 10, perSeconds: 60, key: 'ip' } } }] };
+    setup({ 'GET /definition': () => withFaults });
+    await userEvent.click(await screen.findByRole('button', { name: /Details/ }));
+    expect(await screen.findByLabelText('Endpoint faults')).toHaveTextContent('Faults: 20% fail (503), limit 10/60s per ip');
+  });
+
   it('duplicates into a new endpoint with a copy path', async () => {
     const { calls } = setup();
     await userEvent.click(await screen.findByRole('button', { name: 'Duplicate GET /app-config' }));
