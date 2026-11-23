@@ -1,6 +1,7 @@
 import type { CollectionDef, CrudAction, EndpointDef, EndpointType, HttpMethodName, Scenario } from '../api/types';
 import { headersFromRows, rowsFromHeaders, type HeaderRows } from '../ui/HeadersEditor';
 
+import { blankFaults, faultsFormFrom, faultsFrom, type FaultsForm } from './endpointFaults';
 import { writeText } from './jsonForm';
 import { blankLatency, blankNetwork, latencyFormFrom, latencyFrom, MAX_DELAY_MS, networkFormFrom, networkFrom, type LatencyForm, type NetworkForm } from './network';
 
@@ -112,6 +113,7 @@ export interface EndpointForm {
   headers: HeaderRows;
   latency: LatencyForm;
   network: NetworkForm;
+  faults: FaultsForm;
   scenarios: ScenarioForm[];
 }
 
@@ -154,6 +156,7 @@ export function blankForm(type: EndpointType, collections: CollectionDef[]): End
     headers: [],
     latency: blankLatency('inherit'),
     network: blankNetwork('inherit'),
+    faults: blankFaults(),
     scenarios: [],
   };
   return suggest({ ...form, path: '' }, true);
@@ -207,7 +210,7 @@ export function changeType(form: EndpointForm, type: EndpointType, collections: 
   const fresh = blankForm(type, collections);
   const action = type === 'auth' ? 'login' : type === 'users' ? 'add' : fresh.action;
   // What every type shares (the answer's shape, speed and scenarios) survives the change.
-  const shared = { wrap: form.wrap, headers: form.headers, latency: form.latency, network: form.network, scenarios: form.scenarios };
+  const shared = { wrap: form.wrap, headers: form.headers, latency: form.latency, network: form.network, faults: form.faults, scenarios: form.scenarios };
   return suggest({ ...fresh, ...shared, action, summary: form.summary, auth: fresh.auth }, true);
 }
 
@@ -232,6 +235,7 @@ export function formFrom(endpoint: EndpointDef, collections: CollectionDef[]): E
     headers: rowsFromHeaders(endpoint.headers),
     latency: latencyFormFrom(endpoint.latency, 'inherit'),
     network: networkFormFrom(endpoint.network, 'inherit'),
+    faults: faultsFormFrom(endpoint.faults),
     scenarios: Object.entries(endpoint.scenarios ?? {}).map(([name, scenario]) => scenarioFormFrom(name, scenario)),
   };
   switch (endpoint.type) {
@@ -377,6 +381,8 @@ export function problemsOf(form: EndpointForm): FormProblem[] {
   if (!latency.ok) found.push({ field: 'latency', message: latency.message });
   const network = networkFrom(form.network);
   if (!network.ok) found.push({ field: 'network', message: network.message });
+  const faults = faultsFrom(form.faults);
+  if (!faults.ok) found.push({ field: 'faults', message: faults.message });
   const seen = new Set<string>();
   form.scenarios.forEach((scenario, index) => {
     const at = (key: string): string => `scenarios.${String(index)}.${key}`;
@@ -444,6 +450,8 @@ export function endpointFrom(form: EndpointForm, id: string, original?: Endpoint
   set('latency', latency.ok ? latency.value : undefined);
   const network = networkFrom(form.network);
   set('network', network.ok ? network.value : undefined);
+  const faults = faultsFrom(form.faults);
+  set('faults', faults.ok ? faults.value : undefined);
   const scenarios = Object.fromEntries(form.scenarios.map((scenario) => [scenario.name.trim(), scenarioFrom(scenario)]));
   set('scenarios', Object.keys(scenarios).length === 0 ? undefined : scenarios);
   switch (form.type) {
