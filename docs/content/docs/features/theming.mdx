@@ -1,0 +1,60 @@
+---
+title: Theming
+description: Light, dark and system modes plus the Default, Ocean, Forest and Sunset palettes, and how to add your own.
+---
+
+## What it is
+
+The app has eight theme variants: four palettes (Default, Ocean, Forest and Sunset), each in light and dark. The user picks two independent things in **Settings > Theme**:
+
+- **Mode**: System, Light or Dark. Stored in MMKV `app.theme`.
+- **Palette**: Default, Ocean, Forest or Sunset, shown as swatches. Stored in MMKV `app.palette`.
+
+Light and Dark are the Default palette. A brand palette follows the mode, so Ocean with System mode is Ocean light in the day and Ocean dark at night.
+
+The choice is applied before the first render and changes at runtime through `UnistylesRuntime`, without a remount.
+
+## Use it in a component
+
+Components never know which palette is active. Read semantic tokens from the theme and every variant works:
+
+```tsx
+const styles = StyleSheet.create((theme) => ({
+  card: {
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.border,
+  },
+}));
+```
+
+Read or change the choice with `useAppTheme()` from `@theme`:
+
+```tsx
+const { theme, mode, palette, setMode, setPalette } = useAppTheme();
+setPalette("ocean");
+```
+
+`theme.name` is `'light'` or `'dark'`, and `theme.paletteName` is the palette.
+
+## Old stored values
+
+Before palettes, `app.theme` held `system`, `light` or `dark`. It still does, as the mode, so nothing needs to be migrated. A missing `app.palette` means Default, and an unknown value in either key falls back to `system` and `default`.
+
+## How the variants are registered
+
+All eight are registered in Unistyles as `light`, `dark`, `oceanLight`, `oceanDark`, `forestLight`, `forestDark`, `sunsetLight` and `sunsetDark`. Unistyles' adaptive themes only switch between `light` and `dark`, so:
+
+- System mode with the Default palette uses adaptive themes.
+- System mode with a brand palette turns adaptive themes off and follows the device scheme through `Appearance`, including when the device switches while the app is open.
+
+## Add or change a palette
+
+1. Add the primitives under `palette.brands.<name>` in `src/theme/palette.ts`: a `primary` scale (50 to 950), an `accent` (400 and 700) and a `tint` neutral (50, 100, 200, 800, 900, 950).
+2. Add the name to `PALETTE_NAMES` and to `paletteColors` in `src/theme/tokens.ts`, built with the `brandLight` and `brandDark` helpers.
+3. Add `<name>Light` and `<name>Dark` to `ThemeKey` in `src/theme/themes.ts`, and the `theme.palette.<name>` strings to the settings locale files.
+
+`tokens.test.ts` checks every variant against WCAG AA: 4.5:1 for text pairs such as `onPrimary` on `primary`, and 3:1 for the focus colour and the primary colour on the background and surface. A new palette fails the tests until its colours pass.
+
+## Storybook
+
+The on-device Storybook toolbar has chips for light and dark and one for each palette, so a story can be checked in every variant.

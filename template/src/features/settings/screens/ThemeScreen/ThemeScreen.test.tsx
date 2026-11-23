@@ -104,4 +104,34 @@ describe('ThemeScreen', () => {
     expect(screen.getByRole('radio', { name: 'Light' })).toBeChecked();
     expect(screen.getByRole('radio', { name: 'System' })).not.toBeChecked();
   });
+
+  test('AC-T-1: the palette picker lists every palette and marks the current one', async () => {
+    await renderTheme();
+
+    for (const name of ['Default', 'Ocean', 'Forest', 'Sunset']) {
+      expect(screen.getByRole('radio', { name })).toBeOnTheScreen();
+    }
+    expect(screen.getByRole('radio', { name: 'Default' })).toBeChecked();
+  });
+
+  test('AC-T-1: picking a palette applies and persists it without changing the mode', async () => {
+    const { user } = await renderTheme();
+    await user.press(screen.getByRole('radio', { name: 'Dark' }));
+
+    await user.press(screen.getByRole('radio', { name: 'Ocean' }));
+
+    expect(screen.getByRole('radio', { name: 'Ocean' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Dark' })).toBeChecked();
+    expect(savePalette).toHaveBeenLastCalledWith('ocean');
+    expect(setThemeSpy).toHaveBeenLastCalledWith('oceanDark');
+  });
+
+  test('the stored palette is the one selected when the screen opens', async () => {
+    storedPalette = 'sunset';
+    initTheme();
+
+    await renderTheme();
+
+    expect(screen.getByRole('radio', { name: 'Sunset' })).toBeChecked();
+  });
 });

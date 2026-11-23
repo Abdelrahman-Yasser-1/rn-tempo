@@ -89,4 +89,18 @@ describe('useThemeScreen', () => {
 
     expect(mockNavigation.goBack).toHaveBeenCalledTimes(1);
   });
+
+  test('a valid palette applies and persists, an unknown one is ignored', async () => {
+    const { result } = await renderHookWithProviders(() => useThemeScreen());
+
+    await act(() => {
+      result.current.onPaletteChange('forest');
+      result.current.onPaletteChange('neon');
+      return Promise.resolve();
+    });
+
+    expect(result.current.palette).toBe('forest');
+    expect(savePalette).toHaveBeenCalledTimes(1);
+    expect(savePalette).toHaveBeenCalledWith('forest');
+  });
 });

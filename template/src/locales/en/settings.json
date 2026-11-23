@@ -32,6 +32,14 @@
   "theme": {
     "dark": "Dark",
     "light": "Light",
+    "mode": "Mode",
+    "palette": {
+      "default": "Default",
+      "forest": "Forest",
+      "ocean": "Ocean",
+      "sunset": "Sunset",
+      "title": "Palette"
+    },
     "system": "System",
     "title": "Theme"
   },

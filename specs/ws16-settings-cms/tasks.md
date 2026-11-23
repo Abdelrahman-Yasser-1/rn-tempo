@@ -8,7 +8,7 @@ Format: `- [ ] T<id> (AC…) <summary>: commit: <header>, docs: <page>`. Each ta
 - [x] T16.A1 (AC-T-1) Add palette definitions Ocean, Forest and Sunset, each with light and dark variants, built from palette primitives like the default one. Commit: `feat(theme): add ocean forest and sunset palettes`.
 - [x] T16.A2 (AC-T-3) Contrast test over every theme variant. Commit: `test(theme): check wcag contrast for every theme`.
 - [x] T16.A3 (AC-T-2) Register all variants in Unistyles. Split the preference into mode + palette (`app.theme`, `app.palette`), and migrate the old stored value. Commit: `feat(theme): separate theme mode from palette`.
-- [ ] T16.A4 (AC-T-1, AC-T-4) Theme screen gets a palette picker with swatches; the Storybook toolbar lists the variants. Commit: `feat(settings): add palette picker`. Docs: `features/theming`.
+- [x] T16.A4 (AC-T-1, AC-T-4) Theme screen gets a palette picker with swatches; the Storybook toolbar lists the variants. Commit: `feat(settings): add palette picker`. Docs: `features/theming`.
 
 ## Phase B: font scale (`ws16/b-font-scale`)
 - [ ] T16.B1 (AC-F-2, AC-F-3) `fontScale` in the theme layer, persisted in `app.font-scale`, applied before the first render, and fed into typography. Commit: `feat(theme): add user font scale`.
