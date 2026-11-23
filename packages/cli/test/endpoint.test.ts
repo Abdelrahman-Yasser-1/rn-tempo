@@ -1,29 +1,26 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { runCommand } from 'citty';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import generateCommand from '../src/commands/generate.ts';
-import { addNamedImport, appendToArray, generateEndpoint } from '../src/lib/endpoint.ts';
+import { addNamedImport, generateEndpoint } from '../src/lib/endpoint.ts';
 import { pathExists, walkFiles } from '../src/lib/fs-utils.ts';
 import { generateFeature } from '../src/lib/scaffold.ts';
 import { copyFixtureProject, makeTempDir } from './helpers.ts';
 
-const CONFIG = `import { defineConfig } from '@rn-tempo/api-contract';
-
-import { login } from './endpoints/auth';
-
-export default defineConfig({
-  auth: false,
-  endpoints: [
-    login,
-    // @tempo-feature:samples:start
-    listProducts,
-    // @tempo-feature:samples:end
-  ],
-});
-`;
+const BACKEND = `${JSON.stringify(
+  {
+    name: 'orders-app',
+    port: 8443,
+    auth: { seedUsers: [] },
+    collections: [],
+    endpoints: [{ id: 'app.hello', type: 'static', method: 'GET', path: '/hello', body: { hello: 'world' } }],
+  },
+  null,
+  2,
+)}\n`;
 
 describe('addNamedImport', () => {
   it('adds a new module in its group and alphabetical place', () => {
@@ -54,20 +51,6 @@ describe('addNamedImport', () => {
   });
 });
 
-describe('appendToArray', () => {
-  it('adds an entry after the last one, keeping comments and markers', () => {
-    const out = appendToArray(CONFIG, /endpoints:\s*\[/, 'getThing');
-    expect(out).toContain('    // @tempo-feature:samples:end\n    getThing,\n  ],');
-  });
-
-  it('adds a missing comma, handles an empty array and skips a name already there', () => {
-    expect(appendToArray('x = { endpoints: [a] }', /endpoints:\s*\[/, 'b')).toContain('[a,\n    b,\n]');
-    expect(appendToArray('endpoints: []', /endpoints:\s*\[/, 'b')).toBe('endpoints: [\n    b,\n]');
-    expect(appendToArray(CONFIG, /endpoints:\s*\[/, 'login')).toBe(CONFIG);
-    expect(appendToArray('nothing here', /endpoints:\s*\[/, 'b')).toBeNull();
-  });
-});
-
 describe('tempo g endpoint', () => {
   let dir = '';
   let cleanup = async () => {};
@@ -78,22 +61,23 @@ describe('tempo g endpoint', () => {
     ({ dir, cleanup } = await makeTempDir('tempo-endpoint'));
     await copyFixtureProject(dir);
     await generateFeature('orders', { projectDir: dir, date });
-    await mkdir(path.join(dir, 'api'), { recursive: true });
-    await writeFile(path.join(dir, 'api/tempo-api.config.ts'), CONFIG);
+    await mkdir(path.join(dir, 'backend'), { recursive: true });
+    await writeFile(path.join(dir, 'backend/backend.json'), BACKEND);
   });
   afterEach(async () => cleanup());
 
-  const files = ['api/tempo-api.config.ts', 'api/endpoints/orders.ts', 'src/features/orders/api/schemas.ts', 'src/features/orders/api/orders.api.ts', 'src/features/orders/api/keys.ts', 'src/features/orders/api/queries.ts', 'src/features/orders/api/mutations.ts'];
+  const files = ['backend/backend.json', 'src/features/orders/api/schemas.ts', 'src/features/orders/api/orders.api.ts', 'src/features/orders/api/keys.ts', 'src/features/orders/api/queries.ts', 'src/features/orders/api/mutations.ts'];
   async function written(): Promise<Record<string, string>> {
     const out: Record<string, string> = {};
     for (const rel of files) if (await pathExists(path.join(dir, rel))) out[rel] = await read(rel);
     return out;
   }
+  const backend = async (): Promise<{ collections: { name: string }[]; endpoints: Record<string, unknown>[] }> => JSON.parse(await read('backend/backend.json'));
 
-  it('GET with a path param: definition, schema, request, key, query hook and registration', async () => {
+  it('GET with a path param: schema, request, key, query hook and a static backend endpoint', async () => {
     const result = await generateEndpoint('orders.getOrder', { projectDir: dir, date, path: '/orders/:id' });
-    expect(result.created.sort()).toEqual(['api/endpoints/orders.ts', 'src/features/orders/api/orders.api.ts', 'src/features/orders/api/schemas.ts']);
-    expect(result.updated.sort()).toEqual(['api/tempo-api.config.ts', 'src/features/orders/api/keys.ts', 'src/features/orders/api/queries.ts']);
+    expect(result.created.sort()).toEqual(['src/features/orders/api/orders.api.ts', 'src/features/orders/api/schemas.ts']);
+    expect(result.updated.sort()).toEqual(['backend/backend.json', 'src/features/orders/api/keys.ts', 'src/features/orders/api/queries.ts']);
     expect(await written()).toMatchSnapshot();
   });
 
@@ -109,24 +93,52 @@ describe('tempo g endpoint', () => {
     expect(api).toContain('{ id, body }: Readonly<{ id: string; body: UpdateOrderRequest }>');
     expect(api).toContain('export function removeOrder(id: string)');
     expect(await read('src/features/orders/api/mutations.ts')).toContain('mutationFn: updateOrder');
+    expect((await backend()).endpoints.map((endpoint) => `${String(endpoint.method)} ${String(endpoint.path)}`)).toEqual(['GET /hello', 'PUT /orders/:id', 'DELETE /orders/:id']);
   });
 
-  it('--resource: five request functions, list and detail keys, five hooks and listed seed items', async () => {
+  it('--resource: five request functions, list and detail keys, five hooks, a collection and five crud endpoints', async () => {
     await generateEndpoint('orders.invoices', { projectDir: dir, date, resource: true });
     expect(await written()).toMatchSnapshot();
+    const added = await backend();
+    expect(added.collections.map((collection) => collection.name)).toEqual(['invoices']);
+    expect(added.endpoints.slice(1).map((endpoint) => [endpoint.type, endpoint.action, endpoint.method, endpoint.path])).toEqual([
+      ['crud', 'list', 'GET', '/invoices'],
+      ['crud', 'get', 'GET', '/invoices/:id'],
+      ['crud', 'create', 'POST', '/invoices'],
+      ['crud', 'update', 'PATCH', '/invoices/:id'],
+      ['crud', 'delete', 'DELETE', '/invoices/:id'],
+    ]);
+  });
+
+  it('keeps the existing entries and key order, with 2-space indent and a trailing newline', async () => {
+    await generateEndpoint('orders.getOrder', { projectDir: dir, date, path: '/orders/:id' });
+    const text = await read('backend/backend.json');
+    expect(text.endsWith('}\n')).toBe(true);
+    expect(Object.keys(JSON.parse(text))).toEqual(['name', 'port', 'auth', 'collections', 'endpoints']);
+    expect(text).toContain('\n    {\n      "id": "app.hello"');
+    expect((await backend()).endpoints[0]).toEqual({ id: 'app.hello', type: 'static', method: 'GET', path: '/hello', body: { hello: 'world' } });
   });
 
   it('a second endpoint appends to the same files and adds names to the existing imports', async () => {
     await generateEndpoint('orders.getOrder', { projectDir: dir, date, path: '/orders/:id' });
     await generateEndpoint('orders.listOrders', { projectDir: dir, date, path: '/orders' });
-    const definitions = await read('api/endpoints/orders.ts');
-    expect(definitions.match(/from '@features\/orders\/api\/schemas'/g)).toHaveLength(1);
-    expect(definitions).toContain('export const getOrder');
-    expect(definitions).toContain('export const listOrders');
-    expect(await read('api/tempo-api.config.ts')).toContain('import { getOrder, listOrders } from');
+    const api = await read('src/features/orders/api/orders.api.ts');
+    expect(api).toContain('export function getOrder');
+    expect(api).toContain('export function listOrders');
+    expect(await read('src/features/orders/api/queries.ts')).toMatch(/import \{[^}]*getOrder[^}]*listOrders[^}]*\} from/);
+    expect((await backend()).endpoints).toHaveLength(3);
   });
 
-  it('refuses a name that exists, an unknown feature, a bad method, a bad path and a missing config', async () => {
+  it('without backend/backend.json it writes the app code and says no backend was found', async () => {
+    await rm(path.join(dir, 'backend'), { recursive: true });
+    const result = await generateEndpoint('orders.getOrder', { projectDir: dir, date, path: '/orders/:id' });
+    expect(result.created).toContain('src/features/orders/api/orders.api.ts');
+    expect(result.updated).not.toContain('backend/backend.json');
+    expect(result.followUps.join('\n')).toContain('No backend/backend.json found');
+    expect(await pathExists(path.join(dir, 'backend'))).toBe(false);
+  });
+
+  it('refuses a name that exists, an unknown feature, a bad method and a bad path', async () => {
     await generateEndpoint('orders.getOrder', { projectDir: dir, date });
     await expect(generateEndpoint('orders.getOrder', { projectDir: dir, date })).rejects.toMatchObject({ code: 'FILE_EXISTS' });
     await expect(generateEndpoint('nothing.get', { projectDir: dir, date })).rejects.toMatchObject({ code: 'FEATURE_NOT_FOUND' });
@@ -134,8 +146,29 @@ describe('tempo g endpoint', () => {
     await expect(generateEndpoint('orders.x', { projectDir: dir, date, path: 'no-slash' })).rejects.toMatchObject({ code: 'INVALID_PATH' });
     await expect(generateEndpoint('orders', { projectDir: dir, date })).rejects.toMatchObject({ code: 'INVALID_NAME' });
     await expect(generateEndpoint('orders.x', { projectDir: dir, date, resource: true, method: 'POST' })).rejects.toMatchObject({ code: 'INVALID_METHOD' });
-    await writeFile(path.join(dir, 'api/tempo-api.config.ts'), 'export default {};\n');
-    await expect(generateEndpoint('orders.other', { projectDir: dir, date })).rejects.toMatchObject({ code: 'CONFIG_UNPARSEABLE' });
+  });
+
+  it('refuses a method + path the backend already has, and writes nothing', async () => {
+    const before = await written();
+    await expect(generateEndpoint('orders.hello', { projectDir: dir, date, path: '/hello' })).rejects.toMatchObject({ code: 'ENDPOINT_EXISTS' });
+    expect(await written()).toEqual(before);
+    // Another method on the same path is fine.
+    await generateEndpoint('orders.sayHello', { projectDir: dir, date, method: 'POST', path: '/hello' });
+    expect((await backend()).endpoints).toHaveLength(2);
+  });
+
+  it('refuses a resource whose collection already exists', async () => {
+    await generateEndpoint('orders.invoices', { projectDir: dir, date, resource: true });
+    await expect(generateEndpoint('orders.invoices', { projectDir: dir, date, resource: true })).rejects.toMatchObject({ code: 'FILE_EXISTS' });
+    await writeFile(path.join(dir, 'backend/backend.json'), `${JSON.stringify({ collections: [{ name: 'receipts' }], endpoints: [] })}\n`);
+    await expect(generateEndpoint('orders.receipts', { projectDir: dir, date, resource: true })).rejects.toMatchObject({ code: 'ENDPOINT_EXISTS' });
+  });
+
+  it('refuses a backend.json that is not valid', async () => {
+    await writeFile(path.join(dir, 'backend/backend.json'), '{ nope');
+    await expect(generateEndpoint('orders.getOrder', { projectDir: dir, date })).rejects.toMatchObject({ code: 'BACKEND_UNPARSEABLE' });
+    await writeFile(path.join(dir, 'backend/backend.json'), '{ "endpoints": {} }');
+    await expect(generateEndpoint('orders.getOrder', { projectDir: dir, date })).rejects.toMatchObject({ code: 'BACKEND_UNPARSEABLE' });
   });
 
   it('--dry-run writes nothing', async () => {
@@ -143,7 +176,7 @@ describe('tempo g endpoint', () => {
     const result = await generateEndpoint('orders.getOrder', { projectDir: dir, date, dryRun: true });
     expect(result.created.length).toBeGreaterThan(0);
     expect(await walkFiles(dir)).toEqual(before);
-    expect(await read('api/tempo-api.config.ts')).toBe(CONFIG);
+    expect(await read('backend/backend.json')).toBe(BACKEND);
   });
 
   it('the command prints one JSON document', async () => {
@@ -157,7 +190,7 @@ describe('tempo g endpoint', () => {
     }
     const json = JSON.parse(out.join('')) as { ok: boolean; kind: string; created: string[]; updated: string[] };
     expect(json).toMatchObject({ ok: true, kind: 'endpoint' });
-    expect(json.created).toContain('api/endpoints/orders.ts');
-    expect(await pathExists(path.join(dir, 'api/endpoints/orders.ts'))).toBe(true);
+    expect(json.updated).toContain('backend/backend.json');
+    expect((await backend()).endpoints.some((endpoint) => endpoint.path === '/orders/:id')).toBe(true);
   });
 });

@@ -1,37 +1,120 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`tempo g endpoint > --resource: five request functions, list and detail keys, five hooks and listed seed items 1`] = `
+exports[`tempo g endpoint > --resource: five request functions, list and detail keys, five hooks, a collection and five crud endpoints 1`] = `
 {
-  "api/endpoints/orders.ts": "import { resource } from '@rn-tempo/api-contract';
-
-import { InvoicesSchema } from '@features/orders/api/schemas';
-
-/** \`/invoices\`: list, get, create, update and delete, stored by the dev server. */
-export const invoices = resource('invoices', InvoicesSchema, {
-  path: '/invoices',
-  // Listed items, because the app (Jest and the dev mock mode) has no data generator.
-  seed: [
-    { id: 1, title: 'Invoices 1' },
-    { id: 2, title: 'Invoices 2' },
-    { id: 3, title: 'Invoices 3' },
+  "backend/backend.json": "{
+  "name": "orders-app",
+  "port": 8443,
+  "auth": {
+    "seedUsers": []
+  },
+  "collections": [
+    {
+      "name": "invoices",
+      "fields": [
+        {
+          "name": "title",
+          "type": "string",
+          "required": true,
+          "default": ""
+        }
+      ],
+      "seed": [
+        {
+          "id": 1,
+          "title": "Invoices 1"
+        },
+        {
+          "id": 2,
+          "title": "Invoices 2"
+        },
+        {
+          "id": 3,
+          "title": "Invoices 3"
+        }
+      ]
+    }
   ],
-});
-",
-  "api/tempo-api.config.ts": "import { defineConfig } from '@rn-tempo/api-contract';
-
-import { login } from './endpoints/auth';
-import { invoices } from './endpoints/orders';
-
-export default defineConfig({
-  auth: false,
-  endpoints: [
-    login,
-    // @tempo-feature:samples:start
-    listProducts,
-    // @tempo-feature:samples:end
-    invoices,
-  ],
-});
+  "endpoints": [
+    {
+      "id": "app.hello",
+      "type": "static",
+      "method": "GET",
+      "path": "/hello",
+      "body": {
+        "hello": "world"
+      }
+    },
+    {
+      "id": "invoices.list",
+      "type": "crud",
+      "collection": "invoices",
+      "action": "list",
+      "method": "GET",
+      "path": "/invoices",
+      "summary": "List invoices",
+      "tags": [
+        "orders"
+      ],
+      "wrap": "none"
+    },
+    {
+      "id": "invoices.get",
+      "type": "crud",
+      "collection": "invoices",
+      "action": "get",
+      "method": "GET",
+      "path": "/invoices/:id",
+      "summary": "Get invoices by id",
+      "tags": [
+        "orders"
+      ],
+      "wrap": "none"
+    },
+    {
+      "id": "invoices.create",
+      "type": "crud",
+      "collection": "invoices",
+      "action": "create",
+      "method": "POST",
+      "path": "/invoices",
+      "aliases": [
+        "/invoices/add"
+      ],
+      "summary": "Create invoices",
+      "tags": [
+        "orders"
+      ],
+      "wrap": "none"
+    },
+    {
+      "id": "invoices.update",
+      "type": "crud",
+      "collection": "invoices",
+      "action": "update",
+      "method": "PATCH",
+      "path": "/invoices/:id",
+      "summary": "Update invoices",
+      "tags": [
+        "orders"
+      ],
+      "wrap": "none"
+    },
+    {
+      "id": "invoices.delete",
+      "type": "crud",
+      "collection": "invoices",
+      "action": "delete",
+      "method": "DELETE",
+      "path": "/invoices/:id",
+      "summary": "Delete invoices",
+      "tags": [
+        "orders"
+      ],
+      "wrap": "none"
+    }
+  ]
+}
 ",
   "src/features/orders/api/keys.ts": "/** Query keys of the orders feature. Keep them here so invalidation stays predictable. */
 export const ordersKeys = {
@@ -166,41 +249,42 @@ export type InvoicesPage = z.infer<typeof InvoicesPageSchema>;
 }
 `;
 
-exports[`tempo g endpoint > GET with a path param: definition, schema, request, key, query hook and registration 1`] = `
+exports[`tempo g endpoint > GET with a path param: schema, request, key, query hook and a static backend endpoint 1`] = `
 {
-  "api/endpoints/orders.ts": "import { defineEndpoint } from '@rn-tempo/api-contract';
-import { z } from 'zod';
-
-import { GetOrderResponseSchema } from '@features/orders/api/schemas';
-
-/** \`GET /orders/:id\` */
-export const getOrder = defineEndpoint({
-  method: 'GET',
-  path: '/orders/:id',
-  summary: 'Get order',
-  tags: ['orders'],
-  params: z.object({ id: z.string() }),
-  response: GetOrderResponseSchema,
-  // Fixed data keeps Jest and the in-app mock deterministic and faker out of the app bundle.
-  // Remove \`data\` only for an endpoint that the dev server alone should answer with generated data.
-  data: () => ({ id: 1 }),
-});
-",
-  "api/tempo-api.config.ts": "import { defineConfig } from '@rn-tempo/api-contract';
-
-import { login } from './endpoints/auth';
-import { getOrder } from './endpoints/orders';
-
-export default defineConfig({
-  auth: false,
-  endpoints: [
-    login,
-    // @tempo-feature:samples:start
-    listProducts,
-    // @tempo-feature:samples:end
-    getOrder,
-  ],
-});
+  "backend/backend.json": "{
+  "name": "orders-app",
+  "port": 8443,
+  "auth": {
+    "seedUsers": []
+  },
+  "collections": [],
+  "endpoints": [
+    {
+      "id": "app.hello",
+      "type": "static",
+      "method": "GET",
+      "path": "/hello",
+      "body": {
+        "hello": "world"
+      }
+    },
+    {
+      "id": "orders.getOrder",
+      "type": "static",
+      "method": "GET",
+      "path": "/orders/:id",
+      "status": 200,
+      "body": {
+        "id": 1
+      },
+      "summary": "Get order",
+      "tags": [
+        "orders"
+      ],
+      "wrap": "none"
+    }
+  ]
+}
 ",
   "src/features/orders/api/keys.ts": "/** Query keys of the orders feature. Keep them here so invalidation stays predictable. */
 export const ordersKeys = {
@@ -257,38 +341,40 @@ export type GetOrderResponse = z.infer<typeof GetOrderResponseSchema>;
 
 exports[`tempo g endpoint > POST with a body: request schema and a mutation that invalidates the feature keys 1`] = `
 {
-  "api/endpoints/orders.ts": "import { defineEndpoint } from '@rn-tempo/api-contract';
-
-import { CreateOrderResponseSchema, CreateOrderRequestSchema } from '@features/orders/api/schemas';
-
-/** \`POST /orders\` */
-export const createOrder = defineEndpoint({
-  method: 'POST',
-  path: '/orders',
-  summary: 'Create order',
-  tags: ['orders'],
-  body: CreateOrderRequestSchema,
-  response: CreateOrderResponseSchema,
-  // Fixed data keeps Jest and the in-app mock deterministic and faker out of the app bundle.
-  // Remove \`data\` only for an endpoint that the dev server alone should answer with generated data.
-  data: () => ({ id: 1 }),
-});
-",
-  "api/tempo-api.config.ts": "import { defineConfig } from '@rn-tempo/api-contract';
-
-import { login } from './endpoints/auth';
-import { createOrder } from './endpoints/orders';
-
-export default defineConfig({
-  auth: false,
-  endpoints: [
-    login,
-    // @tempo-feature:samples:start
-    listProducts,
-    // @tempo-feature:samples:end
-    createOrder,
-  ],
-});
+  "backend/backend.json": "{
+  "name": "orders-app",
+  "port": 8443,
+  "auth": {
+    "seedUsers": []
+  },
+  "collections": [],
+  "endpoints": [
+    {
+      "id": "app.hello",
+      "type": "static",
+      "method": "GET",
+      "path": "/hello",
+      "body": {
+        "hello": "world"
+      }
+    },
+    {
+      "id": "orders.createOrder",
+      "type": "static",
+      "method": "POST",
+      "path": "/orders",
+      "status": 200,
+      "body": {
+        "id": 1
+      },
+      "summary": "Create order",
+      "tags": [
+        "orders"
+      ],
+      "wrap": "none"
+    }
+  ]
+}
 ",
   "src/features/orders/api/keys.ts": "/** Query keys of the orders feature. Keep them here so invalidation stays predictable. */
 export const ordersKeys = {

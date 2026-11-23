@@ -106,7 +106,7 @@ const query = generator('query', 'Generate a TanStack Query hook inside a featur
 );
 
 const endpoint = defineCommand({
-  meta: { name: 'endpoint', description: 'Generate an API endpoint: definition, schemas, request function, query key and hook' },
+  meta: { name: 'endpoint', description: 'Generate an API endpoint: schemas, request function, query key, hook and a backend.json endpoint' },
   args: {
     ...commonArgs,
     'dry-run': writeArgs['dry-run'],

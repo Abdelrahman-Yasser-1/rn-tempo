@@ -68,6 +68,10 @@ const remove = defineCommand({
         if (result.postRemove.includes('assets-sync')) await yarnRun(common.cwd, 'assets', [], { json: common.json });
       }
       reporter.success(`Removed ${plan.remove.join(', ')}. Run yarn install to refresh the lockfile.`);
+      // Removing a feature never edits backend/backend.json, so its endpoints and collections stay there.
+      if (result.deletedPaths.some((deleted) => deleted.startsWith('src/features/') || deleted.startsWith('api/endpoints/'))) {
+        reporter.info('backend/backend.json is not changed: delete the endpoints and collections the app no longer calls there.');
+      }
       // The generated OpenAPI, Postman and MSW files still describe the removed endpoints.
       if (result.deletedPaths.some((deleted) => deleted.startsWith('api/endpoints/'))) {
         reporter.info('Endpoint definitions were removed: run yarn api generate to refresh api/generated.');

@@ -17,7 +17,7 @@ export type EndpointOptions = ScaffoldOptions & {
   resource?: boolean | undefined;
 };
 
-const CONFIG_FILE = 'api/tempo-api.config.ts';
+const BACKEND_FILE = 'backend/backend.json';
 
 // ---- text helpers: small, string based, and tested; they edit the files a person also edits
 
@@ -107,27 +107,6 @@ function matchingBracket(text: string, open: number): number {
   return -1;
 }
 
-/** Adds `entry` as the last item of the array that follows `anchor` (`endpoints: [`). Returns null when not found. */
-export function appendToArray(text: string, anchor: RegExp, entry: string): string | null {
-  const match = anchor.exec(text);
-  if (match === null) return null;
-  const open = match.index + match[0].length - 1;
-  const close = matchingBracket(text, open);
-  if (close < 0) return null;
-  const inner = text.slice(open + 1, close);
-  if (new RegExp(`(^|[^\\w.])${entry.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*,?\\s*(//.*)?$`, 'm').test(inner)) return text;
-  const lines = inner.replace(/\s+$/, '').split('\n');
-  const isComment = (line: string): boolean => line.trim() === '' || line.trim().startsWith('//');
-  const lastReal = lines.reduce((found, line, index) => (isComment(line) ? found : index), -1);
-  if (lastReal >= 0 && !(lines[lastReal] ?? '').trimEnd().endsWith(',') && !(lines[lastReal] ?? '').trimEnd().endsWith('[')) {
-    lines[lastReal] = `${lines[lastReal] ?? ''},`;
-  }
-  const indent = inner.includes('\n') ? (/^\s*/.exec(lines[lastReal >= 0 ? lastReal : lines.length - 1] ?? '')?.[0] ?? '    ') : '    ';
-  const closing = /\n[^\S\n]*$/.exec(inner)?.[0] ?? '\n';
-  const body = lines.join('\n');
-  return `${text.slice(0, open + 1)}${body}\n${indent}${entry},${closing}${text.slice(close)}`;
-}
-
 /** Adds `line` before the `};` that closes the keys object. Returns null when there is none. */
 function appendToKeys(text: string, keysVar: string, lines: string): string | null {
   const match = new RegExp(`export const ${keysVar}\\s*=\\s*\\{`).exec(text);
@@ -143,6 +122,104 @@ function keysVarOf(text: string | undefined, fallback: string): string {
   return (text === undefined ? undefined : /export const (\w+)\s*=\s*\{[^}]*\ball:/s.exec(text)?.[1]) ?? fallback;
 }
 
+// ---- the backend definition: `backend/backend.json` of the Tempo Local Backend
+
+type BackendEntry = Record<string, unknown>;
+type BackendFile = Record<string, unknown>;
+
+/** The static endpoint a plain `tempo g endpoint` adds: it answers the stub the generated schema accepts. */
+function staticEndpoint(vars: Pieces['vars'], { method, route, summary }: Pieces): BackendEntry {
+  return {
+    id: `${vars.featureCamel}.${vars.name}`,
+    type: 'static',
+    method,
+    path: route,
+    status: 200,
+    body: { id: 1 },
+    summary,
+    tags: [vars.feature],
+    wrap: 'none',
+  };
+}
+
+/**
+ * What `--resource` adds: a collection with three listed rows and the five CRUD endpoints the generated request
+ * functions call (`POST {path}/add` is an alias of the create endpoint, as the app code expects).
+ */
+function resourceDefinition(vars: Pieces['vars'], route: string): { collection: BackendEntry; endpoints: BackendEntry[] } {
+  const crud = (action: string, method: string, route: string, summary: string, extra: BackendEntry = {}): BackendEntry => ({
+    id: `${vars.name}.${action}`,
+    type: 'crud',
+    collection: vars.name,
+    action,
+    method,
+    path: route,
+    ...extra,
+    summary,
+    tags: [vars.feature],
+    wrap: 'none',
+  });
+  return {
+    collection: {
+      name: vars.name,
+      fields: [{ name: 'title', type: 'string', required: true, default: '' }],
+      seed: [1, 2, 3].map((id) => ({ id, title: `${vars.Name} ${id}` })),
+    },
+    endpoints: [
+      crud('list', 'GET', route, `List ${vars.name}`),
+      crud('get', 'GET', `${route}/:id`, `Get ${vars.name} by id`),
+      crud('create', 'POST', route, `Create ${vars.name}`, { aliases: [`${route}/add`] }),
+      crud('update', 'PATCH', `${route}/:id`, `Update ${vars.name}`),
+      crud('delete', 'DELETE', `${route}/:id`, `Delete ${vars.name}`),
+    ],
+  };
+}
+
+/** Reads `backend/backend.json`; `undefined` when the project has no backend. */
+async function readBackend(projectDir: string): Promise<BackendFile | undefined> {
+  const file = path.join(projectDir, BACKEND_FILE);
+  if (!(await pathExists(file))) return undefined;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(await readFile(file, 'utf8'));
+  } catch (error) {
+    throw new CliError(`${BACKEND_FILE} is not valid JSON: ${error instanceof Error ? error.message : String(error)}`, { code: 'BACKEND_UNPARSEABLE' });
+  }
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    throw new CliError(`${BACKEND_FILE} must hold one JSON object`, { code: 'BACKEND_UNPARSEABLE' });
+  }
+  const backend = parsed as BackendFile;
+  for (const key of ['endpoints', 'collections']) {
+    if (backend[key] !== undefined && !Array.isArray(backend[key])) {
+      throw new CliError(`"${key}" in ${BACKEND_FILE} must be an array`, { code: 'BACKEND_UNPARSEABLE' });
+    }
+  }
+  return backend;
+}
+
+const pathsOf = (entry: BackendEntry): string[] => [entry.path, ...(Array.isArray(entry.aliases) ? entry.aliases : [])].filter((value): value is string => typeof value === 'string');
+
+/** Adds the endpoints (and collection) to the parsed file, or fails when the same id, method + path or collection exists. */
+function addToBackend(backend: BackendFile, additions: { collection?: BackendEntry; endpoints: BackendEntry[] }): void {
+  const existing = (backend.endpoints ?? []) as BackendEntry[];
+  for (const added of additions.endpoints) {
+    const clash = existing.find(
+      (entry) => entry.id === added.id || (entry.method === added.method && pathsOf(entry).some((route) => pathsOf(added).includes(route))),
+    );
+    if (clash !== undefined) {
+      throw new CliError(`${BACKEND_FILE} already has an endpoint for ${String(added.method)} ${String(added.path)} (id "${String(clash.id)}")`, { code: 'ENDPOINT_EXISTS' });
+    }
+  }
+  const collections = (backend.collections ?? []) as BackendEntry[];
+  if (additions.collection !== undefined) {
+    if (collections.some((entry) => entry.name === additions.collection?.name)) {
+      throw new CliError(`${BACKEND_FILE} already has a collection "${String(additions.collection.name)}"`, { code: 'ENDPOINT_EXISTS' });
+    }
+    backend.collections = [...collections, additions.collection];
+  }
+  backend.endpoints = [...existing, ...additions.endpoints];
+}
+
 // ---- the generator
 
 type Pieces = {
@@ -150,6 +227,8 @@ type Pieces = {
   params: string[];
   hasBody: boolean;
   method: EndpointMethod;
+  route: string;
+  summary: string;
 };
 
 function parseTarget(target: string): { feature: string; name: string } {
@@ -201,12 +280,9 @@ function buildPieces(target: string, options: EndpointOptions): Pieces {
       ...vars,
       method,
       path: route,
-      summary: words(name),
       signature,
       urlExpr,
       dataEntry: hasBody ? ', data: body' : '',
-      paramsLine: params.length > 0 ? `\n  params: z.object({ ${params.map((p) => `${p}: z.string()`).join(', ')} }),` : '',
-      bodyLine: hasBody ? `\n  body: ${vars.Name}RequestSchema,` : '',
       hookParams: params.map((p) => `${p}: string`).join(', '),
       keyArgs: params.join(', '),
       keyParams: params.map((p) => `${p}: string`).join(', '),
@@ -216,6 +292,8 @@ function buildPieces(target: string, options: EndpointOptions): Pieces {
     params,
     hasBody,
     method,
+    route,
+    summary: words(name),
   };
 }
 
@@ -271,21 +349,20 @@ function append(edit: Edit, snippet: string): void {
 }
 
 /**
- * `tempo g endpoint <feature>.<name>`: one definition in `api/endpoints/<feature>.ts`, registered in
- * `api/tempo-api.config.ts`, with its Zod schemas, API call, query key and TanStack Query hook in
- * the feature. Everything is a stub that compiles: replace the schemas and the fixed `data`.
- * With `resource` it writes a `resource(...)` with list, get, create, update and delete instead.
+ * `tempo g endpoint <feature>.<name>`: the feature's Zod schemas, API call, query key and TanStack Query
+ * hook, and a `static` endpoint in `backend/backend.json` that answers the stub. Everything is a stub that
+ * compiles: replace the schemas and the example body. With `resource` it adds a collection and the five
+ * CRUD endpoints (list, get, create, update, delete) instead. A project without `backend/backend.json`
+ * still gets the app code, and the result says no backend was found.
  */
 export async function generateEndpoint(target: string, options: EndpointOptions): Promise<ScaffoldResult> {
-  const { vars, params, hasBody, method } = buildPieces(target, options);
+  const pieces = buildPieces(target, options);
+  const { vars, hasBody, method, route } = pieces;
   const { projectDir } = options;
   const resource = options.resource === true;
   const feature = vars.feature;
   if (!(await pathExists(path.join(projectDir, 'src/features', feature)))) {
     throw new CliError(`Feature "${feature}" does not exist. Create it first: tempo g feature ${feature}`, { code: 'FEATURE_NOT_FOUND' });
-  }
-  if (!(await pathExists(path.join(projectDir, CONFIG_FILE)))) {
-    throw new CliError(`${CONFIG_FILE} not found. Endpoint definitions need the dev API (@rn-tempo/dev-api).`, { code: 'API_CONFIG_MISSING' });
   }
 
   const { dir } = await resolveTemplateDir(projectDir, 'endpoint', options.builtInRoot);
@@ -293,17 +370,17 @@ export async function generateEndpoint(target: string, options: EndpointOptions)
   const apiDir = `src/features/${feature}/api`;
 
   const schemas = await new Edit(projectDir, `${apiDir}/schemas.ts`).load();
-  const definitions = await new Edit(projectDir, `api/endpoints/${feature}.ts`).load();
   const apiFile = await new Edit(projectDir, `${apiDir}/${feature}.api.ts`).load();
   const keys = await new Edit(projectDir, `${apiDir}/keys.ts`).load();
   const queries = await new Edit(projectDir, `${apiDir}/queries.ts`).load();
   const mutations = await new Edit(projectDir, `${apiDir}/mutations.ts`).load();
-  const config = await new Edit(projectDir, CONFIG_FILE).load();
+  const backend = await readBackend(projectDir);
 
   const exported = vars.name;
-  if (new RegExp(`export const ${exported}\\b`).test(definitions.text) || new RegExp(`export function ${resource ? `list${vars.Name}` : exported}\\b`).test(apiFile.text)) {
-    throw new CliError(`"${exported}" already exists in ${definitions.rel} or ${apiFile.rel}`, { code: 'FILE_EXISTS' });
+  if (new RegExp(`export function ${resource ? `list${vars.Name}` : exported}\\b`).test(apiFile.text)) {
+    throw new CliError(`"${exported}" already exists in ${apiFile.rel}`, { code: 'FILE_EXISTS' });
   }
+  if (backend !== undefined) addToBackend(backend, resource ? resourceDefinition(vars, route) : { endpoints: [staticEndpoint(vars, pieces)] });
   const keysVar = keysVarOf(keys.existed ? keys.text : undefined, `${vars.featureCamel}Keys`);
   vars.keys = keysVar;
 
@@ -312,21 +389,7 @@ export async function generateEndpoint(target: string, options: EndpointOptions)
   append(schemas, await snippet(resource ? 'schema-resource.ts.tmpl' : 'schema-response.ts.tmpl'));
   if (hasBody) append(schemas, await snippet('schema-request.ts.tmpl'));
 
-  // 2. definition, registered in the config
-  const schemaSource = `@features/${feature}/api/schemas`;
-  definitions.text = addNamedImport(definitions.text, '@rn-tempo/api-contract', resource ? 'resource' : 'defineEndpoint');
-  if (!resource && params.length > 0) definitions.text = addNamedImport(definitions.text, 'zod', 'z');
-  const defNames = resource ? [`${vars.Name}Schema`] : [`${vars.Name}ResponseSchema`, ...(hasBody ? [`${vars.Name}RequestSchema`] : [])];
-  for (const schemaName of defNames) definitions.text = addNamedImport(definitions.text, schemaSource, schemaName);
-  append(definitions, await snippet(resource ? 'definition-resource.ts.tmpl' : 'definition.ts.tmpl'));
-  const importLine = addNamedImport(config.text, `./endpoints/${feature}`, exported);
-  const registered = appendToArray(importLine, /endpoints:\s*\[/, exported);
-  if (registered === null) {
-    throw new CliError(`Could not find "endpoints: [" in ${CONFIG_FILE}. Add ${exported} to the endpoint list by hand.`, { code: 'CONFIG_UNPARSEABLE' });
-  }
-  config.text = registered;
-
-  // 3. the feature's request function(s)
+  // 2. the feature's request function(s)
   apiFile.text = addNamedImport(apiFile.text, '@services/http/request', 'request');
   const apiSchemas = resource
     ? [`${vars.Name}Schema`, `${vars.Name}PageSchema`, `${vars.Name}Input`]
@@ -336,7 +399,7 @@ export async function generateEndpoint(target: string, options: EndpointOptions)
   }
   append(apiFile, await snippet(resource ? 'api-resource.ts.tmpl' : 'api-call.ts.tmpl'));
 
-  // 4. query key(s) and hook(s)
+  // 3. query key(s) and hook(s)
   const keyLines = resource ? await snippet('keys-resource.ts.tmpl') : await snippet('keys-entry.ts.tmpl');
   if (keys.existed) {
     const added = appendToKeys(keys.text, keysVar, keyLines);
@@ -363,14 +426,20 @@ export async function generateEndpoint(target: string, options: EndpointOptions)
     append(mutations, await snippet(resource ? 'mutation-resource.ts.tmpl' : 'mutation.ts.tmpl'));
   }
 
-  const edits = [schemas, definitions, apiFile, keys, config, ...(withQuery ? [queries] : []), ...(withMutation ? [mutations] : [])];
-  if (!options.dryRun) for (const edit of edits) await edit.save(projectDir);
+  const edits = [schemas, apiFile, keys, ...(withQuery ? [queries] : []), ...(withMutation ? [mutations] : [])];
+  if (!options.dryRun) {
+    for (const edit of edits) await edit.save(projectDir);
+    if (backend !== undefined) await writeFile(path.join(projectDir, BACKEND_FILE), `${JSON.stringify(backend, null, 2)}\n`);
+  }
   return {
     created: edits.filter((edit) => !edit.existed).map((edit) => edit.rel),
-    updated: edits.filter((edit) => edit.existed).map((edit) => edit.rel),
-    followUps: [
-      `Replace the stub schemas in ${schemas.rel} and the fixed data in ${definitions.rel}`,
-      'Run yarn api generate (openapi, collections and msw handlers), then yarn verify',
-    ],
+    updated: [...edits.filter((edit) => edit.existed).map((edit) => edit.rel), ...(backend === undefined ? [] : [BACKEND_FILE])],
+    followUps:
+      backend === undefined
+        ? [
+            `No ${BACKEND_FILE} found: nothing answers ${resource ? 'these endpoints' : `${method} ${route}`} yet. Add the endpoint to your backend by hand`,
+            `Replace the stub schemas in ${schemas.rel}`,
+          ]
+        : [`Replace the stub schemas in ${schemas.rel} and the example ${resource ? 'rows and fields' : 'body'} in ${BACKEND_FILE}`],
   };
 }
