@@ -34,7 +34,7 @@ restarts and expire safely. Today the signed-out stack shows placeholder screens
 
 - Social login, biometrics and passkeys.
 - Setting a new password after the reset code (the backend has no such endpoint).
-- Real OTP delivery: the demo backend has no OTP endpoints, the mock API accepts only 123456.
+- Real OTP delivery: the demo backend has no OTP endpoints, the local backend accepts only 123456.
 
 ## Open questions
 

@@ -73,7 +73,7 @@ None. If anything is ambiguous, STOP and ask the integrator.
 
 **8.4 Build/E2E/Release workflows**
 - **`build.yml`:** `workflow_dispatch` (inputs: env, platform, lane) and tags `v*`. Matrix android (ubuntu) / ios (macos-latest). Writes `.env.<env>` from secrets, sets up ruby/bundler cache, Gradle cache, CocoaPods cache, then runs `bundle exec fastlane <platform> <lane> env:<env>`.
-- **`e2e.yml`:** `maestro` on the Android emulator (`reactivecircus/android-emulator-runner`). Builds the `devRelease` APK with `API_MOCKING=true`, installs it, then runs `maestro test e2e/flows --format junit`. Triggers: the PR label `e2e`, plus nightly cron. The `maestro` markers wrap the file (`ci-github` + `maestro`).
+- **`e2e.yml`:** `maestro` on the Android emulator (`reactivecircus/android-emulator-runner`). Builds the `devRelease` APK, installs it, then runs `maestro test e2e/flows --format junit`. Triggers: the PR label `e2e`, plus nightly cron. _The mock mode it first used is superseded by T15.Z9: the flows run against a backend CI session._ The `maestro` markers wrap the file (`ci-github` + `maestro`).
 - **`release.yml`:** release-please action (`release-type: node`). On release created, dispatch `build.yml` with env prod for both platforms.
 - **Commits:** one per workflow.
 

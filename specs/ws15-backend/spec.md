@@ -67,6 +67,8 @@ template/api/       # the app's endpoint definitions (dev-api reads them)
 
 ## Tier 1: `@rn-tempo/dev-api`
 
+> Superseded by the Tempo local backend (T15.Z9): `@rn-tempo/dev-api`, `@rn-tempo/api-contract`, `template/api` and `yarn api` are removed. This section is kept as history.
+
 ### Endpoint contract (`@rn-tempo/api-contract`)
 ```ts
 export const getProduct = defineEndpoint({
