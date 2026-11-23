@@ -314,7 +314,7 @@ One engine runs three ways, and projects need no mock code or mock data. It exte
    - Developers can opt into configured delays/faults per suite or test.
   4. Helpers: `backend.scenario(endpointId, name)`, `backend.time.set(...)`, `backend.data.insert(...)`, `backend.reset()`, and `backend.requests()` to assert calls.
 - **CI E2E sessions:** `POST /b/<name>/__sessions` (`sessions` key) creates a temporary isolated copy with its own URL. It is deleted on `DELETE` or after its TTL. Parallel runs never share data.
-- **Old mocks are kept** (`template/api`, `yarn api`, in-app mock mode, MSW handlers) until the owner confirms the new path. The docs mark them **deprecated** with the migration steps; removal is a later step after confirmation.
+- **Old mocks are removed** (owner confirmation, 2026-11-23): `template/api`, `yarn api` and `api:check`, in-app mock mode (`API_MOCKING`), and the default MSW handlers and route tables. `msw` stays only for per-test `server.use` overrides. `tempo generate endpoint` adds a static endpoint to `backend/backend.json` instead of a mock definition.
 
 ### OpenAPI / Swagger import and sync
 - **Import sources:** a file (drag & drop) or a URL. Formats: OpenAPI 3.0/3.1 (JSON/YAML) and Swagger 2.0, which is converted on import.
@@ -359,7 +359,7 @@ One engine runs three ways, and projects need no mock code or mock data. It exte
   - an OAuth2 / social-login mock (authorize, token, userinfo)
 
 ### Packaging
-One npm package `@rn-tempo/local-backend` (engine + web dashboard + test kit), the Docker image, and the macOS app. `packages/api-contract` and `packages/dev-api` stay until the old mocks are removed, then they are retired.
+One npm package `@rn-tempo/local-backend` (engine + web dashboard + test kit), the Docker image, and the macOS app. `packages/api-contract` and `packages/dev-api` are retired with the old mocks (T15.Z9): the helpers the engine used (certificates, redaction, logging, problem documents) move into the engine.
 
 ## Tier 2: full backend and portal
 
