@@ -82,8 +82,15 @@ export type TypographyStyle = {
 export type ShadowKey = 'none' | 'sm' | 'md' | 'lg';
 export type ZIndexKey = 'base' | 'dropdown' | 'sticky' | 'modal' | 'toast';
 
+export type ThemeMode = 'light' | 'dark';
+export const PALETTE_NAMES = ['default', 'ocean', 'forest', 'sunset'] as const;
+export type PaletteName = (typeof PALETTE_NAMES)[number];
+
 export type AppTheme = {
-  name: 'light' | 'dark';
+  /** The light or dark half of the theme; each palette has both. */
+  name: ThemeMode;
+  /** Which brand palette the colours come from. */
+  paletteName: PaletteName;
   colors: ColorTokens;
   /** Raw primitives for component variants only (amendment 49); use `colors` first. */
   palette: typeof palette;
@@ -168,6 +175,88 @@ export const darkColors: ColorTokens = {
   overlay: 'rgba(0, 0, 0, 0.6)',
   skeletonBase: palette.gray[800],
   skeletonHighlight: palette.gray[700],
+};
+
+type BrandName = Exclude<PaletteName, 'default'>;
+
+/** Builds the light colours of a brand palette from its three primitive scales. */
+const brandLight = ({
+  primary,
+  accent,
+  tint,
+}: (typeof palette.brands)[BrandName]): ColorTokens => ({
+  primary: primary[700],
+  onPrimary: palette.white,
+  primaryContainer: primary[100],
+  onPrimaryContainer: primary[900],
+  secondary: accent[700],
+  onSecondary: palette.white,
+  background: palette.white,
+  onBackground: palette.gray[1000],
+  surface: tint[50],
+  onSurface: palette.gray[1000],
+  surfaceVariant: tint[100],
+  onSurfaceVariant: palette.gray[600],
+  textPrimary: palette.gray[1000],
+  textSecondary: palette.gray[700],
+  textDisabled: palette.gray[400], // exempt from AA (disabled state)
+  textInverse: palette.white,
+  border: palette.gray[300],
+  divider: tint[200],
+  focus: primary[800],
+  success: palette.success[700],
+  onSuccess: palette.white,
+  warning: palette.warning[600],
+  onWarning: palette.gray[1000],
+  error: palette.error[600],
+  onError: palette.white,
+  info: palette.info[600],
+  onInfo: palette.white,
+  overlay: 'rgba(13, 18, 28, 0.5)',
+  skeletonBase: tint[200],
+  skeletonHighlight: tint[100],
+});
+
+/** Builds the dark colours of a brand palette from its three primitive scales. */
+const brandDark = ({ primary, accent, tint }: (typeof palette.brands)[BrandName]): ColorTokens => ({
+  primary: primary[400],
+  onPrimary: primary[950],
+  primaryContainer: primary[800],
+  onPrimaryContainer: primary[100],
+  secondary: accent[400],
+  onSecondary: palette.gray[950],
+  background: tint[950],
+  onBackground: palette.gray[25],
+  surface: tint[900],
+  onSurface: palette.gray[25],
+  surfaceVariant: tint[800],
+  onSurfaceVariant: palette.gray[300],
+  textPrimary: palette.gray[25],
+  textSecondary: palette.gray[300],
+  textDisabled: palette.gray[600],
+  textInverse: palette.gray[1000],
+  border: palette.gray[700],
+  divider: tint[800],
+  focus: primary[300],
+  success: palette.success[400],
+  onSuccess: palette.gray[950],
+  warning: palette.warning[400],
+  onWarning: palette.gray[950],
+  error: palette.error[400],
+  onError: palette.gray[950],
+  info: palette.info[400],
+  onInfo: palette.gray[950],
+  overlay: 'rgba(0, 0, 0, 0.6)',
+  skeletonBase: tint[800],
+  skeletonHighlight: palette.gray[700],
+});
+
+/** Colour tokens of every palette, light and dark. `default` is the Saudi (DGA) palette. */
+export const paletteColors: Record<PaletteName, Record<ThemeMode, ColorTokens>> = {
+  default: { light: lightColors, dark: darkColors },
+  ocean: { light: brandLight(palette.brands.ocean), dark: brandDark(palette.brands.ocean) },
+  forest: { light: brandLight(palette.brands.forest), dark: brandDark(palette.brands.forest) },
+  sunset: { light: brandLight(palette.brands.sunset), dark: brandDark(palette.brands.sunset) },
 };
 
 /** Raw type scale (design px). `fontSize`/`lineHeight` are run through `fontPx` in themes.ts. */
