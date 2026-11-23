@@ -61,7 +61,6 @@ const FOREGROUND_SIZES = { mdpi: 108, hdpi: 162, xhdpi: 216, xxhdpi: 324, xxxhdp
 
 const RIBBON_HEIGHT_RATIO = 0.26; // ribbon band, as a share of the icon height
 const TEXT_HEIGHT_RATIO = 0.18; // letter height, as a share of the icon height
-const ADAPTIVE_BACKGROUND = '#FFFFFF';
 
 // Block letters on a 10x14 grid, drawn as strokes so no font is needed.
 const GLYPHS = {
@@ -207,16 +206,16 @@ async function roundMask(buffer, size) {
     .toBuffer();
 }
 
-const adaptiveXml = `<?xml version="1.0" encoding="utf-8"?>
+const adaptiveXml = (name) => `<?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@color/ic_launcher_background" />
-    <foreground android:drawable="@mipmap/ic_launcher_foreground" />
+    <background android:drawable="@color/${name}_background" />
+    <foreground android:drawable="@mipmap/${name}_foreground" />
 </adaptive-icon>
 `;
 
-const backgroundXml = `<?xml version="1.0" encoding="utf-8"?>
+const backgroundXml = (name, color) => `<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">${ADAPTIVE_BACKGROUND}</color>
+    <color name="${name}_background">${color}</color>
 </resources>
 `;
 
@@ -234,18 +233,11 @@ async function writeFileEnsured(file, data) {
   await writeFile(file, data);
 }
 
-async function generateAndroid({ flavor, badge }, label) {
-  const res = path.join(root, 'android/app/src', flavor, 'res');
-  // Legacy icon: the ribbon spans the full-bleed square. Foreground: the ribbon sits on the 288px tile.
-  const legacy = await withBadge(
-    'app-icon.png',
-    { x: 0, y: 0, width: 1024, height: 1024 },
-    badge,
-    0,
-    label,
-  );
+async function generateAndroid(outputRoot, { flavor, badge }, variant, legacy, label, background) {
+  const res = path.join(outputRoot, 'android/app/src', flavor, 'res');
+  const name = variant ? `ic_launcher_${variant}` : 'ic_launcher';
   const foreground = await withBadge(
-    'app-icon-foreground.png',
+    variant ? `alternates/foreground/${variant}.png` : 'app-icon-foreground.png',
     { x: 72, y: 72, width: 288, height: 288 },
     badge,
     48,
@@ -255,29 +247,25 @@ async function generateAndroid({ flavor, badge }, label) {
   for (const [density, size] of Object.entries(LEGACY_SIZES)) {
     const resized = await resizeTo(legacy, size);
     const dir = path.join(res, `mipmap-${density}`);
-    await writeFileEnsured(path.join(dir, 'ic_launcher.png'), resized);
-    await writeFileEnsured(path.join(dir, 'ic_launcher_round.png'), await roundMask(resized, size));
+    await writeFileEnsured(path.join(dir, `${name}.png`), resized);
+    await writeFileEnsured(path.join(dir, `${name}_round.png`), await roundMask(resized, size));
   }
   for (const [density, size] of Object.entries(FOREGROUND_SIZES)) {
     await writeFileEnsured(
-      path.join(res, `mipmap-${density}`, 'ic_launcher_foreground.png'),
+      path.join(res, `mipmap-${density}`, `${name}_foreground.png`),
       await resizeTo(foreground, size),
     );
   }
-  await writeFileEnsured(path.join(res, 'mipmap-anydpi-v26/ic_launcher.xml'), adaptiveXml);
-  await writeFileEnsured(path.join(res, 'mipmap-anydpi-v26/ic_launcher_round.xml'), adaptiveXml);
-  await writeFileEnsured(path.join(res, 'values/ic_launcher_background.xml'), backgroundXml);
+  await writeFileEnsured(path.join(res, `mipmap-anydpi-v26/${name}.xml`), adaptiveXml(name));
+  await writeFileEnsured(path.join(res, `mipmap-anydpi-v26/${name}_round.xml`), adaptiveXml(name));
+  await writeFileEnsured(
+    path.join(res, `values/${name}_background.xml`),
+    backgroundXml(name, background),
+  );
 }
 
-async function generateIos({ iosSet, badge }, label) {
-  const dir = path.join(root, 'ios', iosApp, 'Images.xcassets', `${iosSet}.appiconset`);
-  const icon = await withBadge(
-    'app-icon.png',
-    { x: 0, y: 0, width: 1024, height: 1024 },
-    badge,
-    0,
-    label,
-  );
+async function generateIos(outputRoot, setName, icon) {
+  const dir = path.join(outputRoot, 'ios', iosApp, 'Images.xcassets', `${setName}.appiconset`);
   // App Store icons must not have an alpha channel.
   const flat = await sharp(icon)
     .flatten({ background: '#FFFFFF' })
@@ -316,6 +304,44 @@ export function parseArgs(argv) {
   return options;
 }
 
+export async function generateIcons(outputRoot, environments = ENVIRONMENTS, label = '') {
+  const alternates = (await readdir(path.join(sourceDir, 'alternates')))
+    .filter((file) => file.endsWith('.png'))
+    .map((file) => path.basename(file, '.png'))
+    .sort();
+  const alternateNames = [];
+  for (const variant of ['', ...alternates]) {
+    const file = variant ? `alternates/${variant}.png` : 'app-icon.png';
+    const rgb = await sharp(path.join(sourceDir, file))
+      .extract({ left: 0, top: 0, width: 1, height: 1 })
+      .removeAlpha()
+      .raw()
+      .toBuffer();
+    const background = `#${rgb.toString('hex')}`;
+    const suffix = variant && `-${variant[0].toUpperCase()}${variant.slice(1)}`;
+    if (variant) {
+      alternateNames.push(`$(ASSETCATALOG_COMPILER_APPICON_NAME)${suffix}`);
+    }
+    for (const env of environments) {
+      const flat = await withBadge(
+        file,
+        { x: 0, y: 0, width: 1024, height: 1024 },
+        env.badge,
+        0,
+        label,
+      );
+      await generateAndroid(outputRoot, env, variant, flat, label, background);
+      await generateIos(outputRoot, env.iosSet + suffix, flat);
+    }
+  }
+  // Xcode merges the explicitly named sets into CFBundleAlternateIcons for this configuration.
+  // Including all sets would also expose the other environments' badges.
+  await writeFileEnsured(
+    path.join(outputRoot, 'ios/Config/AlternateIcons.xcconfig'),
+    `// Generated by scripts/native/icons.mjs.\nASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = ${alternateNames.join(' ')}\n`,
+  );
+}
+
 async function main() {
   const { label, env } = parseArgs(process.argv.slice(2));
   const selected = env === undefined ? ENVIRONMENTS : ENVIRONMENTS.filter((e) => e.flavor === env);
@@ -323,10 +349,7 @@ async function main() {
     throw new Error(`icons.mjs: unknown env "${env}"`);
   }
   await removeStockAndroidIcons();
-  for (const environment of selected) {
-    await generateAndroid(environment, label);
-    await generateIos(environment, label);
-  }
+  await generateIcons(root, selected, label);
   const suffix =
     label === '' ? '' : ` with label "${label}" (envs without a badge are never labelled)`;
   console.log(`Generated icons for: ${selected.map((e) => e.flavor).join(', ')}${suffix}`);
