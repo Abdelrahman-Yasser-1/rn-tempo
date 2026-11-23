@@ -1,7 +1,9 @@
-import { i18n, initI18nInstance } from './i18n';
-import type { Language } from './languageManager';
+import { formatCurrency, formatDate, formatNumber } from '@shared/utils/format';
 
-const LANGUAGES: readonly Language[] = ['en', 'ar'];
+import { i18n, initI18nInstance } from './i18n';
+import { LANGUAGES as REGISTRY, type Language } from './languages';
+
+const LANGUAGES: readonly Language[] = REGISTRY.map(({ code }) => code);
 const AMOUNT = 1234.5;
 const DAY = new Date(2026, 10, 18);
 
@@ -27,13 +29,13 @@ describe('formatting inside messages', () => {
     await initI18nInstance('en');
   });
 
-  test.each(LANGUAGES)('AC-N-4: %s formats a number like Intl in that language', (lng) => {
+  test.each(LANGUAGES)('AC-L-4: %s formats a number like Intl in that language', (lng) => {
     const expected = new Intl.NumberFormat(lng, { minimumFractionDigits: 2 }).format(AMOUNT);
 
     expect(translate('total', { amount: AMOUNT }, lng)).toBe(`Total ${expected}`);
   });
 
-  test.each(LANGUAGES)('AC-N-4: %s formats currency like Intl in that language', (lng) => {
+  test.each(LANGUAGES)('AC-L-4: %s formats currency like Intl in that language', (lng) => {
     const expected = new Intl.NumberFormat(lng, { style: 'currency', currency: 'USD' }).format(
       AMOUNT,
     );
@@ -41,7 +43,7 @@ describe('formatting inside messages', () => {
     expect(translate('price', { amount: AMOUNT }, lng)).toBe(`Total ${expected}`);
   });
 
-  test.each(LANGUAGES)('AC-N-4: %s formats a date like Intl in that language', (lng) => {
+  test.each(LANGUAGES)('AC-L-4: %s formats a date like Intl in that language', (lng) => {
     const expected = new Intl.DateTimeFormat(lng, { dateStyle: 'long' }).format(DAY);
 
     expect(translate('day', { date: DAY }, lng)).toBe(`On ${expected}`);
@@ -70,4 +72,41 @@ describe('formatting inside messages', () => {
 
     expect(title).toMatch(/18\D+11\D+2026/);
   });
+
+  test.each(LANGUAGES)('AC-L-4: the shared helpers follow the %s locale', (lng) => {
+    expect(formatNumber(AMOUNT, lng)).toBe(new Intl.NumberFormat(lng).format(AMOUNT));
+    expect(formatCurrency(AMOUNT, 'EUR', lng)).toBe(
+      new Intl.NumberFormat(lng, { style: 'currency', currency: 'EUR' }).format(AMOUNT),
+    );
+    expect(formatDate(DAY, 'long', lng)).toBe(
+      new Intl.DateTimeFormat(lng, { dateStyle: 'long' }).format(DAY),
+    );
+  });
+
+  test('AC-L-4: es, de and fr use their own separators and month names', () => {
+    // 12345.67: only the separators are asserted, not the exact spacing between ICU versions.
+    expect(formatNumber(12345.67, 'de')).toBe('12.345,67');
+    expect(formatNumber(12345.67, 'es')).toBe('12.345,67');
+    expect(formatNumber(12345.67, 'fr')).toMatch(/^12\s345,67$/);
+    expect(formatNumber(12345.67, 'en')).toBe('12,345.67');
+
+    expect(translate('price', { amount: AMOUNT }, 'de')).toMatch(/1\.234,50/);
+    expect(translate('price', { amount: AMOUNT }, 'fr')).toMatch(/1\s234,50/);
+    expect(translate('price', { amount: AMOUNT }, 'es')).toMatch(/1234,50/);
+
+    expect(translate('day', { date: DAY }, 'es')).toBe('On 18 de noviembre de 2026');
+    expect(translate('day', { date: DAY }, 'de')).toBe('On 18. November 2026');
+    expect(translate('day', { date: DAY }, 'fr')).toBe('On 18 novembre 2026');
+  });
+
+  test.each(['es', 'de', 'fr'] as const)(
+    'AC-L-4: the item details sentences format numbers in %s',
+    async (lng) => {
+      await initI18nInstance(lng);
+
+      const stock = i18n.t('details.stock', { ns: 'items', stock: 12345 });
+
+      expect(stock).toContain(new Intl.NumberFormat(lng).format(12345));
+    },
+  );
 });
