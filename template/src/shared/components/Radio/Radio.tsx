@@ -12,6 +12,7 @@ import type { RadioProps } from './types';
 export function Radio({
   value,
   label,
+  leading,
   disabled: isDisabledProp = false,
   accessibilityLabel,
   accessibilityState,
@@ -44,6 +45,7 @@ export function Radio({
       }}
     >
       <Box style={styles.outer}>{isSelected && <Box style={styles.dot} />}</Box>
+      {leading}
       {label !== undefined && (
         <Text
           testID={testID ? `${testID}.label` : undefined}

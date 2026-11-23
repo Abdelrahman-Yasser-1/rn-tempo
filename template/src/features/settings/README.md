@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Language, theme and about screens, plus the hidden debug menu entry (non-production builds).
+Language, theme (mode and palette) and about screens, plus the hidden debug menu entry (non-production builds).
 
 ## Public API
 
@@ -11,7 +11,7 @@ Everything `index.ts` exports. `yarn lint:readmes` fails when this list and the 
 - `AboutScreen`: Version and build information.
 - `LanguageScreen`: Switches between `en` and `ar` (a restart is needed when the direction changes).
 - `SettingsScreen`: The Settings tab root screen.
-- `ThemeScreen`: Light, dark or system theme.
+- `ThemeScreen`: Mode (light, dark or system) and palette (default, ocean, forest or sunset).
 
 ## Screens and routes
 
@@ -19,7 +19,7 @@ Routes of the Settings stack (`SettingsStackParamList`): `Settings`, `Language`,
 
 ## Data
 
-No requests and no store. Preferences are written through `@services/i18n` (language) and `@theme` (theme), which persist them in MMKV (`app.language`, `app.theme`).
+No requests and no store. Preferences are written through `@services/i18n` (language) and `@theme` (theme), which persist them in MMKV (`app.language`, `app.theme` for the mode, `app.palette`).
 
 ## Spec
 
