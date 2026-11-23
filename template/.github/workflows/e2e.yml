@@ -101,5 +101,7 @@ jobs:
         env:
           TEMPO_BACKEND_URL: ${{ vars.TEMPO_BACKEND_URL }}
           TEMPO_SESSIONS_KEY: ${{ secrets.TEMPO_SESSIONS_KEY }}
-        run: curl -sS -X DELETE -H "Authorization: Bearer ${TEMPO_SESSIONS_KEY}" "${TEMPO_BACKEND_URL}/__sessions/${TEMPO_SESSION_ID}"
+        run: |
+          curl -sS -X DELETE -H "Authorization: Bearer ${TEMPO_SESSIONS_KEY}" "${TEMPO_BACKEND_URL}/__sessions/${TEMPO_SESSION_ID}"
+
 # @tempo-feature:maestro:end

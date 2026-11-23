@@ -5731,21 +5731,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rn-tempo/api-contract@link:../packages/api-contract::locator=tempo-app%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@rn-tempo/api-contract@link:../packages/api-contract::locator=tempo-app%40workspace%3A."
-  languageName: node
-  linkType: soft
-
 "@rn-tempo/commitlint-config@link:../packages/commitlint-config::locator=tempo-app%40workspace%3A.":
   version: 0.0.0-use.local
   resolution: "@rn-tempo/commitlint-config@link:../packages/commitlint-config::locator=tempo-app%40workspace%3A."
-  languageName: node
-  linkType: soft
-
-"@rn-tempo/dev-api@link:../packages/dev-api::locator=tempo-app%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@rn-tempo/dev-api@link:../packages/dev-api::locator=tempo-app%40workspace%3A."
   languageName: node
   linkType: soft
 
@@ -15334,9 +15322,7 @@ __metadata:
     "@react-navigation/bottom-tabs": "npm:7.21.0"
     "@react-navigation/native": "npm:7.5.1"
     "@react-navigation/native-stack": "npm:7.21.0"
-    "@rn-tempo/api-contract": "link:../packages/api-contract"
     "@rn-tempo/commitlint-config": "link:../packages/commitlint-config"
-    "@rn-tempo/dev-api": "link:../packages/dev-api"
     "@rn-tempo/eslint-config": "link:../packages/eslint-config"
     "@rn-tempo/local-backend": "link:../apps/local-backend/engine"
     "@rn-tempo/prettier-config": "link:../packages/prettier-config"

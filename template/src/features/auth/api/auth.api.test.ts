@@ -4,8 +4,8 @@ import { http, HttpResponse } from 'msw';
 import { useAuthStore } from '@features/auth/store/auth.store';
 import { setUnauthorizedHandler } from '@services/http/client';
 import { tokenStore } from '@services/secure-storage/tokenStore';
-import { MOCK_ACCESS_TOKEN, MOCK_REFRESH_TOKEN, mockUser } from '@test-utils/seed';
 import { server } from '@test-utils/msw/server';
+import { MOCK_ACCESS_TOKEN, MOCK_REFRESH_TOKEN, mockUser } from '@test-utils/seed';
 
 import { fetchMe } from './auth.api';
 

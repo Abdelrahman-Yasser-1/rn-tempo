@@ -1,4 +1,3 @@
-
 const { getDefaultConfig } = require('@react-native/metro-config');
 const { withRozenite } = require('@rozenite/metro');
 // @tempo-feature:storybook:start
