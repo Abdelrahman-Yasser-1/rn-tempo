@@ -16,7 +16,7 @@ export function ThemeScreen() {
     <Screen preset="scroll" contentContainerStyle={styles.content} testID="theme-screen">
       <Header title={t('theme.title')} onBack={vm.onBack} testID="theme.header" />
       <RadioGroup
-        value={vm.preference}
+        value={vm.mode}
         onChange={vm.onChange}
         accessibilityLabel={t('theme.title')}
         testID="theme.group"

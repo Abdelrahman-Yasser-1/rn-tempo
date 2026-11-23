@@ -23,14 +23,18 @@ async function renderTheme() {
 }
 
 /** The stored preference as any other screen would read it through the hook. */
-async function currentPreference() {
+async function currentMode() {
   const { result } = await renderHook(() => useAppTheme());
-  return result.current.preference;
+  return result.current.mode;
 }
 
 let stored: string | undefined;
-const save = jest.fn((preference: string) => {
-  stored = preference;
+let storedPalette: string | undefined;
+const save = jest.fn((mode: string) => {
+  stored = mode;
+});
+const savePalette = jest.fn((palette: string) => {
+  storedPalette = palette;
 });
 
 describe('ThemeScreen', () => {
@@ -39,10 +43,16 @@ describe('ThemeScreen', () => {
 
   beforeEach(() => {
     stored = undefined;
+    storedPalette = undefined;
     jest.clearAllMocks();
     setThemeSpy = jest.spyOn(UnistylesRuntime, 'setTheme');
     setAdaptiveSpy = jest.spyOn(UnistylesRuntime, 'setAdaptiveThemes');
-    configureThemePersistence({ load: () => stored, save });
+    configureThemePersistence({
+      loadMode: () => stored,
+      loadPalette: () => storedPalette,
+      saveMode: save,
+      savePalette,
+    });
     // Back to the default (system) preference so each test starts from the same state.
     initTheme();
   });
@@ -58,7 +68,7 @@ describe('ThemeScreen', () => {
     await user.press(screen.getByRole('radio', { name: 'Dark' }));
 
     expect(screen.getByRole('radio', { name: 'Dark' })).toBeChecked();
-    expect(await currentPreference()).toBe('dark');
+    expect(await currentMode()).toBe('dark');
     expect(save).toHaveBeenLastCalledWith('dark');
     expect(setThemeSpy).toHaveBeenLastCalledWith('dark');
   });
@@ -69,7 +79,7 @@ describe('ThemeScreen', () => {
     await user.press(screen.getByRole('radio', { name: 'Light' }));
 
     expect(screen.getByRole('radio', { name: 'Light' })).toBeChecked();
-    expect(await currentPreference()).toBe('light');
+    expect(await currentMode()).toBe('light');
     expect(save).toHaveBeenLastCalledWith('light');
   });
 
@@ -80,7 +90,7 @@ describe('ThemeScreen', () => {
     await user.press(screen.getByRole('radio', { name: 'System' }));
 
     expect(screen.getByRole('radio', { name: 'System' })).toBeChecked();
-    expect(await currentPreference()).toBe('system');
+    expect(await currentMode()).toBe('system');
     expect(save).toHaveBeenLastCalledWith('system');
     expect(setAdaptiveSpy).toHaveBeenLastCalledWith(true);
   });

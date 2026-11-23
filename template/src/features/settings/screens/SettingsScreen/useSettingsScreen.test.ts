@@ -30,11 +30,11 @@ describe('useSettingsScreen', () => {
     signOutSpy.mockRestore();
   });
 
-  test('exposes the current language and theme preference, with the logout dialog closed', async () => {
+  test('exposes the current language and theme mode, with the logout dialog closed', async () => {
     const { result } = await renderHookWithProviders(() => useSettingsScreen());
 
     expect(result.current.language).toBe('en');
-    expect(result.current.preference).toBe('system');
+    expect(result.current.mode).toBe('system');
     expect(result.current.isLogoutVisible).toBe(false);
   });
 

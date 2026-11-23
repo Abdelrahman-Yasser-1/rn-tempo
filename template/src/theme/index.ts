@@ -19,6 +19,7 @@ export {
   configureThemePersistence,
   initTheme,
   useAppTheme,
+  type ThemeModePreference,
+  type ThemePalette,
   type ThemePersistence,
-  type ThemePreference,
 } from './useAppTheme';

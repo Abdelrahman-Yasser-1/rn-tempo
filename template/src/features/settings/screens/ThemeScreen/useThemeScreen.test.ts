@@ -19,8 +19,12 @@ beforeEach(() => {
 });
 
 let stored: string | undefined;
-const save = jest.fn((preference: string) => {
-  stored = preference;
+let storedPalette: string | undefined;
+const save = jest.fn((mode: string) => {
+  stored = mode;
+});
+const savePalette = jest.fn((palette: string) => {
+  storedPalette = palette;
 });
 
 describe('useThemeScreen', () => {
@@ -29,10 +33,16 @@ describe('useThemeScreen', () => {
 
   beforeEach(() => {
     stored = undefined;
+    storedPalette = undefined;
     jest.clearAllMocks();
     setThemeSpy = jest.spyOn(UnistylesRuntime, 'setTheme');
     setAdaptiveSpy = jest.spyOn(UnistylesRuntime, 'setAdaptiveThemes');
-    configureThemePersistence({ load: () => stored, save });
+    configureThemePersistence({
+      loadMode: () => stored,
+      loadPalette: () => storedPalette,
+      saveMode: save,
+      savePalette,
+    });
     // Back to the default (system) preference so each test starts from the same state.
     initTheme();
   });
@@ -45,7 +55,7 @@ describe('useThemeScreen', () => {
   test('starts with the system preference', async () => {
     const { result } = await renderHookWithProviders(() => useThemeScreen());
 
-    expect(result.current.preference).toBe('system');
+    expect(result.current.mode).toBe('system');
   });
 
   test('a valid choice applies and persists the preference', async () => {
@@ -56,7 +66,7 @@ describe('useThemeScreen', () => {
       return Promise.resolve();
     });
 
-    expect(result.current.preference).toBe('dark');
+    expect(result.current.mode).toBe('dark');
     expect(save).toHaveBeenCalledWith('dark');
   });
 
@@ -68,7 +78,7 @@ describe('useThemeScreen', () => {
       return Promise.resolve();
     });
 
-    expect(result.current.preference).toBe('system');
+    expect(result.current.mode).toBe('system');
     expect(save).not.toHaveBeenCalled();
   });
 

@@ -11,7 +11,7 @@ import { useAppTheme } from '@theme/index';
 export function useSettingsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<SettingsStackParamList, 'Settings'>>();
   const { language } = useLanguage();
-  const { preference } = useAppTheme();
+  const { mode } = useAppTheme();
   const logout = useLogout();
   const [isLogoutVisible, setIsLogoutVisible] = useState(false);
 
@@ -42,7 +42,7 @@ export function useSettingsScreen() {
 
   return {
     language,
-    preference,
+    mode,
     isLogoutVisible,
     onLanguage,
     onTheme,

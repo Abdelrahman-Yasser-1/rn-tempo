@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react-native';
 import { StyleSheet, UnistylesRuntime, useUnistyles } from 'react-native-unistyles';
 
-import { darkTheme, lightTheme } from '@theme/index';
+import { appThemes, darkTheme, lightTheme } from '@theme/index';
 import { useAppTheme } from '@theme/useAppTheme';
 
 // Smoke test for the real wiring of react-native-unistyles with the app themes, run through the
@@ -23,24 +23,44 @@ describe('integration: react-native-unistyles', () => {
     expect(styles.box.backgroundColor).toBe(lightTheme.colors.primary);
   });
 
-  test('switching the preference reaches the Unistyles runtime and the hook state', async () => {
+  test('switching the mode and palette reaches the Unistyles runtime and the hook state', async () => {
     const setTheme = jest.spyOn(UnistylesRuntime, 'setTheme');
     const setAdaptiveThemes = jest.spyOn(UnistylesRuntime, 'setAdaptiveThemes');
     const { result } = await renderHook(() => useAppTheme());
 
     await act(() => {
-      result.current.setPreference('dark');
+      result.current.setMode('dark');
     });
 
-    expect(result.current.preference).toBe('dark');
+    expect(result.current.mode).toBe('dark');
     expect(setAdaptiveThemes).toHaveBeenLastCalledWith(false);
     expect(setTheme).toHaveBeenLastCalledWith('dark');
 
     await act(() => {
-      result.current.setPreference('system');
+      result.current.setMode('system');
     });
 
-    expect(result.current.preference).toBe('system');
+    expect(result.current.mode).toBe('system');
     expect(setAdaptiveThemes).toHaveBeenLastCalledWith(true);
+
+    await act(() => {
+      result.current.setMode('light');
+      result.current.setPalette('ocean');
+    });
+
+    expect(setTheme).toHaveBeenLastCalledWith('oceanLight');
+  });
+
+  test('every theme variant is registered under its Unistyles name', () => {
+    expect(Object.keys(appThemes)).toEqual([
+      'light',
+      'dark',
+      'oceanLight',
+      'oceanDark',
+      'forestLight',
+      'forestDark',
+      'sunsetLight',
+      'sunsetDark',
+    ]);
   });
 });
