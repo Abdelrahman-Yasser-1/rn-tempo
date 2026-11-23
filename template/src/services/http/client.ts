@@ -1,4 +1,4 @@
-import axios, { type AxiosAdapter, type InternalAxiosRequestConfig } from 'axios';
+import axios, { type InternalAxiosRequestConfig } from 'axios';
 import { z } from 'zod';
 
 import { ENV, isProd } from '@config/env';
@@ -17,23 +17,23 @@ import { shouldSkipRefresh } from './skipRefresh';
 let resolvedBaseUrl: string | undefined;
 
 /**
- * Dev builds only: the local dev API's URL when the debug menu's API source is `dev-api`. The
+ * Dev builds only: the Tempo backend's URL when the debug menu's API source is `backend`. The
  * `require` sits directly inside this exact `if`, so release bundles do not contain `apiSource`.
  */
-function devApiBaseUrl(): string | undefined {
+function backendBaseUrl(): string | undefined {
   if (__DEV__ && !isProd) {
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- guarded require keeps the api source out of release bundles
-    const { readApiSource, readDevApiUrl } = require('./apiSource') as {
+    const { readApiSource, readBackendUrl } = require('./apiSource') as {
       readApiSource: () => string;
-      readDevApiUrl: () => string;
+      readBackendUrl: () => string;
     };
-    return readApiSource() === 'dev-api' ? readDevApiUrl() : undefined;
+    return readApiSource() === 'backend' ? readBackendUrl() : undefined;
   }
   return undefined;
 }
 
 /**
- * Debug-menu choice (non-prod only): the dev API URL when that API source is picked, otherwise the
+ * Debug-menu choice (non-prod only): the Tempo backend URL when that API source is picked, otherwise the
  * base URL override, falling back to `ENV.API_BASE_URL`; read once per launch.
  */
 export function resolveBaseUrl(): string {
@@ -42,10 +42,10 @@ export function resolveBaseUrl(): string {
   }
   if (!isProd) {
     try {
-      const devApi = devApiBaseUrl();
-      if (devApi) {
-        resolvedBaseUrl = devApi;
-        return devApi;
+      const backend = backendBaseUrl();
+      if (backend) {
+        resolvedBaseUrl = backend;
+        return backend;
       }
       const override = storage.getString(STORAGE_KEYS.apiBaseUrlOverride);
       if (override) {
@@ -66,31 +66,10 @@ export function resetBaseUrlCache(): void {
   resolvedBaseUrl = undefined;
 }
 
-/**
- * Dev builds choose the adapter per request source (debug menu "API source": env, mocks or the
- * local dev API; `env` follows `API_MOCKING`). The `require` sits inside the `__DEV__` branch, which
- * Metro folds away in release bundles, so the adapters and their routes never ship.
- */
-function resolveAdapter(): AxiosAdapter | undefined {
-  // Keep the `require` directly inside this exact `if`: Metro only folds `__DEV__` conditions in
-  // this shape, and a release bundle must not contain the adapter or its routes.
-  if (__DEV__ && !isProd) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports -- guarded require keeps the mock adapter out of release bundles
-    const { createSwitchingAdapter } = require('./devAdapter') as {
-      createSwitchingAdapter: () => AxiosAdapter;
-    };
-    return createSwitchingAdapter();
-  }
-  return undefined;
-}
-
-const adapter = resolveAdapter();
-
 /** The app's axios instance: auth, language and correlation headers are added per request. */
 export const httpClient = axios.create({
   baseURL: ENV.API_BASE_URL,
   timeout: ENV.API_TIMEOUT_MS,
-  adapter,
 });
 
 // @tempo-feature:ssl-pinning:start
@@ -137,7 +116,7 @@ const REFRESH_PATH = '/auth/refresh';
 const RefreshResponseSchema = z.object({ accessToken: z.string(), refreshToken: z.string() });
 
 // A bare instance: sharing httpClient would re-enter these interceptors and could loop.
-const refreshClient = axios.create({ timeout: ENV.API_TIMEOUT_MS, adapter });
+const refreshClient = axios.create({ timeout: ENV.API_TIMEOUT_MS });
 
 // @tempo-feature:ssl-pinning:start
 // Refresh must not leave the device before pinning is enforced, but it gets no Authorization header.

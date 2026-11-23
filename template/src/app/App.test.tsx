@@ -13,7 +13,7 @@ import {
   MOCK_REFRESH_TOKEN,
   mockAppConfig,
   mockUser,
-} from '@test-utils/msw/routes';
+} from '@test-utils/seed';
 import { server } from '@test-utils/msw/server';
 
 import { App } from './App';

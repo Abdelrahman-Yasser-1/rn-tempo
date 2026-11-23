@@ -11,20 +11,25 @@ describe('parseEnv', () => {
     const env = parseEnv({
       ...VALID,
       API_TIMEOUT_MS: '5000',
-      API_MOCKING: 'true',
+      PUSH_ENABLED: 'true',
       LOG_LEVEL: 'debug',
     });
 
     expect(env.APP_ENV).toBe('dev');
     expect(env.API_TIMEOUT_MS).toBe(5000);
-    expect(env.API_MOCKING).toBe(true);
+    expect(env.PUSH_ENABLED).toBe(true);
     expect(env.LOG_LEVEL).toBe('debug');
+  });
+
+  test('ignores a leftover API_MOCKING line from an older .env file', () => {
+    const env = parseEnv({ ...VALID, API_MOCKING: 'true' });
+
+    expect(env).not.toHaveProperty('API_MOCKING');
   });
 
   test('applies defaults for optional values', () => {
     expect(parseEnv(VALID)).toMatchObject({
       API_TIMEOUT_MS: 15000,
-      API_MOCKING: false,
       SSL_PINNING_ENABLED: false,
       SSL_PINS: [],
       DEVICE_INTEGRITY_ENABLED: false,

@@ -11,7 +11,7 @@ type Client = typeof client;
 type StorageModule = typeof storageModule;
 
 /**
- * Runs `use` against a fresh copy of the client and storage: the adapter and base URL are chosen once
+ * Runs `use` against a fresh copy of the client and storage: the base URL is chosen once
  * per launch, and the client loads its dev-only modules lazily, so it must be used inside the scope.
  */
 async function launch(
@@ -32,7 +32,6 @@ async function launch(
 
 describe('API source in the http client', () => {
   test("env: today's behavior (ENV.API_BASE_URL over the network)", async () => {
-    jest.replaceProperty(ENV, 'API_MOCKING', false);
     server.use(http.get(`${ENV.API_BASE_URL}/ping`, () => HttpResponse.json({ from: 'env' })));
 
     await launch(
@@ -57,46 +56,26 @@ describe('API source in the http client', () => {
     );
   });
 
-  test('mocks: the in-app mock adapter answers even when API_MOCKING is false, with no network call', async () => {
-    jest.replaceProperty(ENV, 'API_MOCKING', false);
-    const seen = jest.fn();
-    server.events.on('request:start', seen);
-
-    await launch(
-      (storage) => {
-        storage.setString('app.api-source', 'mocks');
-      },
-      async (client) => {
-        const response = await client.httpClient.get<{ id: number }>('/products/1');
-        expect(response.data.id).toBe(1);
-      },
-    );
-
-    expect(seen).not.toHaveBeenCalled();
-    server.events.removeAllListeners();
-  });
-
-  test('dev-api on iOS: requests go to https://localhost:8443 and never to the mock adapter', async () => {
-    jest.replaceProperty(ENV, 'API_MOCKING', true);
+  test('backend on iOS: requests go to https://localhost:8443', async () => {
     server.use(
-      http.get('https://localhost:8443/ping', () => HttpResponse.json({ from: 'dev-api' })),
+      http.get('https://localhost:8443/ping', () => HttpResponse.json({ from: 'backend' })),
     );
 
     await launch(
       (storage) => {
-        storage.setString('app.api-source', 'dev-api');
+        storage.setString('app.api-source', 'backend');
       },
       async (client) => {
         expect(client.resolveBaseUrl()).toBe('https://localhost:8443');
-        expect((await client.httpClient.get<{ from: string }>('/ping')).data.from).toBe('dev-api');
+        expect((await client.httpClient.get<{ from: string }>('/ping')).data.from).toBe('backend');
       },
     );
   });
 
-  test('dev-api on Android defaults to the emulator host alias', async () => {
+  test('backend on Android defaults to the emulator host alias', async () => {
     await launch(
       (storage) => {
-        storage.setString('app.api-source', 'dev-api');
+        storage.setString('app.api-source', 'backend');
       },
       (client) => {
         expect(client.resolveBaseUrl()).toBe('https://10.0.2.2:8443');
@@ -105,13 +84,13 @@ describe('API source in the http client', () => {
     );
   });
 
-  test('dev-api uses the stored URL, and beats the base URL override', async () => {
+  test('backend uses the stored URL, and beats the base URL override', async () => {
     server.use(http.get('https://192.168.1.20:8443/ping', () => HttpResponse.json({ ok: true })));
 
     await launch(
       (storage) => {
-        storage.setString('app.api-source', 'dev-api');
-        storage.setString('app.dev-api-url', 'https://192.168.1.20:8443');
+        storage.setString('app.api-source', 'backend');
+        storage.setString('app.backend-url', 'https://192.168.1.20:8443');
         storage.setString('app.api-base-url-override', 'https://staging.example.test');
       },
       async (client) => {

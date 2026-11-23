@@ -4,13 +4,13 @@ import { initStorage, storage } from '@services/storage/storage';
 
 import {
   API_SOURCE_KEY,
-  DEV_API_URL_KEY,
-  defaultDevApiUrl,
+  BACKEND_URL_KEY,
+  defaultBackendUrl,
   isApiSource,
   readApiSource,
-  readDevApiUrl,
+  readBackendUrl,
   writeApiSource,
-  writeDevApiUrl,
+  writeBackendUrl,
 } from './apiSource';
 
 beforeAll(async () => {
@@ -24,7 +24,7 @@ beforeEach(() => {
 describe('apiSource storage', () => {
   test('uses the documented MMKV keys', () => {
     expect(API_SOURCE_KEY).toBe('app.api-source');
-    expect(DEV_API_URL_KEY).toBe('app.dev-api-url');
+    expect(BACKEND_URL_KEY).toBe('app.backend-url');
   });
 
   test('defaults to env, and ignores a stored value that is not a source', () => {
@@ -33,36 +33,34 @@ describe('apiSource storage', () => {
     expect(readApiSource()).toBe('env');
   });
 
-  test('stores mocks and dev-api, and removes the key for env', () => {
-    writeApiSource('mocks');
-    expect(storage.getString(API_SOURCE_KEY)).toBe('mocks');
-    writeApiSource('dev-api');
-    expect(readApiSource()).toBe('dev-api');
+  test('stores backend, and removes the key for env', () => {
+    writeApiSource('backend');
+    expect(readApiSource()).toBe('backend');
     writeApiSource('env');
     expect(storage.getString(API_SOURCE_KEY)).toBeUndefined();
   });
 
   test('knows which values are sources', () => {
-    expect(['env', 'mocks', 'dev-api'].every(isApiSource)).toBe(true);
+    expect(['env', 'backend'].every(isApiSource)).toBe(true);
     expect(isApiSource('prod')).toBe(false);
     expect(isApiSource(undefined)).toBe(false);
   });
 
-  test('the dev API URL defaults per platform', () => {
+  test('the backend URL defaults per platform', () => {
     jest.replaceProperty(Platform, 'OS', 'ios');
-    expect(defaultDevApiUrl()).toBe('https://localhost:8443');
-    expect(readDevApiUrl()).toBe('https://localhost:8443');
+    expect(defaultBackendUrl()).toBe('https://localhost:8443');
+    expect(readBackendUrl()).toBe('https://localhost:8443');
     jest.replaceProperty(Platform, 'OS', 'android');
-    expect(defaultDevApiUrl()).toBe('https://10.0.2.2:8443');
-    expect(readDevApiUrl()).toBe('https://10.0.2.2:8443');
+    expect(defaultBackendUrl()).toBe('https://10.0.2.2:8443');
+    expect(readBackendUrl()).toBe('https://10.0.2.2:8443');
   });
 
-  test('a stored dev API URL wins, trimmed; an empty one restores the default', () => {
+  test('a stored backend URL wins, trimmed; an empty one restores the default', () => {
     jest.replaceProperty(Platform, 'OS', 'ios');
-    writeDevApiUrl('  https://192.168.1.20:8443  ');
-    expect(readDevApiUrl()).toBe('https://192.168.1.20:8443');
-    writeDevApiUrl('   ');
-    expect(storage.getString(DEV_API_URL_KEY)).toBeUndefined();
-    expect(readDevApiUrl()).toBe('https://localhost:8443');
+    writeBackendUrl('  https://192.168.1.20:8443  ');
+    expect(readBackendUrl()).toBe('https://192.168.1.20:8443');
+    writeBackendUrl('   ');
+    expect(storage.getString(BACKEND_URL_KEY)).toBeUndefined();
+    expect(readBackendUrl()).toBe('https://localhost:8443');
   });
 });
