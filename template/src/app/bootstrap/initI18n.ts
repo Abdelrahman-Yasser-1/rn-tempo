@@ -6,5 +6,5 @@ export async function initI18n(): Promise<void> {
   const language = getInitialLanguage();
   await initI18nInstance(language);
   // Takes effect on the next launch if the stored direction differs; never restarts here.
-  applyLayoutDirection(language === 'ar' ? 'ar' : 'en');
+  applyLayoutDirection(language);
 }

@@ -48,14 +48,32 @@ describe('getInitialLanguage', () => {
   });
 
   test('AC-3: ignores an unsupported persisted value and falls back to the device locale', () => {
-    storage.setString(STORAGE_KEYS.language, 'fr');
+    storage.setString(STORAGE_KEYS.language, 'it');
     mockDeviceLanguage('ar');
 
     expect(getInitialLanguage()).toBe('ar');
   });
 
-  test.each([['fr-FR'], [undefined]])(
-    'AC-3: unsupported device locale %s falls back to en',
+  test.each([
+    ['es-MX', 'es'],
+    ['de-AT', 'de'],
+    ['fr-CA', 'fr'],
+    ['fr', 'fr'],
+  ])('AC-L-3: device locale %s picks %s', (tag, expected) => {
+    mockDeviceLanguage(tag);
+
+    expect(getInitialLanguage()).toBe(expected);
+  });
+
+  test('AC-L-3: a persisted es, de or fr wins over the device locale', () => {
+    storage.setString(STORAGE_KEYS.language, 'de');
+    mockDeviceLanguage('fr-FR');
+
+    expect(getInitialLanguage()).toBe('de');
+  });
+
+  test.each([['it-IT'], ['ja-JP'], [undefined]])(
+    'AC-L-3: unsupported device locale %s falls back to en',
     (tag) => {
       mockDeviceLanguage(tag);
 
@@ -102,6 +120,30 @@ describe('changeLanguage', () => {
 
     expect(didRestart).toBe(false);
     expect(RNRestart.restart).not.toHaveBeenCalled();
+  });
+
+  test.each(['es', 'de', 'fr'] as const)(
+    'AC-L-1: LTR to %s applies live without a restart',
+    async (language) => {
+      jest.replaceProperty(I18nManager, 'isRTL', false);
+
+      const didRestart = await changeLanguage(language);
+
+      expect(didRestart).toBe(false);
+      expect(storage.getString(STORAGE_KEYS.language)).toBe(language);
+      expect(i18n.language).toBe(language);
+      expect(i18n.t('title', { ns: 'settings' })).not.toBe('Settings');
+      expect(RNRestart.restart).not.toHaveBeenCalled();
+    },
+  );
+
+  test.each(['es', 'de', 'fr'] as const)('AC-L-1: RTL to %s restarts', async (language) => {
+    jest.replaceProperty(I18nManager, 'isRTL', true);
+
+    const didRestart = await changeLanguage(language);
+
+    expect(didRestart).toBe(true);
+    expect(RNRestart.restart).toHaveBeenCalledTimes(1);
   });
 });
 

@@ -20,6 +20,14 @@ describe('useLanguage', () => {
     expect(result.current.setLanguage).toBe(changeLanguage);
   });
 
+  test.each(['es', 'de', 'fr'] as const)('reports %s as LTR', async (language) => {
+    await initI18nInstance(language);
+
+    const { result } = await renderHook(() => useLanguage());
+
+    expect(result.current).toMatchObject({ language, isRtl: false });
+  });
+
   test('defaults to en for LTR', async () => {
     await initI18nInstance('en');
 

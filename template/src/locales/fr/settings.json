@@ -11,8 +11,6 @@
     "title": "Partager les rapports de plantage"
   },
   "language": {
-    "arabic": "العربية",
-    "english": "English",
     "restartMessage": "L'app peut redémarrer pour appliquer la nouvelle langue et le sens de lecture.",
     "restartTitle": "Changer de langue ?",
     "title": "Langue"

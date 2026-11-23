@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
-import { LANGUAGE_OPTIONS } from '@features/settings/constants';
+import { LANGUAGES } from '@services/i18n/languages';
 import { Dialog, Header, Radio, RadioGroup, Screen } from '@shared/components';
 
 import { styles } from './styles';
@@ -9,8 +9,6 @@ import { useLanguageScreen } from './useLanguageScreen';
 export function LanguageScreen() {
   const { t } = useTranslation('settings');
   const vm = useLanguageScreen();
-
-  const languageNames = { en: t('language.english'), ar: t('language.arabic') };
 
   return (
     <Screen preset="scroll" contentContainerStyle={styles.content} testID="language-screen">
@@ -21,13 +19,8 @@ export function LanguageScreen() {
         accessibilityLabel={t('language.title')}
         testID="language.group"
       >
-        {LANGUAGE_OPTIONS.map((option) => (
-          <Radio
-            key={option}
-            value={option}
-            label={languageNames[option]}
-            testID={`language.option-${option}`}
-          />
+        {LANGUAGES.map(({ code, nativeName }) => (
+          <Radio key={code} value={code} label={nativeName} testID={`language.option-${code}`} />
         ))}
       </RadioGroup>
       <Dialog

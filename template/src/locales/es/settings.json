@@ -11,8 +11,6 @@
     "title": "Compartir informes de fallos"
   },
   "language": {
-    "arabic": "العربية",
-    "english": "English",
     "restartMessage": "Puede que la app se reinicie para aplicar el nuevo idioma y la dirección del diseño.",
     "restartTitle": "¿Cambiar de idioma?",
     "title": "Idioma"

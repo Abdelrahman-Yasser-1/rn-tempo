@@ -11,8 +11,6 @@
     "title": "Share crash reports"
   },
   "language": {
-    "arabic": "العربية",
-    "english": "English",
     "restartMessage": "The app may restart to apply the new language and layout direction.",
     "restartTitle": "Change language?",
     "title": "Language"
