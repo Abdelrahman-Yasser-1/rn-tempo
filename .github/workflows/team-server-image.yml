@@ -9,16 +9,12 @@ on:
   pull_request:
     paths:
       - 'apps/local-backend/**'
-      - 'packages/dev-api/**'
-      - 'packages/api-contract/**'
       - '.dockerignore'
       - '.github/workflows/team-server-image.yml'
   push:
     branches: [main]
     paths:
       - 'apps/local-backend/**'
-      - 'packages/dev-api/**'
-      - 'packages/api-contract/**'
       - '.dockerignore'
       - '.github/workflows/team-server-image.yml'
   workflow_dispatch:

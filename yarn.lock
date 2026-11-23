@@ -3489,7 +3489,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@rn-tempo/dev-api@workspace:*, @rn-tempo/dev-api@workspace:packages/dev-api":
+"@rn-tempo/dev-api@workspace:packages/dev-api":
   version: 0.0.0-use.local
   resolution: "@rn-tempo/dev-api@workspace:packages/dev-api"
   dependencies:
@@ -3598,8 +3598,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@rn-tempo/local-backend@workspace:apps/local-backend/engine"
   dependencies:
-    "@rn-tempo/api-contract": "workspace:*"
-    "@rn-tempo/dev-api": "workspace:*"
     "@rn-tempo/tsconfig": "workspace:*"
     "@types/busboy": "npm:1.5.5"
     "@types/node": "npm:24.19.2"
