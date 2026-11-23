@@ -2,13 +2,26 @@
   "name": "tempo-app",
   "version": "0.0.1",
   "private": true,
+  "codegenConfig": {
+    "name": "AppIconSpec",
+    "type": "modules",
+    "jsSrcsDir": "src/services/app-icon",
+    "android": {
+      "javaPackageName": "com.rntempo.app"
+    },
+    "ios": {
+      "modulesProvider": {
+        "AppIconModule": "AppIconModule"
+      }
+    }
+  },
   "scripts": {
     "preinstall": "node scripts/check-node.mjs",
-    "android": "react-native run-android",
+    "android": "react-native run-android --main-activity .MainActivity",
     "android:reverse": "adb reverse tcp:8081 tcp:8081",
-    "android:dev": "react-native run-android --mode devDebug --appIdSuffix dev",
-    "android:staging": "react-native run-android --mode stagingDebug --appIdSuffix staging",
-    "android:prod": "react-native run-android --mode prodDebug",
+    "android:dev": "react-native run-android --main-activity .MainActivity --mode devDebug --appIdSuffix dev",
+    "android:staging": "react-native run-android --main-activity .MainActivity --mode stagingDebug --appIdSuffix staging",
+    "android:prod": "react-native run-android --main-activity .MainActivity --mode prodDebug",
     "android:dev:release": "node scripts/icons-prune.mjs --exec sh -c \"cd android && ./gradlew assembleDevRelease\"",
     "android:staging:release": "node scripts/icons-prune.mjs --exec sh -c \"cd android && ./gradlew assembleStagingRelease\"",
     "android:prod:release": "node scripts/icons-prune.mjs --exec sh -c \"cd android && ./gradlew assembleProdRelease\"",

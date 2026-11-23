@@ -59,10 +59,6 @@
         android:windowSoftInputMode="adjustResize"
         android:exported="true"
         android:theme="@style/BootTheme">
-        <intent-filter>
-            <action android:name="android.intent.action.MAIN" />
-            <category android:name="android.intent.category.LAUNCHER" />
-        </intent-filter>
         <!-- Custom scheme deep link, e.g. tempo-dev://items/1 (per-flavor via manifestPlaceholders). -->
         <intent-filter>
             <action android:name="android.intent.action.VIEW" />
@@ -82,5 +78,57 @@
             <data android:scheme="https" android:host="${deepLinkHost}" />
         </intent-filter>
       </activity>
+
+      <activity-alias
+        android:name="${applicationId}.LauncherDefault"
+        android:targetActivity=".MainActivity"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:enabled="true"
+        android:exported="true">
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
+      </activity-alias>
+
+      <activity-alias
+        android:name="${applicationId}.LauncherOcean"
+        android:targetActivity=".MainActivity"
+        android:icon="@mipmap/ic_launcher_ocean"
+        android:roundIcon="@mipmap/ic_launcher_ocean_round"
+        android:enabled="false"
+        android:exported="true">
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
+      </activity-alias>
+
+      <activity-alias
+        android:name="${applicationId}.LauncherForest"
+        android:targetActivity=".MainActivity"
+        android:icon="@mipmap/ic_launcher_forest"
+        android:roundIcon="@mipmap/ic_launcher_forest_round"
+        android:enabled="false"
+        android:exported="true">
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
+      </activity-alias>
+
+      <activity-alias
+        android:name="${applicationId}.LauncherSunset"
+        android:targetActivity=".MainActivity"
+        android:icon="@mipmap/ic_launcher_sunset"
+        android:roundIcon="@mipmap/ic_launcher_sunset_round"
+        android:enabled="false"
+        android:exported="true">
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
+      </activity-alias>
     </application>
 </manifest>

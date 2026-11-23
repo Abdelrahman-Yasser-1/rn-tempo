@@ -7,6 +7,9 @@ ls:
     .test.tsx: PascalCase
     .stories.tsx: PascalCase
     .json: kebab-case
+  # RN Codegen discovers the app-local spec by its Native prefix.
+  src/services/app-icon:
+    .ts: camelCase | regex:NativeAppIcon
   # Contract C5 names renderWithProviders.tsx in camelCase.
   src/test-utils:
     .tsx: camelCase | PascalCase
