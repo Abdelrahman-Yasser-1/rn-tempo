@@ -464,6 +464,8 @@ The **Inbox** tab lists captures (time, method, path, size, status). Editors ope
 | `offline: true` | Every connection is closed at once. |
 | `slowUpload`, `slowDownload` | Kilobits per second (the same throttle as network presets). |
 
+**One endpoint.** In an endpoint's form, the **Faults** section sits next to **Speed**. Each setting is "Same as the backend" or its own value, and the rate limit can also be turned off for that endpoint. A custom `failureBody` is not in the form: set it in the JSON tab and the form keeps it. The endpoint's details show its own faults in one line.
+
 Rate limit answers carry the IETF `RateLimit` headers: `RateLimit: limit=…, remaining=…, reset=…` and `RateLimit-Policy`, plus the older `RateLimit-Limit`, `RateLimit-Remaining` and `RateLimit-Reset` that many clients still read. Windows are fixed, starting at a key's first request.
 
 **Repeatable.** Random choices are drawn from a generator seeded with the request number and the engine's seed (fixed in test mode and in the test kit), so the same run fails on the same requests. **Test mode.** Faults are **off** in test mode unless a request sends `x-tempo-test-faults: 1` (the engine exports the name as `TEST_FAULTS_HEADER`), like `x-tempo-test-delays: 1` for delays. The dashboard and `GET /stats` show how many requests were rate limited, failed, dropped or refused offline.
