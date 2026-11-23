@@ -1,13 +1,10 @@
 import { getStatusTint, type StatusTone } from './statusTints';
 import { contrast } from './testContrast';
-import { darkTheme, lightTheme } from './themes';
+import { appThemes } from './themes';
 
 const TONES: StatusTone[] = ['success', 'warning', 'error', 'info'];
 
-describe.each([
-  ['light', lightTheme],
-  ['dark', darkTheme],
-])('status tints (%s)', (_name, theme) => {
+describe.each(Object.entries(appThemes))('status tints (%s)', (_name, theme) => {
   test.each(TONES)('%s text meets AA on its tint', (tone) => {
     const tint = getStatusTint(theme, tone);
     expect(contrast(tint.text, tint.background)).toBeGreaterThanOrEqual(4.5);

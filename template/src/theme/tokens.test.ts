@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { palette } from './palette';
 import { contrast } from './testContrast';
-import { darkTheme, lightTheme } from './themes';
+import { appThemes, darkTheme, lightTheme } from './themes';
 import type * as Themes from './themes';
 import { darkColors, lightColors, type ColorTokens } from './tokens';
 
@@ -24,12 +24,48 @@ const TEXT_PAIRS: [foreground: keyof ColorTokens, background: keyof ColorTokens]
   ['onInfo', 'info'],
 ];
 
-describe.each([
-  ['light', lightColors],
-  ['dark', darkColors],
-])('%s palette', (_name, colors) => {
+// AC-T-3: every palette variant (default, ocean, forest and sunset, each light and dark).
+const VARIANTS = Object.entries(appThemes).map(
+  ([key, theme]) => [key, theme.colors] as [string, ColorTokens],
+);
+
+describe('theme variants', () => {
+  test('cover default plus three brand palettes in both modes', () => {
+    expect(VARIANTS.map(([key]) => key)).toEqual([
+      'light',
+      'dark',
+      'oceanLight',
+      'oceanDark',
+      'forestLight',
+      'forestDark',
+      'sunsetLight',
+      'sunsetDark',
+    ]);
+  });
+
+  test('every variant defines every color token', () => {
+    const tokens = new Set(Object.keys(lightColors));
+    for (const [, colors] of VARIANTS) {
+      expect(new Set(Object.keys(colors))).toEqual(tokens);
+    }
+  });
+});
+
+// Non-text UI (large text and graphics): 3:1.
+const UI_PAIRS: [foreground: keyof ColorTokens, background: keyof ColorTokens][] = [
+  ['focus', 'background'],
+  ['focus', 'surface'],
+  ['primary', 'background'],
+  ['primary', 'surface'],
+];
+
+describe.each(VARIANTS)('%s palette', (_name, colors) => {
   test.each(TEXT_PAIRS)('%s on %s meets WCAG AA (4.5:1)', (foreground, background) => {
     expect(contrast(colors[foreground], colors[background])).toBeGreaterThanOrEqual(4.5);
+  });
+
+  test.each(UI_PAIRS)('%s on %s meets 3:1 for UI', (foreground, background) => {
+    expect(contrast(colors[foreground], colors[background])).toBeGreaterThanOrEqual(3);
   });
 });
 
@@ -87,10 +123,7 @@ describe('token sources', () => {
     expect(source).not.toMatch(/#[0-9a-f]{3,8}\b/i);
   });
 
-  test.each([
-    ['light', lightColors],
-    ['dark', darkColors],
-  ])('%s opaque colors all come from the palette', (_name, colors) => {
+  test.each(VARIANTS)('%s opaque colors all come from the palette', (_name, colors) => {
     for (const [token, value] of Object.entries(colors)) {
       if (value.startsWith('rgba')) {
         continue;
