@@ -1,23 +1,18 @@
 name: Local Backend app
 
-# The Tempo Local Backend desktop app (Tauri 2). It runs on macOS only and only when the app, its engine or the
-# dev API pieces the engine reuses change, so the main CI stays fast. The engine is bundled as a Node single
-# executable (SEA) and the app is built into an unsigned .dmg, uploaded as an artifact. Apple silicon only: a
+# The Tempo Local Backend desktop app (Tauri 2). It runs on macOS only and only when the app or its engine change, so the main CI stays
+# fast. The engine is bundled as a Node single executable (SEA) and the app is built into an unsigned .dmg, uploaded as an artifact. Apple silicon only: a
 # single executable is built on the machine it runs on, so an Intel build would need a `macos-15-intel` runner
 # and its own artifact; it is left out to keep this job cheap.
 on:
   pull_request:
     paths:
       - 'apps/local-backend/**'
-      - 'packages/dev-api/**'
-      - 'packages/api-contract/**'
       - '.github/workflows/local-backend.yml'
   push:
     branches: [main]
     paths:
       - 'apps/local-backend/**'
-      - 'packages/dev-api/**'
-      - 'packages/api-contract/**'
       - '.github/workflows/local-backend.yml'
   workflow_dispatch:
 
@@ -53,10 +48,8 @@ jobs:
           restore-keys: cargo-${{ runner.os }}-
       - name: Install mkcert (the HTTPS smoke test makes a certificate)
         run: brew install mkcert
-      # The app starts the engine, and the engine reuses the dev API's certificate and redaction code.
       - name: Engine tests, types and build
         run: |
-          yarn workspace @rn-tempo/dev-api build
           yarn workspace @rn-tempo/local-backend lint
           yarn workspace @rn-tempo/local-backend typecheck
           yarn workspace @rn-tempo/local-backend test
