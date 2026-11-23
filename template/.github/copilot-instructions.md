@@ -63,7 +63,7 @@ Run everything from the project root.
 10. Server data lives in TanStack Query, client state in Zustand; tokens never go in stores or MMKV.
 11. All HTTP goes through `request()` with a Zod schema; env through `ENV` from `@config/env`; storage through `@services/storage`.
 12. Accessibility props, 44x44 targets and `testID` conventions on every interactive component.
-13. Every new util, hook, store, service, component and screen has a test. Query with `getByRole`; mock the network with MSW; spec'd tests start with `AC-n:`.
+13. Every new util, hook, store, service, component and screen has a test. Query with `getByRole`; tests run against the local backend in `backend/`, and one route is overridden with MSW's `server.use`; spec'd tests start with `AC-n:`.
 14. Use generators (`yarn tempo g ...`) instead of hand-creating files when available.
 15. Small Conventional Commits `type(scope): subject` (scope required, about 200 lines max, each one green); never `--no-verify`.
 16. Run `yarn verify:changed` before finishing and `yarn verify` before pushing; never claim done with failing checks.
@@ -73,7 +73,7 @@ Also: check library APIs with context7 for the **pinned** version, never from me
 ## Rules
 
 - [a11y](../ai/rules/a11y.md): Accessibility requirements for components and screens, backed by react-native-a11y lint rules.
-- [api](../ai/rules/api.md): Typed, Zod-validated requests through @services/http, query key factories, mutations that invalidate, and the mock API defined once in api/.
+- [api](../ai/rules/api.md): Typed, Zod-validated requests through @services/http, query key factories, mutations that invalidate, and the Tempo local backend in backend/.
 - [architecture](../ai/rules/architecture.md): Folder skeleton, path aliases, barrels and the import-boundary matrix enforced by ESLint.
 - [assets](../ai/rules/assets.md): Icons and images. Sources in src/assets, generated components, every Tabler icon in src, adding icons, pruning at release, RTL mirroring.
 - [commits](../ai/rules/commits.md): Conventional Commits with required scope, commit size, and the AI session trailers.
@@ -85,5 +85,5 @@ Also: check library APIs with context7 for the **pinned** version, never from me
 - [specs](../ai/rules/specs.md): Spec-driven flow in specs/: spec.md, design.md, tasks.md, AC IDs and test linkage.
 - [state](../ai/rules/state.md): Zustand for client state, TanStack Query for server state; never put tokens in stores.
 - [styling](../ai/rules/styling.md): Unistyles 3 styling with theme tokens, no literals, RTL-safe and scaled sizes.
-- [testing](../ai/rules/testing.md): Jest and React Native Testing Library conventions, renderWithProviders, MSW and AC-linked test names.
+- [testing](../ai/rules/testing.md): Jest and React Native Testing Library conventions, renderWithProviders, the backend test kit, MSW overrides and AC-linked test names.
 - [verification](../ai/rules/verification.md): Run yarn verify:changed before finishing; never claim done with failing checks.

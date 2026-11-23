@@ -23,7 +23,7 @@ Two nested levels is a lint error.
 - Read env through `ENV` from `@config/env`, never `process.env` or `react-native-config` directly.
 - Log through `@services/logger`: no `console`, no secrets, tokens or PII in log lines.
 - Services do not import features or screens. Features and shared code import services, not the reverse.
-- Every service has tests. Mock only native modules; network tests use MSW.
+- Every service has tests. Mock only native modules; network tests run against the local backend, and one route is overridden with MSW's `server.use(...)`.
 - A new runtime dependency needs an ownership entry in `eslint.config.mjs` (`yarn lint:deps`).
 
 ## Generators

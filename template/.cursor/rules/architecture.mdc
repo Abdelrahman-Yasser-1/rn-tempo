@@ -46,7 +46,7 @@ A screen with logic splits into a view and a hook:
 
 ## Path aliases
 
-`@app/*` `@navigation/*` `@features/*` `@shared/*` `@services/*` `@theme/*` `@assets/*` `@locales/*` `@config/*` `@test-utils/*` map to the folder of the same name under `src/`. `@api/*` maps to the root `api/` folder (endpoint definitions and generated mocks), and is used by `src/test-utils` and the dev mock adapter only.
+`@app/*` `@navigation/*` `@features/*` `@shared/*` `@services/*` `@theme/*` `@assets/*` `@locales/*` `@config/*` `@test-utils/*` map to the folder of the same name under `src/`.
 
 The aliases are declared once, in `compilerOptions.paths` of `tsconfig.json`; Babel, Jest and ESLint read them from there, so adding an alias means editing that file only.
 

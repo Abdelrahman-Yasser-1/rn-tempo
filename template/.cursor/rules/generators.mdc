@@ -10,13 +10,13 @@ alwaysApply: false
 
 Always use `yarn tempo g ...` instead of hand-creating files, so folders, tests, barrels and locale files match the structure lint.
 
-| Command                                                                            | Creates                                                                                                                       |
-| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `yarn tempo g feature <kebab-name>`                                                | Feature tree, `src/locales/{en,ar}/<feature>.json`, `specs/<feature>/{spec,design,tasks}.md`                                  |
-| `yarn tempo g screen <Name> --feature <f> [--stack <Stack>]`                       | `screens/<Name>Screen/` (screen, test, styles, index) and the route in `navigation/types.ts`                                  |
-| `yarn tempo g component <Name> [--feature <f>]`                                    | Component folder (shared components also get a story and a test)                                                              |
-| `yarn tempo g hook <name>`, `g store <name>`, `g query <name>`                     | Hook, Zustand store, or query/mutation with keys, plus tests                                                                  |
-| `yarn tempo g endpoint <feature>.<name> [--method M] [--path /p/:id] [--resource]` | Mock definition in `api/endpoints/<feature>.ts` (registered in the config), Zod schemas, request function, query key and hook |
+| Command                                                                            | Creates                                                                                      |
+| ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `yarn tempo g feature <kebab-name>`                                                | Feature tree, `src/locales/{en,ar}/<feature>.json`, `specs/<feature>/{spec,design,tasks}.md` |
+| `yarn tempo g screen <Name> --feature <f> [--stack <Stack>]`                       | `screens/<Name>Screen/` (screen, test, styles, index) and the route in `navigation/types.ts` |
+| `yarn tempo g component <Name> [--feature <f>]`                                    | Component folder (shared components also get a story and a test)                             |
+| `yarn tempo g hook <name>`, `g store <name>`, `g query <name>`                     | Hook, Zustand store, or query/mutation with keys, plus tests                                 |
+| `yarn tempo g endpoint <feature>.<name> [--method M] [--path /p/:id] [--resource]` | Endpoint in `backend/backend.json`, Zod schemas, request function, query key and hook        |
 
 Generated output passes `yarn verify` untouched. Overrides for the templates live in `.tempo/templates/<kind>/`.
 

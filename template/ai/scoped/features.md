@@ -36,6 +36,6 @@ Create files with the generators, not by hand:
 - `yarn tempo g screen <Name> --feature <f> [--stack <Stack>]`
 - `yarn tempo g component <Name> --feature <f>`
 - `yarn tempo g hook <name>`, `yarn tempo g store <name>`, `yarn tempo g query <name>`
-- `yarn tempo g endpoint <feature>.<name> [--method M] [--path /p/:id] [--resource]` (then `yarn api generate`)
+- `yarn tempo g endpoint <feature>.<name> [--method M] [--path /p/:id] [--resource]` (also adds the endpoint to `backend/backend.json`)
 
 Full rules: `ai/rules/architecture.md` and `ai/rules/generators.md`.
