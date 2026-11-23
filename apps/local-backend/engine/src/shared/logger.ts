@@ -31,7 +31,7 @@ const REDACT_PATHS = [
 export function createLogger(options: { level?: string; destination?: DestinationStream } = {}): Logger {
   return pino(
     {
-      name: 'tempo-api',
+      name: 'local-backend',
       level: options.level ?? 'info',
       redact: { paths: REDACT_PATHS, censor: '[REDACTED]' },
     },

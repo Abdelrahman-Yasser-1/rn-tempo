@@ -2,7 +2,7 @@ import path from 'node:path';
 
 import boundaries from 'eslint-plugin-boundaries';
 
-export const SOURCE_FILES = ['src/**/*.{ts,tsx}', 'api/**/*.ts'];
+export const SOURCE_FILES = ['src/**/*.{ts,tsx}'];
 export const TEST_UTILS_CONSUMERS = [
   'src/**/*.test.{ts,tsx}',
   'src/**/*.stories.tsx',
@@ -22,8 +22,6 @@ const ELEMENTS = [
   { type: 'locales', pattern: 'src/locales' },
   { type: 'config', pattern: 'src/config' },
   { type: 'test-utils', pattern: 'src/test-utils' },
-  // The endpoint definitions read by `yarn api`, outside `src`.
-  { type: 'api', pattern: 'api/**/*', partialMatch: false },
 ];
 
 const ALL_TYPES = ELEMENTS.map((element) => element.type);
@@ -72,13 +70,6 @@ const POLICIES = [
     disallow: { to: types('test-utils') },
     message:
       'src/test-utils is for tests and stories only. Import it from *.test.ts(x), *.stories.tsx or src/test-utils.',
-  },
-  {
-    // Re-allowed below for plain schema modules.
-    from: types('api'),
-    disallow: { to: types('feature', 'services', 'shared-ui', 'navigation', 'app', 'theme', 'assets', 'locales') },
-    message:
-      'api/ is loaded by Node (yarn api), not React Native. Import a plain schema module (features/<name>/api/schemas.ts or types, @shared/utils/schemas), never a barrel that pulls in React Native.',
   },
   {
     from: { element: { type: 'app' } },
@@ -138,18 +129,6 @@ const POLICIES = [
   { from: { element: { type: 'locales' } }, allow: { to: types('locales') } },
   { from: { element: { type: 'config' } }, allow: { to: types('config') } },
   { from: { element: { type: 'test-utils' } }, allow: { to: types(...ALL_TYPES) } },
-  {
-    // Loaded by Node, not React Native: only plain schema modules may be imported. A feature
-    // is reached through its `api/schemas.ts` or `types` folder, never its index.ts barrel,
-    // which exports screens. `yarn api:check` fails when a React Native import slips in.
-    from: { element: { type: 'api' } },
-    allow: {
-      to: [
-        types('api', 'shared-core', 'services', 'config'),
-        { element: { type: 'feature', fileInternalPath: '{api/schemas,types/index}.ts' } },
-      ],
-    },
-  },
 ];
 
 /**
@@ -165,7 +144,7 @@ export function boundariesConfig(root) {
       settings: {
         'boundaries/elements': ELEMENTS,
         'boundaries/root-path': root,
-        'boundaries/include': ['src/**/*', 'api/**/*'],
+        'boundaries/include': ['src/**/*'],
         'import/resolver': {
           typescript: { alwaysTryTypes: true, project: path.join(root, 'tsconfig.json') },
         },

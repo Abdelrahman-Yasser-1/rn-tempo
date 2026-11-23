@@ -13,7 +13,7 @@ import { json, stopAll, tempDir } from './helpers.ts';
 
 afterEach(stopAll);
 
-const TEMPLATE_OPENAPI = resolve(import.meta.dirname, '../../../../template/api/generated/openapi.json');
+const TEMPLATE_OPENAPI = resolve(import.meta.dirname, 'fixtures/template-openapi.json');
 const CLI = resolve(import.meta.dirname, '../src/cli.ts');
 const template = JSON.parse(readFileSync(TEMPLATE_OPENAPI, 'utf8')) as Record<string, unknown>;
 

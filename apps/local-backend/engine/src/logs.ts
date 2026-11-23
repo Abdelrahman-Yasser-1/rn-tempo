@@ -133,7 +133,7 @@ export interface EngineLogger {
   error(fields: Record<string, unknown>, message: string): void;
 }
 
-/** The engine's own log: JSON lines in `.data/logs/engine.log`, redacted by dev-api's logger. */
+/** The engine's own log: JSON lines in `.data/logs/engine.log`, redacted by its logger. */
 export function createEngineLog(dir: string): { logger: EngineLogger; close(): void } {
   const stream = new EngineLogStream(join(dir, 'engine.log'), 5 * 1024 * 1024);
   return { logger: createLogger({ destination: stream }), close: () => stream.close() };
