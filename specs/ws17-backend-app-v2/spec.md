@@ -29,5 +29,5 @@ Tempo, File, Edit, View, Backend, Request, Window and Help menus, with the stand
   - **A Workbench:** IDE-like, with tree, tabs and a bottom panel.
   - **B Console:** a clean product dashboard with a grouped sidebar.
   - **C Inspector:** traffic first, with three panes.
-- [ ] **T17.A2** Open-source feature survey and recommendations (MCP tools, request runner must-haves, features by timing), in `specs/ws17-backend-app-v2/research.md`.
+- [x] **T17.A2** Open-source feature survey and recommendations (MCP tools, request runner must-haves, features by timing), in `specs/ws17-backend-app-v2/research.md`.
 - [ ] **T17.A3** Owner picks a direction (or a mix) and the features. Record the decision here, then write phases B onward (design system, shell and menus, page migration, request runner, MCP server, chosen features, docs).
