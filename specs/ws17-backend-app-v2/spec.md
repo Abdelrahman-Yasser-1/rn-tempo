@@ -1,6 +1,6 @@
 # WS17: Mockyard (the Local Backend app, v2)
 
-Status: **Phase A done. The design and name are chosen. The build phases B–K are planned below** (amendment 62).
+Status: **Phase A done. The design and name are chosen. The build phases B–L are planned below** (amendment 62).
 
 ## Goal
 Turn the Tempo Local Backend into **Mockyard**, a standalone, production-ready desktop app that any developer can use with any framework. Mockyard runs local backends, mocks and CMS content. It sends requests like Postman. AI agents drive it over MCP. Backends can be shared with a public link. It lives in this monorepo until it moves to its own repository.
@@ -24,7 +24,7 @@ Turn the Tempo Local Backend into **Mockyard**, a standalone, production-ready d
   - **Availability:** the name `mockyard` and the `@mockyard` scope were both free on npm, and GitHub had only five small repos with the name.
   - **Owner to confirm before T17.B1:** the domain and the trademark check, which set the bundle id. The runner-up was **Localyard**.
 - **2026-11-24 (owner): new feature, share links.** A backend can be shared with people who are not on the same network, the way VS Code forwards ports (phase I).
-- **2026-11-24 (owner): the app moves to its own repository soon.** Phase K prepares the move. Until then, nothing in the app may import from `template/` or depend on Tempo-only packages.
+- **2026-11-24 (owner): the app moves to its own repository soon.** Phase L prepares the move. Until then, nothing in the app may import from `template/` or depend on Tempo-only packages.
 
 ## Product rules (every phase)
 - **Familiar UI:** Postman-familiar desktop density (13 px base text, 28–32 px rows), soft slate light and dark themes, WCAG AA contrast, and visible focus.
@@ -32,6 +32,15 @@ Turn the Tempo Local Backend into **Mockyard**, a standalone, production-ready d
 - **Two kinds of tabs:** project tabs (in the title bar) and request tabs (in the workbench) look clearly different. Each project keeps its own tabs, sidebar and environment.
 - **Compatible:** the existing backend folders (`backend.json`, `handlers/`, `seed/`, `.data/`) and the engine's admin and public APIs stay compatible. Existing users' backends open without changes.
 - **Safe for agents:** every AI-agent write goes through the same permission and snapshot rules as the UI.
+- **Every feature teaches itself ("guide kit", phase J defines it, every phase uses it).** A feature is not done until it ships with all of these:
+  1. an empty state that says what the feature is for, with one primary action and a "Learn more" link
+  2. a guide page in `guide/` (see phase J)
+  3. a ⌘K search entry for its main actions and its guide page
+  4. a one-line contextual tip shown the first time its screen opens (dismissible)
+  5. `?` help on any setting that isn't obvious
+  6. its MCP `docs` entry
+  
+  Phases C–I add the components and content for their own features. Phase J adds the onboarding, tours, the sample project, the docs site and the usability test.
 - **Contracts first:** each phase starts by fixing its contracts (types, schemas, admin API routes) and tests, then builds the UI. One PR per phase, small commits, and docs in the same PR (amendments 52 and 53).
 
 ## Information architecture (Studio)
@@ -63,7 +72,7 @@ Each phase is a branch `ws17/<letter>-<slug>` with one PR. The phase order follo
   - Existing `backend.json` files open as they are.
   - The template's `yarn backend`, test kit and docs point at the new package names. The old names keep working as aliases until WS14.
   - CI is updated.
-- [ ] **T17.B3** Boundary check: a lint rule and a CI check that fail if `apps/local-backend/**` imports from `template/`, `packages/cli` or any other `@rn-tempo/*` package except approved shared configs (eslint, tsconfig, prettier). List what Phase K must copy.
+- [ ] **T17.B3** Boundary check: a lint rule and a CI check that fail if `apps/local-backend/**` imports from `template/`, `packages/cli` or any other `@rn-tempo/*` package except approved shared configs (eslint, tsconfig, prettier). List what Phase L must copy.
 - [ ] **T17.B4** ADR `017-mockyard`: the name, the scope, the repo move plan, and the compatibility promises. Update the docs and README, and add the commitlint scope `mockyard`.
 
 ### Phase C: design system and app shell (`ws17/c-shell`)
@@ -82,6 +91,7 @@ Each phase is a branch `ws17/<letter>-<slug>` with one PR. The phase order follo
   - Home with projects, devices, running now, getting started and recent
 - [ ] **T17.C4** The native Tauri menu bar, with all menus, shortcuts and enabled/disabled states wired to the same command registry as the ⌘K search and the ⇧⌘P palette. The tray menu stays.
 - [ ] **T17.C5** Keyboard map and a Shortcuts help sheet (⌘/). Accessibility pass: roles, focus order, and screen-reader labels.
+- [ ] **T17.C6** The guide kit components from T17.J1 (loader, `HelpLink`, `Tip`, `HelpIcon`, Guide panel, ⌘K guide results, the CI check), so phases D–I can ship their help as they go.
 
 ### Phase D: move the existing features into the new shell (`ws17/d-pages`)
 - [ ] **T17.D1** Endpoints in the Studio split:
@@ -195,19 +205,72 @@ Share a running backend with people outside the local network, like VS Code's po
   - shares stop automatically when the backend stops or the app quits
 - [ ] **T17.I4** Tests: the admin API is never reachable through a share, a missing or wrong key is rejected, expiry and revoke take effect immediately, and read-only mode blocks writes. Docs page "Share a backend".
 
-### Phase J: production readiness (`ws17/j-release`)
-- [ ] **T17.J1** Auto-update with the Tauri updater: signed updates, a release channel, and an "Update available, restart to install" notice.
-- [ ] **T17.J2** macOS signing and notarization, plus Windows and Linux builds if the engine sidecar supports them (ADR). A crash and error report that the user sends with one click (opt-in, no automatic telemetry).
-- [ ] **T17.J3** Performance budgets (cold start, 10k log rows, 1 MB responses), an accessibility audit, and a full end-to-end flow with the WebDriver/Playwright setup the app already uses.
-- [ ] **T17.J4** Docs: a Mockyard section in the docs site (getting started per framework, devices and CA, request runner, MCP, share links, CLI), plus release notes.
+### Phase J: guide and discoverability (`ws17/j-guide`)
+The goal is that a developer who opens Mockyard for the first time can connect their app and see its first request in **under 5 minutes, without reading docs**, and that they find each major feature without being told. Guidance stays quiet: it is skippable, it never blocks, it stays out of the way after it is dismissed, and it is always reachable again from Help.
 
-### Phase K: prepare the repository move (`ws17/k-extract`)
-- [ ] **T17.K1** Make `apps/local-backend` self-contained: its own lint, tsconfig and prettier configs (copied or published), its own CI workflow, a README, a LICENSE, CONTRIBUTING, and a changelog.
-- [ ] **T17.K2** Move dry run: `git subtree split` (or `filter-repo`) into a scratch repo, then build, test and package it there. Record the steps.
-- [ ] **T17.K3** After the owner creates the new repo and runs the move, this monorepo consumes Mockyard from npm: the template's backend scripts and test kit come from `mockyard` and `@mockyard/testing`. Remove the in-repo copy.
+**Single source for the content:** the guide lives as Markdown in `apps/local-backend/guide/` (it moves with the repo). It has one page per feature and per task, with front matter: `title`, `summary`, `screen` (the app screens it explains), `keywords`, `level` (basics, testing, observe, advanced). The same files are bundled into the app (so they work offline), published on the docs site, and served to agents through the MCP `docs` tool and an `llms.txt`.
+
+- [ ] **T17.J1** Guide kit (the contract the other phases rely on; build it early, in phase C, then complete it here):
+  - **Components:** a `guide/` loader and index, `<HelpLink page>`, `<Tip id screen>` (shown once, then remembered locally), `<HelpIcon>` for settings, and the right-bar **Guide** panel, which shows the page for the current screen with search.
+  - **Search:** ⌘K finds guide pages and "How do I…" questions, ranked together with actions.
+  - **Settings:** "Show tips" (on/off) and "Reset tips and tours".
+  - **Tests:** every guide page parses, every `screen` exists, every screen has at least one page, and every `HelpLink` resolves (a CI check).
+- [ ] **T17.J2** First-run onboarding (skippable, resumable from Home):
+  1. Welcome, with a choice: "Start with a sample project" (recommended) or "Create / open my own".
+  2. Framework picker (Web, React Native/Expo, Flutter, iOS, Android, other). It sets the defaults for snippets and CORS.
+  3. HTTPS check: it trusts the CA on the Mac and shows the device list with each device's CA state and a fix action.
+  4. "Connect your app": the snippet for the chosen framework, plus the QR for a physical device. It waits for the first request and celebrates it ("Your app just called GET /api/v1/products").
+  5. Next steps: the Get started checklist on Home.
+- [ ] **T17.J3** Sample project "Shop API demo", created in one click. It shows every feature with realistic data:
+  - endpoints with scenarios (normal, empty, 401, 500, slow), a JS handler, data collections, app users and login
+  - CMS content in English and Arabic, media, webhooks, SSE, WebSocket and GraphQL
+  - a saved request collection with tests, two environments, a snapshot, a disabled proxy target
+  
+  Each item links to its guide page. "Reset demo" restores it.
+- [ ] **T17.J4** Get started checklist on Home, grouped by level. It tracks progress locally, from real use rather than clicks on the checklist:
+  - **Basics:** create or open a project, connect your app, trust HTTPS on a device, switch a scenario, send a request.
+  - **Testing:** save a collection, add a test, run the collection, use an environment secret.
+  - **Observe and simulate:** replay from Traffic, save a response as a scenario, simulate offline, record with the proxy.
+  - **Power:** take and restore a snapshot, connect an AI agent (MCP), share a link, export OpenAPI.
+  
+  Each item has "Show me": it opens the right screen and runs that feature's tour.
+- [ ] **T17.J5** Feature tours: short coach-mark tours (3–5 steps, keyboard-accessible, Esc to exit) for the Studio endpoint, the request runner, Traffic, Devices, MCP and Share. A tour starts only from "Show me" or Help, never by itself, apart from the first-run flow.
+- [ ] **T17.J6** Discovery without nagging:
+  - **"Did you know":** one suggestion on Home for a feature this user hasn't tried yet, based only on local usage flags (no telemetry), and dismissible.
+  - **"What's new":** shown after an update, linking to the new guide pages.
+  - **Shortcuts sheet:** ⌘/ shows the keyboard shortcuts.
+- [ ] **T17.J7** Guide content:
+  - **Quick starts per framework:** Web (Vite, Next.js), React Native/Expo, Flutter, Swift, Kotlin.
+  - **Task recipes:**
+    - show an error or empty state in my app
+    - test offline and slow networks
+    - log in as a test user
+    - chain requests with variables
+    - run my collection in CI
+    - mock some routes and proxy the rest
+    - let Claude, Codex or Cursor edit my mocks safely
+    - share my backend with QA
+    - use real HTTPS on a physical device
+  - **Reference:** one page per screen and setting, and the CLI.
+  - **Troubleshooting:** CA trust on iOS and Android, `10.0.2.2`, port conflicts, CORS, firewalls and LAN, proxy errors.
+  - Each recipe has short screenshots taken from the app by a script, so they stay current.
+- [ ] **T17.J8** Docs site: a Mockyard section built from `guide/` (moved with the repo in phase L), with search and per-framework quick starts linked from the app.
+- [ ] **T17.J9** Usability check before release: five first-time users (the owner plus colleagues) do five tasks without help: connect an app, show an error state, send and save a request, connect an AI agent, and share a link. Record the time and where they got stuck, then fix the top issues. Done when four of five finish "connect your app" in under 5 minutes.
+
+### Phase K: production readiness (`ws17/k-release`)
+- [ ] **T17.K1** Auto-update with the Tauri updater: signed updates, a release channel, and an "Update available, restart to install" notice.
+- [ ] **T17.K2** macOS signing and notarization, plus Windows and Linux builds if the engine sidecar supports them (ADR). A crash and error report that the user sends with one click (opt-in, no automatic telemetry).
+- [ ] **T17.K3** Performance budgets (cold start, 10k log rows, 1 MB responses), an accessibility audit, and a full end-to-end flow with the WebDriver/Playwright setup the app already uses.
+- [ ] **T17.K4** Release notes and the "What's new" content for 1.0. The user guide itself is phase J.
+
+### Phase L: prepare the repository move (`ws17/l-extract`)
+- [ ] **T17.L1** Make `apps/local-backend` self-contained: its own lint, tsconfig and prettier configs (copied or published), its own CI workflow, a README, a LICENSE, CONTRIBUTING, and a changelog.
+- [ ] **T17.L2** Move dry run: `git subtree split` (or `filter-repo`) into a scratch repo, then build, test and package it there. Record the steps.
+- [ ] **T17.L3** After the owner creates the new repo and runs the move, this monorepo consumes Mockyard from npm: the template's backend scripts and test kit come from `mockyard` and `@mockyard/testing`. Remove the in-repo copy.
 
 ## Phase A: design selection (`ws17/a-design`), done
 - [x] **T17.A1** Round 1 (rejected): Workbench, Console, Inspector.
 - [x] **T17.A2** Open-source feature survey and recommendations, in `research.md`.
 - [x] **T17.A1b** Rounds 2 and 3: the Postman-familiar Familiar, Studio and Hub, in `designs/`, refined with selection actions, Devices, the framework-agnostic setup and the slate palette.
 - [x] **T17.A3** The owner accepts any of the three. Claude chose Studio. The name is Mockyard. The share-links feature was added. The phases above are planned.
+- [x] **T17.A4** (owner 2026-11-24) Add a detailed in-app guide and discoverability plan: phase J and the guide-kit product rule.
