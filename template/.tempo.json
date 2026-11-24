@@ -37,6 +37,7 @@
     "ai-vendored-skills",
     "app-icons",
     "ci-github",
+    "cms",
     "crashlytics",
     "device-integrity",
     "dynamic-forms",
