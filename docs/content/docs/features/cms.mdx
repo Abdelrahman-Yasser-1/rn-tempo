@@ -1,0 +1,227 @@
+---
+title: CMS
+description: Read published, localized content from the Tempo local backend or Sanity, with a What's new sample screen.
+---
+
+The `cms` module lets the app read content that editors manage outside the app: announcements, FAQs, release notes. It is read-only and public. The app never holds a write token.
+
+The module has four parts:
+
+- `src/services/cms/` is the service. It has the `CmsClient` interface, the Zod schemas, the query hooks and two adapters (`tempo` and `sanity`).
+- `src/shared/components/Markdown/` renders Markdown text safely. See [Markdown](#markdown).
+- `src/features/whats-new/` is a sample screen that lists `announcement` entries.
+- `backend/backend.json` holds the `announcement` content type and five seed entries for the local backend.
+
+## Enable and disable
+
+The module is off by default.
+
+```sh
+tempo feature add cms
+tempo feature remove cms
+```
+
+`remove` deletes the service, the What's new feature and its route, the `whats-new` locale files and the `CMS_*` env keys. It does **not** touch `backend/backend.json`. The `announcement` type and its seeds stay, because the backend is shared infrastructure. Delete the content type in the local backend's Content tab if you no longer want it. See [Local backend](/docs/backend/local-backend#8-content) for the Content tab.
+
+## Configuration
+
+Set these in your `.env.*` files.
+
+| Key | Default | Meaning |
+| --- | --- | --- |
+| `CMS_PROVIDER` | `tempo` | `tempo` or `sanity`. |
+| `CMS_BASE_URL` | empty | Base URL of the Tempo content API. Empty means `API_BASE_URL`. |
+| `CMS_PROJECT_ID` | empty | Sanity project id. Sanity only. |
+| `CMS_DATASET` | empty | Sanity dataset, for example `production`. Sanity only. |
+| `CMS_API_VERSION` | `2025-02-19` | Sanity API version. Sanity only. |
+
+Tempo, using the same server as the API:
+
+```sh
+CMS_PROVIDER=tempo
+CMS_BASE_URL=
+```
+
+Tempo, with content under a prefix on another host:
+
+```sh
+CMS_PROVIDER=tempo
+CMS_BASE_URL=https://content.example.com/api/v1
+```
+
+Sanity:
+
+```sh
+CMS_PROVIDER=sanity
+CMS_PROJECT_ID=abc123de
+CMS_DATASET=production
+```
+
+No key is a token. The sanity adapter throws if `CMS_PROJECT_ID` or `CMS_DATASET` is empty.
+
+## Edit content
+
+Open the local backend's **Content** tab (the Mac app, the web dashboard of `npx @rn-tempo/local-backend`, or a team server). Open the `announcement` type, add an entry, fill each language tab and press **Publish**. Pull to refresh in the app's What's new screen to see it.
+
+The app reads published entries only. **Save draft**, **Schedule** (until its time) and **Unpublish** all keep an entry out of the app.
+
+## How the app reads it
+
+The `tempo` adapter calls these paths on the content base URL:
+
+- `GET <base>/content/<type>?locale=<code>&limit=<n>&cursor=<c>` lists entries.
+- `GET <base>/content/<type>/<id or slug>?locale=<code>` reads one entry.
+
+Rules:
+
+- **Base URL.** If `CMS_BASE_URL` differs from `API_BASE_URL`, it is used as is. Otherwise the adapter uses the API's resolved base, including the backend you picked in the dev menu.
+- **No auth.** The request sends no `Authorization` header. Content is public.
+- **Published only.** The server returns published entries only.
+- **Locale.** The app sends its active language (`en`, `ar`, `es`, `de`, `fr`). A field that is empty in that language comes back in the default language, and the entry lists those fields in `fallbackFields`. If the server answers `400` for an unknown `locale`, the adapter retries once with `en`.
+- **ETag.** The adapter keeps the last 50 responses. It sends `If-None-Match` and reuses the cached body on `304`.
+- **Bad documents.** An entry that fails Zod validation is logged without its content and skipped. The rest of the page still loads.
+
+The local backend's locales are set in `backend.json` under `content`. The template uses all five app languages.
+
+## The CmsClient contract
+
+An adapter implements this interface (`src/services/cms/types.ts`).
+
+```ts
+export type CmsClient = {
+  getEntries<T extends CmsType>(type: T, params: CmsEntriesParams): Promise<CmsPage<T>>;
+  getEntry<T extends CmsType>(
+    type: T,
+    idOrSlug: CmsId,
+    params: { locale: string },
+  ): Promise<CmsEntry<T>>;
+};
+
+type CmsEntriesParams = { locale: string; limit?: number; cursor?: string };
+```
+
+Every adapter maps its provider's documents to one envelope (`cmsEnvelopeSchema`):
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `id` | `number` or `string` | Provider id. |
+| `slug` | `string` or `null` | Optional readable key. |
+| `type` | `string` | Content type name, such as `announcement`. |
+| `locale` | `string` | The language the fields are in. |
+| `availableLocales` | `string[]` | Languages that have content. |
+| `fallbackFields` | `string[]` | Fields filled from the default language. |
+| `fields` | `object` | The content. Validated per type. |
+| `updatedAt` | ISO date with offset | Last change. |
+| `publishedAt` | ISO date with offset, or `null` | Publish time. |
+
+Fields are validated by `cmsFieldSchemas[type]`. The `announcement` schema has `title` (required), `body` (Markdown), `image` (`url`, optional `alt`, `width`, `height`), `ctaLabel` and `ctaUrl`. A null or missing optional field becomes `undefined`.
+
+A list returns `{ items, nextCursor }`. The cursor is opaque to the app. Use `parseCmsEntries` and `parseCmsEntry` in your adapter. They validate, skip bad items and log without content.
+
+To add a content type, add a schema to `cmsFieldSchemas` and a type in the backend. To add a provider, see [CMS providers](/docs/recipes/cms-providers).
+
+## Use the hooks in a screen
+
+`useCmsEntries` loads cursor pages in the active app language. `useCmsEntry` reads one entry. Both are TanStack Query hooks, and both key on the language, so changing the language reloads the content. `cmsKeys` builds the query keys.
+
+This is the What's new screen, reduced to its core:
+
+```tsx
+import { useCmsEntries } from '@services/cms';
+import type { CmsEntry, CmsPage } from '@services/cms';
+import { EmptyState, PaginatedList, Screen } from '@shared/components';
+
+const getAnnouncements = (page: CmsPage) => page.items;
+const getKey = (entry: CmsEntry) => String(entry.id);
+
+export function AnnouncementsScreen() {
+  const query = useCmsEntries('announcement');
+
+  return (
+    <Screen preset="fixed">
+      <PaginatedList
+        query={query}
+        getItems={getAnnouncements}
+        keyExtractor={getKey}
+        renderItem={({ item }) => <AnnouncementCard entry={item} />}
+        ListEmptyComponent={<EmptyState icon="bell" title="Nothing new" message="Check back soon." />}
+      />
+    </Screen>
+  );
+}
+```
+
+`PaginatedList` shows the shimmer, the error state, pull-to-refresh and infinite scroll. A single entry:
+
+```tsx
+const { data, isPending, error } = useCmsEntry('announcement', 'welcome');
+```
+
+`getEntry` throws `CmsEntryError` with code `not-found` or `invalid`. Both are expected failures, so a screen can show a message for them.
+
+## Markdown
+
+`@shared/components/Markdown` renders text fields such as `body`:
+
+```tsx
+<Markdown>{entry.fields.body}</Markdown>
+```
+
+It supports:
+
+- paragraphs and line breaks
+- headings `#`, `##`, `###` (rendered one level lower, so `h1` stays free for the screen title)
+- `**bold**`, `*italic*` or `_italic_`, and `` `inline code` ``
+- links `[text](https://...)`
+- bullet lists and numbered lists
+
+Safety rules:
+
+- No HTML. Tags show as plain text.
+- No images.
+- Links open only if the scheme is `http`, `https` or `mailto`, with no spaces or control characters. Anything else renders as text.
+- Control characters are removed. Input over 20,000 characters is cut. Nesting depth and scanning work are bounded.
+- Anything outside the subset is shown as plain text, never executed.
+
+The sample screen also shows the call-to-action button only when `ctaLabel` and `ctaUrl` are both set and the URL passes the same scheme check.
+
+## Sanity
+
+Set `CMS_PROVIDER=sanity`, `CMS_PROJECT_ID` and `CMS_DATASET`. The adapter calls the public, read-only query API (`https://<projectId>.apicdn.sanity.io/v<version>/data/query/<dataset>`) with GROQ. The dataset must be public. See [the Sanity HTTP reference](https://www.sanity.io/docs/http-reference/query).
+
+Conventions the adapter expects:
+
+- The document `_type` is the content type name (`announcement`).
+- A localized field is an object keyed by language: `title: { en: 'Hello', ar: 'مرحبا' }`. The adapter picks the active language, then `en`. A field filled from `en` goes in `fallbackFields`.
+- A plain field (a string, a number) is used as is.
+- `slug.current` becomes `slug`. `publishedAt` is optional. Fields that start with `_` are not copied into `fields`.
+- Lists are sorted by `publishedAt`, then `_updatedAt`, newest first. The cursor is a numeric offset.
+- **Drafts are excluded.** The request uses `perspective=published` and the query drops ids that start with `drafts.`.
+- `image` must be an object with a `url`, or the entry is skipped. Use a GROQ projection in your own copy of the adapter if your schema stores a Sanity image reference.
+
+## Test
+
+Jest runs against the backend test kit, so no mocks are needed. The seeds in `backend/backend.json` (five `announcement` entries, five languages) are what tests read. Use MSW's `server.use` for one-off answers:
+
+```ts
+import { http, HttpResponse } from 'msw';
+
+import { ENV } from '@config/env';
+
+server.use(
+  http.get(`${ENV.API_BASE_URL}/content/announcement`, () =>
+    HttpResponse.json({ message: 'Down' }, { status: 503 }),
+  ),
+);
+```
+
+See [Testing without mocks](/docs/backend/test-without-mocks).
+
+## Troubleshooting
+
+- **The list is empty.** Nothing is published for that type. A draft, a scheduled entry or an unpublished entry does not appear. Publish it in the Content tab.
+- **Content is in English, not my language.** The entry has no text in that language, so the server fell back to the default. Fill the language tab. For an unknown locale (not in `content.locales`), the adapter retries with `en`.
+- **The app shows old content.** Pull to refresh. The adapter revalidates with `If-None-Match`, so a changed entry returns `200`.
+- **The app cannot find the content.** In a dev build, check the backend you chose in the dev menu. Content follows it unless `CMS_BASE_URL` is set to another URL.
+- **Every entry is missing.** Check the logs for `Skipping invalid CMS entry`. A required field such as `title` is empty, or an `image` has no valid URL.
+- **Sanity returns an error.** Check `CMS_PROJECT_ID`, `CMS_DATASET` and that the dataset is public.

@@ -1,0 +1,301 @@
+---
+title: CMS providers
+description: Add a content provider behind the CmsClient interface, with example Strapi and Contentful adapters.
+---
+
+The template ships two providers: `tempo` (the local backend) and `sanity`. Anything else is one file. Read [CMS](/docs/features/cms) first for the interface, the envelope and the hooks.
+
+<Callout type="warn" title="Examples, not shipped code">
+  The Strapi and Contentful adapters below are examples. They were written from the official docs listed at the end and were not run against a real project. Test them against yours.
+</Callout>
+
+## Add a provider
+
+1. Create `src/services/cms/<name>.ts` that exports a `CmsClient`.
+2. Add the name to the `CMS_PROVIDER` enum in `src/config/parseEnv.ts`, and any new keys next to it (and to `.env.example`).
+3. Register it in `getCmsClient` in `src/services/cms/client.ts`:
+
+```ts
+return { tempo: tempoClient, sanity: sanityClient, strapi: strapiClient }[ENV.CMS_PROVIDER];
+```
+
+4. Add the new env keys to `envKeys` in `.tempo/features/cms.json`, so `tempo feature remove cms` removes them.
+
+Rules for an adapter, the same as the built-in ones:
+
+- Read only. Never ship a write token.
+- Send no `Authorization` header: pass `headers: { Authorization: false }` and `skipAuthRefresh: true` to `httpClient`, so the app's session token is not sent to a third party.
+- Map each document to the envelope, then call `parseCmsEntries` or `parseCmsEntry`. They validate with Zod, skip bad items and log without content.
+- Return `nextCursor` as a string, or `null` on the last page.
+- Throw `CmsEntryError('not-found')` when a single entry does not exist.
+- Ask for published content only.
+
+## Strapi
+
+Strapi v5 has a REST API. Content types are private by default. In the admin panel, open **Settings, Users & Permissions plugin, Roles, Public** and tick `find` and `findOne` for your content type. The app then reads without a token. Do not put a Strapi API token in the app: an API token can be made read-only, but it still identifies a user of your CMS, and the Public role is the right fit for content any visitor may see.
+
+What the adapter relies on (from the Strapi docs):
+
+- `GET /api/<pluralApiId>` lists and `GET /api/<pluralApiId>/<documentId>` reads one.
+- Attributes are flat on the document: `data.title`, plus `id`, `documentId`, `locale`, `createdAt`, `updatedAt`, `publishedAt`.
+- `locale=<code>` selects a locale. Without it Strapi uses the default locale. The docs do not say what happens for a locale with no version, so the example retries `en` on a `404` for a single entry. For a list, a missing translation is simply absent.
+- `status=published` asks for published documents.
+- Offset pagination is `pagination[start]` and `pagination[limit]`. The response has `meta.pagination` with `start`, `limit` and `total`. Do not mix it with `page` and `pageSize`.
+- `populate=image` includes a media field. Its `url` can be relative (the local upload provider), so the example resolves it against the base URL.
+
+Env keys: `CMS_PROVIDER=strapi` and `CMS_BASE_URL=https://cms.example.com`. Content type plural id `announcements`, with fields `title`, `body` (rich text as Markdown or text), `image`, `ctaLabel`, `ctaUrl`.
+
+```ts
+// src/services/cms/strapi.ts (example)
+import { ENV } from '@config/env';
+import { httpClient } from '@services/http/client';
+import { ApiError } from '@services/http/errors';
+
+import { CmsEntryError, parseCmsEntries, parseCmsEntry } from './schemas';
+import type { CmsClient } from './types';
+
+const DEFAULT_PAGE_SIZE = 20;
+const FALLBACK_LOCALE = 'en';
+
+// Strapi addresses a type by its plural API id.
+const PLURAL: Record<string, string> = { announcement: 'announcements' };
+
+type Json = Record<string, unknown>;
+
+function isRecord(value: unknown): value is Json {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+async function get(path: string, params: Record<string, string | number>): Promise<unknown> {
+  const url = httpClient.getUri({
+    baseURL: ENV.CMS_BASE_URL,
+    url: `/api/${path}`,
+    params: { status: 'published', populate: 'image', ...params },
+  });
+  const response = await httpClient.get<unknown>(url, {
+    headers: { Authorization: false },
+    skipAuthRefresh: true,
+  });
+  return response.data;
+}
+
+function toEnvelope(doc: unknown, type: string, locale: string): unknown {
+  if (!isRecord(doc)) {
+    return doc;
+  }
+  const { id, documentId, locale: docLocale, createdAt, updatedAt, publishedAt, image, ...fields } = doc;
+  const imageUrl = isRecord(image) && typeof image.url === 'string' ? image.url : undefined;
+  return {
+    id: documentId ?? id,
+    slug: null,
+    type,
+    locale: typeof docLocale === 'string' ? docLocale : locale,
+    availableLocales: typeof docLocale === 'string' ? [docLocale] : [],
+    fallbackFields: [],
+    fields: {
+      ...fields,
+      image: imageUrl
+        ? {
+            url: new URL(imageUrl, ENV.CMS_BASE_URL).toString(),
+            alt: isRecord(image) && typeof image.alternativeText === 'string' ? image.alternativeText : undefined,
+          }
+        : null,
+    },
+    updatedAt: updatedAt ?? createdAt,
+    publishedAt: publishedAt ?? null,
+  };
+}
+
+export const strapiClient: CmsClient = {
+  async getEntries(type, { locale, limit = DEFAULT_PAGE_SIZE, cursor }) {
+    const start = cursor === undefined ? 0 : Number(cursor);
+    if (!Number.isInteger(start) || start < 0) {
+      throw new CmsEntryError('invalid');
+    }
+    const body = await get(PLURAL[type], {
+      locale,
+      'pagination[start]': start,
+      'pagination[limit]': limit,
+      'sort': 'publishedAt:desc',
+    });
+    const data = isRecord(body) && Array.isArray(body.data) ? body.data : [];
+    const meta = isRecord(body) && isRecord(body.meta) ? body.meta : {};
+    const pagination = isRecord(meta.pagination) ? meta.pagination : {};
+    const total = typeof pagination.total === 'number' ? pagination.total : 0;
+    const next = start + data.length;
+    return parseCmsEntries(type, {
+      items: data.map((doc) => toEnvelope(doc, type, locale)),
+      nextCursor: data.length > 0 && next < total ? String(next) : null,
+    });
+  },
+
+  async getEntry(type, idOrSlug, { locale }) {
+    const path = `${PLURAL[type]}/${encodeURIComponent(String(idOrSlug))}`;
+    const read = async (code: string) => {
+      const body = await get(path, { locale: code });
+      return parseCmsEntry(type, toEnvelope(isRecord(body) ? body.data : undefined, type, code));
+    };
+    try {
+      return await read(locale);
+    } catch (error) {
+      if (!(error instanceof ApiError) || error.status !== 404) {
+        throw error;
+      }
+      if (locale !== FALLBACK_LOCALE) {
+        try {
+          return await read(FALLBACK_LOCALE);
+        } catch (fallbackError) {
+          if (!(fallbackError instanceof ApiError) || fallbackError.status !== 404) {
+            throw fallbackError;
+          }
+        }
+      }
+      throw new CmsEntryError('not-found');
+    }
+  },
+};
+```
+
+Two things to check in your project. Strapi lists locales you add in **Settings, Internationalization**, so use the same codes as the app (`en`, `ar`, `es`, `de`, `fr`). And a Strapi rich text field (Blocks) is JSON, not Markdown. Use the Markdown text type, or convert blocks to Markdown in `toEnvelope`.
+
+## Contentful
+
+The Content Delivery API (CDA) at `https://cdn.contentful.com` is read-only. It needs an access token, sent as the `access_token` query parameter or as `Authorization: Bearer <token>`.
+
+<Callout type="info" title="A delivery token in the app">
+  The template rule is "no write token in the app". A Content Delivery API token is not a write token. Contentful's authentication docs say a token gives read-only access to one or more environments and recommends one token per environment so you can revoke them. The CDA serves published content only. Treat the token as a public read key, like a Sanity project id: anyone who unpacks the app can read it, and it can read only what you already publish. Never use a Content Management API token (it has the rights of its owner) or a Preview API token (it reads drafts) in the app. If you want the key out of the binary, put a small proxy in front of the CDA and point the adapter at it.
+</Callout>
+
+The delivery token is therefore an env key, not a secret. Because it is a key in the app, set a separate token for each environment (`dev`, `staging`, `prod`) and revoke one if it leaks.
+
+What the adapter relies on (from the Contentful docs):
+
+- `GET https://cdn.contentful.com/spaces/{space_id}/environments/{environment_id}/entries?access_token=...&content_type=announcement` lists entries. EU data residency spaces use `https://cdn.eu.contentful.com`.
+- The response is `{ sys: { type: 'Array' }, skip, limit, total, items, includes }`. Each item has `sys.id`, `sys.updatedAt` and `fields`.
+- `limit` defaults to 100. `skip` is the offset and must be an integer of 0 or more. `order` keeps the order stable, for example `order=-sys.createdAt`. Contentful advises against walking a whole collection with `skip`, which is fine for app-sized pages.
+- Linked assets are in `includes.Asset`. A link has `sys.type: 'Link'`, `sys.linkType: 'Asset'` and `sys.id`. `include` defaults to 1 level (maximum 10), which is enough for an image field. The asset has `fields.file.url`, which is protocol-relative (`//images.ctfassets.net/...`), and `fields.file.details.image` with `width` and `height`.
+- Links resolve to published entries only. An unresolved link is missing from `includes` and appears in `errors`, so the example treats a missing asset as no image.
+- `locale=<code>` selects a locale (see the CDA reference for locale behavior). Contentful defines the fallback chain in the space settings, so the example does not retry. Use space locale codes equal to the app's (`en`, `ar`, ...), or map them. The docs pages used here do not say what an unknown locale returns, so test it and add the same retry the `tempo` adapter has if it is a `400`.
+- Single entry by id: `GET .../entries/{entry_id}`. The `includes` array does not apply to a single entry, so request it through the list with `sys.id` as a filter.
+
+Env keys: `CMS_PROVIDER=contentful`, `CMS_SPACE_ID`, `CMS_ENVIRONMENT` (usually `master`) and `CMS_DELIVERY_TOKEN`. Content type id `announcement`, with fields `title`, `body` (Long text), `image` (Media), `ctaLabel`, `ctaUrl`.
+
+```ts
+// src/services/cms/contentful.ts (example)
+import { ENV } from '@config/env';
+import { httpClient } from '@services/http/client';
+
+import { CmsEntryError, parseCmsEntries, parseCmsEntry } from './schemas';
+import type { CmsClient } from './types';
+
+const DEFAULT_PAGE_SIZE = 20;
+
+type Json = Record<string, unknown>;
+
+function isRecord(value: unknown): value is Json {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+async function search(params: Record<string, string | number>): Promise<Json> {
+  const { CMS_SPACE_ID: space, CMS_ENVIRONMENT: environment, CMS_DELIVERY_TOKEN: token } = ENV;
+  if (!space || !environment || !token) {
+    throw new Error('The contentful CMS adapter needs CMS_SPACE_ID, CMS_ENVIRONMENT and CMS_DELIVERY_TOKEN');
+  }
+  const url = httpClient.getUri({
+    baseURL: 'https://cdn.contentful.com',
+    url: `/spaces/${space}/environments/${environment}/entries`,
+    params: { include: 1, ...params },
+  });
+  const response = await httpClient.get<unknown>(url, {
+    // The delivery token is a read-only key. Never send the app's session token here.
+    headers: { Authorization: false },
+    params: { access_token: token },
+    skipAuthRefresh: true,
+  });
+  return isRecord(response.data) ? response.data : {};
+}
+
+function toEnvelope(item: unknown, assets: Map<string, Json>, type: string, locale: string): unknown {
+  if (!isRecord(item) || !isRecord(item.sys) || !isRecord(item.fields)) {
+    return item;
+  }
+  const { image, ...fields } = item.fields;
+  let imageField: unknown = null;
+  if (isRecord(image) && isRecord(image.sys) && typeof image.sys.id === 'string') {
+    const file = assets.get(image.sys.id)?.file;
+    if (isRecord(file) && typeof file.url === 'string') {
+      const details = isRecord(file.details) && isRecord(file.details.image) ? file.details.image : {};
+      imageField = {
+        url: `https:${file.url}`,
+        width: typeof details.width === 'number' ? details.width : undefined,
+        height: typeof details.height === 'number' ? details.height : undefined,
+      };
+    }
+  }
+  return {
+    id: item.sys.id,
+    slug: null,
+    type,
+    locale,
+    availableLocales: [locale],
+    fallbackFields: [],
+    fields: { ...fields, image: imageField },
+    updatedAt: item.sys.updatedAt,
+    publishedAt: item.sys.createdAt ?? null,
+  };
+}
+
+function assetsOf(body: Json): Map<string, Json> {
+  const map = new Map<string, Json>();
+  const includes = isRecord(body.includes) ? body.includes : {};
+  for (const asset of Array.isArray(includes.Asset) ? includes.Asset : []) {
+    if (isRecord(asset) && isRecord(asset.sys) && typeof asset.sys.id === 'string' && isRecord(asset.fields)) {
+      map.set(asset.sys.id, asset.fields);
+    }
+  }
+  return map;
+}
+
+export const contentfulClient: CmsClient = {
+  async getEntries(type, { locale, limit = DEFAULT_PAGE_SIZE, cursor }) {
+    const skip = cursor === undefined ? 0 : Number(cursor);
+    if (!Number.isInteger(skip) || skip < 0) {
+      throw new CmsEntryError('invalid');
+    }
+    const body = await search({ content_type: type, locale, limit, skip, order: '-sys.createdAt' });
+    const items = Array.isArray(body.items) ? body.items : [];
+    const total = typeof body.total === 'number' ? body.total : 0;
+    const assets = assetsOf(body);
+    const next = skip + items.length;
+    return parseCmsEntries(type, {
+      items: items.map((item) => toEnvelope(item, assets, type, locale)),
+      nextCursor: items.length > 0 && next < total ? String(next) : null,
+    });
+  },
+
+  async getEntry(type, id, { locale }) {
+    const body = await search({ content_type: type, 'sys.id': String(id), locale, limit: 1 });
+    const items = Array.isArray(body.items) ? body.items : [];
+    return parseCmsEntry(type, toEnvelope(items[0], assetsOf(body), type, locale));
+  },
+};
+```
+
+Contentful has no slug field by default. If you add a `slug` field to the content type, filter on `fields.slug` as well.
+
+## After you add a provider
+
+- Add a test for each method. Use `server.use` to return a sample body, and check that an invalid document is skipped and a missing entry throws `not-found`.
+- Run `yarn verify`.
+- Document the provider's env keys in your `.env.example`.
+
+## Official docs used
+
+- Strapi REST API: https://docs.strapi.io/cms/api/rest
+- Strapi `locale` parameter: https://docs.strapi.io/cms/api/rest/locale
+- Strapi sort and pagination: https://docs.strapi.io/cms/api/rest/sort-pagination
+- Contentful Content Delivery API: https://www.contentful.com/developers/docs/references/content-delivery-api/
+- Contentful get all entries: https://www.contentful.com/developers/docs/references/content-delivery-api/entries/get-all-entries
+- Contentful search parameters: https://www.contentful.com/developers/docs/references/content-delivery-api/search-parameters/
+- Contentful links and `include`: https://www.contentful.com/developers/docs/concepts/links/
+- Contentful authentication: https://www.contentful.com/developers/docs/references/authentication/

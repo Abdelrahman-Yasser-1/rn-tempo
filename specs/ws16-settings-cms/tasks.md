@@ -32,7 +32,7 @@ Format: `- [ ] T<id> (AC…) <summary>: commit: <header>, docs: <page>`. Each ta
 - [x] T16.E2 (AC-C-2) `tempo` adapter (default, reads the WS15 content API) and Sanity adapter (no token), the `tempo` adapter tested against the Tempo local backend test kit (`@rn-tempo/local-backend/test`; dev-api is retired in T15.Z9), the Sanity adapter with MSW `server.use` fixtures of its GROQ HTTP API. Commits: `feat(cms): add tempo backend adapter`, `feat(cms): add sanity adapter`.
 - [x] T16.E3 (AC-C-3, AC-C-4, AC-C-7) A shared `Markdown` component (a safe subset, no dependency; owner decision 2026-11-24), the "What's new" screen, route, Home entry, content types and entries in `backend/backend.json` and its seed, strings in all 5 languages, and a run against the local backend. Commit: `feat(cms): add whats new sample screen`.
 - [x] T16.E4 (AC-C-5) `.tempo/features/cms.json`, markers, and the CLI e2e case. Commit: `feat(template): add cms module manifest`.
-- [ ] T16.E5 (AC-C-6) Docs: `features/cms` and the recipe `recipes/cms-providers` (Strapi, Contentful). Commit: `docs(cms): add cms module and provider recipe`.
+- [x] T16.E5 (AC-C-6) Docs: `features/cms` and the recipe `recipes/cms-providers` (Strapi, Contentful). Commit: `docs(cms): add cms module and provider recipe`.
 
 ## Phase F: verification (`ws16/f-e2e`)
 - [ ] T16.F1 Maestro flows: `settings-theme-palette`, `settings-text-size`, `settings-language-five`, `settings-app-icon` (Android), `cms-whats-new` (module on). Commit: `test(e2e): cover settings customization and cms`.
