@@ -24,10 +24,15 @@ The engine, its API and its data formats stay compatible. Existing backends open
 ## Menu bar
 Tempo, File, Edit, View, Backend, Request, Window and Help menus, with the standard macOS items and shortcuts. The full list is in the Phase A design brief and is shown in each design sample. In the app it becomes a Tauri menu. The web dashboard mode shows the same actions in the command palette.
 
+## Decisions
+- **2026-11-24 (owner):** the round 1 designs (Workbench, Console, Inspector) are rejected. The new designs follow Postman's familiar layout, which most developers know.
+- **2026-11-24 (owner): every feature in `research.md` is in scope for WS17 ("all features now").** That includes the Now and Next items. The Skip items stay skipped. The build phases order them, and none waits for a later workstream.
+
 ## Phase A: design selection (`ws17/a-design`)
-- [x] **T17.A1** Three self-contained HTML design directions plus a comparison page, in `specs/ws17-backend-app-v2/designs/`:
+- [x] **T17.A1** (round 1, rejected by the owner 2026-11-24) Three self-contained HTML design directions plus a comparison page, in `specs/ws17-backend-app-v2/designs/`:
   - **A Workbench:** IDE-like, with tree, tabs and a bottom panel.
   - **B Console:** a clean product dashboard with a grouped sidebar.
   - **C Inspector:** traffic first, with three panes.
 - [x] **T17.A2** Open-source feature survey and recommendations (MCP tools, request runner must-haves, features by timing), in `specs/ws17-backend-app-v2/research.md`.
+- [ ] **T17.A1b** Round 2: three new Postman-familiar directions with a stronger UX pass, replacing round 1 in `designs/`.
 - [ ] **T17.A3** Owner picks a direction (or a mix) and the features. Record the decision here, then write phases B onward (design system, shell and menus, page migration, request runner, MCP server, chosen features, docs).
