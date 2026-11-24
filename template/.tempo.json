@@ -31,29 +31,30 @@
     }
   ],
   "features": [
-    "ssl-pinning",
-    "device-integrity",
-    "storybook",
-    "dynamic-forms",
-    "samples",
-    "maestro",
-    "ci-github",
     "ai-claude",
-    "ai-cursor",
     "ai-copilot",
+    "ai-cursor",
     "ai-vendored-skills",
-    "webview",
+    "app-icons",
+    "ci-github",
+    "crashlytics",
+    "device-integrity",
+    "dynamic-forms",
     "file-picker",
-    "maps",
     "firebase-core",
+    "maestro",
+    "maps",
     "push-notifications",
-    "crashlytics"
+    "samples",
+    "ssl-pinning",
+    "storybook",
+    "webview"
   ],
   "ai": {
     "tools": [
       "claude",
-      "cursor",
-      "copilot"
+      "copilot",
+      "cursor"
     ],
     "logPrompts": "full"
   }

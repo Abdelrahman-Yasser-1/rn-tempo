@@ -19,7 +19,7 @@
 		949F94AAB7F8DB8098AA8F7C /* IBMPlexSansArabic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A2697D0468DF63E5AFD3EEF5 /* IBMPlexSansArabic.ttf */; };
 		AAC14E40BA4331ACD1090AA1 /* IBMPlexSansArabic-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9B63BB17E254CE35A7427ED7 /* IBMPlexSansArabic-Bold.ttf */; };
 		B108707F10574A5AAC07FA8F /* Colors.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FA0B6FE6242E40D2B4491200 /* Colors.xcassets */; };
-		D21600000000000000000001 /* AppIconModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = D21600000000000000000002 /* AppIconModule.mm */; };
+		D21600000000000000000001 /* NativeModules.mm in Sources */ = {isa = PBXBuildFile; fileRef = D21600000000000000000002 /* NativeModules.mm */; };
 		D400F6D08745FB55CA50AC83 /* IBMPlexSansArabic-Medm.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C4C98DE0F9BAA5CFDB3B6CD1 /* IBMPlexSansArabic-Medm.ttf */; };
 /* End PBXBuildFile section */
 
@@ -53,7 +53,7 @@
 		C4C98DE0F9BAA5CFDB3B6CD1 /* IBMPlexSansArabic-Medm.ttf */ = {isa = PBXFileReference; includeInIndex = 1; path = "IBMPlexSansArabic-Medm.ttf"; sourceTree = "<group>"; };
 		CFDD66006E8BA8FF5510FEE0 /* TempoApp.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; name = TempoApp.entitlements; path = TempoApp/TempoApp.entitlements; sourceTree = "<group>"; };
 		D15BC6616E2895F60E9C4B41 /* Staging.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = Staging.debug.xcconfig; sourceTree = "<group>"; };
-		D21600000000000000000002 /* AppIconModule.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = AppIconModule.mm; path = TempoApp/AppIconModule.mm; sourceTree = "<group>"; };
+		D21600000000000000000002 /* NativeModules.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = NativeModules.mm; path = TempoApp/NativeModules.mm; sourceTree = "<group>"; };
 		D368A3E1E520F1B8C6F49A7E /* Dev.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = Dev.debug.xcconfig; sourceTree = "<group>"; };
 		DE33AE9BBB08A6CFAD3A36AE /* Staging.shared.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = Staging.shared.xcconfig; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -78,7 +78,7 @@
 			isa = PBXGroup;
 			children = (
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
-				D21600000000000000000002 /* AppIconModule.mm */,
+				D21600000000000000000002 /* NativeModules.mm */,
 				761780EC2CA45674006654EE /* AppDelegate.swift */,
 				761780EE2CA45674006654EF /* SceneDelegate.swift */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
@@ -449,7 +449,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D21600000000000000000001 /* AppIconModule.mm in Sources */,
+				D21600000000000000000001 /* NativeModules.mm in Sources */,
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
 				761780EF2CA45674006654EF /* SceneDelegate.swift in Sources */,
 			);

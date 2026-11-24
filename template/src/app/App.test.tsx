@@ -42,7 +42,9 @@ jest.mock('@features/settings', () => {
     SettingsScreen: () => <MockText>Settings</MockText>,
     LanguageScreen: () => <MockText>Language</MockText>,
     ThemeScreen: () => <MockText>Theme</MockText>,
+    // @tempo-feature:app-icons:start
     AppIconScreen: () => <MockText>App icon</MockText>,
+    // @tempo-feature:app-icons:end
     TextSizeScreen: () => <MockText>Text size</MockText>,
     AboutScreen: () => <MockText>About</MockText>,
   };

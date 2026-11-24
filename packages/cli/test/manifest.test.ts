@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { FeatureManifest, FeatureName } from '@rn-tempo/contracts';
+import { FEATURE_NAMES, type FeatureManifest, type FeatureName } from '@rn-tempo/contracts';
 
 import { CliError } from '../src/lib/errors.ts';
 import { defaultFeatures, loadManifests, parseManifest, planRemoval, resolveSelection } from '../src/lib/manifest.ts';
@@ -33,7 +33,8 @@ const manifests = new Map<FeatureName, FeatureManifest>([
 describe('loadManifests', () => {
   it('loads and validates every template manifest', async () => {
     const loaded = await loadManifests(TEMPLATE_DIR);
-    expect(loaded.size).toBe(17);
+    expect([...loaded.keys()].sort()).toEqual([...FEATURE_NAMES].sort());
+    expect(defaultFeatures(loaded)).toContain('app-icons');
     expect(defaultFeatures(loaded)).not.toContain('dynamic-forms');
     for (const optional of ['webview', 'file-picker', 'maps', 'firebase-core', 'push-notifications', 'crashlytics']) expect(defaultFeatures(loaded)).not.toContain(optional);
     expect(defaultFeatures(loaded)).toContain('samples');

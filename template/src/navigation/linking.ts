@@ -19,7 +19,9 @@ export const LINK_PATHS = {
   Settings: 'settings',
   Language: 'settings/language',
   Theme: 'settings/theme',
+  // @tempo-feature:app-icons:start
   AppIcon: 'settings/app-icon',
+  // @tempo-feature:app-icons:end
   TextSize: 'settings/text-size',
   About: 'settings/about',
   DebugMenu: 'debug',

@@ -25,7 +25,7 @@ Format: `- [ ] T<id> (AC…) <summary>: commit: <header>, docs: <page>`. Each ta
 - [x] T16.D1 (AC-I-3) Icon generator: alternate sources, badges per env, iOS `AppIcon-<Name>` sets plus `CFBundleAlternateIcons`, and Android `mipmap` sets per alternate. Commit: `feat(native): generate alternate app icons`.
 - [x] T16.D2 (AC-I-1) Native bridge. Check the docs for a maintained library that supports RN 0.88 New Architecture; otherwise write a small TurboModule (`AppIconModule`) for iOS (`setAlternateIconName`) and Android (`activity-alias` toggling). Commit: `feat(native): add app icon switching module`.
 - [x] T16.D3 (AC-I-1, AC-I-2, AC-I-4, AC-I-5) App icon screen and service, persisted, with an unsupported state. Commit: `feat(settings): add app icon picker`.
-- [ ] T16.D4 Manifest `app-icons` with markers, plus the CLI round-trip. Docs: `features/app-icons`. Commit: `feat(template): make app icons a removable module`.
+- [x] T16.D4 Manifest `app-icons` with markers, plus the CLI round-trip. Docs: `features/app-icons`. Commit: `feat(template): make app icons a removable module`.
 
 ## Phase E: CMS module (`ws16/e-cms`)
 - [ ] T16.E1 (AC-C-1) `services/cms`: `CmsClient`, Zod schemas, key factory and hooks. Env keys in `env.ts`, in markers. Commit: `feat(cms): add provider-agnostic cms client`.

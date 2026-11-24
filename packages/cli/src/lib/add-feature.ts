@@ -63,7 +63,7 @@ function extractRegions(text: string, feature: FeatureName, filePath: string): {
   const rest: string[] = [];
   let current: Region | null = null;
   for (const line of text.split('\n')) {
-    const marker = scanMarkers(line)[0];
+    const marker = scanMarkers(line, filePath)[0];
     const mine = marker !== undefined && marker.name === feature;
     if (current === null && mine) {
       current = { at: rest.length, lines: [line] };
@@ -451,7 +451,7 @@ export async function addFeature(options: AddFeatureOptions): Promise<AddFeature
         const absolute = path.join(templateDir, rel);
         if (!(await isTextFile(absolute))) continue;
         let text = await readFile(absolute, 'utf8');
-        if (!scanMarkers(text).some((marker) => marker.name === name)) continue;
+        if (!scanMarkers(text, rel).some((marker) => marker.name === name)) continue;
         for (const other of later) text = stripFeature(text, other, rel);
         if (!(await workspace.exists(rel))) {
           conflicts.push({ file: rel, reason: `file is missing in the project, so ${name} could not be re-inserted` });

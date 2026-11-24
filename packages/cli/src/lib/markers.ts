@@ -43,7 +43,7 @@ export function stripFeaturesFromText(text: string, features: readonly FeatureNa
   return result;
 }
 
-/** True when feature markers of this file type are supported (markdown and unknown types are skipped). */
+/** True when feature markers of this file type are supported (unknown types are skipped). */
 function supportsMarkers(filePath: string): boolean {
   return commentStylesFor(filePath).length > 0 || filePath.endsWith('.json');
 }
