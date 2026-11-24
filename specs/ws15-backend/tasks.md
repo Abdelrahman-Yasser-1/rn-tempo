@@ -41,7 +41,7 @@ Format: `- [ ] T<id> (AC…) <summary>`, followed by its commit and its docs pag
   - An iOS simulator CA script.
   - A commented dev-api `API_BASE_URL` in `.env.dev`, and pinning notes.
   - Commit: `feat(native): trust the local dev ca in dev builds`.
-- [ ] **T15.C3** (AC-D-6) Device run over HTTPS on the iOS simulator and the Android emulator, with screenshots in the PR.
+- [x] **T15.C3** (AC-D-6) Device run over HTTPS on the iOS simulator and the Android emulator, with screenshots in the PR.
   - Docs: `backend/local-https`.
 
 ## Phase X: dev API desktop app (`ws15/x-desktop`)
@@ -72,7 +72,7 @@ Spec: "Tier 1c" in `spec.md`. It builds on Phase X (X1–X3 kept; the X4–X6 sh
 - [x] **T15.Y4** (AC-LB-6) The app UI rework in `apps/local-backend/app`: Dashboard, Endpoints, Data, Media, Users, Logs and Settings tabs (Content is a placeholder until Y5); the code-project mode is removed. The engine runs through one swappable `engine_launch` function (Y6 swaps it for the sidecar).
 - [x] **T15.Y5** (AC-LB-7) Content (CMS) types, entries and the public content endpoints.
 - [x] **T15.Y6** (AC-LB-1) Packaging: the Node SEA sidecar, the CI `.dmg`, the user guide `backend/local-backend` and the device run on the iOS simulator.
-  - [ ] owner device run on the iOS simulator (the packaging and the guide are done).
+  - [x] owner device run on the iOS simulator (the packaging and the guide are done).
 
 ## Phase Z: local backend platform (`ws15/z<n>-<slug>`)
 Spec: "Tier 1d" in `spec.md`. Stacked on Phase Y. One PR per step.
