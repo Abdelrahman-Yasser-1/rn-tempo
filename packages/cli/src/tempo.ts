@@ -13,6 +13,7 @@ const main = defineCommand({
     rename: () => import('./commands/rename.ts').then((m) => m.default),
     feature: () => import('./commands/feature.ts').then((m) => m.default),
     assets: () => import('./commands/assets.ts').then((m) => m.default),
+    ai: () => import('./commands/ai.ts').then((m) => m.default),
     clean: () => import('./commands/clean.ts').then((m) => m.default),
     doctor: () => import('./commands/doctor.ts').then((m) => m.default),
   },

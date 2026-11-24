@@ -1,0 +1,39 @@
+---
+title: tempo ai
+description: Sync AI tool files and report AI-assisted commits.
+---
+
+## tempo ai sync
+
+```sh
+tempo ai sync [--tools claude,cursor,copilot] [--check] [--cwd <project>] [--json]
+```
+
+Sync generates tool files from the project's `ai/` folder using its own
+`scripts/ai-sync/sync.mjs`. It reads the tool selection from `.tempo.json`.
+Use `--tools` to override that selection for one run. Use `--check` in CI to
+preview changes. It exits with status 1 when a generated file needs updating or removal.
+
+With `--json`, stdout contains one result and stderr carries the human log.
+Paths are relative to the project. In check mode the arrays describe pending changes.
+
+```json
+{ "ok": false, "check": true, "written": [".cursor/rules/naming.mdc"], "removed": [] }
+```
+
+## tempo ai report
+
+```sh
+tempo ai report [--since 7d] [--cwd <project>] [--json]
+```
+
+The project's `scripts/ai-log/report.mjs` reads Git commit trailers and reports
+AI-assisted commits by tool and author. The template defaults to the last 30 days.
+The JSON `summary` string contains the complete report, including any per-author rows.
+
+```json
+{ "ok": true, "summary": "Commits since 7d: 0 · AI-assisted: 0" }
+```
+
+If either project script is missing, the command exits with status 1 and returns
+`{ "ok": false, "error": { "code": "AI_SCRIPTS_MISSING", "message": "...", "details": [] } }`.
