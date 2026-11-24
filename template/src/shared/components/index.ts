@@ -139,6 +139,8 @@ export { Loader } from './Loader';
 export type { LoaderProps, LoaderSize, LoaderVariant } from './Loader';
 export { MapPicker } from './MapPicker'; // @tempo-feature:maps
 export type { MapCenter, MapLocation, MapPickerProps } from './MapPicker'; // @tempo-feature:maps
+export { Markdown } from './Markdown';
+export type { MarkdownProps } from './Markdown';
 export { Modal } from './Modal';
 export type { ModalProps } from './Modal';
 export { MonthYearGrid } from './MonthYearGrid';
