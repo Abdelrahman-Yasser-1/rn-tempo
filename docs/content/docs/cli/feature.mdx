@@ -1,0 +1,75 @@
+---
+title: tempo feature
+description: List, add and remove optional modules.
+---
+
+```sh
+tempo feature list [--json]
+tempo feature add <name> [--dry-run] [--force] [--template <folder|source>] [--json]
+tempo feature remove <a,b> [--skip-post] [--yes] [--json]
+```
+
+## list
+
+Prints every module in the template and whether this project has it enabled.
+
+## add
+
+Fetches the template for the project's `templateVersion`, renames it like your
+project and restores the module: its files, the marked regions in shared files,
+dependencies, env keys and `package.json` scripts. It never overwrites existing
+files unless you pass `--force`. A region it cannot place with confidence is
+listed as a conflict, together with the code to merge by hand. `--dry-run`
+reports the changes without writing. Run `yarn install` and `yarn pods` afterwards.
+
+## remove
+
+Deletes the module's files, strips its marked regions, removes its dependencies and
+env keys, and updates `.tempo.json`. If another enabled module requires it, the command stops and names that
+module: remove both in one call (`tempo feature remove <a>,<b>`), and they are removed in the right order.
+It asks for confirmation unless you pass `--yes` or `--json`. Unless you pass
+`--skip-post`, it re-runs `pod install` and the asset generator when needed.
+It does not edit `backend/backend.json`.
+
+### JSON output
+
+`list`:
+
+```json
+{ "ok": true, "features": [{ "name": "samples", "title": "Samples", "enabled": true }] }
+```
+
+`add` (with `--dry-run`, `dryRun` is `true` and nothing is written):
+
+```json
+{
+  "ok": true,
+  "feature": "samples",
+  "features": ["samples"],
+  "dryRun": false,
+  "added": ["src/features/items/index.ts"],
+  "updated": ["src/navigation/types.ts"],
+  "conflicts": [{ "file": "src/App.tsx", "reason": "Region not found", "region": "..." }],
+  "followUps": ["yarn install"]
+}
+```
+
+`remove` (`removed` is `[]` and the other lists are missing when nothing was enabled):
+
+```json
+{
+  "ok": true,
+  "removed": ["samples"],
+  "features": ["samples"],
+  "strippedFiles": ["src/navigation/types.ts"],
+  "deletedPaths": ["src/features/items"],
+  "removedDependencies": [],
+  "patchedFiles": [],
+  "removedEnvKeys": [],
+  "postRemove": []
+}
+```
+
+Error codes include `UNKNOWN_FEATURE`, `FEATURE_ENABLED`, `FEATURE_REQUIRED`,
+`FEATURE_CONFLICT`, `MANIFESTS_MISSING`, `TEMPLATE_NOT_FOUND`, `TEMPLATE_DOWNLOAD_FAILED`
+and `NOT_A_TEMPO_PROJECT`.

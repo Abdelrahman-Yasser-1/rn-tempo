@@ -55,7 +55,7 @@ const remove = defineCommand({
   async run({ args }) {
     const common = resolveCommon(args);
     await runGuarded(common.json, async (reporter) => {
-      if (isInteractive(common.yes)) {
+      if (isInteractive(common.yes || common.json)) {
         const ok = answer(await confirm({ message: `Remove env "${args.name}" and its files?`, initialValue: false }));
         if (!ok) return;
       }

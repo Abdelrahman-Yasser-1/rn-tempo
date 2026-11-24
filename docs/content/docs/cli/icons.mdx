@@ -1,0 +1,23 @@
+---
+title: tempo icons
+description: Regenerate the launcher icons of every environment.
+---
+
+```sh
+tempo icons [--json] [--cwd <project>]
+```
+
+Runs the project's `scripts/native/icons.mjs`. It reads the environments and
+badges from `.tempo.json` and writes the Android and iOS icon sets. The script's
+own output goes to stderr with `--json`.
+
+### JSON output
+
+`envs` lists the environment names the icons were generated for.
+
+```json
+{ "ok": true, "envs": ["dev", "staging", "prod"] }
+```
+
+Error codes: `ICONS_SCRIPT_MISSING` and `NOT_A_TEMPO_PROJECT`. A script that
+fails exits 1 with the code `ERROR`.

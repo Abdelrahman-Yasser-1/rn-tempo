@@ -1,0 +1,34 @@
+---
+title: tempo doctor
+description: Check the toolchain and the project for problems.
+---
+
+```sh
+tempo doctor [--ci] [--offline] [--skip-lint] [--json] [--cwd <project>]
+```
+
+Checks Node, Yarn, Java, Xcode, Bundler and CocoaPods, then the project:
+`.env` tracking, package versions against the registry, the template version,
+file names and the project structure lint. The command exits 1 when any check
+has the status `error`; warnings do not fail it.
+
+- `--ci` prints a Markdown report on stdout, for a CI summary. It is ignored with `--json`.
+- `--offline` skips checks that need the npm registry.
+- `--skip-lint` skips the `ls-lint` and ESLint structure run.
+
+### JSON output
+
+`status` is `ok`, `info`, `warn` or `error`. `ok` is `false` when any check is an
+`error`, and the exit code is then 1.
+
+```json
+{
+  "ok": true,
+  "checks": [
+    { "id": "node", "title": "Node.js", "status": "ok", "message": "v24.3.0 (project wants 24)" },
+    { "id": "template-version", "title": "Template version", "status": "info", "message": "project 1.0.0, latest 1.2.0" }
+  ]
+}
+```
+
+Error code: `NOT_A_TEMPO_PROJECT`.

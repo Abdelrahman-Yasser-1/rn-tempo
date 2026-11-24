@@ -1,0 +1,38 @@
+---
+title: tempo clean
+description: Delete build and tool caches.
+---
+
+```sh
+tempo clean [--dry-run] [--skip-pods] [--yes] [--json] [--cwd <project>]
+```
+
+Removes the caches that exist: `node_modules/.cache`, Metro and Haste caches in the
+temp folder, `ios/Pods`, `ios/build`, `android/.gradle`, the Android build folders
+and the Xcode DerivedData of the app, then resets Watchman. It asks about each
+target unless you pass `--yes` or `--json`.
+
+`ios/build` holds codegen output that `pod install` writes. When the command
+removes `ios/build` or `ios/Pods` on macOS, it re-runs `pod install`. Use
+`--skip-pods` to skip that. `--dry-run` lists the targets and removes nothing.
+
+### JSON output
+
+With `--dry-run`:
+
+```json
+{
+  "ok": true,
+  "dryRun": true,
+  "targets": [{ "id": "node-cache", "paths": ["/work/app/node_modules/.cache"] }]
+}
+```
+
+Without it, `removed` and `skipped` hold target ids. A target is skipped when its
+command failed, for example Watchman is not installed.
+
+```json
+{ "ok": true, "removed": ["node-cache", "pods"], "skipped": ["watchman"], "podsReinstalled": true }
+```
+
+Error code: `NOT_A_TEMPO_PROJECT`.

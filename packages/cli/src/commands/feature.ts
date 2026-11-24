@@ -53,7 +53,7 @@ const remove = defineCommand({
         reporter.result({ ok: true, removed: [] });
         return;
       }
-      if (isInteractive(common.yes)) {
+      if (isInteractive(common.yes || common.json)) {
         const ok = answer(await confirm({ message: `Remove ${plan.remove.join(', ')}? This deletes files.`, initialValue: false }));
         if (!ok) return;
       }
@@ -103,6 +103,8 @@ const add = defineCommand({
       reporter.result({
         ok: true,
         feature: result.feature,
+        features: result.features,
+        dryRun: result.dryRun,
         added: result.added,
         updated: result.updated,
         conflicts: result.conflicts,

@@ -1,0 +1,56 @@
+---
+title: create-tempo-app
+description: Create an RN-TEMPO app from the template.
+---
+
+```sh
+npx create-tempo-app [Name] [--display-name <text>] [--bundle-id <id>] [--envs dev,staging,prod]
+  [--features a,b | --without a,b] [--template <folder|source>]
+  [--skip-install] [--skip-git] [--yes] [--json] [--cwd <dir>]
+```
+
+The command copies the template into `./<Name>`, renames it, removes the modules
+you did not pick, sets up the environments, installs dependencies, runs the new
+project's `ai sync` and makes the first Git commit. Without `--yes` it asks for the
+name, display name, bundle id, environments, modules and AI tools.
+
+- `Name` is PascalCase letters and digits, for example `MyApp`.
+- `--bundle-id` defaults to `com.example.<name in lowercase>`.
+- `--envs` defaults to `dev,staging,prod`. Other names get a flavor, iOS
+  configurations, an `.env.<name>` file and launcher icons.
+- `--features` replaces the default module list. `--without` removes modules from it.
+  Modules that others require are added back and reported as `autoAdded`.
+- `--template` takes a local folder or a giget source. By default it downloads the tag
+  that matches the CLI version.
+- `--skip-install` skips `yarn install` and `pod install`. `--skip-git` skips
+  `git init` and the first commit.
+
+The target folder must be missing or empty.
+
+### JSON output
+
+`--json` needs the name and never prompts. `steps` lists the pipeline steps that ran,
+in order, for example `fetch`, `rename`, `features`, `envs`, `metadata`, `git init`,
+`install`, `pods`, `git commit`.
+
+```json
+{
+  "ok": true,
+  "dir": "/work/MyApp",
+  "app": { "name": "MyApp", "displayName": "My App", "bundleId": "com.example.myapp" },
+  "envs": [
+    { "name": "dev", "suffix": ".dev", "displayName": "My App Dev", "scheme": "my-app-dev", "badge": "DEV" }
+  ],
+  "features": ["ai-claude", "samples"],
+  "templateSource": "gh:Abdelrahman-Yasser-1/rn-tempo/template#v1.0.0",
+  "autoAdded": [],
+  "steps": ["fetch", "rename", "features", "envs", "metadata"],
+  "postRemove": [],
+  "nextSteps": ["cd MyApp", "yarn install", "yarn pods", "yarn ios:dev   # or yarn android:dev"]
+}
+```
+
+`postRemove` lists follow-up steps for removed modules (`pods`, `assets-sync`).
+Error codes include `MISSING_NAME`, `INVALID_NAME`, `INVALID_BUNDLE_ID`,
+`INVALID_ENV`, `TARGET_EXISTS`, `UNKNOWN_FEATURE`, `FEATURE_CONFLICT`,
+`TEMPLATE_NOT_FOUND` and `TEMPLATE_DOWNLOAD_FAILED`.
