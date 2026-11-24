@@ -34,6 +34,5 @@ Format: `- [ ] T<id> (AC…) <summary>: commit: <header>, docs: <page>`. Each ta
 - [x] T16.E4 (AC-C-5) `.tempo/features/cms.json`, markers, and the CLI e2e case. Commit: `feat(template): add cms module manifest`.
 - [x] T16.E5 (AC-C-6) Docs: `features/cms` and the recipe `recipes/cms-providers` (Strapi, Contentful). Commit: `docs(cms): add cms module and provider recipe`.
 
-## Phase F: verification (`ws16/f-e2e`)
-- [ ] T16.F1 Maestro flows: `settings-theme-palette`, `settings-text-size`, `settings-language-five`, `settings-app-icon` (Android), `cms-whats-new` (module on). Commit: `test(e2e): cover settings customization and cms`.
-- [ ] T16.F2 Device tour on the iOS simulator and the Android emulator: 5 languages × light/dark × one brand palette × Extra large text. Screenshots go in the PR.
+## Phase F: verification (moved to WS11)
+Moved to WS11 on 2026-11-24 (owner): the Maestro flows and the device tour need the WS11 Maestro setup, so they ship there as T11.6 and T11.7. WS16 is complete without them.

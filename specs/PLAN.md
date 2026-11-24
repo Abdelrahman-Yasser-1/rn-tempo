@@ -2388,3 +2388,6 @@ Recorded by the integrator during WS0. Where this list and the plan disagree, **
     - **Features:** OpenAPI/Swagger import and sync; delays, network presets, shared base response, dynamic values and a Monaco JSON editor; SSE, WebSocket, GraphQL, webhooks and an inbox, a push test sender, and fault/limit simulation with an OAuth2 mock.
     - **Old mocks:** they stay until the owner confirms, marked deprecated in the docs, and are then removed together with `api-contract` and `dev-api`.
     - Spec: "Tier 1d" in `specs/ws15-backend/spec.md`.
+60. **WS16 phase F moves to WS11 (owner, 2026-11-24).**
+    - The WS16 Maestro flows and the device tour need the WS11 Maestro setup, so they become WS11 tasks T11.6 and T11.7. WS16 is complete with phases A–E.
+    - The old mocks were removed in T15.Z9 (owner confirmation, 2026-11-23): E2E flows run against the Tempo local backend (a local `serve` or a CI session).
