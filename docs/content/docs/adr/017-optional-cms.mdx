@@ -1,0 +1,22 @@
+---
+title: "ADR-017: Optional CMS"
+description: "How projects opt into published content from Tempo or Sanity"
+---
+
+- **Status:** accepted · 2026-11-24
+
+## Context
+
+Some projects need editors to publish localized app content between releases. WS16 Decision 5 allows projects to choose their content provider.
+
+## Decision
+
+Register `cms` as an optional module with `defaultEnabled: false`. Projects that enable it use a shared read client whose default provider is Tempo. The Sanity adapter uses a public dataset. Neither provider requires a write token in the app.
+
+## Consequences
+
+The CLI can strip CMS configuration and services together. Screens can consume validated entries independently of the selected provider.
+
+## Alternatives
+
+Coupling screens to one provider would require changes to each consumer when switching providers.
