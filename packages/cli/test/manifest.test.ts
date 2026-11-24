@@ -36,8 +36,16 @@ describe('loadManifests', () => {
     expect([...loaded.keys()].sort()).toEqual([...FEATURE_NAMES].sort());
     expect(defaultFeatures(loaded)).toContain('app-icons');
     expect(defaultFeatures(loaded)).not.toContain('dynamic-forms');
-    for (const optional of ['webview', 'file-picker', 'maps', 'firebase-core', 'push-notifications', 'crashlytics']) expect(defaultFeatures(loaded)).not.toContain(optional);
+    for (const optional of ['webview', 'file-picker', 'maps', 'firebase-core', 'push-notifications', 'crashlytics', 'cms']) expect(defaultFeatures(loaded)).not.toContain(optional);
     expect(defaultFeatures(loaded)).toContain('samples');
+  });
+
+  it('describes cms as a default-off module that owns its code, locales and env keys', async () => {
+    const cms = (await loadManifests(TEMPLATE_DIR)).get('cms');
+    expect(cms?.defaultEnabled).toBe(false);
+    expect(cms?.deleteGlobs).toEqual(['src/services/cms/**', 'src/features/whats-new/**', 'src/locales/{en,ar,es,de,fr}/whats-new.json']);
+    expect(cms?.envKeys).toEqual(['CMS_PROVIDER', 'CMS_BASE_URL', 'CMS_PROJECT_ID', 'CMS_DATASET', 'CMS_API_VERSION']);
+    expect(cms?.jsonPatches).toEqual([]); // backend/backend.json is shared infrastructure the CLI never rewrites
   });
 
   it('rejects a manifest with unknown fields', () => {

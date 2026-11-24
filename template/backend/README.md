@@ -19,6 +19,10 @@ Sign in as `emilys` / `emilyspass`.
 | `handlers/`    | yes     | JavaScript handlers for endpoints of type `handler`.                 |
 | `.data/`       | **no**  | The database, certificates, logs and uploads. It is git-ignored.     |
 
+## Removing the CMS module
+
+`tempo feature remove cms` deletes only the app's code (`src/services/cms`, `src/features/whats-new`, the `whats-new` locale files and the `CMS_*` env keys). It never edits this folder: the `announcement` content type and its seeds stay in `backend.json`, because the backend is shared infrastructure that other features or your team may use. Delete the content type here yourself if you no longer want it.
+
 ## Tests
 
 `yarn test` runs the whole Jest suite against this folder, in memory and in test mode (no delays, no random faults, a fixed clock). Each test file gets its own copy, so tests never share data. A test that needs a special answer overrides one route with MSW's `server.use(...)`.
