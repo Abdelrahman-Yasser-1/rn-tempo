@@ -17,6 +17,8 @@ export type ApiErrorInit = {
   details?: unknown;
   /** Overrides the default, see `ApiError.isOperational`. */
   isOperational?: boolean;
+  /** Dev builds only: the request went to the Tempo backend picked in the debug menu. */
+  isDevBackend?: boolean;
 };
 
 /** Network, timeout, 4xx and 5xx are expected at runtime; an unexpected shape or error is a bug. */
@@ -34,15 +36,25 @@ export class ApiError extends Error {
    * programmer or contract bugs (a response that does not match its schema): log at `error`.
    */
   readonly isOperational: boolean;
+  /** Dev builds only: the request went to the Tempo backend picked in the debug menu. */
+  readonly isDevBackend: boolean;
 
   /** Builds an error from a code and message, plus optional HTTP status and raw details. */
-  constructor({ code, message, status, details, isOperational }: Readonly<ApiErrorInit>) {
+  constructor({
+    code,
+    message,
+    status,
+    details,
+    isOperational,
+    isDevBackend,
+  }: Readonly<ApiErrorInit>) {
     super(message);
     this.name = 'ApiError';
     this.code = code;
     this.status = status;
     this.details = details;
     this.isOperational = isOperational ?? isOperationalByDefault(code, status);
+    this.isDevBackend = isDevBackend ?? false;
   }
 }
 
@@ -100,6 +112,7 @@ export function normalizeError(error: unknown): ApiError {
 
 export type ErrorMessageKey =
   | 'network'
+  | 'networkDevBackend'
   | 'timeout'
   | 'unauthorized'
   | 'forbidden'
@@ -121,7 +134,12 @@ const MESSAGE_KEYS: Record<ApiErrorCode, ErrorMessageKey> = {
 
 /** Key inside the `errors` namespace: `t(getErrorMessageKey(error), { ns: 'errors' })`. */
 export function getErrorMessageKey(error: unknown): ErrorMessageKey {
-  return MESSAGE_KEYS[normalizeError(error).code];
+  const normalized = normalizeError(error);
+  // A dev build talking to the local Tempo backend: say what usually breaks (not running, wrong URL, untrusted
+  // certificate) instead of "no internet".
+  return normalized.code === 'NETWORK' && normalized.isDevBackend
+    ? 'networkDevBackend'
+    : MESSAGE_KEYS[normalized.code];
 }
 
 /** Whether retrying the same request can plausibly succeed (transient failures only). */
@@ -132,6 +150,7 @@ export function isRetryable(error: unknown): boolean {
 
 // Keys of the `errors` namespace, declared here so the i18n extractor keeps them.
 // t('network', { ns: 'errors', defaultValue: 'No internet connection. Check your network and try again.' })
+// t('networkDevBackend', { ns: 'errors', defaultValue: "Can't reach the Tempo backend. Check that it is running, the URL in the debug menu, and that this device trusts its certificate." })
 // t('timeout', { ns: 'errors', defaultValue: 'The request took too long. Please try again.' })
 // t('unauthorized', { ns: 'errors', defaultValue: 'Your session has expired. Please sign in again.' })
 // t('forbidden', { ns: 'errors', defaultValue: "You don't have permission to do this." })

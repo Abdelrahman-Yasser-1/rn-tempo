@@ -1,6 +1,7 @@
 {
   "forbidden": "Vous n'avez pas l'autorisation de faire cela.",
   "network": "Aucune connexion internet. Vérifiez votre réseau et réessayez.",
+  "networkDevBackend": "Impossible de joindre le backend Tempo. Vérifiez qu'il est démarré, l'URL du menu de débogage et que cet appareil fait confiance à son certificat.",
   "notFound": "Nous n'avons pas trouvé ce que vous cherchiez.",
   "server": "Un problème est survenu de notre côté. Veuillez réessayer plus tard.",
   "timeout": "La requête a pris trop de temps. Veuillez réessayer.",

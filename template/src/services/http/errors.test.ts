@@ -74,6 +74,15 @@ describe('ApiError.isOperational', () => {
 });
 
 describe('error helpers', () => {
+  test('getErrorMessageKey explains a network failure on the dev Tempo backend', () => {
+    expect(
+      getErrorMessageKey(new ApiError({ code: 'NETWORK', message: '', isDevBackend: true })),
+    ).toBe('networkDevBackend');
+    expect(
+      getErrorMessageKey(new ApiError({ code: 'TIMEOUT', message: '', isDevBackend: true })),
+    ).toBe('timeout');
+  });
+
   test('getErrorMessageKey maps every code to an errors-namespace key', () => {
     expect(getErrorMessageKey(new ApiError({ code: 'NOT_FOUND', message: '' }))).toBe('notFound');
     expect(getErrorMessageKey(axiosError(undefined, undefined, 'ERR_NETWORK'))).toBe('network');

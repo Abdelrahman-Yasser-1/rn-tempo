@@ -1,6 +1,7 @@
 {
   "forbidden": "Dafür hast du keine Berechtigung.",
   "network": "Keine Internetverbindung. Prüfe dein Netzwerk und versuche es erneut.",
+  "networkDevBackend": "Das Tempo-Backend ist nicht erreichbar. Prüfe, ob es läuft, die URL im Debug-Menü und ob dieses Gerät seinem Zertifikat vertraut.",
   "notFound": "Wir konnten nicht finden, wonach du gesucht hast.",
   "server": "Bei uns ist etwas schiefgelaufen. Bitte versuche es später erneut.",
   "timeout": "Die Anfrage hat zu lange gedauert. Bitte versuche es erneut.",

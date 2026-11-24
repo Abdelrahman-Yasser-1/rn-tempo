@@ -1,6 +1,7 @@
 {
   "forbidden": "You don't have permission to do this.",
   "network": "No internet connection. Check your network and try again.",
+  "networkDevBackend": "Can't reach the Tempo backend. Check that it is running, the URL in the debug menu, and that this device trusts its certificate.",
   "notFound": "We couldn't find what you were looking for.",
   "server": "Something went wrong on our side. Please try again later.",
   "timeout": "The request took too long. Please try again.",

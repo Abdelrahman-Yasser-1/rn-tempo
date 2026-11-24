@@ -6,6 +6,7 @@ import type * as storageModule from '@services/storage/storage';
 import { server } from '@test-utils/msw/server';
 
 import type * as client from './client';
+import type * as errors from './errors';
 
 type Client = typeof client;
 type StorageModule = typeof storageModule;
@@ -68,6 +69,40 @@ describe('API source in the http client', () => {
       async (client) => {
         expect(client.resolveBaseUrl()).toBe('https://localhost:8443');
         expect((await client.httpClient.get<{ from: string }>('/ping')).data.from).toBe('backend');
+      },
+    );
+  });
+
+  test('a network failure on the Tempo backend is marked, so the UI explains what to check', async () => {
+    server.use(http.get('https://localhost:8443/ping', () => HttpResponse.error()));
+
+    await launch(
+      (storage) => {
+        storage.setString('app.api-source', 'backend');
+      },
+      async (client) => {
+        const { getErrorMessageKey } = jest.requireActual<typeof errors>('./errors');
+        const failure: unknown = await client.httpClient
+          .get('/ping')
+          .catch((error: unknown) => error);
+        expect(getErrorMessageKey(failure)).toBe('networkDevBackend');
+      },
+    );
+  });
+
+  test('a network failure on the env API keeps the usual offline message', async () => {
+    server.use(http.get(`${ENV.API_BASE_URL}/ping`, () => HttpResponse.error()));
+
+    await launch(
+      () => {
+        // nothing stored: the build default
+      },
+      async (client) => {
+        const { getErrorMessageKey } = jest.requireActual<typeof errors>('./errors');
+        const failure: unknown = await client.httpClient
+          .get('/ping')
+          .catch((error: unknown) => error);
+        expect(getErrorMessageKey(failure)).toBe('network');
       },
     );
   });

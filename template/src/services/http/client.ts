@@ -10,7 +10,7 @@ import { isPinningReady } from '@services/security/pinning/pinning';
 import { STORAGE_KEYS } from '@services/storage/keys';
 import { storage } from '@services/storage/storage';
 
-import { normalizeError } from './errors';
+import { ApiError, normalizeError } from './errors';
 import { createRequestId } from './requestId';
 import { shouldSkipRefresh } from './skipRefresh';
 
@@ -229,6 +229,10 @@ httpClient.interceptors.response.use((response) => response, handleUnauthorized)
 httpClient.interceptors.response.use(
   (response) => response,
   (error: unknown) => {
-    throw normalizeError(error);
+    const apiError = normalizeError(error);
+    if (apiError.code === 'NETWORK' && backendBaseUrl() !== undefined) {
+      throw new ApiError({ code: 'NETWORK', message: apiError.message, isDevBackend: true });
+    }
+    throw apiError;
   },
 );
