@@ -19,6 +19,7 @@ export const FEATURE_NAMES = Object.freeze([
   'push-notifications',
   'crashlytics',
   'app-icons',
+  'cms',
 ]);
 
 const SLASH = { start: (n) => `// @tempo-feature:${n}:start`, end: (n) => `// @tempo-feature:${n}:end`, single: (n) => `// @tempo-feature:${n}` };

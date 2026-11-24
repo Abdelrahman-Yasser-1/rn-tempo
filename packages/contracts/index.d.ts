@@ -16,7 +16,8 @@ export type FeatureName =
   | 'firebase-core'
   | 'push-notifications'
   | 'crashlytics'
-  | 'app-icons';
+  | 'app-icons'
+  | 'cms';
 
 export declare const FEATURE_NAMES: readonly FeatureName[];
 

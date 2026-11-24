@@ -33,6 +33,13 @@ describe('feature manifests', () => {
     expect(manifest.name).toBe(file.replace('.json', ''));
   });
 
+  it('registers cms as an opt-in module and recognizes its env markers', () => {
+    expect(readJson(path.join(dir, 'cms.json')).defaultEnabled).toBe(false);
+    const block = '# @tempo-feature:cms:start\nCMS_PROVIDER=tempo\n# @tempo-feature:cms:end';
+    expect(validateMarkers(block, '.env.example')).toEqual([]);
+    expect(stripFeature(block, 'cms', '.env.example')).toBe('');
+  });
+
   it('rejects unknown fields and absolute globs', () => {
     const bad = { ...readJson(path.join(dir, 'samples.json')), extra: true, deleteGlobs: ['/etc/**'] };
     expect(validateManifest(bad)).toBe(false);
