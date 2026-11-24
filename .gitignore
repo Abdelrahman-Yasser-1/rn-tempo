@@ -49,3 +49,5 @@ apps/*/src-tauri/target/
 apps/*/src-tauri/gen/
 apps/*/src-tauri/resources/
 apps/local-backend/engine/.kit-stage/
+# code-review-graph: local code graph for AI tools (see AGENTS.md)
+.code-review-graph/
