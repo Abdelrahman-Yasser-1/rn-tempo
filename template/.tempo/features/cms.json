@@ -1,0 +1,24 @@
+{
+  "$schema": "https://unpkg.com/@rn-tempo/contracts/schemas/feature-manifest.schema.json",
+  "name": "cms",
+  "title": "CMS",
+  "description": "Read published, localized content from Tempo or Sanity.",
+  "defaultEnabled": false,
+  "requires": [],
+  "conflicts": [],
+  "deleteGlobs": [
+    "src/services/cms/**"
+  ],
+  "dependencies": [],
+  "devDependencies": [],
+  "envKeys": [
+    "CMS_PROVIDER",
+    "CMS_BASE_URL",
+    "CMS_PROJECT_ID",
+    "CMS_DATASET",
+    "CMS_API_VERSION"
+  ],
+  "jsonPatches": [],
+  "postRemove": [],
+  "docs": "/docs/features/cms"
+}

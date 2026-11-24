@@ -3,11 +3,24 @@ import { z } from 'zod';
 import { CRASH_REPORTER_NAMES } from './crashReporters';
 
 const bool = z.enum(['true', 'false']).transform((v) => v === 'true');
+// @tempo-feature:cms:start
+const optionalCmsSetting = z
+  .string()
+  .optional()
+  .transform((value) => (value === '' ? undefined : value));
+// @tempo-feature:cms:end
 
 const EnvSchema = z
   .object({
     APP_ENV: z.enum(['dev', 'staging', 'prod']),
     API_BASE_URL: z.url(),
+    // @tempo-feature:cms:start
+    CMS_PROVIDER: z.enum(['tempo', 'sanity']).default('tempo'),
+    CMS_BASE_URL: optionalCmsSetting.pipe(z.url().optional()),
+    CMS_PROJECT_ID: optionalCmsSetting,
+    CMS_DATASET: optionalCmsSetting,
+    CMS_API_VERSION: optionalCmsSetting,
+    // @tempo-feature:cms:end
     API_TIMEOUT_MS: z.coerce.number().int().positive().default(15000),
     SSL_PINNING_ENABLED: bool.default(false),
     SSL_PINS: z
@@ -30,6 +43,12 @@ const EnvSchema = z
     CRASH_REPORTER: z.enum(CRASH_REPORTER_NAMES).default('none'),
     LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error', 'silent']).default('info'),
   })
+  // @tempo-feature:cms:start
+  .transform((env) => ({
+    ...env,
+    CMS_BASE_URL: env.CMS_BASE_URL ?? env.API_BASE_URL,
+  }))
+  // @tempo-feature:cms:end
   .superRefine((env, ctx) => {
     if (env.SSL_PINNING_ENABLED && env.SSL_PINS.length < 2) {
       ctx.addIssue({

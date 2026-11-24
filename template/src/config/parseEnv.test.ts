@@ -73,3 +73,43 @@ describe('parseEnv', () => {
     expect(() => parseEnv({ ...VALID, APP_ENV: 'qa' })).toThrow(/APP_ENV/);
   });
 });
+// @tempo-feature:cms:start
+describe('CMS environment', () => {
+  test('AC-C-1: defaults to Tempo and uses API_BASE_URL for missing or empty overrides', () => {
+    expect(parseEnv(VALID)).toMatchObject({
+      CMS_PROVIDER: 'tempo',
+      CMS_BASE_URL: VALID.API_BASE_URL,
+    });
+    expect(
+      parseEnv({
+        ...VALID,
+        CMS_BASE_URL: '',
+        CMS_PROJECT_ID: '',
+        CMS_DATASET: '',
+        CMS_API_VERSION: '',
+      }),
+    ).toMatchObject({
+      CMS_BASE_URL: VALID.API_BASE_URL,
+      CMS_PROJECT_ID: undefined,
+      CMS_DATASET: undefined,
+      CMS_API_VERSION: undefined,
+    });
+  });
+
+  test('AC-C-1: accepts public Sanity settings and a separate CMS URL', () => {
+    const config = {
+      CMS_PROVIDER: 'sanity',
+      CMS_BASE_URL: 'https://cms.example.com',
+      CMS_PROJECT_ID: 'project',
+      CMS_DATASET: 'public',
+      CMS_API_VERSION: '2026-01-01',
+    };
+    expect(parseEnv({ ...VALID, ...config })).toMatchObject(config);
+  });
+
+  test('AC-C-1: rejects unsupported providers and malformed base URLs', () => {
+    expect(() => parseEnv({ ...VALID, CMS_PROVIDER: 'other' })).toThrow(/CMS_PROVIDER/);
+    expect(() => parseEnv({ ...VALID, CMS_BASE_URL: 'bad' })).toThrow(/CMS_BASE_URL/);
+  });
+});
+// @tempo-feature:cms:end
