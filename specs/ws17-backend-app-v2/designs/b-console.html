@@ -1,0 +1,1692 @@
+<!doctype html>
+<!-- Console. Accent #176648 (light), #8cdab0 (dark). Type scale: 10 px metadata, 14 px body, 34 px page title. -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shop API — Console</title><style>
+:root{--accent:light-dark(#176648,#8cdab0);--on:light-dark(#fff,#11281e);--base:14px;--title:34px;--radius:9px;--sidew:217px;--pad:30px}
+*{box-sizing:border-box}
+ :root{color-scheme:light dark;--paper:light-dark(#fffefa,#191c20);--side:light-dark(#f1f2ed,#212529);--inset:light-dark(#e9ece7,#292e32);--ink:light-dark(#202722,#edf1ec);--mute:light-dark(#4d5953,#b3c0b8);--line:light-dark(#cfd4ce,#424947);--edge:light-dark(#748077,#89968c);--good:light-dark(#176047,#85ddaf);--bad:light-dark(#a52e36,#ff9da5);--mono:ui-monospace,"SF Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;--wash:color-mix(in srgb,var(--accent) 12%,var(--paper));font:var(--base)/1.45 var(--sans);color:var(--ink);background:var(--inset)}
+:root[data-theme=dark]{color-scheme:dark}
+:root[data-theme=light]{color-scheme:light}
+body{margin:0;padding:10px}
+#frame{height:calc(100dvh - 20px);background:var(--paper);border:1px solid var(--edge);border-radius:12px;display:flex;flex-direction:column;overflow:clip;box-shadow:0 5px 16px #0002}
+button,input,select,textarea{font:inherit;color:inherit}
+button,select{cursor:pointer}
+button{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:var(--paper);border:1px solid var(--edge);border-radius:var(--radius);padding:6px 10px;white-space:nowrap}
+button:hover,summary:hover{background:var(--wash)}
+button:disabled{color:var(--mute);cursor:default}
+button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--accent);outline-offset:-2px}
+button.flat,nav button,.tabs button,.tree button{border-color:transparent;background:transparent}
+button.flat:hover,nav button:hover,.tabs button:hover,.tree button:hover{background:var(--wash)}
+button.on,.tabs .on,nav .on,.tree .on{background:var(--wash);color:var(--accent);font-weight:650}
+.primary{background:var(--accent);color:var(--on);border-color:var(--accent)}
+.primary:hover{background:var(--accent);filter:brightness(.92)}
+svg.icon{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.native,.toolbar,.row,.spread,.tabs,.crumb,footer,.brand{display:flex;align-items:center;gap:9px}
+.spread{justify-content:space-between}
+.native{height:32px;flex:none;background:var(--side);border-bottom:1px solid var(--line);padding:0 12px;gap:1px;position:relative;z-index:8;font-size:12px}
+.native button{padding:3px 8px}
+.lights{display:flex;gap:5px;margin-right:12px}
+.lights i{width:10px;height:10px;background:#e87469;border-radius:100%}
+.lights i:nth-child(2){background:#e8b34e}
+.lights i:last-child{background:#69b67d}
+.right{margin-left:auto}
+.native .right{color:var(--mute)}
+.toolbar{padding:10px 16px;border-bottom:1px solid var(--line);flex:none}
+.brand{font-size:1.32rem;font-weight:720;letter-spacing:-.055em}
+.mark{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:8px;background:var(--accent);color:var(--on)}
+.mark svg{width:23px;height:23px;stroke-width:2.4}
+.vline{height:20px;border-left:1px solid var(--line);margin:0 5px}
+.badge,.method,.eyebrow,kbd,.mono,code,pre,footer,.count{font-family:var(--mono)}
+.badge,.method{font-size:.85rem;font-weight:650}
+.badge{display:inline-flex;align-items:center;gap:6px;border-radius:20px;padding:3px 9px;color:var(--good);background:color-mix(in srgb,var(--good) 10%,var(--paper))}
+.dot{width:7px;height:7px;display:inline-block;background:currentColor;border-radius:100%}
+.off,.muted,small,kbd,.eyebrow{color:var(--mute)}
+.method{color:var(--good)}
+.post{color:var(--accent)}
+.error{color:var(--bad)}
+kbd{font-size:11px}
+.shell{display:flex;flex:1;min-height:0}
+.side,.rail,.inspector,.capture{background:var(--side);border-right:1px solid var(--line);overflow:auto;flex:none}
+.side{width:var(--sidew);padding:14px 10px}
+.side button{justify-content:flex-start;width:100%;text-align:left;min-height:29px}
+.side details{margin:3px 0}
+.side summary{padding:7px;cursor:pointer;font-weight:620}
+.side details button{padding-left:24px}
+.side small,.eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.12em;font-weight:650}
+.side hr,hr{border:0;border-top:1px solid var(--line);margin:12px 0}
+.rail{width:48px;display:flex;align-items:center;flex-direction:column;gap:8px;padding-top:12px}
+.rail button{height:34px;width:34px}
+.editor{display:flex;flex:1;min-width:0;flex-direction:column}
+.tabs,.crumb{border-bottom:1px solid var(--line);padding:0 14px;flex-shrink:0}
+.tabs{gap:4px;overflow-x:auto}
+.tabs button{border-radius:0;padding:10px 8px}
+.tabs .on{border-bottom:2px solid var(--accent)}
+.crumb{padding:8px 16px;color:var(--mute);font:11px var(--mono)}
+.canvas{flex:1;overflow:auto;min-height:0;padding:var(--pad)}
+h1,h2,h3,p,pre{margin:0}
+h1{font-size:var(--title);line-height:1.13;letter-spacing:-.05em}
+h2{font-size:1.15rem;letter-spacing:-.024em}
+h3{font-size:1rem}
+.pagehead{margin-bottom:20px}
+.pagehead .eyebrow{margin-bottom:6px}
+.card{border:1px solid var(--line);background:var(--paper);border-radius:var(--radius);margin:13px 0;overflow:hidden}
+.card>header{background:var(--side);border-bottom:1px solid var(--line);padding:10px 14px}
+.inside{padding:15px}
+.stack>*+*{margin-top:13px}
+.grid,.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.metrics{grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border-block:1px solid var(--line);margin:16px 0}
+.metric{padding:14px 12px;border-right:1px solid var(--line)}
+.metric:last-child{border:0}
+.metric strong{display:block;font-size:1.85rem;letter-spacing:-.06em}
+.metric small{font:11px var(--mono)}
+table{border-collapse:collapse;width:100%;text-align:left}
+th,td{padding:9px 12px;border-bottom:1px solid var(--line)}
+tr:last-child td{border:0}
+th{font-size:.85rem;font-weight:550;color:var(--mute);background:var(--side)}
+td button{max-width:100%;white-space:normal}
+.chart{width:100%;height:115px;display:block;color:var(--accent)}
+.chartlabels{display:flex;justify-content:space-between;font:10px var(--mono);color:var(--mute)}
+label{display:grid;gap:5px;font-weight:580}
+input,select,textarea{padding:7px 9px;border:1px solid var(--edge);border-radius:var(--radius);background:var(--paper);min-width:0}
+textarea{width:100%;resize:vertical}
+input[type=checkbox]{accent-color:var(--accent)}
+.url{display:flex;gap:6px}
+.url input{flex:1;font-family:var(--mono)}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.7 var(--mono)}
+.code{background:var(--side);padding:14px;counter-reset:ln}
+.code div{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.68 var(--mono)}
+.code div:before{counter-increment:ln;content:counter(ln);display:inline-block;width:23px;color:var(--mute);user-select:none}
+.key{color:var(--accent)}
+.str{color:var(--good)}
+.bottom{border-top:1px solid var(--edge);flex:none;max-height:23%;overflow:auto;background:var(--side)}
+.bottom .spread{padding:3px 12px}
+.bottom table{font:11px var(--mono)}
+.bottom td{padding:4px 12px}
+.inspector{width:200px;border-left:1px solid var(--line);border-right:0;padding:16px}
+.inspector dl{line-height:1.8}
+.inspector dd{margin:0 0 12px;font-family:var(--mono)}
+.capture{width:clamp(300px,28vw,480px);background:var(--paper)}
+.capture header{padding:18px 15px;background:var(--side)}
+.capture input{width:100%;margin-top:12px}
+.requestrow{display:grid;grid-template-columns:48px 1fr auto;text-align:left;width:100%;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:12px;gap:4px 7px}
+.requestrow small{grid-column:2/-1;font:10px var(--mono)}
+.requestrow.on{box-shadow:inset 3px 0 var(--accent)}
+footer{padding:5px 12px;border-top:1px solid var(--line);background:var(--side);font-size:10px;color:var(--mute)}
+.menu{position:fixed;z-index:12;padding:5px;width:230px;background:var(--paper);border:1px solid var(--edge);border-radius:8px;box-shadow:0 8px 24px #0003;max-height:80vh;overflow:auto}
+.menu button,.results button{width:100%;text-align:left;justify-content:space-between;border:0;background:transparent}
+.menu button:hover,.menu button:focus,.results button:hover,.results .on{background:var(--wash);color:var(--accent)}
+.menu hr{margin:4px}
+.menu button{padding:5px 8px;font-size:13px}
+dialog{color:var(--ink);background:var(--paper);border:1px solid var(--edge);border-radius:12px;padding:20px;width:min(520px,90vw);max-height:80vh;box-shadow:0 24px 80px #0004}
+dialog::backdrop{background:#10131561}
+dialog input,dialog textarea{width:100%}
+.results{max-height:46vh;overflow:auto}
+.results .eyebrow{margin:12px 8px 3px}
+.toast{position:fixed;bottom:42px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:8px;z-index:20}
+.toast:empty{display:none}
+.empty{display:grid;place-content:center;text-align:center;gap:18px;min-height:52vh}
+.empty .row{justify-content:center}
+.treebranch{margin-left:14px;border-left:1px solid var(--edge)}
+.treebranch button{font:11px var(--mono);padding-left:10px!important}
+.tabs .short{font-size:11px}
+.wrap{flex-wrap:wrap}
+.timeline{height:8px;display:flex;gap:2px;margin:10px 0}
+.timeline i{background:var(--accent)}
+.timeline i:nth-child(2){background:var(--good)}
+.timeline i:last-child{background:var(--edge)}
+.signal{display:flex;align-items:end;gap:2px;height:31px;overflow:hidden}
+.signal i{background:var(--accent);width:4px}
+.hero{padding:20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--side)}
+.hero h2{font-size:1.7rem}
+.hero p{color:var(--mute)}
+.port{font:11px var(--mono);color:var(--mute)}
+.caplist{padding:14px}
+.caplist .eyebrow{margin-bottom:8px}
+.side .backendname{font-size:1.12rem;font-weight:700}
+.mini-pill{font:10px var(--mono);border:1px solid var(--edge);padding:2px 5px;border-radius:4px}
+.statusbar{display:flex;align-items:center;gap:6px}
+.subtle{color:var(--mute);font-size:.9rem}
+.traces{background:var(--side);border:1px solid var(--line);padding:12px;border-radius:var(--radius)}
+@media(max-width:1300px){.inspector{width:164px}
+.canvas{padding:min(var(--pad),22px)}
+.toolbar{gap:6px}
+.side{width:182px}
+}
+.side{background:light-dark(#edf2eb,#202922)}
+.side summary{padding:9px 6px}
+.toolbar{padding:12px 20px}
+.hero{position:relative;isolation:isolate;overflow:hidden;background:#153f32;color:#fff;border:0;min-height:100px;padding:20px 26px}
+.hero p{color:#d1e9db}
+.hero h2{font-size:28px}
+.hero:before{content:"";position:absolute;z-index:-1;inset:-140% -6% -160% 47%;transform:rotate(-14deg);background:repeating-radial-gradient(ellipse at 70% 50%,transparent 0 11px,#85b89c65 12px 13px,transparent 14px 18px)}
+.hero .badge{background:#dcf5e6;color:#155039}
+.metrics{padding-block:4px}
+.metric:first-child{padding-left:0}
+.metric strong{font-size:2.4rem;font-weight:620}
+.card>header{background:var(--paper);padding:14px 16px}
+.chart{height:128px}
+.canvas{max-width:1450px;width:100%;margin:0 auto}
+.brand{font-weight:760}
+.crumb{padding:11px 30px}
+.pagehead{margin-bottom:16px}
+.side .on{border-radius:7px}
+.canvas>.grid .card{margin-top:2px}
+.side summary svg{vertical-align:-3px;margin-inline:2px 5px}
+.side small{display:block;margin:0 6px 6px}
+.menu button:disabled{color:var(--mute);font-style:italic;background:var(--side)}
+input::placeholder,textarea::placeholder{color:var(--mute);opacity:1}
+.destructive{background:var(--bad);color:var(--on);border-color:var(--bad)}.destructive:hover{background:var(--bad)}.side .treebranch button{min-height:24px}.capture .requestrow.on:focus-visible{outline-offset:-3px} @media(min-height:950px){.capture .requestrow{padding-block:15px}}
+.switchtrack{width:28px;height:16px;border-radius:10px;background:var(--mute);padding:3px;display:flex}
+.switchtrack:before{content:"";height:10px;width:10px;border-radius:50%;background:var(--paper)}
+[aria-checked=true] .switchtrack{background:var(--accent);justify-content:flex-end}
+</style></head><body><div id="frame"><div class="native" id="native" aria-label="Application menu"></div><header class="toolbar" id="toolbar"></header><div class="shell" id="shell"></div><footer id="foot"></footer></div><div id="mainmenu"></div><div id="submenu"></div><dialog id="dialog" aria-label="Tempo dialog"></dialog><div class="toast" id="toast" role="status"></div>
+<script>
+const dir = 'B',
+  direction = 'Console';
+const qrSvg =
+  '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="165px" height="165px" viewBox="0 0 165 165"  preserveAspectRatio="xMinYMin meet"><rect width="100%" height="100%" fill="white" cx="0" cy="0"/><path d="M20,20l5,0 0,5 -5,0 0,-5z M25,20l5,0 0,5 -5,0 0,-5z M30,20l5,0 0,5 -5,0 0,-5z M35,20l5,0 0,5 -5,0 0,-5z M40,20l5,0 0,5 -5,0 0,-5z M45,20l5,0 0,5 -5,0 0,-5z M50,20l5,0 0,5 -5,0 0,-5z M60,20l5,0 0,5 -5,0 0,-5z M80,20l5,0 0,5 -5,0 0,-5z M85,20l5,0 0,5 -5,0 0,-5z M100,20l5,0 0,5 -5,0 0,-5z M110,20l5,0 0,5 -5,0 0,-5z M115,20l5,0 0,5 -5,0 0,-5z M120,20l5,0 0,5 -5,0 0,-5z M125,20l5,0 0,5 -5,0 0,-5z M130,20l5,0 0,5 -5,0 0,-5z M135,20l5,0 0,5 -5,0 0,-5z M140,20l5,0 0,5 -5,0 0,-5z M20,25l5,0 0,5 -5,0 0,-5z M50,25l5,0 0,5 -5,0 0,-5z M60,25l5,0 0,5 -5,0 0,-5z M65,25l5,0 0,5 -5,0 0,-5z M70,25l5,0 0,5 -5,0 0,-5z M75,25l5,0 0,5 -5,0 0,-5z M90,25l5,0 0,5 -5,0 0,-5z M100,25l5,0 0,5 -5,0 0,-5z M110,25l5,0 0,5 -5,0 0,-5z M140,25l5,0 0,5 -5,0 0,-5z M20,30l5,0 0,5 -5,0 0,-5z M30,30l5,0 0,5 -5,0 0,-5z M35,30l5,0 0,5 -5,0 0,-5z M40,30l5,0 0,5 -5,0 0,-5z M50,30l5,0 0,5 -5,0 0,-5z M60,30l5,0 0,5 -5,0 0,-5z M65,30l5,0 0,5 -5,0 0,-5z M80,30l5,0 0,5 -5,0 0,-5z M85,30l5,0 0,5 -5,0 0,-5z M95,30l5,0 0,5 -5,0 0,-5z M100,30l5,0 0,5 -5,0 0,-5z M110,30l5,0 0,5 -5,0 0,-5z M120,30l5,0 0,5 -5,0 0,-5z M125,30l5,0 0,5 -5,0 0,-5z M130,30l5,0 0,5 -5,0 0,-5z M140,30l5,0 0,5 -5,0 0,-5z M20,35l5,0 0,5 -5,0 0,-5z M30,35l5,0 0,5 -5,0 0,-5z M35,35l5,0 0,5 -5,0 0,-5z M40,35l5,0 0,5 -5,0 0,-5z M50,35l5,0 0,5 -5,0 0,-5z M65,35l5,0 0,5 -5,0 0,-5z M70,35l5,0 0,5 -5,0 0,-5z M80,35l5,0 0,5 -5,0 0,-5z M85,35l5,0 0,5 -5,0 0,-5z M90,35l5,0 0,5 -5,0 0,-5z M110,35l5,0 0,5 -5,0 0,-5z M120,35l5,0 0,5 -5,0 0,-5z M125,35l5,0 0,5 -5,0 0,-5z M130,35l5,0 0,5 -5,0 0,-5z M140,35l5,0 0,5 -5,0 0,-5z M20,40l5,0 0,5 -5,0 0,-5z M30,40l5,0 0,5 -5,0 0,-5z M35,40l5,0 0,5 -5,0 0,-5z M40,40l5,0 0,5 -5,0 0,-5z M50,40l5,0 0,5 -5,0 0,-5z M60,40l5,0 0,5 -5,0 0,-5z M65,40l5,0 0,5 -5,0 0,-5z M70,40l5,0 0,5 -5,0 0,-5z M75,40l5,0 0,5 -5,0 0,-5z M80,40l5,0 0,5 -5,0 0,-5z M85,40l5,0 0,5 -5,0 0,-5z M110,40l5,0 0,5 -5,0 0,-5z M120,40l5,0 0,5 -5,0 0,-5z M125,40l5,0 0,5 -5,0 0,-5z M130,40l5,0 0,5 -5,0 0,-5z M140,40l5,0 0,5 -5,0 0,-5z M20,45l5,0 0,5 -5,0 0,-5z M50,45l5,0 0,5 -5,0 0,-5z M65,45l5,0 0,5 -5,0 0,-5z M70,45l5,0 0,5 -5,0 0,-5z M80,45l5,0 0,5 -5,0 0,-5z M85,45l5,0 0,5 -5,0 0,-5z M100,45l5,0 0,5 -5,0 0,-5z M110,45l5,0 0,5 -5,0 0,-5z M140,45l5,0 0,5 -5,0 0,-5z M20,50l5,0 0,5 -5,0 0,-5z M25,50l5,0 0,5 -5,0 0,-5z M30,50l5,0 0,5 -5,0 0,-5z M35,50l5,0 0,5 -5,0 0,-5z M40,50l5,0 0,5 -5,0 0,-5z M45,50l5,0 0,5 -5,0 0,-5z M50,50l5,0 0,5 -5,0 0,-5z M60,50l5,0 0,5 -5,0 0,-5z M70,50l5,0 0,5 -5,0 0,-5z M80,50l5,0 0,5 -5,0 0,-5z M90,50l5,0 0,5 -5,0 0,-5z M100,50l5,0 0,5 -5,0 0,-5z M110,50l5,0 0,5 -5,0 0,-5z M115,50l5,0 0,5 -5,0 0,-5z M120,50l5,0 0,5 -5,0 0,-5z M125,50l5,0 0,5 -5,0 0,-5z M130,50l5,0 0,5 -5,0 0,-5z M135,50l5,0 0,5 -5,0 0,-5z M140,50l5,0 0,5 -5,0 0,-5z M65,55l5,0 0,5 -5,0 0,-5z M70,55l5,0 0,5 -5,0 0,-5z M80,55l5,0 0,5 -5,0 0,-5z M85,55l5,0 0,5 -5,0 0,-5z M90,55l5,0 0,5 -5,0 0,-5z M95,55l5,0 0,5 -5,0 0,-5z M100,55l5,0 0,5 -5,0 0,-5z M20,60l5,0 0,5 -5,0 0,-5z M35,60l5,0 0,5 -5,0 0,-5z M40,60l5,0 0,5 -5,0 0,-5z M45,60l5,0 0,5 -5,0 0,-5z M50,60l5,0 0,5 -5,0 0,-5z M55,60l5,0 0,5 -5,0 0,-5z M60,60l5,0 0,5 -5,0 0,-5z M65,60l5,0 0,5 -5,0 0,-5z M70,60l5,0 0,5 -5,0 0,-5z M75,60l5,0 0,5 -5,0 0,-5z M80,60l5,0 0,5 -5,0 0,-5z M100,60l5,0 0,5 -5,0 0,-5z M105,60l5,0 0,5 -5,0 0,-5z M120,60l5,0 0,5 -5,0 0,-5z M130,60l5,0 0,5 -5,0 0,-5z M135,60l5,0 0,5 -5,0 0,-5z M140,60l5,0 0,5 -5,0 0,-5z M20,65l5,0 0,5 -5,0 0,-5z M45,65l5,0 0,5 -5,0 0,-5z M55,65l5,0 0,5 -5,0 0,-5z M60,65l5,0 0,5 -5,0 0,-5z M70,65l5,0 0,5 -5,0 0,-5z M80,65l5,0 0,5 -5,0 0,-5z M85,65l5,0 0,5 -5,0 0,-5z M95,65l5,0 0,5 -5,0 0,-5z M100,65l5,0 0,5 -5,0 0,-5z M105,65l5,0 0,5 -5,0 0,-5z M120,65l5,0 0,5 -5,0 0,-5z M125,65l5,0 0,5 -5,0 0,-5z M130,65l5,0 0,5 -5,0 0,-5z M135,65l5,0 0,5 -5,0 0,-5z M20,70l5,0 0,5 -5,0 0,-5z M25,70l5,0 0,5 -5,0 0,-5z M30,70l5,0 0,5 -5,0 0,-5z M40,70l5,0 0,5 -5,0 0,-5z M45,70l5,0 0,5 -5,0 0,-5z M50,70l5,0 0,5 -5,0 0,-5z M55,70l5,0 0,5 -5,0 0,-5z M65,70l5,0 0,5 -5,0 0,-5z M90,70l5,0 0,5 -5,0 0,-5z M95,70l5,0 0,5 -5,0 0,-5z M105,70l5,0 0,5 -5,0 0,-5z M115,70l5,0 0,5 -5,0 0,-5z M120,70l5,0 0,5 -5,0 0,-5z M125,70l5,0 0,5 -5,0 0,-5z M140,70l5,0 0,5 -5,0 0,-5z M20,75l5,0 0,5 -5,0 0,-5z M55,75l5,0 0,5 -5,0 0,-5z M70,75l5,0 0,5 -5,0 0,-5z M75,75l5,0 0,5 -5,0 0,-5z M80,75l5,0 0,5 -5,0 0,-5z M95,75l5,0 0,5 -5,0 0,-5z M100,75l5,0 0,5 -5,0 0,-5z M110,75l5,0 0,5 -5,0 0,-5z M125,75l5,0 0,5 -5,0 0,-5z M130,75l5,0 0,5 -5,0 0,-5z M135,75l5,0 0,5 -5,0 0,-5z M140,75l5,0 0,5 -5,0 0,-5z M20,80l5,0 0,5 -5,0 0,-5z M25,80l5,0 0,5 -5,0 0,-5z M50,80l5,0 0,5 -5,0 0,-5z M55,80l5,0 0,5 -5,0 0,-5z M80,80l5,0 0,5 -5,0 0,-5z M90,80l5,0 0,5 -5,0 0,-5z M95,80l5,0 0,5 -5,0 0,-5z M105,80l5,0 0,5 -5,0 0,-5z M110,80l5,0 0,5 -5,0 0,-5z M140,80l5,0 0,5 -5,0 0,-5z M20,85l5,0 0,5 -5,0 0,-5z M25,85l5,0 0,5 -5,0 0,-5z M30,85l5,0 0,5 -5,0 0,-5z M35,85l5,0 0,5 -5,0 0,-5z M65,85l5,0 0,5 -5,0 0,-5z M85,85l5,0 0,5 -5,0 0,-5z M95,85l5,0 0,5 -5,0 0,-5z M105,85l5,0 0,5 -5,0 0,-5z M115,85l5,0 0,5 -5,0 0,-5z M120,85l5,0 0,5 -5,0 0,-5z M135,85l5,0 0,5 -5,0 0,-5z M20,90l5,0 0,5 -5,0 0,-5z M25,90l5,0 0,5 -5,0 0,-5z M35,90l5,0 0,5 -5,0 0,-5z M50,90l5,0 0,5 -5,0 0,-5z M55,90l5,0 0,5 -5,0 0,-5z M75,90l5,0 0,5 -5,0 0,-5z M80,90l5,0 0,5 -5,0 0,-5z M85,90l5,0 0,5 -5,0 0,-5z M90,90l5,0 0,5 -5,0 0,-5z M95,90l5,0 0,5 -5,0 0,-5z M100,90l5,0 0,5 -5,0 0,-5z M110,90l5,0 0,5 -5,0 0,-5z M120,90l5,0 0,5 -5,0 0,-5z M125,90l5,0 0,5 -5,0 0,-5z M130,90l5,0 0,5 -5,0 0,-5z M135,90l5,0 0,5 -5,0 0,-5z M140,90l5,0 0,5 -5,0 0,-5z M20,95l5,0 0,5 -5,0 0,-5z M30,95l5,0 0,5 -5,0 0,-5z M45,95l5,0 0,5 -5,0 0,-5z M65,95l5,0 0,5 -5,0 0,-5z M70,95l5,0 0,5 -5,0 0,-5z M75,95l5,0 0,5 -5,0 0,-5z M90,95l5,0 0,5 -5,0 0,-5z M95,95l5,0 0,5 -5,0 0,-5z M115,95l5,0 0,5 -5,0 0,-5z M125,95l5,0 0,5 -5,0 0,-5z M130,95l5,0 0,5 -5,0 0,-5z M140,95l5,0 0,5 -5,0 0,-5z M20,100l5,0 0,5 -5,0 0,-5z M40,100l5,0 0,5 -5,0 0,-5z M45,100l5,0 0,5 -5,0 0,-5z M50,100l5,0 0,5 -5,0 0,-5z M55,100l5,0 0,5 -5,0 0,-5z M60,100l5,0 0,5 -5,0 0,-5z M70,100l5,0 0,5 -5,0 0,-5z M85,100l5,0 0,5 -5,0 0,-5z M90,100l5,0 0,5 -5,0 0,-5z M100,100l5,0 0,5 -5,0 0,-5z M105,100l5,0 0,5 -5,0 0,-5z M110,100l5,0 0,5 -5,0 0,-5z M115,100l5,0 0,5 -5,0 0,-5z M120,100l5,0 0,5 -5,0 0,-5z M130,100l5,0 0,5 -5,0 0,-5z M135,100l5,0 0,5 -5,0 0,-5z M60,105l5,0 0,5 -5,0 0,-5z M65,105l5,0 0,5 -5,0 0,-5z M70,105l5,0 0,5 -5,0 0,-5z M75,105l5,0 0,5 -5,0 0,-5z M80,105l5,0 0,5 -5,0 0,-5z M90,105l5,0 0,5 -5,0 0,-5z M100,105l5,0 0,5 -5,0 0,-5z M120,105l5,0 0,5 -5,0 0,-5z M130,105l5,0 0,5 -5,0 0,-5z M135,105l5,0 0,5 -5,0 0,-5z M20,110l5,0 0,5 -5,0 0,-5z M25,110l5,0 0,5 -5,0 0,-5z M30,110l5,0 0,5 -5,0 0,-5z M35,110l5,0 0,5 -5,0 0,-5z M40,110l5,0 0,5 -5,0 0,-5z M45,110l5,0 0,5 -5,0 0,-5z M50,110l5,0 0,5 -5,0 0,-5z M60,110l5,0 0,5 -5,0 0,-5z M75,110l5,0 0,5 -5,0 0,-5z M85,110l5,0 0,5 -5,0 0,-5z M100,110l5,0 0,5 -5,0 0,-5z M110,110l5,0 0,5 -5,0 0,-5z M120,110l5,0 0,5 -5,0 0,-5z M140,110l5,0 0,5 -5,0 0,-5z M20,115l5,0 0,5 -5,0 0,-5z M50,115l5,0 0,5 -5,0 0,-5z M60,115l5,0 0,5 -5,0 0,-5z M80,115l5,0 0,5 -5,0 0,-5z M85,115l5,0 0,5 -5,0 0,-5z M90,115l5,0 0,5 -5,0 0,-5z M100,115l5,0 0,5 -5,0 0,-5z M120,115l5,0 0,5 -5,0 0,-5z M135,115l5,0 0,5 -5,0 0,-5z M20,120l5,0 0,5 -5,0 0,-5z M30,120l5,0 0,5 -5,0 0,-5z M35,120l5,0 0,5 -5,0 0,-5z M40,120l5,0 0,5 -5,0 0,-5z M50,120l5,0 0,5 -5,0 0,-5z M60,120l5,0 0,5 -5,0 0,-5z M80,120l5,0 0,5 -5,0 0,-5z M95,120l5,0 0,5 -5,0 0,-5z M100,120l5,0 0,5 -5,0 0,-5z M105,120l5,0 0,5 -5,0 0,-5z M110,120l5,0 0,5 -5,0 0,-5z M115,120l5,0 0,5 -5,0 0,-5z M120,120l5,0 0,5 -5,0 0,-5z M135,120l5,0 0,5 -5,0 0,-5z M140,120l5,0 0,5 -5,0 0,-5z M20,125l5,0 0,5 -5,0 0,-5z M30,125l5,0 0,5 -5,0 0,-5z M35,125l5,0 0,5 -5,0 0,-5z M40,125l5,0 0,5 -5,0 0,-5z M50,125l5,0 0,5 -5,0 0,-5z M60,125l5,0 0,5 -5,0 0,-5z M65,125l5,0 0,5 -5,0 0,-5z M100,125l5,0 0,5 -5,0 0,-5z M110,125l5,0 0,5 -5,0 0,-5z M135,125l5,0 0,5 -5,0 0,-5z M140,125l5,0 0,5 -5,0 0,-5z M20,130l5,0 0,5 -5,0 0,-5z M30,130l5,0 0,5 -5,0 0,-5z M35,130l5,0 0,5 -5,0 0,-5z M40,130l5,0 0,5 -5,0 0,-5z M50,130l5,0 0,5 -5,0 0,-5z M65,130l5,0 0,5 -5,0 0,-5z M80,130l5,0 0,5 -5,0 0,-5z M85,130l5,0 0,5 -5,0 0,-5z M90,130l5,0 0,5 -5,0 0,-5z M95,130l5,0 0,5 -5,0 0,-5z M105,130l5,0 0,5 -5,0 0,-5z M120,130l5,0 0,5 -5,0 0,-5z M125,130l5,0 0,5 -5,0 0,-5z M130,130l5,0 0,5 -5,0 0,-5z M135,130l5,0 0,5 -5,0 0,-5z M140,130l5,0 0,5 -5,0 0,-5z M20,135l5,0 0,5 -5,0 0,-5z M50,135l5,0 0,5 -5,0 0,-5z M90,135l5,0 0,5 -5,0 0,-5z M95,135l5,0 0,5 -5,0 0,-5z M115,135l5,0 0,5 -5,0 0,-5z M120,135l5,0 0,5 -5,0 0,-5z M130,135l5,0 0,5 -5,0 0,-5z M135,135l5,0 0,5 -5,0 0,-5z M140,135l5,0 0,5 -5,0 0,-5z M20,140l5,0 0,5 -5,0 0,-5z M25,140l5,0 0,5 -5,0 0,-5z M30,140l5,0 0,5 -5,0 0,-5z M35,140l5,0 0,5 -5,0 0,-5z M40,140l5,0 0,5 -5,0 0,-5z M45,140l5,0 0,5 -5,0 0,-5z M50,140l5,0 0,5 -5,0 0,-5z M60,140l5,0 0,5 -5,0 0,-5z M80,140l5,0 0,5 -5,0 0,-5z M85,140l5,0 0,5 -5,0 0,-5z M90,140l5,0 0,5 -5,0 0,-5z M95,140l5,0 0,5 -5,0 0,-5z M100,140l5,0 0,5 -5,0 0,-5z M105,140l5,0 0,5 -5,0 0,-5z M125,140l5,0 0,5 -5,0 0,-5z M140,140l5,0 0,5 -5,0 0,-5z " stroke="transparent" fill="black"/></svg>';
+('use strict');
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const paths = {
+  tempo: 'M2 15h4l3-9 3 13 3-10 2 6h5',
+  search: 'M15 15l6 6 M18 10a8 8 0 1 1-16 0 8 8 0 1 1 16 0',
+  box: 'm3 7 9-5 9 5v10l-9 5-9-5z M3 7l9 5 9-5 M12 12v10',
+  send: 'm3 3 18 9-18 9 3-9z M6 12h15',
+  pulse: 'M2 12h5l3-8 4 16 3-8h5',
+  grid: 'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',
+  code: 'm8 6-6 6 6 6 M16 6l6 6-6 6 M14 3l-4 18',
+  data: 'M3 5q9-6 18 0v14q-9 6-18 0z M3 5q9 6 18 0 M3 12q9 6 18 0',
+  gear: 'M4 5h16 M4 12h16 M4 19h16 M8 2v6 M16 9v6 M10 16v6',
+  sun: 'M12 2v2 M12 20v2 M2 12h2 M20 12h2 M5 5l2 2 M17 17l2 2 M5 19l2-2 M17 7l2-2 M16 12a4 4 0 1 1-8 0 4 4 0 1 1 8 0',
+  team: 'M14 7a4 4 0 1 1-8 0 4 4 0 1 1 8 0 M2 21q0-13 16-7l2 7 M17 4q7 4 1 8',
+  copy: 'M8 8h12v13H8z M4 16H3V3h12v2',
+  panel: 'M2 4h20v16H2z M2 15h20',
+  side: 'M2 4h20v16H2z M9 4v16',
+  file: 'M5 2h9l5 5v15H5z M14 2v6h5 M8 13h8 M8 17h6',
+  folder: 'M2 6h8l2 3h10v11H2z',
+  bolt: 'm13 2-9 12h7l-1 8 10-13h-8z',
+  chev: 'm8 10 4 4 4-4',
+  clock: 'M21 12a9 9 0 1 1-18 0 9 9 0 1 1 18 0 M12 6v6l4 2',
+};
+const icon = (n) => '<svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="' + paths[n] + '"/></svg>';
+const btn = (label, action, cls = '', glyph = '') => '<button class="' + cls + '" data-act="' + esc(action) + '">' + (glyph ? icon(glyph) : '') + label + '</button>';
+const ib = (name, action, glyph) => '<button class="flat" aria-label="' + name + '" title="' + name + '" data-act="' + action + '">' + icon(glyph) + '</button>';
+const groups = {
+  Workspace: ['Backends', 'Requests', 'Team', 'Preferences'],
+  API: ['Endpoints', 'GraphQL', 'Realtime', 'Responses'],
+  Data: ['Collections', 'Users', 'Media', 'Content'],
+  Traffic: ['Logs', 'Webhooks inbox', 'Push tester'],
+  Simulate: ['Faults and latency', 'Rate limits', 'Network presets', 'OAuth2 mock'],
+  Settings: ['Server', 'Certificates', 'Tools', 'AI and MCP'],
+};
+const symbols = {
+  Workspace: 'folder',
+  API: 'code',
+  Data: 'data',
+  Traffic: 'pulse',
+  Simulate: 'bolt',
+  Settings: 'gear',
+  Overview: 'grid',
+  Requests: 'send',
+  Backends: 'box',
+  Team: 'team',
+  Preferences: 'gear',
+};
+const endpoints = [
+  ['GET', '/api/v1/products', 'List products'],
+  ['POST', '/api/v1/auth/login', 'Sign in'],
+  ['GET', '/api/v1/me', 'Current user'],
+  ['GET', '/api/v1/orders', 'List orders'],
+  ['POST', '/api/v1/orders', 'Create order'],
+  ['GET', '/api/v1/products/:id', 'Product detail'],
+];
+const records = [
+  { id: 'prd_1042', name: 'Canvas tote', price: 28 },
+  { id: 'prd_1043', name: 'Studio mug', price: 18 },
+];
+const samples = [
+  { data: records, total: 128 },
+  { token: '[redacted]', expires_in: 3600 },
+  { id: 'usr_012', name: 'Mona Saleh', email: 'mona@example.com' },
+  { data: [{ id: 'ord_281', total: 46 }] },
+  { id: 'ord_282', total: 28 },
+  records[0],
+];
+const log = Array.from({ length: 24 }, (_, i) => ({
+  ep: [0, 2, 3, 1, 5, 4, 0, 3][i % 8],
+  status: i % 8 === 3 ? 401 : i % 8 === 5 ? 201 : 200,
+  ms: [42, 18, 86, 14, 27, 64, 38, 71][i % 8],
+  time: '14:32:' + String(58 - i * 2).padStart(2, '0'),
+}));
+const base = 'https://localhost:8443';
+const state = {
+  page: dir === 'A' ? 'Requests' : dir === 'B' ? 'Overview' : 'Logs',
+  running: true,
+  empty: false,
+  sidebar: true,
+  bottom: dir === 'A',
+  inspect: dir === 'A',
+  open: new Set(['Workspace', dir === 'A' ? 'API' : dir === 'C' ? 'Traffic' : 'Data']),
+  tabs: ['Overview', 'Endpoints', 'Requests'],
+  ep: 0,
+  selected: 0,
+  req: 0,
+  last: 0,
+  requestTab: 'Params',
+  responseTab: 'Pretty',
+  detailTab: 'Response',
+  method: 'GET',
+  url: '{{baseUrl}}/api/v1/products',
+  scenario: {},
+  locale: 'English',
+  mcp: true,
+  permission: 'Read only',
+  client: 'Claude Code',
+  library: 'Collections',
+  history: [0, 2],
+  capture: 'Requests',
+  filter: '',
+  console: 'Live logs',
+  drafts: {},
+  collection: 'products',
+};
+const groupOf = (p) => Object.keys(groups).find((g) => groups[g].includes(p)) || 'Backend';
+const pill = () => '<span class="badge ' + (state.running ? '' : 'off') + '"><i class="dot"></i>' + (state.running ? 'Running' : 'Stopped') + '</span>';
+const navbtn = (p, g) => btn(esc(p), 'go:' + p, state.page === p ? 'on' : 'flat', g);
+const card = (name, body, action = '') => '<section class="card"><header class="spread"><h2>' + name + '</h2>' + action + '</header>' + body + '</section>';
+const tabs = (items, active, prefix) => '<div class="tabs">' + items.map((x) => btn(x, prefix + x, x === active ? 'on' : '')).join('') + '</div>';
+const table = (headers, rows) =>
+  '<table><thead><tr>' +
+  headers.map((x) => '<th>' + x + '</th>').join('') +
+  '</tr></thead><tbody>' +
+  rows.map((row) => '<tr>' + row.map((x) => '<td>' + x + '</td>').join('') + '</tr>').join('') +
+  '</tbody></table>';
+const method = (m) => '<span class="method ' + (m === 'POST' ? 'post' : '') + '">' + esc(m) + '</span>';
+const niceCode = (value) =>
+  '<div class="code">' +
+  JSON.stringify(value, null, 2)
+    .split('\n')
+    .map(
+      (line) => '<div>' + esc(line).replace(/(&quot;.*?&quot;)(:)?/g, (_, v, k) => '<span class="' + (k ? 'key' : 'str') + '">' + v + '</span>' + (k || '')) + '</div>',
+    )
+    .join('') +
+  '</div>';
+const head = (title, action = '', section = groupOf(state.page)) =>
+  '<header class="pagehead spread"><div><div class="eyebrow">' + esc(section) + '</div><h1>' + esc(title) + '</h1></div>' + action + '</header>';
+const field = (label, key, value, type = 'text') =>
+  '<label>' + esc(label) + '<input type="' + type + '" data-field="' + esc(key) + '" value="' + esc(state.drafts[key] ?? value) + '"></label>';
+const select = (label, key, options, current) =>
+  '<label>' +
+  label +
+  '<select data-field="' +
+  key +
+  '">' +
+  options.map((x) => '<option ' + (x === (state.drafts[key] ?? current) ? 'selected' : '') + '>' + esc(x) + '</option>').join('') +
+  '</select></label>';
+const textArea = (key, value, rows = 4) =>
+  '<textarea aria-label="' + esc(key) + '" data-field="' + esc(key) + '" rows="' + rows + '">' + esc(state.drafts[key] ?? value) + '</textarea>';
+const signal = () =>
+  '<div class="signal" aria-hidden="true">' +
+  Array.from({ length: 48 }, (_, i) => '<i style="height:' + (4 + Math.abs(Math.sin(i * 1.4) * Math.cos(i / 9)) * 26) + 'px"></i>').join('') +
+  '</div>';
+function navigation() {
+  if (state.empty) return '<small>Workspace</small>' + navbtn('Backends', 'box') + navbtn('Preferences', 'gear');
+  let nav = '<small>' + (dir === 'A' ? 'Explorer' : dir === 'C' ? 'Sources' : 'Workspace') + '</small>';
+  nav += dir === 'A' ? btn('Shop API', 'go:Overview', 'backendname', 'folder') : btn('Shop API', 'go:Backends', 'backendname', 'box');
+  nav += navbtn('Overview', 'grid');
+  for (const [g, pages] of Object.entries(groups)) {
+    nav +=
+      '<details data-group="' +
+      g +
+      '" ' +
+      (state.open.has(g) ? 'open' : '') +
+      '><summary>' +
+      icon(symbols[g]) +
+      ' ' +
+      g +
+      '</summary>' +
+      pages
+        .map(
+          (p) =>
+            navbtn(p) +
+            (dir === 'A' && p === 'Requests'
+              ? '<div class="treebranch">' +
+                btn('Shop collection', 'libraryOpen:Collections', 'flat', 'folder') +
+                btn('History', 'libraryOpen:History', 'flat', 'clock') +
+                '</div>'
+              : '') +
+            (dir === 'A' && p === 'Endpoints'
+              ? '<div class="treebranch">' +
+                endpoints
+                  .slice(0, 3)
+                  .map(([m, path], i) => btn(m + ' ' + path.split('/').pop(), 'endpoint:' + i, 'flat'))
+                  .join('') +
+                '</div>'
+              : '') +
+            (dir === 'A' && p === 'Collections'
+              ? '<div class="treebranch">' + ['products', 'orders'].map((x) => btn(x, 'collection:' + x, 'flat')).join('') + '</div>'
+              : ''),
+        )
+        .join('') +
+      '</details>';
+  }
+  return nav;
+}
+function chart() {
+  const values = [
+    17, 20, 18, 22, 20, 25, 22, 24, 31, 29, 30, 24, 26, 33, 25, 30, 42, 38, 34, 39, 57, 46, 49, 44, 53, 48, 60, 54, 57, 65, 62, 75, 66, 72, 68, 84, 78, 82, 69, 74, 62,
+    70, 60, 73, 75, 68, 81, 78, 86, 80, 92, 86, 90, 86,
+  ];
+  let point = values.map((v, i) => ((i * 600) / (values.length - 1)).toFixed(1) + ',' + (104 - v)).join(' ');
+  return (
+    '<svg class="chart" viewBox="0 0 600 110" preserveAspectRatio="none" role="img" aria-label="Request volume rising over the last 30 minutes"><path d="M0 25H600 M0 58H600 M0 90H600" stroke="var(--line)" stroke-dasharray="4 4"/><polygon points="0,110 ' +
+    point +
+    ' 600,110" fill="currentColor" opacity=".12"/><polyline points="' +
+    point +
+    '" fill="none" stroke="currentColor" stroke-width="2.3" vector-effect="non-scaling-stroke"/></svg><div class="chartlabels"><span>14:00</span><span>14:10</span><span>14:20</span><span>14:30</span></div>'
+  );
+}
+function overview() {
+  if (!state.running)
+    return (
+      head('Backend overview', pill(), 'Shop API') +
+      '<div class="empty"><h2>Shop API is stopped</h2><p>Start the backend to listen on port 8443 and collect traffic.</p><div>' +
+      btn('Start backend', 'power', 'primary') +
+      '</div></div>'
+    );
+  return (
+    head('Backend overview', btn('Device QR', 'qr'), 'Shop API') +
+    '<div class="hero spread"><div><h2>Shop API</h2><p class="mono">' +
+    base +
+    '</p></div>' +
+    pill() +
+    '</div><div class="metrics">' +
+    [
+      ['Requests / min', '184', 'Last minute'],
+      ['Error rate', '0.4%', 'Last 30 min'],
+      ['Records', '412', '2 collections'],
+      ['Media storage', '18.6 MB', '24 files'],
+    ]
+      .map(([n, v, d]) => '<div class="metric"><span>' + n + '</span><strong>' + (state.running ? v : '—') + '</strong><small>' + d + '</small></div>')
+      .join('') +
+    '</div>' +
+    card('Request volume', '<div class="inside">' + chart() + '</div>', '<span class="port">Last 30 minutes</span>') +
+    '<div class="grid">' +
+    card(
+      'Slowest endpoints',
+      table(
+        ['Route', 'p95'],
+        [
+          [btn('/api/v1/orders', 'endpoint:3', 'flat'), '86 ms'],
+          [btn('/api/v1/products', 'endpoint:0', 'flat'), '42 ms'],
+        ],
+      ),
+    ) +
+    card(
+      'Collections',
+      table(
+        ['Collection', 'Records'],
+        [
+          ['products', '128'],
+          ['orders', '284'],
+        ],
+      ),
+    ) +
+    '</div>' +
+    card('GraphQL operations', table(['Operation', 'p95'], [['Products', '48 ms']])) +
+    card(
+      'Connection addresses',
+      table(
+        ['Client', 'Base URL'],
+        [
+          ['Local', base],
+          ['LAN', 'https://192.0.2.12:8443'],
+          ['Android emulator', 'https://10.0.2.2:8443'],
+        ],
+      ),
+    )
+  );
+}
+function endpointPage() {
+  const [m, path, name] = endpoints[state.ep];
+  return (
+    head('Endpoints', btn('Try it', 'load:' + state.ep, 'primary', 'send')) +
+    card(
+      'Route directory',
+      controls(['Add endpoint', 'Import OpenAPI…']) +
+        table(
+          ['Method', 'Path', 'Operation'],
+          endpoints.map(([verb, p, n], i) => [method(verb), btn(p, 'endpoint:' + i, i === state.ep ? 'on mono' : 'flat mono'), n]),
+        ),
+    ) +
+    card(
+      name,
+      '<div class="inside stack"><h3>' +
+        method(m) +
+        ' <code>' +
+        path +
+        '</code></h3>' +
+        select('Active scenario', 'scenario' + state.ep, ['Normal answer', 'Empty result', 'Unauthorized', 'Server error'], 'Normal answer') +
+        '<p class="subtle">Request rules · ' +
+        (m === 'GET' ? 'Optional query parameters' : 'JSON body required') +
+        '</p></div>' +
+        niceCode(samples[state.ep]),
+    )
+  );
+}
+function loadReq(i) {
+  state.req = i;
+  state.last = i;
+  state.response = responseFixture(i);
+  state.method = endpoints[i][0];
+  state.url = '{{baseUrl}}' + endpoints[i][1];
+  go('Requests');
+}
+function runner() {
+  const rq = state.requestTab,
+    rs = state.responseTab,
+    response = state.response || responseFixture(state.last);
+  const editor =
+    rq === 'Params'
+      ? '<div class="grid">' + field('Key', 'queryKey', 'limit') + field('Value', 'queryValue', '2') + '</div>'
+      : rq === 'Headers'
+        ? '<div class="grid">' + field('Header', 'headerKey', 'Accept') + field('Value', 'headerValue', 'application/json') + '</div>'
+        : rq === 'Body'
+          ? textArea('Request body', '{\n  "limit": 2\n}')
+          : select('Authorization', 'auth', ['No auth', 'Bearer token', 'Basic auth'], 'No auth') + field('Token', 'token', '[redacted]');
+  const list =
+    state.library === 'Environments'
+      ? 'Local · {{baseUrl}} = ' + base
+      : (state.library === 'History' ? state.history : [0, 2, 3]).map((i) => btn(endpoints[i][2], 'load:' + i, 'flat', 'file')).join('');
+  return (
+    head(endpoints[state.req][2], btn('Import cURL', 'import'), 'Requests / Shop collection') +
+    '<div class="url"><select aria-label="Request method" data-field="method">' +
+    ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].map((m) => '<option ' + (state.method === m ? 'selected' : '') + '>' + m + '</option>').join('') +
+    '</select><input aria-label="Request URL" data-field="url" value="' +
+    esc(state.url) +
+    '">' +
+    btn('Send　⌘↵', 'send', 'primary', 'send') +
+    '</div>' +
+    card(
+      'Request',
+      tabs(['Params', 'Headers', 'Body', 'Auth'], rq, 'rq:') + '<div class="inside">' + editor + '</div>',
+      '<span class="mini-pill">Local environment</span>',
+    ) +
+    card(
+      'Response',
+      tabs(['Pretty', 'Raw', 'Headers'], rs, 'rs:') +
+        (rs === 'Pretty'
+          ? niceCode(response.body)
+          : '<pre class="inside">' +
+            esc(rs === 'Raw' ? JSON.stringify(response.body) : 'content-type: application/json\ncache-control: no-store\nx-request-id: req_0842') +
+            '</pre>'),
+      '<span class="mono"><span class="' +
+        (response.status.startsWith('2') ? 'method' : 'error') +
+        '">' +
+        response.status +
+        '</span>　42 ms　' +
+        new TextEncoder().encode(JSON.stringify(response.body)).length +
+        ' B</span>',
+    ) +
+    '<div class="row">' +
+    btn('Copy as cURL', 'curl', '', 'copy') +
+    btn('Save request', 'save') +
+    '</div>' +
+    card('Request library', tabs(['Collections', 'History', 'Environments'], state.library, 'library:') + '<div class="inside">' + list + '</div>')
+  );
+}
+function captureList() {
+  const ep = state.capture === 'Endpoints';
+  const rows = ep ? endpoints.map((_, i) => ({ ep: i })) : log;
+  return (
+    rows
+      .map((r, i) => {
+        const [m, p] = endpoints[r.ep];
+        if (!(m + ' ' + p + ' ' + (r.status || '')).toLowerCase().includes(state.filter.toLowerCase())) return '';
+        return (
+          '<button class="requestrow ' +
+          ((ep ? state.ep : state.selected) === i ? 'on' : '') +
+          '" data-act="' +
+          (ep ? 'endpoint:' : 'log:') +
+          i +
+          '">' +
+          method(m) +
+          '<code>' +
+          p.replace('/api/v1/', '/') +
+          '</code><b class="' +
+          (r.status >= 400 ? 'error' : 'method') +
+          '">' +
+          (r.status || '›') +
+          '</b><small>' +
+          (r.time ? r.time + '　·　' + r.ms + ' ms' : p) +
+          '</small></button>'
+        );
+      })
+      .join('') || '<p class="inside">No matching requests.</p>'
+  );
+}
+function capture() {
+  return (
+    '<aside class="capture"><header><div class="spread"><h2>Traffic capture</h2>' +
+    pill() +
+    '</div>' +
+    signal() +
+    '<input aria-label="Filter capture" id="filter" placeholder="Filter path, method or status…" value="' +
+    esc(state.filter) +
+    '"></header>' +
+    tabs(['Requests', 'Endpoints'], state.capture, 'capture:') +
+    '<div id="capturelist">' +
+    captureList() +
+    '</div></aside>'
+  );
+}
+function logs() {
+  const r = log[state.selected],
+    [m, p] = endpoints[r.ep];
+  const tab = state.detailTab;
+  const detail =
+    tab === 'Response'
+      ? niceCode(r.status === 401 ? { error: 'unauthorized', message: 'Session expired' } : samples[r.ep])
+      : tab === 'Headers'
+        ? table(
+            ['Header', 'Value'],
+            [
+              ['Content-Type', 'application/json'],
+              ['Cache-Control', 'no-store'],
+              ['X-Request-Id', 'req_' + (842 - state.selected)],
+            ],
+          )
+        : tab === 'Request'
+          ? '<pre class="inside">' +
+            m +
+            ' ' +
+            p +
+            ' HTTP/1.1\nHost: localhost:8443\nAccept: application/json\n\n' +
+            (m === 'GET' ? 'No request body.' : '{"token":"[redacted]"}') +
+            '</pre>'
+          : '<div class="inside">Request timing' + timing(r.ms) + '</div>';
+  return (
+    head(dir === 'C' ? 'Request detail' : 'Traffic logs', btn('Replay', 'replay', '', 'send'), 'Traffic / Capture') +
+    (dir === 'C'
+      ? ''
+      : card(
+          'Captured requests',
+          '<div style="max-height:190px;overflow:auto">' +
+            log
+              .slice(0, 8)
+              .map((l, i) =>
+                btn(l.time + '　' + endpoints[l.ep][0] + '　' + endpoints[l.ep][1] + '　' + l.status, 'log:' + i, state.selected === i ? 'on mono' : 'flat mono'),
+              )
+              .join(' ') +
+            '</div>',
+        )) +
+    '<div class="traces stack"><div class="spread"><span class="eyebrow">Request #' +
+    (842 - state.selected) +
+    '</span><span class="port">' +
+    r.time +
+    '</span></div><h2>' +
+    method(m) +
+    ' <code>' +
+    p +
+    '</code></h2><div class="row"><b class="' +
+    (r.status >= 400 ? 'error' : 'method') +
+    '">' +
+    r.status +
+    ' ' +
+    (r.status === 401 ? 'Unauthorized' : r.status === 201 ? 'Created' : 'OK') +
+    '</b><span class="port">' +
+    r.ms +
+    ' ms　·　HTTP/1.1</span></div></div>' +
+    card('Message', tabs(['Response', 'Request', 'Headers', 'Timing'], tab, 'detail:') + detail) +
+    card('Timing breakdown', '<div class="inside">' + timing(r.ms) + '</div>')
+  );
+}
+function timing(ms) {
+  return (
+    '<div class="timeline"><i style="width:12%"></i><i style="width:72%"></i><i style="width:16%"></i></div><div class="spread mono"><small>Connect · 4 ms</small><small>Waiting · ' +
+    (ms - 10) +
+    ' ms</small><small>Transfer · 6 ms</small></div>'
+  );
+}
+function content() {
+  const ar = state.locale === 'العربية';
+  return (
+    head('Content studio', btn('Save draft', 'save', 'primary'), 'Data / Content') +
+    card(
+      'Content types',
+      controls(['Add type', 'Edit fields', 'New entry']) +
+        table(['Type', 'Entry', 'Locales', 'Publication'], [['Landing page', 'Summer collection', 'en · ar', 'Draft']]),
+    ) +
+    card(
+      'Summer collection',
+      tabs(['English', 'العربية'], state.locale, 'locale:') +
+        '<div class="inside stack" lang="' +
+        (ar ? 'ar' : 'en') +
+        '" dir="' +
+        (ar ? 'rtl' : 'ltr') +
+        '">' +
+        field(ar ? 'العنوان' : 'Title', 'title' + state.locale, ar ? 'مجموعة الصيف' : 'Summer collection') +
+        '<label>' +
+        (ar ? 'المحتوى' : 'Body') +
+        textArea('body' + state.locale, ar ? 'اكتشف الحقائب والأكواب المصممة للاستخدام اليومي.' : 'Discover canvas totes and studio ceramics for everyday use.') +
+        '</label>' +
+        select('Publication', 'publication', ['Draft', 'Published', 'Scheduled'], 'Draft') +
+        '</div>',
+    )
+  );
+}
+function settings() {
+  return (
+    head('Server settings', btn('Save settings', 'save', 'primary'), 'Settings') +
+    card(
+      'Listener',
+      '<div class="inside grid">' +
+        field('Port', 'port', '8443', 'number') +
+        select('Transport', 'transport', ['HTTPS', 'HTTP'], 'HTTPS') +
+        select('Access', 'access', ['Open', 'Access key required'], 'Open') +
+        select('Session mode', 'session', ['Bearer tokens', 'HttpOnly cookie', 'Both'], 'Bearer tokens') +
+        '</div>',
+    ) +
+    card(
+      'CORS policy',
+      '<div class="inside grid">' + field('Allowed origins', 'origins', '*') + select('Credentials', 'credentials', ['Allow', 'Omit'], 'Omit') + '</div>',
+    ) +
+    card('Backend configuration', '<div class="inside row wrap">' + ['Certificates', 'Tools', 'AI and MCP'].map((p) => navbtn(p)).join('') + '</div>') +
+    card('Data maintenance', '<div class="inside spread"><span>Restore products and orders to their seed records.</span>' + btn('Reset data…', 'reset') + '</div>')
+  );
+}
+function mcp() {
+  const snippets = {
+    'Claude Code': 'claude mcp add tempo-backend -- tempo backend mcp',
+    Codex: 'codex mcp add tempo-backend -- tempo backend mcp',
+    Cursor: '{"mcpServers":{"tempo-backend":{"command":"tempo","args":["backend","mcp"]}}}',
+  };
+  return (
+    head(
+      'AI and MCP',
+      '<button data-act="mcp" role="switch" aria-label="MCP server" aria-checked="' + state.mcp + '"><span class="switchtrack"></span>MCP server</button>',
+      'Settings',
+    ) +
+    card(
+      'Agent connection',
+      '<div class="inside spread"><b>MCP server · ' +
+        (state.mcp ? 'Enabled' : 'Disabled') +
+        '</b>' +
+        select('Tool permissions', 'permission', ['Read only', 'Read-write'], 'Read only') +
+        '</div>' +
+        tabs(Object.keys(snippets), state.client, 'client:') +
+        '<pre class="inside">' +
+        esc(snippets[state.client]) +
+        '</pre>',
+    ) +
+    card(
+      'Exposed tools',
+      table(
+        ['Tool', 'Access'],
+        ['list_endpoints', 'create_endpoint', 'query_logs', 'seed_data', 'set_fault', 'send_request'].map((t, i) => [
+          '<code>' + t + '</code>',
+          i === 0 || i === 2 ? 'Read' : state.drafts.permission === 'Read-write' ? 'Write' : 'Write · restricted',
+        ]),
+      ),
+    ) +
+    card(
+      'Recent agent actions',
+      table(
+        ['Time', 'Agent', 'Action', 'Result'],
+        [
+          ['14:29:17', 'Codex', 'query_logs', 'Allowed'],
+          ['14:26:08', 'Cursor', 'seed_data', 'Denied'],
+        ],
+      ),
+    )
+  );
+}
+function simulate() {
+  return (
+    head('Faults and latency', btn('Apply simulation', 'save', 'primary'), 'Simulate') +
+    card(
+      'Response shaping',
+      '<div class="inside grid">' +
+        field('Base latency (ms)', 'latency', '120', 'number') +
+        field('Jitter (ms)', 'jitter', '30', 'number') +
+        field('Failure rate (%)', 'failures', '2', 'number') +
+        select('Failure response', 'failureStatus', ['503 Service Unavailable', '500 Server Error', '429 Too Many Requests'], '503 Service Unavailable') +
+        '</div>',
+    ) +
+    card(
+      'Connection faults',
+      '<div class="inside grid">' + field('Drop connections (%)', 'drop', '0', 'number') + select('Reachability', 'offline', ['Online', 'Offline'], 'Online') + '</div>',
+    ) +
+    card(
+      'Simulation controls',
+      '<div class="inside row wrap">' +
+        groups.Simulate.slice(1)
+          .map((x) => navbtn(x))
+          .join('') +
+        '</div>',
+    )
+  );
+}
+const ancillary = {
+  GraphQL: ['Query editor', 'Schema · products, orders, users', 'query { products { id name price } }', 'Run query'],
+  Realtime: ['Live connections', 'SSE / WebSocket · 1 connected client', '{"event":"stock.updated","quantity":18}', 'Broadcast message'],
+  Responses: ['Shared base response', 'Dynamic values · request ID, timestamp, random UUID', '{"data":"{{body}}","requestId":"{{uuid}}"}', 'Save template'],
+  'Webhooks inbox': ['Captured delivery', 'POST /hooks/order · 200 OK · 14:25:18', '{"event":"order.created","id":"ord_281"}', 'Replay delivery'],
+  'Push tester': ['Test notification', 'FCM / APNs · sandbox device', '{"title":"Order ready","body":"Your order is packed."}', 'Send test'],
+  'Rate limits': ['Request budget', 'Requests per minute per client address', '120', 'Apply limit'],
+  'Network presets': ['Connection profile', 'Configure bandwidth and offline behaviour', 'Slow 3G', 'Apply preset'],
+  'OAuth2 mock': ['Sign-in provider', 'Google / Apple / GitHub / Generic', 'tempo-shop-client', 'Save provider'],
+  Certificates: ['Local certificate', 'Shop API · local development CA', 'localhost, 192.0.2.12', 'Preview certificate'],
+  Tools: ['Backup and schema checks', 'Backend archive · OpenAPI comparison', 'shop-api.tempo.zip', 'Preview backup'],
+  Team: ['Team server', 'Signed in as workspace owner · Members, API keys and audit log', 'Mona Saleh <mona@example.com>', 'Preview invitation'],
+};
+function controls(actions) {
+  return '<div class="inside row wrap">' + actions.map((a) => btn(a, 'system:' + a)).join('') + '</div>';
+}
+function supportingPanels(p) {
+  switch (p) {
+    case 'GraphQL':
+      return card('Operation metrics', table(['Operation', 'Calls', 'p95'], [['Products', '112', '48 ms']]));
+    case 'Realtime':
+      return (
+        card(
+          'Connected clients',
+          table(
+            ['Transport', 'Client', 'Messages in / out'],
+            [
+              ['WebSocket', 'iOS simulator', '12 / 18'],
+              ['SSE', 'Android emulator', '0 / 9'],
+            ],
+          ),
+        ) + card('Recent messages', table(['Time', 'Event'], [['14:32:08', 'stock.updated']]))
+      );
+    case 'Responses':
+      return (
+        card(
+          'Response templates',
+          table(
+            ['Template', 'Format'],
+            [
+              ['notFound', 'Problem details'],
+              ['rateLimited', 'application/json'],
+            ],
+          ),
+        ) + controls(['Edit template', 'Add dynamic value'])
+      );
+    case 'Rate limits':
+      return card(
+        'Counting rules',
+        '<div class="inside grid">' +
+          select('Counted by', 'countBy', ['Client address', 'Signed-in user', 'Everybody together'], 'Client address') +
+          field('Window (seconds)', 'limitWindow', '60', 'number') +
+          '</div>',
+      );
+    case 'Network presets':
+      return card(
+        'Connectivity',
+        '<div class="inside grid">' +
+          select('Profile', 'networkProfile', ['Local', 'Offline', 'Slow 3G', 'Wi-Fi'], 'Local') +
+          select('Expose to LAN', 'lan', ['Enabled', 'Disabled'], 'Enabled') +
+          '</div>',
+      );
+    case 'OAuth2 mock':
+      return card(
+        'Discovery',
+        table(
+          ['Endpoint', 'Path'],
+          [
+            ['Authorize', '/oauth/authorize'],
+            ['Token', '/oauth/token'],
+            ['User info', '/oauth/userinfo'],
+          ],
+        ),
+      );
+    case 'Webhooks inbox':
+      return (
+        card(
+          'Outgoing subscriptions',
+          table(['Target', 'Event', 'Signature'], [['https://hooks.example.com/shop', 'order.created', 'HMAC-SHA256']]) +
+            controls(['Add webhook', 'Test delivery', 'Rotate secret']),
+        ) + card('Recent deliveries', table(['Event', 'Attempts', 'Result'], [['order.created', '1', '202 Accepted']]))
+      );
+    case 'Push tester':
+      return (
+        card(
+          'Device',
+          '<div class="inside grid">' + select('Provider', 'pushProvider', ['FCM', 'APNs'], 'FCM') + field('Device token', 'pushToken', 'test-device-004') + '</div>',
+        ) + card('Delivery history', table(['Time', 'Platform', 'Result'], [['14:27:14', 'FCM', 'Delivered']]))
+      );
+    case 'Certificates':
+      return card('Trust on device', controls(['Generate local certificate', 'Install on simulator', 'Show device certificate']));
+    case 'Tools':
+      return card('Backend archive', controls(['Back up folder', 'Restore archive…', 'Reveal in Finder'])) + card('OpenAPI contract', controls(['Compare schema…']));
+    case 'Team':
+      return (
+        card('Members', table(['Member', 'Role', 'Status'], [['Mona Saleh · mona@example.com', 'Owner', 'Active']])) +
+        card('API keys', table(['Name', 'Scope'], [['Build preview', 'Read only']])) +
+        card('Audit log', table(['Time', 'Actor', 'Action'], [['14:18:20', 'Mona Saleh', 'Invited a member']]))
+      );
+    default:
+      return '';
+  }
+}
+function secondary() {
+  const p = state.page;
+  if (p === 'Backends')
+    return (
+      head('Backends', btn('New backend…', 'new', 'primary'), 'Workspace') +
+      card('Registered folders', table(['Backend', 'Folder', 'State'], [[btn('Shop API', 'example', 'flat', 'box'), '<code>~/Backends/shop-api</code>', pill()]])) +
+      '<div class="row">' +
+      btn('Open backend folder…', 'open') +
+      btn('Preview first run', 'empty') +
+      '</div>'
+    );
+  if (p === 'Preferences')
+    return (
+      head('Preferences') +
+      card('Appearance', '<div class="inside row">' + ['System', 'Light', 'Dark'].map((t) => btn(t, 'theme:' + t)).join('') + '</div>') +
+      card(
+        'Workspace previews',
+        '<div class="inside row">' + btn('First-run welcome', 'empty') + btn(state.running ? 'Stop backend' : 'Start backend', 'power') + '</div>',
+      )
+    );
+  if (p === 'Collections')
+    return (
+      head('Collections') +
+      controls(['New collection', 'Edit fields', 'Add record', 'Import rows', 'Export CSV', 'Export JSON']) +
+      tabs(['products', 'orders'], state.collection, 'collection:') +
+      card(
+        state.collection,
+        state.collection === 'products'
+          ? table(
+              ['ID', 'Name', 'Price'],
+              records.map((x) => [x.id, x.name, '$' + x.price]),
+            )
+          : table(['ID', 'Customer', 'Total'], [['ord_281', 'Mona Saleh', '$46']]),
+      )
+    );
+  if (p === 'Users')
+    return (
+      head('Users') +
+      controls(['Add user', 'Reset password', 'Revoke session']) +
+      card('Backend accounts', table(['Name', 'Email', 'Session'], [['Mona Saleh', 'mona@example.com', 'Signed in']]))
+    );
+  if (p === 'Media')
+    return (
+      head('Media') +
+      controls(['Upload files', 'Copy file URL', 'Delete file…']) +
+      card(
+        'File library',
+        table(
+          ['File', 'Type', 'Size'],
+          [
+            ['canvas-tote.webp', 'image/webp', '184 KB'],
+            ['studio-mug.webp', 'image/webp', '92 KB'],
+          ],
+        ),
+      )
+    );
+  const [name, note, value, action] = ancillary[p];
+  return (
+    head(p) +
+    card(
+      name,
+      '<div class="inside stack"><p>' + esc(note) + '</p>' + textArea(name, value) + btn(action, 'sample:' + p, 'primary') + '<div id="sample-result"></div></div>',
+    ) +
+    supportingPanels(p)
+  );
+}
+function page() {
+  if (state.empty && state.page !== 'Preferences')
+    return (
+      '<div class="empty"><div>' +
+      icon('folder') +
+      '</div><h1>No backends yet</h1><p>Choose a backend folder to start your workspace.</p><div class="row">' +
+      btn('New backend…', 'new', 'primary') +
+      btn('Open folder…', 'open') +
+      '</div>' +
+      btn('Explore Shop API', 'example', 'flat') +
+      '</div>'
+    );
+  if (!state.running && !['Backends', 'Server', 'Overview', 'Preferences', 'Team', 'AI and MCP'].includes(state.page))
+    return (
+      head(state.page) +
+      '<div class="empty"><h2>Shop API is stopped</h2><p>Start the local server to use ' +
+      esc(state.page) +
+      '.</p><div>' +
+      btn('Start backend', 'power', 'primary') +
+      '</div></div>'
+    );
+  return (
+    { Overview: overview, Endpoints: endpointPage, Requests: runner, Logs: logs, Content: content, Server: settings, 'Faults and latency': simulate, 'AI and MCP': mcp }[
+      state.page
+    ] || secondary
+  )();
+}
+function bottom() {
+  return (
+    '<div class="bottom"><div class="spread">' +
+    tabs(['Live logs', 'Console'], state.console, 'console:') +
+    ib('Collapse bottom panel', 'bottom', 'panel') +
+    '</div>' +
+    (state.console === 'Console'
+      ? '<pre class="inside">[14:00:01] Loaded shop-api · 6 routes\n[14:00:02] ' + (state.running ? 'Listening on ' + base : 'Server stopped') + '</pre>'
+      : table(
+          ['Time', 'Method', 'Path', 'Status'],
+          log.slice(0, 3).map((r) => [r.time, method(endpoints[r.ep][0]), endpoints[r.ep][1], r.status]),
+        )) +
+    '</div>'
+  );
+}
+function inspector() {
+  return (
+    '<aside class="inspector"><div class="spread"><span class="eyebrow">Inspector</span>' +
+    ib('Hide inspector', 'inspect', 'side') +
+    '</div><hr><h3>' +
+    esc(state.page) +
+    '</h3><dl><dt>Environment</dt><dd>Local</dd><dt>Protocol</dt><dd>HTTPS</dd><dt>Backend</dt><dd>Shop API</dd><dt>Active scenario</dt><dd>' +
+    esc(state.drafts['scenario' + (state.page === 'Requests' ? state.req : state.ep)] || 'Normal answer') +
+    '</dd></dl><hr>' +
+    btn('AI and MCP', 'go:AI and MCP', 'flat', 'bolt') +
+    '</aside>'
+  );
+}
+function render() {
+  const scrollTargets = ['.side', '.capture', '.editor>.tabs', '.canvas', '.bottom'];
+  const positions = scrollTargets.map((selector) => [selector, $(selector)?.scrollTop || 0, $(selector)?.scrollLeft || 0]);
+  const samePage = $('#shell').dataset.page === state.page;
+  $('#shell').dataset.page = state.page;
+  const was = document.activeElement?.dataset.act;
+  const menuNames = ['Tempo', 'File', 'Edit', 'View', 'Backend', 'Request', 'Window', 'Help'];
+  $('#native').innerHTML =
+    '<span class="lights" aria-hidden="true"><i></i><i></i><i></i></span>' +
+    menuNames.map((m, i) => '<button aria-haspopup="menu" data-menu="' + m + '" class="flat">' + (i === 0 ? '<b>Tempo</b>' : m) + '</button>').join('') +
+    '<span class="right">' +
+    (state.empty ? 'Tempo Local Backend' : 'Shop API · ' + (state.running ? 'Running' : 'Stopped')) +
+    '</span><button class="flat" aria-label="Tempo tray" data-menu="Tray">' +
+    icon('tempo') +
+    '</button>';
+  $('#toolbar').innerHTML =
+    '<span class="brand"><span class="mark">' +
+    icon('tempo') +
+    '</span>Tempo</span><span class="vline"></span>' +
+    btn((state.empty ? 'Backends' : 'Shop API') + ' ⌄', 'go:Backends', 'flat', 'box') +
+    (state.empty ? '' : pill() + btn(state.running ? 'Stop' : 'Start', 'power') + btn('https://localhost:8443', 'base', 'flat mono', 'copy')) +
+    '<span class="right"></span>' +
+    btn('Search <kbd>⌘ K</kbd>', 'palette', '', 'search') +
+    ib('Change appearance', 'theme', 'sun') +
+    ib('Toggle sidebar', 'sidebar', 'side') +
+    (dir === 'A' ? ib('Toggle inspector', 'inspect', 'gear') : '');
+  const rail =
+    dir === 'A'
+      ? '<aside class="rail">' +
+        [
+          ['Backends', 'box'],
+          ['Requests', 'send'],
+          ['Logs', 'pulse'],
+          ['Collections', 'data'],
+          ['AI and MCP', 'bolt'],
+          ['Preferences', 'gear'],
+        ]
+          .map(([p, g]) => ib(p, 'go:' + p, g))
+          .join('') +
+        '</aside>'
+      : '';
+  const editorTabs =
+    dir === 'A' && !state.empty
+      ? '<div class="tabs">' +
+        state.tabs.map((x) => btn(x === 'Requests' ? esc(endpoints[state.req][2]) : esc(x), 'go:' + x, x === state.page ? 'on' : '', symbols[x] || 'file')).join('') +
+        ib('Close active tab', 'closeTab', 'panel') +
+        '</div>'
+      : '';
+  const cap = dir === 'C' && !state.empty && state.running ? capture() : '';
+  $('#shell').innerHTML =
+    rail +
+    (state.sidebar ? '<nav class="side">' + navigation() + '</nav>' : '') +
+    cap +
+    '<section class="editor">' +
+    editorTabs +
+    '<div class="crumb">' +
+    (state.empty ? 'Workspace' : 'Shop API　/　' + groupOf(state.page) + '　/　' + state.page) +
+    '</div><main class="canvas">' +
+    page() +
+    '</main>' +
+    (!state.empty && state.bottom ? bottom() : '') +
+    '</section>' +
+    (!state.empty && state.inspect ? inspector() : '');
+  $('#foot').innerHTML =
+    '<span class="statusbar"><i class="dot"></i>' +
+    (state.empty ? 'Workspace' : state.running ? 'Listening on :8443' : 'Server stopped') +
+    '</span><span>·　' +
+    (dir === 'A' ? 'Workbench' : dir === 'B' ? 'Console' : 'Inspector') +
+    '</span><span class="right">Local environment　·　' +
+    (state.empty ? '0 backends' : 'Shop API') +
+    '</span>';
+  for (const [selector, top, left] of positions) {
+    const element = $(selector);
+    if (element && (selector !== '.canvas' || samePage)) {
+      element.scrollTop = top;
+      element.scrollLeft = left;
+    }
+  }
+  document.title = (state.empty ? 'Workspace' : 'Shop API · ' + (state.running ? 'Running' : 'Stopped')) + ' — ' + direction;
+  if (was)
+    document.querySelectorAll('[data-act]').forEach((b) => {
+      if (b.dataset.act === was && document.activeElement === document.body) b.focus({ preventScroll: true });
+    });
+}
+function go(p) {
+  if (state.empty && !['Backends', 'Preferences'].includes(p)) state.empty = false;
+  state.page = p;
+  state.open.add(groupOf(p));
+  if (!state.tabs.includes(p)) state.tabs.push(p);
+  render();
+}
+const menus = {
+  Tempo: ['About Tempo Local Backend', 'Check for Updates…', '-', 'Settings…|⌘,', 'Services >', '-', 'Hide Tempo|⌘H', 'Hide Others|⌥⌘H', '-', 'Quit Tempo|⌘Q'],
+  File: [
+    'New Backend…|⌘N',
+    'New Request|⌘T',
+    'Open Backend Folder…|⌘O',
+    'Open Recent >',
+    '-',
+    'Import >',
+    'Export >',
+    'Reveal in Finder',
+    '-',
+    'Close Tab|⌘W',
+    'Close Window|⇧⌘W',
+  ],
+  Edit: ['Undo|⌘Z', 'Redo|⇧⌘Z', '-', 'Cut|⌘X', 'Copy|⌘C', 'Paste|⌘V', 'Duplicate|⌘D', 'Delete', 'Select All|⌘A', '-', 'Find|⌘F', 'Find in Backend|⇧⌘F'],
+  View: [
+    'Command Palette|⌘K',
+    '-',
+    'Toggle Sidebar|⌘\\',
+    'Toggle Bottom Panel|⌘J',
+    'Toggle Inspector|⌥⌘I',
+    'Go To >',
+    'Appearance >',
+    '-',
+    'Zoom In|⌘+',
+    'Zoom Out|⌘−',
+    'Actual Size|⌘0',
+    'Enter Full Screen|⌃⌘F',
+  ],
+  Backend: ['Start|⌘R', 'Stop|⌘.', 'Restart|⇧⌘R', '-', 'Open in Browser', 'Copy Base URL|⇧⌘C', 'Show QR for Device', '-', 'Reset Data…', 'Reseed Data', 'Simulate >'],
+  Request: ['Send|⌘↵', 'Save|⌘S', 'Save As…', '-', 'Copy as cURL', 'Paste cURL as Request', 'Generate Code >', 'Environments…'],
+  Window: ['Minimize|⌘M', 'Zoom', 'Bring All to Front', '-', '✓ Shop API'],
+  Help: ['Documentation', 'Keyboard Shortcuts|⌘/', 'Connect an AI Agent (MCP)…', 'Release Notes', 'Report an Issue…'],
+  Services: ['No Services Available'],
+  'Open Recent': ['Shop API'],
+  Import: ['OpenAPI / Swagger…', 'Postman Collection…', 'Insomnia / Bruno…', 'HAR File…', 'cURL Command…'],
+  Export: ['OpenAPI', 'Postman Collection', 'Backend Archive'],
+  'Go To': ['Overview|⌘1', 'Endpoints|⌘2', 'Data|⌘3', 'Logs|⌘4', 'Requests|⌘5'],
+  Appearance: ['System', 'Light', 'Dark'],
+  Simulate: ['Offline', 'Slow 3G', 'Random Failures', 'Clear Faults'],
+  'Generate Code': ['JavaScript (fetch)', 'Swift (URLSession)', 'Shell (cURL)'],
+};
+let menuName = '',
+  menuTrigger = null,
+  subTrigger = null,
+  toastTimer;
+function dismissMenu(restore = false) {
+  $('#mainmenu').replaceChildren();
+  $('#submenu').replaceChildren();
+  menuName = '';
+  if (restore) menuTrigger?.focus();
+}
+function menuBox(name, trigger, sub = false, focus = false) {
+  const host = $(sub ? '#submenu' : '#mainmenu');
+  if (!sub) {
+    dismissMenu();
+    menuName = name;
+    menuTrigger = trigger;
+  } else subTrigger = trigger;
+  const items =
+    name === 'Tray'
+      ? [state.empty ? 'No backends yet' : state.running ? 'Shop API · Stop' : 'Shop API · Start', '-', 'Open window', 'Quit']
+      : name === 'Window' && state.empty
+        ? [...menus.Window.slice(0, -1), '✓ Workspace']
+        : menus[name];
+  host.innerHTML =
+    '<div role="menu" aria-label="' +
+    esc(name) +
+    '" class="menu">' +
+    items
+      .map((item) => {
+        if (item === '-') return '<hr role="separator">';
+        const [text, shortcut] = item.split('|'),
+          child = text.endsWith(' >'),
+          label = child ? text.slice(0, -2) : text;
+        const disabled =
+          ['No Services Available', 'No backends yet', 'Redo'].includes(label) ||
+          (name === 'Backend' && (state.empty || (state.running ? label === 'Start' : label === 'Stop')));
+        return (
+          '<button role="menuitem" ' +
+          (disabled ? 'disabled ' : '') +
+          (child ? 'aria-haspopup="menu" data-sub="' + esc(label) + '"' : 'data-choice="' + esc(label) + '"') +
+          '>' +
+          esc(label) +
+          '<kbd>' +
+          esc(child ? '›' : shortcut || '') +
+          '</kbd></button>'
+        );
+      })
+      .join('') +
+    '</div>';
+  const el = host.firstElementChild,
+    r = trigger.getBoundingClientRect();
+  el.style.left = Math.min(innerWidth - el.offsetWidth - 10, sub ? r.right - 3 : r.left) + 'px';
+  el.style.top = Math.max(4, Math.min(innerHeight - el.offsetHeight - 6, sub ? r.top : r.bottom + 2)) + 'px';
+  if (focus) el.querySelector('button:enabled')?.focus();
+}
+const commandMap = {
+  'Settings…': 'go:Preferences',
+  'New Backend…': 'new',
+  'Open Backend Folder…': 'open',
+  'New Request': 'go:Requests',
+  'Shop API': 'example',
+  'Close Tab': 'closeTab',
+  'Command Palette': 'palette',
+  'Toggle Sidebar': 'sidebar',
+  'Toggle Inspector': 'inspect',
+  'Toggle Bottom Panel': 'bottom',
+  Overview: 'go:Overview',
+  Endpoints: 'go:Endpoints',
+  Data: 'go:Collections',
+  Logs: 'go:Logs',
+  Requests: 'go:Requests',
+  System: 'theme:System',
+  Light: 'theme:Light',
+  Dark: 'theme:Dark',
+  Start: 'start',
+  Stop: 'stop',
+  Restart: 'restart',
+  'Show QR for Device': 'qr',
+  'Copy Base URL': 'base',
+  'Reset Data…': 'reset',
+  'Reseed Data': 'reset',
+  Send: 'send',
+  Save: 'save',
+  'Copy as cURL': 'curl',
+  'Paste cURL as Request': 'import',
+  'cURL Command…': 'import',
+  'Environments…': 'env',
+  'Connect an AI Agent (MCP)…': 'go:AI and MCP',
+  'Shop API · Stop': 'stop',
+  'Shop API · Start': 'start',
+  'Open window': 'example',
+  'Keyboard Shortcuts': 'shortcuts',
+};
+function announce(s) {
+  $('#toast').textContent = s;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    $('#toast').textContent = '';
+  }, 2500);
+}
+const dlg = $('#dialog');
+let previousFocus = null;
+function modal(title, body) {
+  dismissMenu();
+  if (!dlg.open) previousFocus = document.activeElement;
+  dlg.innerHTML = '<div class="spread"><h2>' + esc(title) + '</h2>' + btn('Close', 'cancel', 'flat') + '</div><hr>' + body;
+  if (!dlg.open) dlg.showModal();
+  (dlg.querySelector('input,textarea') || dlg.querySelector('button')).focus();
+}
+function closeModal() {
+  if (dlg.open) dlg.close();
+  previousFocus?.focus?.();
+}
+const paletteGroups = {
+  Navigate: ['Overview', ...Object.values(groups).flat()],
+  Actions: ['Send', 'Reset Data…', 'Toggle Bottom Panel', 'Show QR for Device'],
+  Endpoints: endpoints.map((e) => e[0] + ' ' + e[1]),
+  Requests: endpoints.slice(0, 3).map((e) => e[2]),
+};
+let paletteIndex = 0;
+function searchResults(q) {
+  const result = [];
+  let html = '';
+  for (const [g, items] of Object.entries(paletteGroups)) {
+    const buttons = [];
+    items.forEach((item, i) => {
+      if (!q && i > 1) return;
+      if (!item.toLowerCase().includes(q.toLowerCase())) return;
+      const action = g === 'Navigate' ? 'go:' + item : g === 'Actions' ? commandMap[item] : g === 'Endpoints' ? 'endpoint:' + i : 'load:' + i;
+      buttons.push(btn(esc(item) + '<kbd>↵</kbd>', action, result.length === paletteIndex ? 'on' : ''));
+      result.push(action);
+    });
+    if (buttons.length) html += '<div class="eyebrow">' + g + '</div>' + buttons.join('');
+  }
+  $('#results').innerHTML = html || '<p>No matching commands.</p>';
+  return result;
+}
+function palette() {
+  paletteIndex = 0;
+  modal(
+    'Command palette',
+    '<input id="query" placeholder="Search commands, endpoints and requests…" aria-label="Search commands"><div id="results" class="results"></div>',
+  );
+  searchResults('');
+}
+function responseFixture(i) {
+  const scenario = state.drafts['scenario' + i];
+  if (scenario === 'Unauthorized') return { status: '401 Unauthorized', body: { error: 'unauthorized' } };
+  if (scenario === 'Server error') return { status: '500 Server Error', body: { error: 'server_error' } };
+  if (scenario === 'Empty result') return { status: '200 OK', body: { data: [], total: 0 } };
+  return { status: i === 4 ? '201 Created' : '200 OK', body: samples[i] };
+}
+function shellQuote(value) {
+  return "'" + String(value).replaceAll("'", "'\\''") + "'";
+}
+function curl() {
+  let url = state.url.replace('{{baseUrl}}', base);
+  const d = state.drafts,
+    query = d.queryKey ?? 'limit';
+  if (query) url += (url.includes('?') ? '&' : '?') + encodeURIComponent(query) + '=' + encodeURIComponent(d.queryValue ?? '2');
+  const args = ['curl -X ' + state.method, shellQuote(url)];
+  if (d.headerKey !== '') args.push('-H ' + shellQuote((d.headerKey ?? 'Accept') + ': ' + (d.headerValue ?? 'application/json')));
+  if (d.auth === 'Bearer token') args.push('-H ' + shellQuote('Authorization: Bearer ' + (d.token ?? '[redacted]')));
+  if (d.auth === 'Basic auth') args.push('-u ' + shellQuote(d.token ?? 'user:password'));
+  if (state.method !== 'GET' && d['Request body']) args.push('--data ' + shellQuote(d['Request body']));
+  return args.join(' ');
+}
+async function clipboard(value) {
+  try {
+    await navigator.clipboard.writeText(value);
+    announce('Copied to clipboard');
+  } catch {
+    modal('Copy to clipboard', textArea('Clipboard text', value));
+    dlg.querySelector('textarea').select();
+  }
+}
+function run(action) {
+  if (dlg.open && !['cancel', 'applyImport', 'confirmReset', 'example'].includes(action)) closeModal();
+  const colon = action.indexOf(':'),
+    op = colon < 0 ? action : action.slice(0, colon),
+    v = colon < 0 ? '' : action.slice(colon + 1);
+  if (op === 'go') {
+    go(v);
+    return;
+  }
+  if (op === 'endpoint') {
+    state.ep = Number(v);
+    go('Endpoints');
+    return;
+  }
+  if (op === 'load') {
+    loadReq(Number(v));
+    return;
+  }
+  if (op === 'collection') {
+    state.collection = v;
+    go('Collections');
+    return;
+  }
+  if (op === 'log') {
+    state.selected = Number(v);
+    go('Logs');
+    return;
+  }
+  const choices = {
+    rq: 'requestTab',
+    rs: 'responseTab',
+    detail: 'detailTab',
+    library: 'library',
+    locale: 'locale',
+    client: 'client',
+    capture: 'capture',
+    console: 'console',
+  };
+  if (op in choices) {
+    state[choices[op]] = v;
+    if (op === 'capture') {
+      state.filter = '';
+      go(v === 'Requests' ? 'Logs' : 'Endpoints');
+    } else render();
+    return;
+  }
+  switch (op) {
+    case 'palette':
+      palette();
+      break;
+    case 'theme': {
+      const root = document.documentElement;
+      const next = v || ((root.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')) === 'dark' ? 'Light' : 'Dark');
+      root.dataset.theme = next.toLowerCase();
+      announce(next + ' appearance');
+      break;
+    }
+    case 'start':
+    case 'stop':
+    case 'power':
+    case 'restart':
+      state.running = op === 'power' ? !state.running : op !== 'stop';
+      render();
+      announce('Shop API ' + (state.running ? 'started' : 'stopped'));
+      break;
+    case 'empty':
+      state.empty = true;
+      state.page = 'Backends';
+      render();
+      break;
+    case 'new':
+    case 'open':
+      modal(
+        op === 'new' ? 'New backend' : 'Open backend folder',
+        '<div class="stack"><p>Use the sample folder for this design preview.</p><code>~/Backends/shop-api</code><div>' +
+          btn(op === 'new' ? 'Create Shop API' : 'Open Shop API', 'example', 'primary') +
+          '</div></div>',
+      );
+      break;
+    case 'example':
+      closeModal();
+      if (state.empty) state.running = true;
+      state.empty = false;
+      go('Overview');
+      break;
+    case 'sidebar':
+    case 'bottom':
+    case 'inspect':
+      state[op] = !state[op];
+      render();
+      break;
+    case 'closeTab':
+      if (dir === 'A' && state.tabs.length > 1) {
+        state.tabs = state.tabs.filter((x) => x !== state.page);
+        go(state.tabs.at(-1));
+      } else announce('One editor remains open');
+      break;
+    case 'send':
+      if (state.empty || !state.running) {
+        announce('Start a backend to send a request');
+        break;
+      }
+      {
+        const path = state.url.replace('{{baseUrl}}', '').replace(base, '').split('?')[0];
+        const i = endpoints.findIndex((e) => e[0] === state.method && e[1] === path);
+        if (i < 0) {
+          announce('No matching route in Shop API');
+          break;
+        }
+        state.last = i;
+        state.req = i;
+        state.response = responseFixture(i);
+        state.history = [i, ...state.history].slice(0, 10);
+        go('Requests');
+        announce('Request completed · ' + state.response.status);
+      }
+      break;
+    case 'replay': {
+      const original = log[state.selected];
+      log.unshift({ ...original, time: new Date().toTimeString().slice(0, 8) });
+      state.selected = 0;
+      render();
+      announce('Replayed capture · ' + original.status);
+      break;
+    }
+    case 'save':
+      announce(state.page === 'Content' ? 'Draft saved' : 'Saved to this preview');
+      break;
+    case 'base':
+      clipboard(base);
+      break;
+    case 'curl':
+      clipboard(curl());
+      break;
+    case 'env':
+    case 'libraryOpen':
+      state.library = v || 'Environments';
+      go('Requests');
+      document.querySelector('.canvas .card:last-child')?.scrollIntoView({ block: 'nearest' });
+      break;
+    case 'import':
+      modal(
+        'Import cURL',
+        '<label>Command<textarea id="curlinput" rows="4">curl -X GET https://localhost:8443/api/v1/products</textarea></label><hr>' +
+          btn('Import request', 'applyImport', 'primary'),
+      );
+      break;
+    case 'applyImport': {
+      const cmd = $('#curlinput').value,
+        url = cmd.match(/https?:\/\/[^\s'"]+/),
+        verb = cmd.match(/-X\s+(GET|POST|PUT|PATCH|DELETE)/i);
+      if (!url) {
+        announce('Enter a cURL command with an HTTP URL');
+        break;
+      }
+      closeModal();
+      state.method = verb ? verb[1].toUpperCase() : 'GET';
+      state.url = url[0].replace(base, '{{baseUrl}}');
+      state.req = Math.max(
+        0,
+        endpoints.findIndex((e) => state.url.endsWith(e[1]) && state.method === e[0]),
+      );
+      go('Requests');
+      announce('Request imported');
+      break;
+    }
+    case 'reset':
+      modal(
+        'Reset Shop API data?',
+        '<p>This replaces changes to products and orders with the sample seed records.</p><hr><div class="row">' +
+          btn('Cancel', 'cancel') +
+          btn('Reset data', 'confirmReset', 'destructive') +
+          '</div>',
+      );
+      break;
+    case 'confirmReset':
+      closeModal();
+      announce('Sample records restored');
+      break;
+    case 'cancel':
+      closeModal();
+      break;
+    case 'qr':
+      modal('Connect a device', '<div style="text-align:center">' + qrSvg + '<p class="mono">https://192.0.2.12:8443</p><small>Sample LAN address</small></div>');
+      break;
+    case 'shortcuts':
+      modal(
+        'Keyboard shortcuts',
+        table(
+          ['Action', 'Shortcut'],
+          [
+            ['Command palette', '⌘K'],
+            ['Send request', '⌘↵'],
+            ['Switch page', '⌘1–5'],
+            ['Toggle sidebar', '⌘\\'],
+            ['Toggle bottom panel', '⌘J'],
+            ['Preferences', '⌘,'],
+          ],
+        ),
+      );
+      break;
+    case 'mcp':
+      state.mcp = !state.mcp;
+      render();
+      break;
+    case 'sample':
+      $('#sample-result').innerHTML = v === 'GraphQL' ? niceCode({ data: { products: records } }) : '<p class="method">Sample action complete</p>';
+      break;
+    case 'system':
+      modal(v, '<p>' + esc(nativeNote(v)) + '</p>');
+      break;
+  }
+}
+function nativeNote(v) {
+  if (v === 'JavaScript (fetch)') return 'await fetch(' + JSON.stringify(state.url.replace('{{baseUrl}}', base)) + ', {method: ' + JSON.stringify(state.method) + '});';
+  if (v === 'Swift (URLSession)')
+    return 'var request = URLRequest(url: URL(string: "' + state.url.replace('{{baseUrl}}', base) + '")!) · request.httpMethod = "' + state.method + '"';
+  if (v === 'Shell (cURL)') return curl();
+  if (v === 'About Tempo Local Backend') return 'Tempo Local Backend · ' + direction + ' design preview.';
+  if (['Offline', 'Slow 3G', 'Random Failures', 'Clear Faults'].includes(v)) return 'Backend simulation preset · ' + v;
+  return v + ' is represented here as a native app command in the desktop design.';
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (!b) {
+    if (!e.target.closest('.menu')) dismissMenu();
+    if (e.target === dlg) {
+      const r = dlg.getBoundingClientRect();
+      if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) closeModal();
+    }
+    return;
+  }
+  if (b.dataset.menu) {
+    if (menuName === b.dataset.menu) dismissMenu();
+    else menuBox(b.dataset.menu, b);
+    return;
+  }
+  if (b.dataset.sub) {
+    menuBox(b.dataset.sub, b, true, true);
+    return;
+  }
+  if (b.dataset.choice) {
+    const v = b.dataset.choice;
+    dismissMenu(true);
+    run(commandMap[v] || 'system:' + v);
+    return;
+  }
+  dismissMenu();
+  if (b.dataset.act) run(b.dataset.act);
+});
+document.addEventListener('pointerover', (e) => {
+  const b = e.target.closest('button');
+  if (!b || !menuName) return;
+  if (b.dataset.menu && b.dataset.menu !== menuName) menuBox(b.dataset.menu, b);
+  if (b.dataset.sub) menuBox(b.dataset.sub, b, true);
+  else if (b.closest('#mainmenu')) $('#submenu').replaceChildren();
+});
+document.addEventListener('input', (e) => {
+  const t = e.target;
+  if (t.id === 'query') {
+    paletteIndex = 0;
+    searchResults(t.value);
+  }
+  if (t.id === 'filter') {
+    state.filter = t.value;
+    $('#capturelist').innerHTML = captureList();
+  }
+  if (t.dataset.field) {
+    const k = t.dataset.field;
+    if (k === 'method' || k === 'url') state[k] = t.value;
+    else state.drafts[k] = t.value;
+    if (k === 'permission') render();
+  }
+});
+document.addEventListener(
+  'toggle',
+  (e) => {
+    const g = e.target.dataset?.group;
+    if (g && e.target.isConnected) {
+      if (e.target.open) state.open.add(g);
+      else state.open.delete(g);
+    }
+  },
+  true,
+);
+document.addEventListener('keydown', (e) => {
+  const key = e.key,
+    cmd = e.metaKey || e.ctrlKey;
+  if (key === 'Escape') {
+    if (menuName) dismissMenu(true);
+    if (dlg.open) closeModal();
+    return;
+  }
+  if (menuName && ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Enter', ' '].includes(key)) {
+    e.preventDefault();
+    const sub = $('#submenu .menu'),
+      active = document.activeElement,
+      inSub = !!sub?.contains(active),
+      box = inSub ? sub : $('#mainmenu .menu'),
+      items = [...box.querySelectorAll('button:enabled')],
+      i = items.indexOf(active);
+    if (key === 'ArrowDown' || key === 'ArrowUp') {
+      items[(i + (key === 'ArrowDown' ? 1 : i < 0 ? 0 : -1) + items.length) % items.length]?.focus();
+      return;
+    }
+    if (key === 'Enter' || key === ' ') {
+      if (i < 0) items[0]?.focus();
+      else active.click();
+      return;
+    }
+    if (key === 'ArrowRight' && active.dataset.sub) {
+      menuBox(active.dataset.sub, active, true, true);
+      return;
+    }
+    if (key === 'ArrowLeft' && inSub) {
+      $('#submenu').replaceChildren();
+      subTrigger.focus();
+      return;
+    }
+    const titles = [...document.querySelectorAll('[data-menu]')],
+      n = titles.indexOf(menuTrigger),
+      next = titles[(n + (key === 'ArrowRight' ? 1 : -1) + titles.length) % titles.length];
+    menuBox(next.dataset.menu, next, false, true);
+    return;
+  }
+  if (dlg.open && $('#query') && (e.target.id === 'query' || e.target.closest('#results')) && ['ArrowDown', 'ArrowUp', 'Enter'].includes(key)) {
+    e.preventDefault();
+    const items = [...$('#results').querySelectorAll('button')];
+    if (!items.length) return;
+    if (key === 'Enter') {
+      (e.target.closest('#results button') || items[paletteIndex]).click();
+      return;
+    }
+    paletteIndex = (paletteIndex + (key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+    searchResults($('#query').value);
+    $('#results .on')?.scrollIntoView({ block: 'nearest' });
+    $('#query').focus();
+    return;
+  }
+  if (cmd && key.toLowerCase() === 'k') {
+    e.preventDefault();
+    if (dlg.open) closeModal();
+    else palette();
+    return;
+  }
+  if (dlg.open) return;
+  if (e.target.dataset.menu && ['ArrowDown', 'ArrowUp'].includes(key)) {
+    e.preventDefault();
+    menuBox(e.target.dataset.menu, e.target, false, true);
+    return;
+  }
+  const shortcuts = {
+    1: 'go:Overview',
+    2: 'go:Endpoints',
+    3: 'go:Collections',
+    4: 'go:Logs',
+    5: 'go:Requests',
+    ',': 'go:Preferences',
+    j: 'bottom',
+    '\\': 'sidebar',
+    s: 'save',
+    Enter: 'send',
+    t: 'go:Requests',
+    n: 'new',
+    o: 'open',
+    '.': 'stop',
+    '/': 'shortcuts',
+  };
+  if (cmd) {
+    const action =
+      key.toLowerCase() === 'r'
+        ? e.shiftKey
+          ? 'restart'
+          : 'start'
+        : e.altKey && key.toLowerCase() === 'i'
+          ? 'inspect'
+          : e.shiftKey && key.toLowerCase() === 'c'
+            ? 'base'
+            : shortcuts[key];
+    if (action) {
+      e.preventDefault();
+      dismissMenu();
+      run(action);
+    }
+  }
+});
+render();
+</script></body></html>

@@ -1,0 +1,79 @@
+<!doctype html>
+<!-- Design comparison. Ink accent #29382f / #d4e7d9, with 12, 15, 25 and responsive 32–52 px system type. -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tempo Local Backend · Design directions</title>
+<style>
+:root{color-scheme:light dark;--bg:light-dark(#f5f4ee,#181b19);--paper:light-dark(#fffefa,#232723);--ink:light-dark(#202820,#eef2ec);--muted:light-dark(#515d52,#bcc9bd);--edge:light-dark(#748174,#8b988c);--line:light-dark(#cbd1c8,#485249);--accent:light-dark(#29382f,#d4e7d9);--mono:ui-monospace,"SF Mono",Menlo,monospace;font:15px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;color:var(--ink);background:var(--bg)}
+*{box-sizing:border-box}body{margin:0}main{max-width:1700px;margin:auto;padding:24px clamp(20px,3.5vw,64px) 48px}
+header,.brand,.opening,.cardhead{display:flex;align-items:center;justify-content:space-between;gap:12px}header{border-bottom:1px solid var(--line);padding-bottom:16px}.brand{font-size:18px;font-weight:650;letter-spacing:-.04em}.brand svg{width:30px;height:30px;color:var(--accent)}.meta,dt,.direction{font:12px var(--mono);color:var(--muted)}.opening{align-items:end;margin:40px 0 26px}h1,h2,p,dl,dd{margin:0}h1{font-size:clamp(32px,3.6vw,52px);font-weight:620;letter-spacing:-.065em;line-height:1.1}h2{font-size:25px;font-weight:620;letter-spacing:-.045em}.opening p{margin-top:12px;color:var(--muted)}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}.card{display:flex;flex-direction:column;overflow:hidden;background:var(--paper);border:1px solid var(--line);border-radius:12px}.frame{width:100%;aspect-ratio:1.6;overflow:hidden;position:relative;border-bottom:1px solid var(--line);background:var(--bg)}iframe{border:0;width:1280px;height:800px;transform-origin:top left;position:absolute;pointer-events:none}.frame a{position:absolute;inset:0;z-index:1}.info{padding:20px;display:flex;flex-direction:column;flex:1}.cardhead{padding-bottom:15px;border-bottom:1px solid var(--line);margin-bottom:14px}.direction{font-weight:650;color:var(--ink)}dt{margin-top:14px}dt:first-child{margin-top:0}dd{margin-top:3px}.action{display:flex;align-items:center;justify-content:space-between;color:var(--ink);border:1px solid var(--edge);padding:9px 12px;border-radius:6px;text-decoration:none;font-weight:600}a:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}.action:hover{background:var(--bg)}.linkwrap{margin-top:auto;padding-top:22px}.note{margin-top:22px;color:var(--muted)}
+@media(max-width:950px){.cards{grid-template-columns:1fr}.card{display:grid;grid-template-columns:1fr 1fr}.frame{align-self:center}.opening{margin:24px 0}}@media(max-width:640px){.card{display:flex}}
+</style></head><body><main>
+<header><span class="brand"><svg viewBox="0 0 30 30" aria-hidden="true"><rect width="30" height="30" rx="8" fill="currentColor"/><path d="M4 18h5l3-11 3 16 4-13 2 8h5" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linejoin="round"/></svg>Tempo Local Backend</span><span class="meta">Desktop / Design review</span></header>
+<div class="opening"><div><h1>Design directions</h1><p>Explore the same Shop API workspace through three different starting points.</p></div></div>
+<div class="cards" id="cards"></div>
+<p class="note">In each sample, use ⌘K or Ctrl+K to jump between screens. Open Backends to preview first run, or stop Shop API from the toolbar.</p>
+</main><script>
+const designs = [
+  [
+    'A',
+    'Workbench',
+    'a-workbench.html',
+    'Keep an endpoint, a saved request and its logs open together. The tree and editor tabs preserve context between edits.',
+    'The activity bar, tree and inspector leave less room for long response bodies.',
+    'Developers iterating on routes and fixtures throughout the day.',
+  ],
+  [
+    'B',
+    'Console',
+    'b-console.html',
+    'Check backend health at a glance, then move into a focused table or form. Group headings expose the configuration model.',
+    'Moving between request editing and traffic inspection takes a page change.',
+    'New contributors and teams managing data, content and backend settings.',
+  ],
+  [
+    'C',
+    'Inspector',
+    'c-inspector.html',
+    'Follow a request from the capture list into its response, headers and timing without losing your place.',
+    'The persistent capture list takes space from content editing and configuration.',
+    'Mobile developers diagnosing unexpected responses or replaying traffic.',
+  ],
+];
+const cards = document.getElementById('cards');
+for (const [letter, name, file, strength, cost, who] of designs) {
+  const article = document.createElement('article');
+  article.className = 'card';
+  article.innerHTML =
+    '<div class="frame"><iframe title="' +
+    name +
+    ' preview" tabindex="-1" inert src="' +
+    file +
+    '"></iframe><a href="' +
+    file +
+    '" aria-label="Explore ' +
+    name +
+    ' preview"></a></div><div class="info"><div class="cardhead"><h2>' +
+    name +
+    '</h2><span class="direction">Direction ' +
+    letter +
+    '</span></div><dl><dt>Strength</dt><dd>' +
+    strength +
+    '</dd><dt>Trade-off</dt><dd>' +
+    cost +
+    '</dd><dt>Best fit</dt><dd>' +
+    who +
+    '</dd></dl><div class="linkwrap"><a class="action" href="' +
+    file +
+    '">Open ' +
+    name +
+    ' <span aria-hidden="true">↗</span></a></div></div>';
+  cards.append(article);
+}
+function fitPreviews() {
+  document.querySelectorAll('.frame').forEach((frame) => {
+    frame.querySelector('iframe').style.transform = 'scale(' + frame.clientWidth / 1280 + ')';
+  });
+}
+fitPreviews();
+window.addEventListener('resize', fitPreviews);
+</script></body></html>

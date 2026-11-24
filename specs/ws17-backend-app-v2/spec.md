@@ -25,7 +25,7 @@ The engine, its API and its data formats stay compatible. Existing backends open
 Tempo, File, Edit, View, Backend, Request, Window and Help menus, with the standard macOS items and shortcuts. The full list is in the Phase A design brief and is shown in each design sample. In the app it becomes a Tauri menu. The web dashboard mode shows the same actions in the command palette.
 
 ## Phase A: design selection (`ws17/a-design`)
-- [ ] **T17.A1** Three self-contained HTML design directions plus a comparison page, in `specs/ws17-backend-app-v2/designs/`:
+- [x] **T17.A1** Three self-contained HTML design directions plus a comparison page, in `specs/ws17-backend-app-v2/designs/`:
   - **A Workbench:** IDE-like, with tree, tabs and a bottom panel.
   - **B Console:** a clean product dashboard with a grouped sidebar.
   - **C Inspector:** traffic first, with three panes.
