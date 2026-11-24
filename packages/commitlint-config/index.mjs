@@ -13,7 +13,7 @@ export const SCOPES = [
   // shared code
   'ui', 'hooks', 'utils',
   // features
-  'auth', 'home', 'profile', 'settings', 'items', 'onboarding', 'forms',
+  'auth', 'home', 'profile', 'settings', 'items', 'onboarding', 'forms', 'cms',
   // tooling
   'e2e', 'test', 'storybook', 'fastlane', 'vscode',
 ];
