@@ -1,0 +1,29 @@
+---
+title: tempo rename
+description: Change the app name, display name or bundle id of a project.
+---
+
+```sh
+tempo rename [--name <PascalCase>] [--display-name <text>] [--bundle-id <id>] [--json] [--cwd <project>]
+```
+
+Pass at least one flag. The command rewrites the identifier in the native
+projects, Gradle files, source, scripts and docs, moves the folders and files
+that carry the old name, and updates `.tempo.json`. Environment display names
+and URL schemes that were derived from the old names follow the new ones.
+
+Afterwards, delete `ios/Pods` and `ios/build` if they exist and run `yarn pods`.
+
+### JSON output
+
+```json
+{
+  "ok": true,
+  "app": { "name": "Shop", "displayName": "Shop", "bundleId": "com.acme.shop" },
+  "rewrittenFiles": ["app.json", "android/app/build.gradle"],
+  "movedPaths": [{ "from": "ios/OldName", "to": "ios/Shop" }]
+}
+```
+
+Paths are relative to the project. Error codes: `NOTHING_TO_DO`, `INVALID_NAME`,
+`INVALID_BUNDLE_ID`, `NOT_A_TEMPO_PROJECT`.

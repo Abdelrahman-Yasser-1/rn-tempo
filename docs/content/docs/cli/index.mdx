@@ -1,8 +1,68 @@
 ---
 title: CLI
-description: Reference for create-tempo-app and the tempo command.
+description: Create RN-TEMPO apps with create-tempo-app and manage them with the tempo command.
 ---
 
+The `create-tempo-app` package ships two commands.
+
+- `create-tempo-app` creates a new app from the template. It renames the app,
+  keeps the modules and environments you pick, installs dependencies and makes the
+  first Git commit.
+- `tempo` manages a project after that. A new project lists the CLI as a dev
+  dependency, so run it with `yarn tempo <command>`. Outside a project, use
+  `npx -p create-tempo-app tempo <command>`.
+
+```sh
+npx create-tempo-app MyApp
+cd MyApp
+yarn tempo --help
+```
+
+## Commands
+
+- [create-tempo-app](/docs/cli/create-tempo-app) creates an app.
+- [tempo generate](/docs/cli/generate) adds features, screens, components, hooks, stores, queries and endpoints.
+- [tempo feature](/docs/cli/feature) lists, adds and removes modules.
+- [tempo env](/docs/cli/env) lists, adds and removes environments.
+- [tempo rename](/docs/cli/rename) changes the app name, display name or bundle id.
+- [tempo assets](/docs/cli/assets) validates assets and regenerates the typed registries.
+- [tempo icons](/docs/cli/icons) regenerates the launcher icons.
+- [tempo clean](/docs/cli/clean) deletes build and tool caches.
+- [tempo doctor](/docs/cli/doctor) checks the toolchain and the project.
 - [tempo ai](/docs/cli/ai) syncs AI tool files and reports AI-assisted commits.
 - [tempo spec](/docs/cli/spec) creates specs and checks acceptance criteria against tests.
 - [tempo upgrade](/docs/cli/upgrade) previews and applies template release patches.
+
+Every command accepts `--yes` (take the defaults and skip prompts), `--json`
+(machine output) and `--cwd <dir>` (run as if started in that folder).
+
+## Machine output
+
+Pass `--json` when a script, CI job or AI tool reads the result.
+
+- **stdout** holds exactly one JSON document, pretty-printed, and nothing else.
+  Child processes such as `yarn`, `pod` and `git` write to stderr in this mode.
+- **stderr** carries the human log: progress, warnings and errors.
+- **Prompts are off.** With `--json` a command never asks a question. Pass every
+  input as a flag.
+- **Exit code** is `0` on success and `1` on failure.
+
+Every success result has `"ok": true`. A command that finds a problem it can
+describe, such as `doctor`, `ai sync --check` or an `upgrade` with conflicts,
+exits 1 and still prints its normal result with `"ok": false`. Any other failure
+prints the error envelope.
+
+```json
+{
+  "ok": false,
+  "error": {
+    "code": "NOT_A_TEMPO_PROJECT",
+    "message": ".tempo.json not found in /work/app. Run this command inside a tempo project (or pass --cwd).",
+    "details": []
+  }
+}
+```
+
+`code` is a stable upper-case identifier you can branch on. `message` is for
+people and can change. `details` lists extra lines, and is often empty. Each
+command page documents its result in a "JSON output" section.

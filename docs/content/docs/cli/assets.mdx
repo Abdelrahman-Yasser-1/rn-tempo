@@ -1,0 +1,21 @@
+---
+title: tempo assets
+description: Validate src/assets and regenerate the typed registries.
+---
+
+```sh
+tempo assets sync [--json] [--cwd <project>]
+```
+
+Runs the project's `scripts/assets.mjs`, the same script as `yarn assets`. It
+validates `src/assets` and rewrites the generated registries. The generator's own
+output goes to stderr with `--json`.
+
+### JSON output
+
+```json
+{ "ok": true }
+```
+
+If the project has no asset generator, the command exits 1 with
+`ASSETS_SCRIPT_MISSING`. A generator that fails exits 1 with the code `ERROR`.

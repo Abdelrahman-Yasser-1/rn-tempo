@@ -25,7 +25,7 @@ export default defineCommand({
       }
       const selected: CleanTarget[] = [];
       for (const target of targets) {
-        if (isInteractive(common.yes)) {
+        if (isInteractive(common.yes || common.json)) {
           if (!answer(await confirm({ message: `Remove ${target.label}?`, initialValue: true }))) continue;
         }
         selected.push(target);

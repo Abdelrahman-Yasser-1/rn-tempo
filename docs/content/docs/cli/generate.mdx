@@ -1,0 +1,42 @@
+---
+title: tempo generate
+description: Generate features, screens, components, hooks, stores, queries and endpoints.
+---
+
+```sh
+tempo generate <kind> <name> [--feature <feature>] [--dry-run] [--force] [--json]
+tempo g <kind> <name> ...
+```
+
+| Kind | What it creates |
+| --- | --- |
+| `feature <name>` | A feature folder with api, a first screen, locales and specs. `--register` adds the route to the stack, `--stack <Name>` picks the stack. |
+| `screen <name> --feature <f>` | A screen inside a feature and its route in `navigation/types.ts`. Takes `--register` and `--stack` too. |
+| `component <name> [--feature <f>]` | A component, shared or inside a feature. |
+| `hook <name> [--feature <f>]` | A `use<Name>` hook, shared or inside a feature. |
+| `store <name> --feature <f>` | A Zustand store. |
+| `query <name> --feature <f>` | A TanStack Query hook. |
+| `endpoint <feature>.<name>` | Schemas, request function, query key, hook and a `backend.json` endpoint. Takes `--method`, `--path` and `--resource`. |
+
+Names can be kebab-case, camelCase or PascalCase. Existing files are never
+overwritten unless you pass `--force`. `--dry-run` lists what would change.
+
+### JSON output
+
+Every kind prints the same result.
+
+```json
+{
+  "ok": true,
+  "kind": "screen",
+  "dryRun": false,
+  "created": ["src/features/items/screens/detail-screen.tsx"],
+  "updated": ["src/navigation/types.ts"],
+  "followUps": ["Add the screen to the stack"],
+  "register": { "updated": ["src/navigation/linking.ts"], "notes": [] }
+}
+```
+
+`register` appears only when `--register` ran. Error codes include `MISSING_FEATURE`,
+`FEATURE_NOT_FOUND`, `FILE_EXISTS`, `INVALID_NAME`, `INVALID_METHOD`, `INVALID_PATH`,
+`ENDPOINT_EXISTS` and `NOT_A_TEMPO_PROJECT`.
