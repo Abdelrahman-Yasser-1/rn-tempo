@@ -1,0 +1,22 @@
+---
+title: "ADR-016: Removable app icons"
+description: "Why the Settings picker and its native assets ship as one module"
+---
+
+- **Status:** accepted · 2026-11-24
+
+## Context
+
+Switching a launcher icon needs bundled artwork and native configuration on both platforms. A project that uses only its primary icon can omit these files.
+
+## Decision
+
+WS16 Decision 6 registers `app-icons` as a removable module. New projects select it by default. Its manifest owns the picker, native bridge and alternate artwork. The iOS target compiles a shared Objective-C++ source file. Its module import and the Xcode build configuration use slash markers. Markdown uses standalone HTML comment markers so prose can still describe the syntax.
+
+## Consequences
+
+Removing the module leaves the primary launcher icon and its generator available. Adding it back restores the bundled choices from the project's template version.
+
+## Alternatives
+
+A runtime flag would hide the Settings row while still shipping alternate images and native code.

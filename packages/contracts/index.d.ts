@@ -15,7 +15,8 @@ export type FeatureName =
   | 'maps'
   | 'firebase-core'
   | 'push-notifications'
-  | 'crashlytics';
+  | 'crashlytics'
+  | 'app-icons';
 
 export declare const FEATURE_NAMES: readonly FeatureName[];
 
@@ -33,7 +34,7 @@ export interface FoundMarker {
   kind: 'start' | 'end' | 'single';
   line: number;
 }
-export declare function scanMarkers(text: string): FoundMarker[];
+export declare function scanMarkers(text: string, filePath?: string): FoundMarker[];
 export declare function validateMarkers(text: string, filePath?: string): string[];
 export declare function stripFeature(text: string, name: FeatureName, filePath?: string): string;
 
