@@ -2395,3 +2395,19 @@ Recorded by the integrator during WS0. Where this list and the plan disagree, **
     - **WS15 phases D–I** (Express + Postgres API, Docker, portal access and UI, portal CMS, Strapi option, CLI `--with-backend`) move after **WS14**. Shipped work already covers part of them (the Local Backend CMS and the team server roles and audit log), so each phase is re-checked before it starts. `T15.I1` drops `@rn-tempo/dev-api`, which T15.Z9 removed.
     - **New WS17: Tempo Local Backend app v2** in `apps/local-backend`. It redesigns the whole app UI and UX for production, with a native app menu bar (Tempo, File, Edit, View, Backend, Request, Window, Help) and a command palette. It adds an MCP server so AI agents can work with a backend, and a Postman/curl-like request runner. It also adds features chosen from a survey of open-source API tools.
     - **Phase A (design selection)** runs now. It produces three HTML design directions and a feature recommendation list. The owner picks one design and the features, then the build phases are written and scheduled. Spec: `specs/ws17-backend-app-v2/spec.md`.
+62. **WS17 becomes Mockyard (owner, 2026-11-24).**
+    - **The app:** the Tempo Local Backend app is renamed **Mockyard**, a standalone, framework-agnostic app that moves to its own repository after phase K. Until then it must not import from `template/` or Tempo-only packages, and a CI boundary check enforces this.
+    - **Design:** Studio (`specs/ws17-backend-app-v2/designs/2-studio.html`). It has a Home start screen, project tabs, selection-based actions, a Devices view with CA trust, and the soft slate palette.
+    - **Scope:** every feature in `research.md`, plus **share links**, which share a backend outside the local network as VS Code port forwarding does.
+    - **Phases B–K:**
+      - B: rename and boundary
+      - C: design system and shell
+      - D: move the existing pages
+      - E: request runner
+      - F: devices and connecting an app
+      - G: MCP server
+      - H: power features
+      - I: share links
+      - J: production readiness
+      - K: prepare the repository move
+    - **Order:** WS17 runs before WS11, WS13 and WS14. WS11's end-to-end flows target the Mockyard backend.
