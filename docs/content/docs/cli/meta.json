@@ -4,6 +4,7 @@
   "icon": "terminal",
   "pages": [
     "index",
+    "ai",
     "..."
   ]
 }
