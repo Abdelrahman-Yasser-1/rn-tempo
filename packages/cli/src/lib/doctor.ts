@@ -4,7 +4,7 @@ import path from 'node:path';
 import { loadManifests } from './manifest.ts';
 import { validateProjectMarkers } from './markers.ts';
 import { pathExists } from './fs-utils.ts';
-import { capture, type Capturer } from './pm.ts';
+import { capture, latestRelease, type Capturer } from './pm.ts';
 import { parseTempoJson } from './tempo-json.ts';
 
 export type CheckStatus = 'ok' | 'info' | 'warn' | 'error';
@@ -192,7 +192,7 @@ export async function runDoctor(dir: string, options: DoctorOptions = {}): Promi
       }
     }
     if (tempo && options.cliVersion) {
-      const latest = await exec('npm', ['view', 'create-tempo-app', 'version'], { cwd: dir });
+      const latest = await latestRelease(dir, exec);
       if (latest.exitCode === 0 && latest.stdout.trim() !== tempo.templateVersion) {
         add('template-version', 'Template version', 'info', `project ${tempo.templateVersion}, latest ${latest.stdout.trim()}`);
       } else add('template-version', 'Template version', 'info', `project ${tempo.templateVersion}`);

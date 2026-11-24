@@ -4,6 +4,7 @@ import path from 'node:path';
 import { execa } from 'execa';
 
 import { pathExists } from './fs-utils.ts';
+import { CLI_PACKAGE } from './workspace-links.ts';
 
 export type RunOptions = { cwd: string; json?: boolean; env?: Record<string, string> };
 
@@ -52,14 +53,19 @@ export async function yarnRun(cwd: string, script: string, args: readonly string
 export type CaptureResult = { exitCode: number; stdout: string; stderr: string };
 
 /** Runs a command and captures its output; never throws (a missing binary gives exit code 127). */
-export type Capturer = (command: string, args: readonly string[], options: { cwd: string }) => Promise<CaptureResult>;
+export type Capturer = (command: string, args: readonly string[], options: { cwd: string; env?: Record<string, string> }) => Promise<CaptureResult>;
 
 /** Default capturer: execa with `reject: false`. */
-export const capture: Capturer = async (command, args, { cwd }) => {
+export const capture: Capturer = async (command, args, { cwd, env }) => {
   try {
-    const result = await execa(command, [...args], { cwd, reject: false, stdin: 'ignore' });
-    return { exitCode: result.exitCode ?? 1, stdout: String(result.stdout ?? ''), stderr: String(result.stderr ?? '') };
+    const result = await execa(command, [...args], { cwd, env, reject: false, stdin: 'ignore' });
+    return { exitCode: result.exitCode ?? (result.code === 'ENOENT' ? 127 : 1), stdout: String(result.stdout ?? ''), stderr: String(result.stderr ?? '') };
   } catch (error) {
     return { exitCode: 127, stdout: '', stderr: error instanceof Error ? error.message : String(error) };
   }
 };
+
+/** Query the release channel shared by doctor and upgrade. */
+export function latestRelease(cwd: string, exec: Capturer = capture) {
+  return exec('npm', ['view', CLI_PACKAGE, 'version'], { cwd });
+}
