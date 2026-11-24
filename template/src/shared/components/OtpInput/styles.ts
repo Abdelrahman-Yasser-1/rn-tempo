@@ -39,5 +39,13 @@ export const styles = StyleSheet.create((theme) => ({
         false: {},
       },
     },
+    compoundVariants: [
+      {
+        focused: false,
+        invalid: false,
+        disabled: false,
+        styles: { borderColor: theme.colors.borderStrong },
+      },
+    ],
   },
 }));

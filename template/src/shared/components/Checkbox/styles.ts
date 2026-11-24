@@ -16,7 +16,7 @@ export const styles = StyleSheet.create((theme) => ({
     height: theme.spacing.xl,
     borderWidth: 2,
     borderRadius: theme.radii.sm,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors.borderStrong,
     backgroundColor: 'transparent',
     variants: {
       checked: {

@@ -53,6 +53,10 @@ describe('theme variants', () => {
 
 // Non-text UI (large text and graphics): 3:1.
 const UI_PAIRS: [foreground: keyof ColorTokens, background: keyof ColorTokens][] = [
+  // border is decorative. Enabled control boundaries use borderStrong.
+  ['borderStrong', 'background'],
+  ['borderStrong', 'surface'],
+  ['borderStrong', 'surfaceVariant'],
   ['focus', 'background'],
   ['focus', 'surface'],
   ['primary', 'background'],
@@ -138,6 +142,7 @@ describe('token sources', () => {
         "dark": {
           "background": "#0D121C",
           "border": "#384250",
+          "borderStrong": "#9DA4AE",
           "divider": "#1F2A37",
           "error": "#F97066",
           "focus": "#88D8AD",
@@ -170,6 +175,7 @@ describe('token sources', () => {
         "light": {
           "background": "#FFFFFF",
           "border": "#D2D6DB",
+          "borderStrong": "#6C737F",
           "divider": "#E5E7EB",
           "error": "#D92D20",
           "focus": "#166A45",

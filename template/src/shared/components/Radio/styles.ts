@@ -27,6 +27,9 @@ export const styles = StyleSheet.create((theme) => ({
         false: {},
       },
     },
+    compoundVariants: [
+      { selected: false, disabled: false, styles: { borderColor: theme.colors.borderStrong } },
+    ],
   },
   dot: {
     width: theme.spacing.md,

@@ -19,7 +19,11 @@ export function Chip({
   ...rest
 }: ChipProps) {
   const state = { ...accessibilityState, selected: isSelected, disabled: isDisabled };
-  styles.useVariants({ selected: isSelected, disabled: isDisabled });
+  styles.useVariants({
+    selected: isSelected,
+    disabled: isDisabled,
+    interactive: !isDisabled && Boolean(rest.onPress ?? rest.onLongPress),
+  });
   const contentColor = isSelected ? 'onPrimaryContainer' : 'onSurfaceVariant';
 
   return (

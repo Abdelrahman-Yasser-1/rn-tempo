@@ -20,7 +20,7 @@ export const styles = StyleSheet.create((theme) => ({
     textAlign: 'center',
     borderWidth: 1,
     borderRadius: theme.radii.sm,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors.borderStrong,
     backgroundColor: theme.colors.background,
     color: theme.colors.textPrimary,
     fontFamily: theme.typography.body.fontFamily,

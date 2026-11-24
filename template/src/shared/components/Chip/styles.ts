@@ -15,6 +15,7 @@ export const styles = StyleSheet.create((theme) => ({
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.background,
     variants: {
+      interactive: { true: {}, false: {} },
       selected: {
         true: {
           borderColor: theme.colors.primary,
@@ -27,5 +28,8 @@ export const styles = StyleSheet.create((theme) => ({
         false: {},
       },
     },
+    compoundVariants: [
+      { selected: false, interactive: true, styles: { borderColor: theme.colors.borderStrong } },
+    ],
   },
 }));
