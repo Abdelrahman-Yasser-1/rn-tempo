@@ -71,13 +71,13 @@ describe('tempo adapter', () => {
   });
 
   test('AC-C-2: pages with limit and the backend cursor', async () => {
-    const first = await tempoClient.getEntries('announcement', { locale: 'en', limit: 1 });
-    expect(first.items).toHaveLength(1);
-    expect(first.nextCursor).toBe('1');
+    const first = await tempoClient.getEntries('announcement', { locale: 'en', limit: 2 });
+    expect(first.items).toHaveLength(2);
+    expect(first.nextCursor).toBe('2');
 
     const second = await tempoClient.getEntries('announcement', {
       locale: 'en',
-      limit: 1,
+      limit: 2,
       cursor: first.nextCursor ?? undefined,
     });
     expect(second.items).toHaveLength(1);
@@ -85,12 +85,26 @@ describe('tempo adapter', () => {
     expect(second.items[0]?.id).not.toBe(first.items[0]?.id);
   });
 
+  test('AC-C-2: lists entries in every app language, with the server-side fallback to en', async () => {
+    const page = await tempoClient.getEntries('announcement', { locale: 'de' });
+
+    const welcome = page.items.find((item) => item.slug === 'welcome');
+    expect(welcome).toMatchObject({ locale: 'de', fields: { title: 'Willkommen bei Tempo' } });
+    const gettingStarted = page.items.find((item) => item.slug === 'getting-started');
+    expect(gettingStarted).toMatchObject({
+      locale: 'de',
+      fallbackFields: ['body'],
+      fields: { title: 'Tipps für den Einstieg' },
+    });
+    expect(gettingStarted?.fields.body).toContain('Quick tips');
+  });
+
   test('AC-C-2: retries once with en when the backend does not know the locale', async () => {
     const seen = recordRequests();
 
-    const page = await tempoClient.getEntries('announcement', { locale: 'fr' });
+    const page = await tempoClient.getEntries('announcement', { locale: 'it' });
 
-    expect(seen.map((request) => request.url.searchParams.get('locale'))).toEqual(['fr', 'en']);
+    expect(seen.map((request) => request.url.searchParams.get('locale'))).toEqual(['it', 'en']);
     expect(page.items.length).toBeGreaterThan(0);
     expect(page.items.every((item) => item.locale === 'en')).toBe(true);
   });
@@ -107,7 +121,7 @@ describe('tempo adapter', () => {
       }),
     );
 
-    await expect(tempoClient.getEntries('announcement', { locale: 'fr' })).rejects.toMatchObject({
+    await expect(tempoClient.getEntries('announcement', { locale: 'it' })).rejects.toMatchObject({
       status: 400,
     });
     expect(calls).toBe(1);
@@ -116,8 +130,8 @@ describe('tempo adapter', () => {
   test('AC-C-2: asks again with If-None-Match and serves the cached body on 304', async () => {
     const seen = recordRequests();
 
-    const first = await tempoClient.getEntries('announcement', { locale: 'en', limit: 2 });
-    const second = await tempoClient.getEntries('announcement', { locale: 'en', limit: 2 });
+    const first = await tempoClient.getEntries('announcement', { locale: 'en', limit: 3 });
+    const second = await tempoClient.getEntries('announcement', { locale: 'en', limit: 3 });
 
     expect(second).toEqual(first);
     expect(seen).toHaveLength(2);

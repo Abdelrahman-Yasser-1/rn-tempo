@@ -25,6 +25,17 @@ jest.mock('@features/home', () => {
     HomeScreen: () => <MockText>Home</MockText>,
   };
 });
+// @tempo-feature:cms:start
+jest.mock('@features/whats-new', () => {
+  const { Text: MockText } = jest.requireActual<{ Text: ComponentType<{ children: string }> }>(
+    'react-native',
+  );
+  return {
+    WhatsNewEntry: () => null,
+    WhatsNewScreen: () => <MockText>WhatsNew</MockText>,
+  };
+});
+// @tempo-feature:cms:end
 jest.mock('@features/profile', () => {
   const { Text: MockText } = jest.requireActual<{ Text: ComponentType<{ children: string }> }>(
     'react-native',

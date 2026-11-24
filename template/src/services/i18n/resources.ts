@@ -7,6 +7,7 @@ import arItems from '@locales/ar/items.json'; // @tempo-feature:samples
 import arProfile from '@locales/ar/profile.json';
 import arSettings from '@locales/ar/settings.json';
 import arValidation from '@locales/ar/validation.json';
+import arWhatsNew from '@locales/ar/whats-new.json'; // @tempo-feature:cms
 import deApp from '@locales/de/app.json';
 import deAuth from '@locales/de/auth.json';
 import deCommon from '@locales/de/common.json';
@@ -16,6 +17,7 @@ import deItems from '@locales/de/items.json'; // @tempo-feature:samples
 import deProfile from '@locales/de/profile.json';
 import deSettings from '@locales/de/settings.json';
 import deValidation from '@locales/de/validation.json';
+import deWhatsNew from '@locales/de/whats-new.json'; // @tempo-feature:cms
 import enApp from '@locales/en/app.json';
 import enAuth from '@locales/en/auth.json';
 import enCommon from '@locales/en/common.json';
@@ -25,6 +27,7 @@ import enItems from '@locales/en/items.json'; // @tempo-feature:samples
 import enProfile from '@locales/en/profile.json';
 import enSettings from '@locales/en/settings.json';
 import enValidation from '@locales/en/validation.json';
+import enWhatsNew from '@locales/en/whats-new.json'; // @tempo-feature:cms
 import esApp from '@locales/es/app.json';
 import esAuth from '@locales/es/auth.json';
 import esCommon from '@locales/es/common.json';
@@ -34,6 +37,7 @@ import esItems from '@locales/es/items.json'; // @tempo-feature:samples
 import esProfile from '@locales/es/profile.json';
 import esSettings from '@locales/es/settings.json';
 import esValidation from '@locales/es/validation.json';
+import esWhatsNew from '@locales/es/whats-new.json'; // @tempo-feature:cms
 import frApp from '@locales/fr/app.json';
 import frAuth from '@locales/fr/auth.json';
 import frCommon from '@locales/fr/common.json';
@@ -43,6 +47,7 @@ import frItems from '@locales/fr/items.json'; // @tempo-feature:samples
 import frProfile from '@locales/fr/profile.json';
 import frSettings from '@locales/fr/settings.json';
 import frValidation from '@locales/fr/validation.json';
+import frWhatsNew from '@locales/fr/whats-new.json'; // @tempo-feature:cms
 
 /** Static resources: every namespace of contract C11, bundled so first render never waits. */
 export const resources = {
@@ -55,6 +60,7 @@ export const resources = {
     profile: enProfile,
     settings: enSettings,
     items: enItems, // @tempo-feature:samples
+    'whats-new': enWhatsNew, // @tempo-feature:cms
     app: enApp,
   },
   ar: {
@@ -66,6 +72,7 @@ export const resources = {
     profile: arProfile,
     settings: arSettings,
     items: arItems, // @tempo-feature:samples
+    'whats-new': arWhatsNew, // @tempo-feature:cms
     app: arApp,
   },
   es: {
@@ -77,6 +84,7 @@ export const resources = {
     profile: esProfile,
     settings: esSettings,
     items: esItems, // @tempo-feature:samples
+    'whats-new': esWhatsNew, // @tempo-feature:cms
     app: esApp,
   },
   de: {
@@ -88,6 +96,7 @@ export const resources = {
     profile: deProfile,
     settings: deSettings,
     items: deItems, // @tempo-feature:samples
+    'whats-new': deWhatsNew, // @tempo-feature:cms
     app: deApp,
   },
   fr: {
@@ -99,6 +108,7 @@ export const resources = {
     profile: frProfile,
     settings: frSettings,
     items: frItems, // @tempo-feature:samples
+    'whats-new': frWhatsNew, // @tempo-feature:cms
     app: frApp,
   },
 };

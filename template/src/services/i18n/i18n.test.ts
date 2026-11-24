@@ -34,6 +34,7 @@ describe('i18n resources', () => {
         'profile',
         'settings',
         'validation',
+        'whats-new', // @tempo-feature:cms
       ]),
     );
   });

@@ -1,0 +1,11 @@
+{
+  "empty": {
+    "message": "Check back later for news.",
+    "title": "Nothing new yet"
+  },
+  "entry": {
+    "hint": "See the latest announcements.",
+    "title": "What's new"
+  },
+  "title": "What's new"
+}

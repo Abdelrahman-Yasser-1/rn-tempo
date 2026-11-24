@@ -31,12 +31,22 @@ function ItemsListStub() {
   );
 }
 
+// @tempo-feature:cms:start
+/** Stands in for What's new so the Home entry's navigation can be observed. */
+function WhatsNewStub() {
+  return <Text>What's new stub</Text>;
+}
+// @tempo-feature:cms:end
+
 /** A real native stack, so focus and navigation behave as they do in the app. */
 function HomeStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="ItemsList" component={ItemsListStub} />
+      {/* @tempo-feature:cms:start */}
+      <Stack.Screen name="WhatsNew" component={WhatsNewStub} />
+      {/* @tempo-feature:cms:end */}
     </Stack.Navigator>
   );
 }
@@ -122,4 +132,15 @@ describe('HomeScreen', () => {
 
     expect(await screen.findByText('Items list stub')).toBeOnTheScreen();
   });
+
+  // @tempo-feature:cms:start
+  test("AC-C-3: the What's new entry opens the announcements", async () => {
+    mockCurrentUser('Ada');
+    const { user } = await renderWithProviders(<HomeStack />);
+
+    await user.press(screen.getByRole('button', { name: "What's new" }));
+
+    expect(await screen.findByText("What's new stub")).toBeOnTheScreen();
+  });
+  // @tempo-feature:cms:end
 });

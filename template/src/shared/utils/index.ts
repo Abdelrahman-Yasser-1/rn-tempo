@@ -24,6 +24,7 @@ export {
 } from './calendar';
 export type { DayOfWeek, DisabledRules, GridCell } from './calendar';
 export { haptics } from './haptics';
+export { isSafeUrl } from './markdown';
 export { computeTooltipLayout } from './tooltipLayout';
 export type { Rect, TooltipLayout, TooltipPlacement } from './tooltipLayout';
 export { countryName, filterCountries, findCountry, sortCountries } from './countries';

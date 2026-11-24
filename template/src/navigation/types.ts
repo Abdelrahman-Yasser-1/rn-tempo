@@ -15,6 +15,9 @@ export type HomeStackParamList = {
   ItemDetails: { itemId: number };
   ItemCreate: undefined;
   // @tempo-feature:samples:end
+  // @tempo-feature:cms:start
+  WhatsNew: undefined;
+  // @tempo-feature:cms:end
 };
 
 export type ProfileStackParamList = {

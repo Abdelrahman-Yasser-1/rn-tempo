@@ -5,6 +5,10 @@ English (`en`) is the source language. Arabic (`ar`) is maintained with the temp
 
 The new `settings.appIcon` strings need review in Arabic, Spanish, German and French.
 <!-- @tempo-feature:app-icons:end -->
+<!-- @tempo-feature:cms:start -->
+
+The new `whats-new` strings, and the seed announcements (`welcome`, `release-notes` and `getting-started`) in `backend/backend.json`, need review in Arabic, Spanish, German and French.
+<!-- @tempo-feature:cms:end -->
 
 ## Status per language
 

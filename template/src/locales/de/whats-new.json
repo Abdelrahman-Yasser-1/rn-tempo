@@ -1,0 +1,11 @@
+{
+  "empty": {
+    "message": "Schau später noch einmal vorbei.",
+    "title": "Noch nichts Neues"
+  },
+  "entry": {
+    "hint": "Sieh dir die neuesten Ankündigungen an.",
+    "title": "Neuigkeiten"
+  },
+  "title": "Neuigkeiten"
+}
