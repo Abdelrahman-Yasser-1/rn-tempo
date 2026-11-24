@@ -1,7 +1,8 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 
 import { FEATURE_NAMES } from '@rn-tempo/contracts';
+import { execa } from 'execa';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { aiToolsFor, createProject, defaultBundleId, defaultDisplayName, validateCreateInput, type CreateOptions } from '../src/lib/create.ts';
@@ -127,6 +128,77 @@ describe('createProject (end to end, local template, no network, no install)', (
     expect(order[1]).toBe('yarn install');
     expect(order.at(-1)).toMatch(/^git commit -q -m chore\(repo\): initialize from rn-tempo v0\.0\.0$/);
     expect(order.indexOf('git add -A')).toBeGreaterThan(order.indexOf('yarn install'));
+  });
+
+  describe('ai sync step', () => {
+    const syncCall = 'node scripts/ai-sync/sync.mjs';
+    const commands = () => calls.map((call) => call.replace(/^[^:]+: /, ''));
+
+    it('AC-1: runs after install and pods, before the initial commit, and is listed in the steps', async () => {
+      const result = await createProject(base({ git: true, install: true }));
+      const order = commands();
+      expect(order.filter((call) => call === syncCall)).toHaveLength(1);
+      expect(order.indexOf(syncCall)).toBeGreaterThan(order.indexOf('yarn install'));
+      expect(order.indexOf(syncCall)).toBeLessThan(order.indexOf('git add -A'));
+      expect(calls.find((call) => call.endsWith(syncCall))).toMatch(/^AcmeShop: /); // runs inside the new project
+      const steps = result.steps;
+      expect(steps.indexOf('ai sync')).toBeGreaterThan(steps.indexOf('install'));
+      expect(steps.indexOf('ai sync')).toBeLessThan(steps.indexOf('git commit'));
+      expect(result.notes).toEqual([]);
+    });
+
+    it('AC-1: is skipped, with a note, when install is skipped (also the case for upgrade snapshots)', async () => {
+      const result = await createProject(base({ git: true, install: false }));
+      expect(commands()).not.toContain(syncCall);
+      expect(result.steps).not.toContain('ai sync');
+      expect(result.notes).toEqual([expect.stringContaining('ai sync skipped: dependencies were not installed')]);
+    });
+
+    it('AC-1: is skipped, with a note, when no AI tool is selected', async () => {
+      const result = await createProject(base({ install: true, features: ['maestro'] }));
+      expect(commands()).not.toContain(syncCall);
+      expect(result.steps).toContain('install');
+      expect(result.steps).not.toContain('ai sync');
+      expect(result.notes).toEqual(['ai sync skipped: no AI tools selected.']);
+    });
+
+    it('AC-1: is skipped, with a note, when the template has no ai sync script', async () => {
+      const dropScript: Runner = async (command, args, options) => {
+        await runner(command, args, options);
+        if (command === 'yarn') await rm(path.join(options.cwd, 'scripts/ai-sync/sync.mjs'));
+      };
+      const result = await createProject(base({ install: true, runner: dropScript }));
+      expect(commands()).not.toContain(syncCall);
+      expect(result.steps).not.toContain('ai sync');
+      expect(result.notes).toEqual([expect.stringContaining('scripts/ai-sync/sync.mjs not found')]);
+    });
+
+    it('AC-1: a failing sync warns and notes instead of failing the create', async () => {
+      const failing: Runner = async (command, args, options) => {
+        if (command === 'node') throw new Error('boom');
+        await runner(command, args, options);
+      };
+      const warnings: string[] = [];
+      const result = await createProject(base({ install: true, runner: failing, onWarn: (message) => warnings.push(message) }));
+      expect(result.steps).toContain('install');
+      expect(result.steps).not.toContain('ai sync');
+      expect(result.notes).toEqual([expect.stringContaining('ai sync failed: boom')]);
+      expect(warnings).toEqual(result.notes);
+    });
+
+    it('AC-1: the real script writes only the selected tools, and its output goes through the runner (stderr with --json)', async () => {
+      const seen: { json?: boolean }[] = [];
+      const real: Runner = async (command, args, options) => {
+        if (command !== 'node') return runner(command, args, options);
+        seen.push({ json: options.json });
+        await execa(command, [...args], { cwd: options.cwd, stdio: 'pipe' });
+      };
+      const result = await createProject(base({ install: true, json: true, runner: real, features: ['ai-claude'] }));
+      expect(result.steps).toContain('ai sync');
+      expect(seen).toEqual([{ json: true }]);
+      expect((await readTempoJson(result.dir)).ai.tools).toEqual(['claude']);
+      expect(await pathExists(path.join(result.dir, '.cursor/rules'))).toBe(false);
+    });
   });
 
   it('refuses a non-empty target directory', async () => {

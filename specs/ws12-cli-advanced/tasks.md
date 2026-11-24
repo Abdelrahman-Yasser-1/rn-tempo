@@ -6,4 +6,4 @@ Format: `- [ ] T<task id> <summary>`. Tick a box in the same commit that complet
 - [x] T12.2 `tempo spec new <name>` and `tempo spec check`
 - [x] T12.3 `tempo upgrade` (diff between templateVersion and latest, patch file, `--apply`)
 - [x] T12.4 `--json` output for every command, shapes documented
-- [ ] T12.5 `create-tempo-app` calls `ai sync`
+- [x] T12.5 `create-tempo-app` calls `ai sync`

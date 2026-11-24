@@ -27,11 +27,17 @@ name, display name, bundle id, environments, modules and AI tools.
 
 The target folder must be missing or empty.
 
+After the install, the command runs the new project's `ai sync`
+(`scripts/ai-sync/sync.mjs`), so the files for the AI tools you picked exist before
+the first commit. It is skipped, with a line in `notes`, when you pass
+`--skip-install`, when you picked no AI tool or when the template has no such script.
+A failing sync only adds a note. Run `yarn tempo ai sync` yourself later.
+
 ### JSON output
 
 `--json` needs the name and never prompts. `steps` lists the pipeline steps that ran,
 in order, for example `fetch`, `rename`, `features`, `envs`, `metadata`, `git init`,
-`install`, `pods`, `git commit`.
+`install`, `pods`, `ai sync`, `git commit`. `notes` explains each skipped optional step.
 
 ```json
 {
@@ -45,6 +51,7 @@ in order, for example `fetch`, `rename`, `features`, `envs`, `metadata`, `git in
   "templateSource": "gh:Abdelrahman-Yasser-1/rn-tempo/template#v1.0.0",
   "autoAdded": [],
   "steps": ["fetch", "rename", "features", "envs", "metadata"],
+  "notes": ["ai sync skipped: dependencies were not installed. Run `yarn tempo ai sync` after `yarn install`."],
   "postRemove": [],
   "nextSteps": ["cd MyApp", "yarn install", "yarn pods", "yarn ios:dev   # or yarn android:dev"]
 }

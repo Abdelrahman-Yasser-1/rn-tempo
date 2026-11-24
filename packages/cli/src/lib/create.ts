@@ -4,18 +4,21 @@ import path from 'node:path';
 import type { FeatureName, TempoEnv, TempoJson } from '@rn-tempo/contracts';
 
 import { addEnv, completeEnv, removeEnv, type EnvInput } from './env.ts';
-import { CliError } from './errors.ts';
+import { CliError, errorMessage } from './errors.ts';
 import { fetchTemplate } from './fetch-template.ts';
 import { pathExists } from './fs-utils.ts';
 import { runIcons } from './icons.ts';
 import { loadManifests, planRemoval, resolveSelection, type ManifestMap } from './manifest.ts';
-import { gitInit, gitInitialCommit, installPods, yarnInstall, type Runner } from './pm.ts';
+import { gitInit, gitInitialCommit, installPods, run, yarnInstall, type Runner } from './pm.ts';
 import { removeFeatures, type PostRemoveStep } from './remove-feature.ts';
 import { isValidAppName, isValidBundleId, kebabCase, renameProject, type AppIdentity } from './rename.ts';
 import { readTempoJson, writeTempoJson } from './tempo-json.ts';
 import { addCliDevDependency, rewriteWorkspaceLinks } from './workspace-links.ts';
 
 export const BUILT_IN_ENVS = ['dev', 'staging', 'prod'] as const;
+
+/** The generated project's own AI file generator (the same script `tempo ai sync` runs). */
+export const AI_SYNC_SCRIPT = 'scripts/ai-sync/sync.mjs';
 
 const AI_FEATURE_TOOLS = { 'ai-claude': 'claude', 'ai-cursor': 'cursor', 'ai-copilot': 'copilot' } as const;
 
@@ -51,6 +54,8 @@ export type CreateResult = {
   templateSource: string;
   autoAdded: FeatureName[];
   steps: string[];
+  /** Why an optional step was skipped or failed, for example `ai sync`. */
+  notes: string[];
   postRemove: PostRemoveStep[];
 };
 
@@ -103,7 +108,7 @@ async function assertTargetFree(dir: string): Promise<void> {
 
 /**
  * The create pipeline: fetch, rename, remove unselected features, configure envs, write
- * `.tempo.json`, rewrite workspace links, then git / install / pods.
+ * `.tempo.json`, rewrite workspace links, then git init / install / pods / ai sync / first commit.
  */
 export async function createProject(options: CreateOptions): Promise<CreateResult> {
   validateCreateInput(options);
@@ -116,6 +121,7 @@ export async function createProject(options: CreateOptions): Promise<CreateResul
 /** Shared by create and upgrade after fetching into an empty destination. */
 export async function configureFetchedProject(options: CreateOptions, templateSource: string): Promise<CreateResult> {
   const steps: string[] = [];
+  const notes: string[] = [];
   const step = (label: string) => {
     steps.push(label);
     options.onStep?.(label);
@@ -176,7 +182,7 @@ export async function configureFetchedProject(options: CreateOptions, templateSo
   await addCliDevDependency(options.dir, options.cliVersion);
   step('metadata');
 
-  // 6. git, install, pods
+  // 6. git, install, pods, ai sync, first commit
   if (options.git) {
     await gitInit(options.dir, runnerOptions);
     step('git init');
@@ -185,6 +191,9 @@ export async function configureFetchedProject(options: CreateOptions, templateSo
     await yarnInstall(options.dir, runnerOptions);
     step('install');
     if (await installPods(options.dir, runnerOptions)) step('pods');
+    if (await syncAi(options, finalJson.ai.tools, notes)) step('ai sync');
+  } else {
+    notes.push('ai sync skipped: dependencies were not installed. Run `yarn tempo ai sync` after `yarn install`.');
   }
   if (options.git) {
     await gitInitialCommit(options.dir, `chore(repo): initialize from rn-tempo v${options.cliVersion}`, runnerOptions);
@@ -199,8 +208,34 @@ export async function configureFetchedProject(options: CreateOptions, templateSo
     templateSource,
     autoAdded: added,
     steps,
+    notes,
     postRemove: removal.postRemove,
   };
+}
+
+/**
+ * Runs the new project's own ai sync so the tool files exist before the first commit. The script
+ * reads the selected tools from `.tempo.json`. A missing script, no selected tools or a failing run
+ * adds a note instead of failing the create. Returns whether it ran.
+ */
+async function syncAi(options: CreateOptions, tools: readonly string[], notes: string[]): Promise<boolean> {
+  if (tools.length === 0) {
+    notes.push('ai sync skipped: no AI tools selected.');
+    return false;
+  }
+  if (!(await pathExists(path.join(options.dir, AI_SYNC_SCRIPT)))) {
+    notes.push(`ai sync skipped: ${AI_SYNC_SCRIPT} not found in this template.`);
+    return false;
+  }
+  try {
+    await (options.runner ?? run)('node', [AI_SYNC_SCRIPT], { cwd: options.dir, json: options.json });
+    return true;
+  } catch (error) {
+    const note = `ai sync failed: ${errorMessage(error)}. Run \`yarn tempo ai sync\` in the project.`;
+    notes.push(note);
+    options.onWarn?.(note);
+    return false;
+  }
 }
 
 /** Default bundle id for `--yes`: `com.example.<lowercase app name>`. */

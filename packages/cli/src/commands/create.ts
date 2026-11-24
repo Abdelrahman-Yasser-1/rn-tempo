@@ -151,6 +151,7 @@ export default defineCommand({
       });
 
       const next = [`cd ${name}`, ...(install ? [] : ['yarn install', 'yarn pods']), 'yarn ios:dev   # or yarn android:dev'];
+      for (const note of result.notes) reporter.info(note);
       if (result.autoAdded.length > 0) reporter.warn(`Also enabled (required by other modules): ${result.autoAdded.join(', ')}`);
       reporter.result({ ok: true, ...result, nextSteps: next });
       if (!common.json) {
