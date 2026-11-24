@@ -36,6 +36,10 @@ setPalette("ocean");
 
 `theme.name` is `'light'` or `'dark'`, and `theme.paletteName` is the palette.
 
+## Control boundaries
+
+Use `borderStrong` when an outline or track identifies an enabled control: WCAG 2.2 SC 1.4.11 requires at least 3:1 contrast with adjacent colours, which the theme tests check against `background`, `surface` and `surfaceVariant`. Use `border` for decorative card edges and separators, which do not identify controls and can stay subtle.
+
 ## Old stored values
 
 Before palettes, `app.theme` held `system`, `light` or `dark`. It still does, as the mode, so nothing needs to be migrated. A missing `app.palette` means Default, and an unknown value in either key falls back to `system` and `default`.

@@ -15,7 +15,7 @@ export const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.spacing.md,
     borderWidth: 1,
     borderRadius: theme.radii.sm,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors.borderStrong,
     backgroundColor: theme.colors.background,
     variants: {
       open: {
@@ -65,7 +65,7 @@ export const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.spacing.md,
     borderWidth: 1,
     borderRadius: theme.radii.sm,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors.borderStrong,
     backgroundColor: theme.colors.background,
   },
   searchInput: {

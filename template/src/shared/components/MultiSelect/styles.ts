@@ -12,7 +12,7 @@ export const styles = StyleSheet.create((theme, rt) => ({
     minHeight: MIN_TOUCH_TARGET,
     borderWidth: 1,
     borderRadius: theme.radii.sm,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors.borderStrong,
     backgroundColor: theme.colors.background,
     variants: {
       open: {

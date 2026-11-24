@@ -97,7 +97,7 @@ export function Slider({
         step={step}
         disabled={isInert}
         minimumTrackTintColor={theme.colors.primary}
-        maximumTrackTintColor={theme.colors.border}
+        maximumTrackTintColor={isInert ? theme.colors.border : theme.colors.borderStrong}
         thumbTintColor={theme.colors.primary}
         style={styles.slider}
         onAccessibilityAction={onAccessibilityAction}

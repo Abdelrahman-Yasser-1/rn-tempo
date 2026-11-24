@@ -36,6 +36,9 @@ export const styles = StyleSheet.create((theme) => ({
         false: {},
       },
     },
+    compoundVariants: [
+      { value: false, disabled: false, styles: { backgroundColor: theme.colors.borderStrong } },
+    ],
   },
   thumb: {
     width: theme.spacing.xl,

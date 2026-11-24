@@ -20,6 +20,7 @@ export type ColorTokens = {
   textDisabled: string;
   textInverse: string;
   border: string;
+  borderStrong: string;
   divider: string;
   focus: string;
   success: string;
@@ -129,6 +130,7 @@ export const lightColors: ColorTokens = {
   textDisabled: palette.gray[400], // exempt from AA (disabled state)
   textInverse: palette.white, // text on primary/dark fills
   border: palette.gray[300],
+  borderStrong: palette.gray[500],
   divider: palette.gray[200],
   focus: palette.sa[700], // keyboard/a11y focus ring
   success: palette.success[700], // AA: white on success600 is only 3.9:1, so one step darker
@@ -162,6 +164,7 @@ export const darkColors: ColorTokens = {
   textDisabled: palette.gray[600],
   textInverse: palette.gray[1000],
   border: palette.gray[700],
+  borderStrong: palette.gray[400],
   divider: palette.gray[800],
   focus: palette.sa[300],
   success: palette.success[400],
@@ -202,6 +205,7 @@ const brandLight = ({
   textDisabled: palette.gray[400], // exempt from AA (disabled state)
   textInverse: palette.white,
   border: palette.gray[300],
+  borderStrong: palette.gray[500],
   divider: tint[200],
   focus: primary[800],
   success: palette.success[700],
@@ -236,6 +240,7 @@ const brandDark = ({ primary, accent, tint }: (typeof palette.brands)[BrandName]
   textDisabled: palette.gray[600],
   textInverse: palette.gray[1000],
   border: palette.gray[700],
+  borderStrong: palette.gray[400],
   divider: tint[800],
   focus: primary[300],
   success: palette.success[400],

@@ -40,6 +40,7 @@ export const styles = StyleSheet.create((theme) => ({
       },
     },
     compoundVariants: [
+      { compact: false, disabled: false, styles: { borderColor: theme.colors.borderStrong } },
       { compact: false, open: true, styles: { borderColor: theme.colors.focus } },
       { compact: false, invalid: true, styles: { borderColor: theme.colors.error } },
       {
