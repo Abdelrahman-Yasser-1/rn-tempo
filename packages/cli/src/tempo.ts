@@ -16,6 +16,7 @@ const main = defineCommand({
     ai: () => import('./commands/ai.ts').then((m) => m.default),
     clean: () => import('./commands/clean.ts').then((m) => m.default),
     doctor: () => import('./commands/doctor.ts').then((m) => m.default),
+    spec: () => import('./commands/spec.ts').then((m) => m.default),
   },
 });
 

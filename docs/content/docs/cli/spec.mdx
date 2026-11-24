@@ -1,0 +1,51 @@
+---
+title: tempo spec
+description: Create a project spec and check its acceptance criteria against tests.
+---
+
+## tempo spec new
+
+```sh
+tempo spec new <name> [--dry-run] [--cwd <project>] [--json]
+```
+
+Choose a kebab-case name such as `wallet-history`. The command copies files from
+the project's `specs/_templates/` into a new `specs/<name>/` directory. An
+existing destination is an error. Use `--dry-run` to preview the project-relative paths.
+
+```json
+{
+  "ok": true,
+  "name": "wallet-history",
+  "dryRun": true,
+  "created": ["specs/wallet-history/design.md", "specs/wallet-history/spec.md", "specs/wallet-history/tasks.md"]
+}
+```
+
+## tempo spec check
+
+```sh
+tempo spec check [--strict] [--cwd <project>] [--json]
+```
+
+The project's `scripts/spec-check.mjs` checks acceptance criteria against Jest
+test titles and Maestro tags. Uncovered criteria fail the check for implemented
+and verified specs. Use `--strict` to enforce coverage for every status. The CLI
+returns the checker's exit status. With `--json`, stdout contains one result and
+stderr carries diagnostics.
+
+```json
+{
+  "ok": false,
+  "specs": [
+    { "feature": "wallet-history", "status": "draft", "total": 2, "uncovered": ["AC-2"], "enforced": true }
+  ]
+}
+```
+
+If the checker exits before producing its JSON report, the CLI returns
+`{ "ok": false, "exitCode": 7 }` with the checker's exit code.
+
+Setup and validation errors use
+`{ "ok": false, "error": { "code": "...", "message": "...", "details": [] } }`.
+The codes are `INVALID_SPEC_NAME`, `SPEC_EXISTS`, `SPEC_TEMPLATES_MISSING` and `SPEC_SCRIPT_MISSING`.
