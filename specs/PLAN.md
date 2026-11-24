@@ -2391,3 +2391,7 @@ Recorded by the integrator during WS0. Where this list and the plan disagree, **
 60. **WS16 phase F moves to WS11 (owner, 2026-11-24).**
     - The WS16 Maestro flows and the device tour need the WS11 Maestro setup, so they become WS11 tasks T11.6 and T11.7. WS16 is complete with phases A–E.
     - The old mocks were removed in T15.Z9 (owner confirmation, 2026-11-23): E2E flows run against the Tempo local backend (a local `serve` or a CI session).
+61. **WS15 later phases and WS17 backend app v2 (owner, 2026-11-24).**
+    - **WS15 phases D–I** (Express + Postgres API, Docker, portal access and UI, portal CMS, Strapi option, CLI `--with-backend`) move after **WS14**. Shipped work already covers part of them (the Local Backend CMS and the team server roles and audit log), so each phase is re-checked before it starts. `T15.I1` drops `@rn-tempo/dev-api`, which T15.Z9 removed.
+    - **New WS17: Tempo Local Backend app v2** in `apps/local-backend`. It redesigns the whole app UI and UX for production, with a native app menu bar (Tempo, File, Edit, View, Backend, Request, Window, Help) and a command palette. It adds an MCP server so AI agents can work with a backend, and a Postman/curl-like request runner. It also adds features chosen from a survey of open-source API tools.
+    - **Phase A (design selection)** runs now. It produces three HTML design directions and a feature recommendation list. The owner picks one design and the features, then the build phases are written and scheduled. Spec: `specs/ws17-backend-app-v2/spec.md`.
