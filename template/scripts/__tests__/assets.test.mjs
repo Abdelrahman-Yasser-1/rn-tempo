@@ -197,6 +197,19 @@ describe('asset sources', () => {
     );
   });
 
+  it('ignores the metadata files an OS drops into folders', () => {
+    assert.deepEqual(
+      findAssetProblems(
+        assetsDirWith({
+          '.DS_Store': 'x',
+          'icons/.DS_Store': 'x',
+          'images/Thumbs.db': 'x',
+        }),
+      ),
+      [],
+    );
+  });
+
   it('rejects stray files, unknown folders and the wrong file types', () => {
     assert.deepEqual(
       findAssetProblems(

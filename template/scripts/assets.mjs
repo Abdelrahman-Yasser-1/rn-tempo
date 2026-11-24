@@ -73,11 +73,15 @@ function toPosix(path) {
   return path.split(sep).join('/');
 }
 
+// Files the OS drops into folders (Finder, Explorer). Git ignores them, so the checks do too.
+const OS_METADATA = new Set(['.DS_Store', 'Thumbs.db', 'desktop.ini']);
+const isOsMetadata = (file) => OS_METADATA.has(file.split('/').pop());
+
 function listFiles(dir) {
   return existsSync(dir)
     ? readdirSync(dir, { recursive: true })
         .map(toPosix)
-        .filter((file) => statSync(join(dir, file)).isFile())
+        .filter((file) => !isOsMetadata(file) && statSync(join(dir, file)).isFile())
         .sort()
     : [];
 }
@@ -116,7 +120,7 @@ function topLevelProblems(assetsDir) {
   const problems = [];
   for (const entry of existsSync(assetsDir) ? readdirSync(assetsDir).sort() : []) {
     if (!statSync(join(assetsDir, entry)).isDirectory()) {
-      if (entry !== 'README.md' && entry !== KEEP_FILE) {
+      if (entry !== 'README.md' && entry !== KEEP_FILE && !isOsMetadata(entry)) {
         problems.push(`${entry}: put assets in icons/ or images/`);
       }
     } else if (!(entry in SOURCE_FOLDERS) && !OTHER_FOLDERS.includes(entry)) {
