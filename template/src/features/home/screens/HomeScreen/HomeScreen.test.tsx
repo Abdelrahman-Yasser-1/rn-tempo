@@ -36,8 +36,8 @@ function ItemsListStub() {
 function WhatsNewStub() {
   return <Text>What's new stub</Text>;
 }
-// @tempo-feature:cms:end
 
+// @tempo-feature:cms:end
 /** A real native stack, so focus and navigation behave as they do in the app. */
 function HomeStack() {
   return (
@@ -132,8 +132,8 @@ describe('HomeScreen', () => {
 
     expect(await screen.findByText('Items list stub')).toBeOnTheScreen();
   });
-
   // @tempo-feature:cms:start
+
   test("AC-C-3: the What's new entry opens the announcements", async () => {
     mockCurrentUser('Ada');
     const { user } = await renderWithProviders(<HomeStack />);

@@ -64,6 +64,7 @@ describe('createProject (end to end, local template, no network, no install)', (
     expect(tempo.app).toEqual({ name: 'AcmeShop', displayName: 'Acme Shop', bundleId: 'io.acme.shop' });
     expect(tempo.createdWith).toBe('create-tempo-app@0.0.0');
     expect(tempo.features).not.toContain('dynamic-forms');
+    expect(tempo.features).not.toContain('cms');
     expect(tempo.features).toContain('ssl-pinning');
     expect(tempo.ai.tools).toEqual(['claude', 'copilot', 'cursor']);
     expect(tempo.envs.map((env) => [env.name, env.displayName, env.scheme])).toEqual([
@@ -79,6 +80,10 @@ describe('createProject (end to end, local template, no network, no install)', (
       if (/TempoApp|com\.rntempo\.app|rntempo\/app/.test(text)) offenders.push(file);
     }
     expect(offenders).toEqual([]);
+    expect(await pathExists(path.join(dir, 'src/services/cms'))).toBe(false);
+    expect(await pathExists(path.join(dir, 'src/features/whats-new'))).toBe(false);
+    expect(await pathExists(path.join(dir, 'src/locales/en/whats-new.json'))).toBe(false);
+    expect(await readFile(path.join(dir, '.env.example'), 'utf8')).not.toContain('CMS_');
     expect(await pathExists(path.join(dir, 'ios/AcmeShop.xcodeproj'))).toBe(true);
     expect(await pathExists(path.join(dir, 'android/app/src/main/java/io/acme/shop/MainActivity.kt'))).toBe(true);
     const pkg = JSON.parse(await readFile(path.join(dir, 'package.json'), 'utf8')) as { devDependencies: Record<string, string> };

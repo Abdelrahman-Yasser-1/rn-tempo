@@ -1,4 +1,4 @@
-import { readdir, readFile } from 'node:fs/promises';
+import { readdir, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 
 import { FEATURE_NAMES, type FeatureName } from '@rn-tempo/contracts';
@@ -52,6 +52,8 @@ describe.skipIf(process.env.TEMPO_E2E !== '1')('tempo feature add (real template
     ({ dir: root, cleanup } = await makeTempDir('tempo-add-e2e'));
     template = path.join(root, 'template');
     await copyLocalTemplate(TEMPLATE_DIR, template);
+    // `.env` is a git-ignored, developer-local copy of an env file: a checkout never has it.
+    await rm(path.join(template, '.env'), { force: true });
     const result = await createProject(base('baseline', FEATURE_NAMES));
     baseline = await readAll(result.dir);
   });
@@ -106,7 +108,28 @@ describe.skipIf(process.env.TEMPO_E2E !== '1')('tempo feature add (real template
     expect(await readAll(dir)).toEqual(baseline);
   });
 
-  it.each(['app-icons', 'samples', 'storybook', 'ssl-pinning', 'dynamic-forms', 'webview', 'file-picker', 'maps', 'firebase-core', 'push-notifications', 'crashlytics', 'ai-vendored-skills'] as const)(
+  it('removes cms from a renamed project, keeps the backend and restores every byte', async () => {
+    const dir = path.join(root, 'baseline');
+    const metadata = await readTempoJson(dir);
+    const keep = metadata.features.filter((name) => name !== 'cms');
+    await removeFeatures(dir, await loadManifests(dir), ['cms'], keep);
+    await writeTempoJson(dir, { ...metadata, features: keep });
+    const files = await walkFiles(dir);
+    expect(files.filter((file) => /src\/services\/cms\/|src\/features\/whats-new\/|whats-new\.json$/.test(file))).toEqual([]);
+    expect(files).toContain('src/shared/components/Markdown/Markdown.tsx');
+    expect(files).toContain('src/shared/utils/markdown.ts');
+    for (const file of files.filter((name) => /^\.env(?:\.|$)/.test(name) || /^src\/(?!locales\/).*\.(?:tsx?|md)$/.test(name))) {
+      const text = await readFile(path.join(dir, file), 'utf8');
+      expect(text, file).not.toMatch(/tempo-feature:cms|CMS_|@services\/cms|@features\/whats-new/);
+    }
+    // The backend is shared infrastructure: its content stays, byte for byte.
+    expect(await readFile(path.join(dir, 'backend/backend.json'), 'utf8')).toBe(Buffer.from(baseline.get('backend/backend.json') ?? '', 'base64').toString('utf8'));
+    const result = await addFeature({ projectDir: dir, cwd: root, feature: 'cms', template });
+    expect(result.conflicts).toEqual([]);
+    expect(await readAll(dir)).toEqual(baseline);
+  });
+
+  it.each(['app-icons', 'samples', 'storybook', 'ssl-pinning', 'dynamic-forms', 'webview', 'file-picker', 'maps', 'firebase-core', 'push-notifications', 'crashlytics', 'cms', 'ai-vendored-skills'] as const)(
     'creating without %s and adding it back matches a project created with it',
     async (feature) => {
       const dropped = [feature, ...(DEPENDENTS[feature] ?? [])];

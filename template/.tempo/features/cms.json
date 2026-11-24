@@ -7,7 +7,9 @@
   "requires": [],
   "conflicts": [],
   "deleteGlobs": [
-    "src/services/cms/**"
+    "src/services/cms/**",
+    "src/features/whats-new/**",
+    "src/locales/{en,ar,es,de,fr}/whats-new.json"
   ],
   "dependencies": [],
   "devDependencies": [],
