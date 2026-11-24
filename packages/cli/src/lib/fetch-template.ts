@@ -32,9 +32,11 @@ export async function copyLocalTemplate(source: string, dest: string): Promise<v
   await mkdir(dest, { recursive: true });
   await cp(source, dest, {
     recursive: true,
+    verbatimSymlinks: true,
     filter: (item) => {
       const rel = path.relative(source, item);
       if (rel === '') return true;
+      if (rel === path.join('vendor', 'bundle')) return false;
       const segments = rel.split(path.sep);
       return !segments.some((segment) => IGNORED_DIRS.has(segment)) && rel !== path.join('.ai', '.current.json');
     },

@@ -1,0 +1,84 @@
+---
+title: tempo upgrade
+description: Preview template changes and merge a release into an existing project.
+---
+
+```sh
+tempo upgrade [--to <version>] [--template <folder|source>] [--apply] [--json] [--cwd <project>]
+```
+
+Run `tempo upgrade` to write a Git patch at
+`.tempo/upgrade-<from>-<to>.patch`. The summary lists added, changed and removed
+paths and any lockfiles to refresh. Use `git apply --stat <patch>` to inspect the
+patch. Previewing works outside a Git repository.
+
+The base comes from the release tag for `templateVersion` in your project's
+`.tempo.json`. By default, the CLI looks up the target with
+`npm view create-tempo-app version`, the same lookup used by `tempo doctor`.
+Use `--to 1.2.0` to choose a release. Use `--template ../my-template` or a
+giget source to select a fork. Its `.tempo.json` supplies the target version.
+When you supply both flags, the source must declare the requested version.
+A local target skips the registry lookup. The base still comes from its
+release tag. Matching versions report “Already up to date” and exit 0.
+
+### Patch contents
+
+Both releases go through create's rename, environment configuration, feature
+removal and dependency pinning with your project's settings. The patch includes
+binary assets and executable-mode changes. Your own edits enter the comparison
+when Git applies the patch. Projects with custom environments use create's
+native environment scripts and may need their usual local dependencies.
+
+The diff skips the following paths.
+
+- Dependencies, build output and caches in `node_modules`, `Pods`, `build`,
+  `.gradle`, `.cxx`, `DerivedData`, `.kotlin`, `.yarn` and `.next` directories, plus installed gems in `vendor/bundle/`.
+- `.env` and `.env.*` files at any depth, except `.env.example`.
+- `backend/.data/`, `.tempo/*.patch`, `.git`, local AI sessions and their current-session pointer.
+- Project metadata in `.tempo.json`. The CLI updates its version after a successful apply.
+- `yarn.lock`, `Podfile.lock` and `Gemfile.lock` at any depth. Changed lockfiles
+  appear under “Reinstall to refresh”.
+
+### Apply and resolve conflicts
+
+1. Commit or stash local changes, including untracked files. If a preview left
+   an untracked patch, move it outside the repository or ignore it before applying.
+2. Run `tempo upgrade --apply` with the same target. The CLI regenerates the patch
+   and runs `git apply --3way`. On success, Git stages the patch changes and the
+   CLI writes the new `templateVersion` to the working copy of `.tempo.json`.
+3. On conflicts, the command exits 1 and lists the affected files. Inspect
+   `git status` and `git diff`, resolve the conflict markers or choose the desired
+   binary version, and stage each resolution with `git add` or `git rm`.
+   After resolving the entire patch, set `templateVersion` to the target in
+   `.tempo.json` yourself.
+4. Run the project's dependency installation steps for the listed lockfiles.
+   Review and stage the metadata and refreshed lockfiles, verify the project,
+   and commit the upgrade.
+
+### JSON output
+
+`--json` prints one result on stdout and sends the human summary to stderr.
+The file lists contain project-relative paths. An up-to-date result has
+`patch: null`, empty lists and `applied: false`.
+
+```json
+{
+  "ok": true,
+  "from": "1.0.0",
+  "to": "1.2.0",
+  "patch": ".tempo/upgrade-1.0.0-1.2.0.patch",
+  "added": ["src/new.ts"],
+  "changed": ["package.json"],
+  "removed": [],
+  "lockfiles": ["yarn.lock"],
+  "applied": false,
+  "conflicts": []
+}
+```
+
+An apply conflict returns this shape with `ok: false`, `applied: false` and
+the unmerged paths in `conflicts`. Setup and validation failures use the
+shared `{ "ok": false, "error": { "code": "...", "message": "...", "details": [] } }`
+shape. Codes include `NOT_A_TEMPO_PROJECT`, `UPGRADE_DIRTY_TREE`, `GIT_MISSING`,
+`UPGRADE_LATEST_FAILED`, `TEMPLATE_NOT_FOUND`, `TEMPLATE_DOWNLOAD_FAILED`,
+`UPGRADE_VERSION_MISMATCH` and `UPGRADE_APPLY_FAILED`.

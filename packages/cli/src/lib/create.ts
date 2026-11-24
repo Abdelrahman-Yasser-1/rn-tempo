@@ -108,6 +108,13 @@ async function assertTargetFree(dir: string): Promise<void> {
 export async function createProject(options: CreateOptions): Promise<CreateResult> {
   validateCreateInput(options);
   await assertTargetFree(options.dir);
+  await mkdir(path.dirname(options.dir), { recursive: true });
+  const fetched = await fetchTemplate({ template: options.template, cliVersion: options.cliVersion, dest: options.dir, cwd: options.cwd });
+  return configureFetchedProject(options, fetched.source);
+}
+
+/** Shared by create and upgrade after fetching into an empty destination. */
+export async function configureFetchedProject(options: CreateOptions, templateSource: string): Promise<CreateResult> {
   const steps: string[] = [];
   const step = (label: string) => {
     steps.push(label);
@@ -115,9 +122,6 @@ export async function createProject(options: CreateOptions): Promise<CreateResul
   };
   const runnerOptions = { json: options.json, runner: options.runner };
 
-  // 1. fetch
-  await mkdir(path.dirname(options.dir), { recursive: true });
-  const fetched = await fetchTemplate({ template: options.template, cliVersion: options.cliVersion, dest: options.dir, cwd: options.cwd });
   step('fetch');
 
   // 2. rename (also rewrites the built-in env display names and schemes)
@@ -147,20 +151,16 @@ export async function createProject(options: CreateOptions): Promise<CreateResul
 
   // 4. envs (only the difference to the template's dev/staging/prod)
   const envOptions = { ...runnerOptions, skipIcons: true, warn: options.onWarn };
-  let envsChanged = false;
-  for (const env of original.envs) {
-    if (!options.envs.some((candidate) => candidate.name === env.name)) {
-      await removeEnv(options.dir, env.name, envOptions);
-      envsChanged = true;
-    }
+  const removedEnvs = original.envs.filter((env) => !options.envs.some((candidate) => candidate.name === env.name));
+  const addedEnvs = options.envs.filter((env) => !original.envs.some((candidate) => candidate.name === env.name));
+  // removeEnv protects the last environment. Seed its replacement for an entirely custom matrix.
+  if (removedEnvs.length === original.envs.length) {
+    const first = addedEnvs.shift();
+    if (first) await addEnv(options.dir, first, envOptions);
   }
-  for (const env of options.envs) {
-    if (!original.envs.some((candidate) => candidate.name === env.name)) {
-      await addEnv(options.dir, env, envOptions);
-      envsChanged = true;
-    }
-  }
-  if (envsChanged) await runIcons(options.dir, runnerOptions);
+  for (const env of removedEnvs) await removeEnv(options.dir, env.name, envOptions);
+  for (const env of addedEnvs) await addEnv(options.dir, env, envOptions);
+  if (removedEnvs.length || addedEnvs.length) await runIcons(options.dir, runnerOptions);
   step('envs');
 
   // 5. .tempo.json and workspace links
@@ -196,7 +196,7 @@ export async function createProject(options: CreateOptions): Promise<CreateResul
     app,
     envs: finalJson.envs,
     features,
-    templateSource: fetched.source,
+    templateSource,
     autoAdded: added,
     steps,
     postRemove: removal.postRemove,

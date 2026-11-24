@@ -1,8 +1,8 @@
-import { runCommand, type CommandDef } from 'citty';
+import { runCommand, type ArgsDef, type CommandDef } from 'citty';
 import { vi } from 'vitest';
 
 /** Exercise citty's argument handling, JSON framing and exit status together. */
-export async function runJson(command: CommandDef, cwd: string, ...args: string[]) {
+export async function runJson<T extends ArgsDef>(command: CommandDef<T>, cwd: string, ...args: string[]) {
   let stdout = '';
   let stderr = '';
   const out = vi.spyOn(process.stdout, 'write').mockImplementation((chunk) => { stdout += String(chunk); return true; });
