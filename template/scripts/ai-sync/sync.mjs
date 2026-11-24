@@ -60,10 +60,14 @@ export function withHeader(text, source) {
   return `${raw}${header(source)}\n\n${normalizedBody}`;
 }
 
+// Files the OS drops into folders (Finder, Explorer). Git ignores them, so the sync never copies them.
+const OS_METADATA = new Set(['.DS_Store', 'Thumbs.db', 'desktop.ini']);
+
 function listFiles(dir) {
   return !existsSync(dir)
     ? []
     : readdirSync(dir, { withFileTypes: true })
+        .filter((entry) => !OS_METADATA.has(entry.name))
         .sort((a, b) => a.name.localeCompare(b.name))
         .flatMap((entry) =>
           entry.isDirectory()
