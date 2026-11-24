@@ -73,6 +73,14 @@
               "ctaUrl": "https://example.com/whats-new"
             }
           }
+        },
+        {
+          "slug": "release-notes",
+          "status": "published",
+          "values": {
+            "en": { "title": "Release notes", "body": "Read the latest app updates here." },
+            "ar": { "title": "ملاحظات الإصدار", "body": "اطّلع هنا على آخر تحديثات التطبيق." }
+          }
         }
       ]
     }
