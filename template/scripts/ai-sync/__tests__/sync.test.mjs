@@ -112,6 +112,14 @@ describe('syncAi', () => {
   });
   afterEach(() => rmSync(cwd, { recursive: true, force: true }));
 
+  it('never copies the metadata files an OS drops into folders', () => {
+    write(cwd, 'ai/skills/.DS_Store', 'x');
+    write(cwd, 'ai/skills/demo/.DS_Store', 'x');
+    syncAi({ cwd, tools: toolsFromConfig(cwd) });
+    assert.equal(existsSync(path.join(cwd, '.claude/skills/.DS_Store')), false);
+    assert.equal(existsSync(path.join(cwd, '.claude/skills/demo/.DS_Store')), false);
+  });
+
   it('writes claude, cursor and copilot outputs with headers', () => {
     const { written } = syncAi({ cwd, tools: toolsFromConfig(cwd) });
     for (const file of [
