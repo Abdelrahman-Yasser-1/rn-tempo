@@ -52,3 +52,33 @@ Guide for every contributor, human or AI agent, working on **this repo** (the te
 - Document each task as you finish it: the docs page, ADR or recipe, the `ai/rules` change and the spec checkbox ship in the same PR. Never leave docs for a later phase (amendment 53).
 - Use the PR template. Reviewers apply Part E checklists and request `--fixup` commits.
 - Merge with **rebase merge** only.
+
+## Saving tokens with code-review-graph
+[code-review-graph](https://github.com/tirth8205/code-review-graph) builds a local graph of this repo (functions, imports, calls, tests) and serves it over MCP. AI tools can ask it what a change touches or where a symbol is used instead of reading many files. It is optional and local: nothing about it is committed.
+
+**Install once** (Python 3.10+ and [uv](https://docs.astral.sh/uv/)), from the repo root:
+```bash
+uv tool install code-review-graph==2.4.0
+code-review-graph build --repo .   # about 20 s; writes .code-review-graph/ (gitignored, about 200 MB)
+```
+
+**Connect your tool** (from the repo root):
+| Tool | Command |
+| --- | --- |
+| Claude Code | `claude mcp add -s local code-review-graph -- code-review-graph serve --repo "$PWD" --auto-watch` |
+| Codex | `codex mcp add code-review-graph -- code-review-graph serve --repo "$PWD" --auto-watch` |
+| Others | Add a stdio MCP server running `code-review-graph serve --repo <repo root> --auto-watch` to your user or local config |
+
+Don't run `code-review-graph install` here. It rewrites the committed `.claude/settings.json`, `CLAUDE.md` and `.gitignore`, adds a `.mcp.json` with your absolute path, and adds steps to the lefthook git hooks.
+
+**Use it before reading lots of files.** For a review, an impact question or "where is X used":
+1. Call `get_minimal_context_tool(task="<your task>")` first.
+2. Then `detect_changes_tool`, `query_graph_tool` (`callers_of`, `importers_of`, `tests_for`) or `semantic_search_nodes_tool`, with `detail_level="minimal"`.
+3. Read only the files they point to. Still read the code and its tests before you change them; the graph narrows the search, it does not replace the source.
+
+Without MCP, use the CLI:
+- `code-review-graph detect-changes --brief --repo . --base main`: what this branch changes, its risk, and test gaps.
+- `code-review-graph query callers_of <name> --repo .` (also `importers_of`, `tests_for`, `file_summary`).
+- `code-review-graph search <text> --repo .`
+
+`--auto-watch` keeps the graph current while the MCP server runs. Otherwise run `code-review-graph update --repo .` after switching branches or pulling. To remove it: `claude mcp remove code-review-graph -s local` (or `codex mcp remove code-review-graph`), `rm -rf .code-review-graph`, and `uv tool uninstall code-review-graph`.
