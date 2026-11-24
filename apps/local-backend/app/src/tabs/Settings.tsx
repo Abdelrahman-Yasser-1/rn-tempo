@@ -31,10 +31,10 @@ export function Settings({ backend, onOpen }: { backend: BackendStatus; onOpen: 
           <p className="muted">Loading the settings…</p>
         ) : (
           <>
-            <SettingsServer key={JSON.stringify([definition.data.port, definition.data.https])} backend={backend} definition={definition.data} certs={certs.data} />
-            <SettingsNetwork key={JSON.stringify([definition.data.latency, definition.data.network, definition.data.testMode])} backend={backend} definition={definition.data} />
-            <SettingsResponses key={JSON.stringify([definition.data.responses, definition.data.responseTemplates])} backend={backend} definition={definition.data} />
-            <SettingsFaults key={JSON.stringify([definition.data.faults, definition.data.cors, definition.data.auth?.mode])} backend={backend} definition={definition.data} />
+            <SettingsServer key={`server:${JSON.stringify([definition.data.port, definition.data.https])}`} backend={backend} definition={definition.data} certs={certs.data} />
+            <SettingsNetwork key={`network:${JSON.stringify([definition.data.latency, definition.data.network, definition.data.testMode])}`} backend={backend} definition={definition.data} />
+            <SettingsResponses key={`responses:${JSON.stringify([definition.data.responses, definition.data.responseTemplates])}`} backend={backend} definition={definition.data} />
+            <SettingsFaults key={`faults:${JSON.stringify([definition.data.faults, definition.data.cors, definition.data.auth?.mode])}`} backend={backend} definition={definition.data} />
             <SettingsWebhooks backend={backend} />
             <SettingsPush backend={backend} />
             <SettingsOauth backend={backend} />
