@@ -14,6 +14,9 @@ export const LINK_PATHS = {
   ItemsList: 'items',
   ItemCreate: 'items/new',
   ItemDetails: 'items/:itemId',
+  // @tempo-feature:cms:start
+  WhatsNew: 'whats-new',
+  // @tempo-feature:cms:end
   Profile: 'profile',
   EditProfile: 'profile/edit',
   Settings: 'settings',

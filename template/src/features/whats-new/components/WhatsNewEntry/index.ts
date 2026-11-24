@@ -1,0 +1,1 @@
+export { WhatsNewEntry } from './WhatsNewEntry';

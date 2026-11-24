@@ -15,6 +15,9 @@ import {
   TextSizeScreen,
   ThemeScreen,
 } from '@features/settings';
+// @tempo-feature:cms:start
+import { WhatsNewScreen } from '@features/whats-new';
+// @tempo-feature:cms:end
 
 import { LINK_PATHS } from './linking';
 import { ScreenErrorLayout } from './ScreenErrorLayout';
@@ -37,6 +40,9 @@ export function createHomeStack() {
         linking: { path: LINK_PATHS.ItemDetails, parse: { itemId: Number } },
       },
       // @tempo-feature:samples:end
+      // @tempo-feature:cms:start
+      WhatsNew: { screen: WhatsNewScreen, linking: LINK_PATHS.WhatsNew },
+      // @tempo-feature:cms:end
     },
   });
 }

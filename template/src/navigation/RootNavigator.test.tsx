@@ -57,6 +57,17 @@ jest.mock('@features/items', () => {
   return { ItemsListScreen: Named, ItemDetailsScreen: Named, ItemCreateScreen: Named };
 });
 // @tempo-feature:samples:end
+// @tempo-feature:cms:start
+jest.mock('@features/whats-new', () => {
+  const { Text: MockText } = jest.requireActual<{ Text: ComponentType<{ children: string }> }>(
+    'react-native',
+  );
+  return {
+    WhatsNewEntry: () => null,
+    WhatsNewScreen: () => <MockText>{'screen:WhatsNew'}</MockText>,
+  };
+});
+// @tempo-feature:cms:end
 jest.mock('@features/profile', () => {
   const { Text: MockText } = jest.requireActual<{ Text: ComponentType<{ children: string }> }>(
     'react-native',
@@ -150,6 +161,7 @@ describe('RootNavigator', () => {
     [`${SCHEME}settings/text-size`, 'screen:TextSize'],
     [`${SCHEME}profile/edit`, 'screen:EditProfile'],
     [`${SCHEME}items/42`, 'screen:ItemDetails'], // @tempo-feature:samples
+    [`${SCHEME}whats-new`, 'screen:WhatsNew'], // @tempo-feature:cms
     [`${SCHEME}debug`, 'screen:DebugMenu'],
     [`${SCHEME}definitely/not/a/route`, 'screen:NotFound'],
   ])('AC-9: signed in, %s opens %s', async (url, expected) => {

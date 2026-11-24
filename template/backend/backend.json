@@ -18,7 +18,10 @@
   "content": {
     "locales": [
       "en",
-      "ar"
+      "ar",
+      "es",
+      "de",
+      "fr"
     ],
     "defaultLocale": "en"
   },
@@ -71,6 +74,21 @@
               "body": "هذا **إعلان محلي** يقدّمه Tempo Local Backend.\n\n- عدّله من تبويب المحتوى\n- انشره أو جدوِله أو ألغِ نشره",
               "ctaLabel": "اعرف المزيد",
               "ctaUrl": "https://example.com/whats-new"
+            },
+            "es": {
+              "title": "Te damos la bienvenida a Tempo",
+              "body": "Este es un **anuncio local** servido por tu Tempo Local Backend.\n\n- Edítalo en la pestaña Contenido\n- Publícalo, prográmalo o anula su publicación",
+              "ctaLabel": "Más información"
+            },
+            "de": {
+              "title": "Willkommen bei Tempo",
+              "body": "Das ist eine **lokale Ankündigung** deines Tempo Local Backend.\n\n- Bearbeite sie im Tab „Inhalt“\n- Veröffentliche sie, plane sie oder nimm sie zurück",
+              "ctaLabel": "Mehr erfahren"
+            },
+            "fr": {
+              "title": "Bienvenue dans Tempo",
+              "body": "Voici une **annonce locale** fournie par votre Tempo Local Backend.\n\n- Modifiez-la dans l'onglet Contenu\n- Publiez-la, planifiez-la ou retirez-la",
+              "ctaLabel": "En savoir plus"
             }
           }
         },
@@ -78,8 +96,49 @@
           "slug": "release-notes",
           "status": "published",
           "values": {
-            "en": { "title": "Release notes", "body": "Read the latest app updates here." },
-            "ar": { "title": "ملاحظات الإصدار", "body": "اطّلع هنا على آخر تحديثات التطبيق." }
+            "en": {
+              "title": "Release notes",
+              "body": "Read the latest app updates here."
+            },
+            "ar": {
+              "title": "ملاحظات الإصدار",
+              "body": "اطّلع هنا على آخر تحديثات التطبيق."
+            },
+            "es": {
+              "title": "Notas de la versión",
+              "body": "Consulta aquí las últimas novedades de la aplicación."
+            },
+            "de": {
+              "title": "Versionshinweise",
+              "body": "Hier findest du die neuesten Updates der App."
+            },
+            "fr": {
+              "title": "Notes de version",
+              "body": "Consultez ici les dernières mises à jour de l'application."
+            }
+          }
+        },
+        {
+          "slug": "getting-started",
+          "status": "published",
+          "values": {
+            "en": {
+              "title": "Tips for getting started",
+              "body": "## Quick tips\n\n1. Open **Settings** to pick a theme and a language\n2. Pull down on this screen to refresh\n3. Tap a link to open it in your browser\n\n_The Content tab of the local backend edits this text._"
+            },
+            "ar": {
+              "title": "نصائح للبدء",
+              "body": "## نصائح سريعة\n\n1. افتح **الإعدادات** لاختيار السمة واللغة\n2. اسحب لأسفل في هذه الشاشة للتحديث\n3. اضغط على رابط لفتحه في المتصفح\n\n_يعدّل تبويب المحتوى في الواجهة الخلفية المحلية هذا النص._"
+            },
+            "es": {
+              "title": "Consejos para empezar"
+            },
+            "de": {
+              "title": "Tipps für den Einstieg"
+            },
+            "fr": {
+              "title": "Conseils pour bien démarrer"
+            }
           }
         }
       ]

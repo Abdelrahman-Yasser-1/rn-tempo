@@ -1,6 +1,9 @@
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
+// @tempo-feature:cms:start
+import { WhatsNewEntry } from '@features/whats-new';
+// @tempo-feature:cms:end
 import { Card, Header, OfflineBanner, Screen, Text } from '@shared/components';
 
 import { styles } from './styles';
@@ -30,6 +33,9 @@ export function HomeScreen() {
           <Text color="textSecondary">{t('browseItemsHint')}</Text>
         </Card>
         {/* @tempo-feature:samples:end */}
+        {/* @tempo-feature:cms:start */}
+        <WhatsNewEntry />
+        {/* @tempo-feature:cms:end */}
       </View>
     </Screen>
   );

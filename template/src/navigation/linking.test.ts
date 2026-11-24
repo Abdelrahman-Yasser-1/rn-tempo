@@ -39,6 +39,7 @@ describe('isPublicPath', () => {
     ['', true],
     ['settings', false],
     ['items/1', false],
+    ['whats-new', false], // @tempo-feature:cms
   ])('%s -> %s', (path, isPublic) => {
     expect(isPublicPath(path)).toBe(isPublic);
   });

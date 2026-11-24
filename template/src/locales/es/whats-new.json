@@ -1,0 +1,11 @@
+{
+  "empty": {
+    "message": "Vuelve más tarde para ver las novedades.",
+    "title": "Aún no hay novedades"
+  },
+  "entry": {
+    "hint": "Consulta los últimos anuncios.",
+    "title": "Novedades"
+  },
+  "title": "Novedades"
+}
