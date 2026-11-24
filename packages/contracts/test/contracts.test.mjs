@@ -23,8 +23,8 @@ describe('feature manifests', () => {
   const dir = path.join(template, '.tempo/features');
   const files = readdirSync(dir).filter((f) => f.endsWith('.json'));
 
-  it('exist for every feature name', () => {
-    expect(files.map((f) => f.replace('.json', '')).sort()).toEqual([...FEATURE_NAMES].sort());
+  it('shares the feature registry with the project and manifest schemas', () => {
+    expect(schemas.featureManifest.$defs.featureName.enum).toEqual(FEATURE_NAMES);
   });
 
   it.each(files)('%s is valid and named after its file', (file) => {
@@ -106,7 +106,15 @@ describe('markers', () => {
     expect(() => stripFeature('// @tempo-feature:samples:start', 'samples')).toThrow(/never closed/);
   });
 
+  it('strips standalone Markdown comments and preserves prose about markers', () => {
+    const prose = 'Mention @tempo-feature:app-icons in prose.';
+    const source = [prose, '<!-- @tempo-feature:app-icons:start -->', 'Picker', '<!-- @tempo-feature:app-icons:end -->'].join('\n');
+    expect(stripFeature(source, 'app-icons', 'README.md')).toBe(prose);
+  });
+
   it('maps file types to comment styles', () => {
+    expect(commentStylesFor('Dev.shared.xcconfig')).toEqual(['slash']);
+    expect(commentStylesFor('README.md')).toEqual(['xml']);
     expect(commentStylesFor('src/a.ts')).toEqual(['slash']);
     expect(commentStylesFor('src/A.tsx')).toEqual(['slash', 'jsx']);
     expect(commentStylesFor('ios/Info.plist')).toEqual(['xml']);

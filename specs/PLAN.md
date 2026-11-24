@@ -514,6 +514,7 @@ export const breakpoints = { xs: 0, sm: 360, md: 600, lg: 900, xl: 1200 } as con
 | `firebase-core` | off | Firebase per environment (`@react-native-firebase/app`): per-env config files, `FIREBASE_ENABLED`; required by `push-notifications` |
 | `crashlytics` | off | Crashlytics crash reporting (`@react-native-firebase/crashlytics`) behind the provider-neutral `CrashReporter`; requires `firebase-core` |
 | `push-notifications` | off | FCM push (`@react-native-firebase/messaging`): token, contextual permission, foreground toast, `data.link` routing, Settings row |
+| `app-icons` | on | Settings picker for bundled launcher icons ([ADR-016](../docs/content/docs/adr/016-removable-app-icons.mdx)) |
 
 The template repo keeps **every** module present, `dynamic-forms` included. "Default" only sets the CLI prompt's preselection.
 
@@ -521,9 +522,9 @@ The template repo keeps **every** module present, `dynamic-forms` included. "Def
 
 | File type | Start | End | Single line |
 |---|---|---|---|
-| ts/tsx/js/kt/swift/gradle | `// @tempo-feature:<name>:start` | `// @tempo-feature:<name>:end` | line ends with `// @tempo-feature:<name>` |
+| ts/tsx/js/kt/swift/gradle/xcconfig | `// @tempo-feature:<name>:start` | `// @tempo-feature:<name>:end` | line ends with `// @tempo-feature:<name>` |
 | JSX children | `{/* @tempo-feature:<name>:start */}` | `{/* @tempo-feature:<name>:end */}` | — |
-| xml/plist/storyboard | `<!-- @tempo-feature:<name>:start -->` | `<!-- @tempo-feature:<name>:end -->` | — |
+| xml/plist/storyboard and standalone HTML comments in Markdown | `<!-- @tempo-feature:<name>:start -->` | `<!-- @tempo-feature:<name>:end -->` | — |
 | rb/yml/yaml/.env/sh/Podfile | `# @tempo-feature:<name>:start` | `# @tempo-feature:<name>:end` | line ends with `# @tempo-feature:<name>` |
 | json | not allowed — use manifest `jsonPatches` | | |
 

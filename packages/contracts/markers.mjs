@@ -18,6 +18,7 @@ export const FEATURE_NAMES = Object.freeze([
   'firebase-core',
   'push-notifications',
   'crashlytics',
+  'app-icons',
 ]);
 
 const SLASH = { start: (n) => `// @tempo-feature:${n}:start`, end: (n) => `// @tempo-feature:${n}:end`, single: (n) => `// @tempo-feature:${n}` };
@@ -28,8 +29,8 @@ const HASH = { start: (n) => `# @tempo-feature:${n}:start`, end: (n) => `# @temp
 /** Comment styles per file type. JSX markers are also valid inside .tsx/.jsx files. */
 export const COMMENT_STYLES = Object.freeze({ slash: SLASH, jsx: JSX, xml: XML, hash: HASH });
 
-const SLASH_EXT = new Set(['ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs', 'kt', 'kts', 'swift', 'gradle', 'java', 'm', 'mm', 'h']);
-const XML_EXT = new Set(['xml', 'plist', 'storyboard', 'xcscheme', 'entitlements']);
+const SLASH_EXT = new Set(['ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs', 'kt', 'kts', 'swift', 'gradle', 'java', 'm', 'mm', 'h', 'xcconfig']);
+const XML_EXT = new Set(['xml', 'plist', 'storyboard', 'xcscheme', 'entitlements', 'md']);
 const HASH_EXT = new Set(['rb', 'yml', 'yaml', 'sh', 'properties', 'toml']);
 const HASH_FILES = new Set(['Podfile', 'Gemfile', 'Fastfile', 'Appfile', 'Matchfile', 'Pluginfile', 'Dangerfile']);
 
@@ -47,11 +48,17 @@ export function commentStylesFor(filePath) {
 
 const MARKER_RE = /@tempo-feature:([a-z0-9-]+)(?::(start|end))?/;
 
+// Markdown can describe marker syntax in prose. Only standalone HTML comments are directives.
+function matchMarker(line, filePath) {
+  if (filePath?.endsWith('.md') && !/^\s*<!-- @tempo-feature:[a-z0-9-]+:(?:start|end) -->\s*$/.test(line)) return null;
+  return MARKER_RE.exec(line);
+}
+
 /** Finds every marker in a text. `kind` is start | end | single; `line` is 1-based. */
-export function scanMarkers(text) {
+export function scanMarkers(text, filePath) {
   const found = [];
   text.split('\n').forEach((content, i) => {
-    const match = MARKER_RE.exec(content);
+    const match = matchMarker(content, filePath);
     if (match) found.push({ name: match[1], kind: match[2] ?? 'single', line: i + 1 });
   });
   return found;
@@ -61,7 +68,7 @@ export function scanMarkers(text) {
 export function validateMarkers(text, filePath = '<text>') {
   const problems = [];
   const open = [];
-  for (const marker of scanMarkers(text)) {
+  for (const marker of scanMarkers(text, filePath)) {
     if (!FEATURE_NAMES.includes(marker.name)) problems.push(`${filePath}:${marker.line} unknown feature "${marker.name}"`);
     if (marker.kind === 'start') {
       if (open.length > 0) problems.push(`${filePath}:${marker.line} nested region "${marker.name}" inside "${open.at(-1).name}"`);
@@ -84,7 +91,7 @@ export function stripFeature(text, name, filePath = '<text>') {
   const out = [];
   let skipping = false;
   for (const content of lines) {
-    const match = MARKER_RE.exec(content);
+    const match = matchMarker(content, filePath);
     if (match && match[1] === name) {
       if (match[2] === 'start') skipping = true;
       else if (match[2] === 'end') skipping = false;
