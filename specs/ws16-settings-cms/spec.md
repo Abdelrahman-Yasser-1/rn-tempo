@@ -31,7 +31,7 @@ Each of these has native or architectural parts (alternate icons, Unistyles them
 4. **Languages: en, ar, es, de, fr** (five, confirmed). Three new LTR languages. Arabic stays the only RTL language.
 5. **CMS: provider-agnostic.**
    - It is the optional module `cms` (`defaultEnabled: false`), removable and re-addable by the CLI like every other module.
-   - The default adapter is `tempo`. It reads the WS15 backend's public content API, and content is edited in the portal's Content section.
+   - The default adapter is `tempo`. It reads the WS15 backend's public content API, and content is edited in the local backend's Content tab (Mac app or web dashboard).
    - The Sanity adapter shows how to plug in an external hosted CMS. Strapi and Contentful are covered by a docs recipe.
    - No write token ships in the app. The app reads published content only.
 6. **App icons are their own removable module**, `app-icons` (`defaultEnabled: true`), because they touch native files.
@@ -82,13 +82,13 @@ Owns:
 ### CMS module (AC-C-*)
 - **AC-C-1** With `cms` enabled, `src/services/cms/` exposes a `CmsClient` interface with `getEntries(type, { locale, limit, cursor })` and `getEntry(type, id, { locale })`, typed by Zod schemas. It also exposes TanStack Query hooks (`useCmsEntries`, `useCmsEntry`) with a key factory.
 - **AC-C-2** Adapters are selected by `CMS_PROVIDER` (`tempo` | `sanity`). No adapter takes a token. Responses are validated with Zod, and a bad document is logged (redacted) and skipped, never a crash.
-  - The `tempo` adapter (default) reads `GET /api/v1/content/:type` from `CMS_BASE_URL`, which defaults to `API_BASE_URL`. It follows the locale fallback and ETag caching.
+  - The `tempo` adapter (default) reads `GET /api/v1/content/:type` from `CMS_BASE_URL`, which defaults to `API_BASE_URL`. It follows the locale fallback and ETag caching. It asks for the app language; when the backend does not know that locale (400 on `locale`) it retries once with `en`.
   - The Sanity adapter reads the public GROQ API, using `CMS_PROJECT_ID`, `CMS_DATASET` and `CMS_API_VERSION`.
 - **AC-C-3** A sample content screen ("What's new", reachable from Home) lists `announcement` entries in the active language, falling back to `en`. It has shimmer, empty and error states and pull-to-refresh.
-- **AC-C-4** The content endpoints are `@rn-tempo/dev-api` definitions, so dev mock mode and tests get generated handlers and fixtures. The screen works without the backend.
+- **AC-C-4** The content types and seed entries live in `template/backend/backend.json`, whose content locales cover all five app languages. Jest reads them through the backend test kit and dev builds through the local backend (the Mac app or `npx @rn-tempo/local-backend`). There is no in-app mock (T15.Z9).
 - **AC-C-5** `tempo feature remove cms` removes the service, screen, route, env keys, locale groups and docs link, and the result passes `yarn verify`. The CLI e2e round-trip (remove, then add back, equals created-with) passes.
 - **AC-C-6** Adding another provider is one file implementing `CmsClient`. A docs recipe shows Strapi and Contentful.
-- **AC-C-7** An editor publishes an `announcement` in the portal. With the dev build pointed at the local backend, the app's "What's new" shows it in the active language after a pull-to-refresh.
+- **AC-C-7** An editor publishes an `announcement` in the local backend's Content tab. With the dev build pointed at the local backend, the app's "What's new" shows it in the active language after a pull-to-refresh.
 
 ## Out of scope
 - Writing content from the app.
