@@ -4,7 +4,9 @@ import { useState } from 'react';
 
 import { useLogout } from '@features/auth';
 import { TEXT_SIZE_OPTIONS } from '@features/settings/constants';
+// @tempo-feature:app-icons:start
 import { useCurrentAppIcon } from '@features/settings/hooks/useCurrentAppIcon';
+// @tempo-feature:app-icons:end
 import type { SettingsStackParamList } from '@navigation/types';
 import { useLanguage } from '@services/i18n/useLanguage';
 import { useAppTheme } from '@theme/index';
@@ -16,7 +18,9 @@ export function useSettingsScreen() {
   const { mode, fontScale } = useAppTheme();
   const fontScaleId =
     TEXT_SIZE_OPTIONS.find((option) => option.scale === fontScale)?.id ?? 'default';
+  // @tempo-feature:app-icons:start
   const { value, names } = useCurrentAppIcon();
+  // @tempo-feature:app-icons:end
   const logout = useLogout();
   const [isLogoutVisible, setIsLogoutVisible] = useState(false);
 
@@ -53,10 +57,12 @@ export function useSettingsScreen() {
     language,
     mode,
     fontScaleId,
+    // @tempo-feature:app-icons:start
     appIconLabel: value ? names[value] : undefined,
     onAppIcon: () => {
       navigation.navigate('AppIcon');
     },
+    // @tempo-feature:app-icons:end
     isLogoutVisible,
     onLanguage,
     onTheme,

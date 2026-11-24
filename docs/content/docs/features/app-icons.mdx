@@ -1,0 +1,48 @@
+---
+title: App icons
+description: Choose, customize or remove the bundled launcher icons.
+---
+
+Open **Settings → App icon** to choose Default, Ocean, Forest or Sunset. The picker reads the current choice from the operating system when you return to it. Choose Default to restore the primary icon.
+
+## Change the artwork
+
+Edit the matching SVG in `src/assets/icons-source/svg/`. Keep a solid, full-size rectangle with `id="background"` behind the mark. Android uses it as the adaptive background.
+
+Run both commands from the app directory.
+
+```sh
+yarn icons:render
+yarn icons
+```
+
+The first command writes the source PNGs, transparent foregrounds and picker previews. The second generates the iOS icon sets, Xcode configuration and Android resources for each flavor. Dev and staging get badges. Rebuild the app to install the artwork.
+
+## Add or remove a choice
+
+1. For a new choice such as Coral, add `coral.svg` beside `default.svg`. Use the same lowercase name for its files and translation key.
+2. Add `coral: 'Coral'` to the name mapping and reverse lookup in `src/services/app-icon/index.ts`. Add the choice to `useAppIconScreen`, its preview to `AppIconScreen`, and its label to `useCurrentAppIcon`. Translate the label in each language's `settings.json`.
+3. Copy an alternate activity alias in `AndroidManifest.xml`. Name it `LauncherCoral`, use the coral resources and leave it disabled initially. Add `Coral` to the alias list in `AppIconModule.kt`.
+4. Add the name to the asset patterns in `.tempo/features/app-icons.json` and the generator test. Run both icon commands. Xcode gets the alternate name from the generated configuration.
+
+For a new app, remove a choice by reversing these steps. Delete its rendered PNGs, preview, iOS sets and Android resources in every flavor before regenerating. The generator reads every PNG in `alternates/`.
+
+In a published Android app, the retired alias can still be someone’s only enabled launcher. Keep that alias and its resources available to existing installs until they switch to another choice.
+
+## Platform behavior
+
+iOS shows a system alert after a switch. Android gives each icon an activity alias that opens `MainActivity`. On API 33 and later, Android switches the aliases atomically. On older releases, the app enables the new alias first, then disables the old one. Both paths ask Android to keep the process running. The launcher can take several seconds to refresh. It may remove home-screen shortcuts for the old alias.
+
+## Remove the module
+
+```sh
+tempo feature remove app-icons
+```
+
+The primary icon and both artwork commands remain available. Use `tempo feature add app-icons` to restore the picker and bundled alternates.
+
+## Troubleshooting
+
+- **The picker says switching is unavailable.** Check that the installed build includes the native bridge. On iOS, check the built app's alternate icon names for the active configuration.
+- **An icon looks stale.** Run both artwork commands and install a new build. On Android, allow time for the launcher to refresh.
+- **One choice fails on Android.** Check the alias spelling against the Kotlin list and verify its icon and round icon exist in the active flavor.

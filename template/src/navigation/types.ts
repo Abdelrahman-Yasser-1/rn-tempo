@@ -28,7 +28,9 @@ export type SettingsStackParamList = {
   Theme: undefined;
   TextSize: undefined;
   About: undefined;
+  // @tempo-feature:app-icons:start
   AppIcon: undefined;
+  // @tempo-feature:app-icons:end
 };
 
 export type MainTabsParamList = {

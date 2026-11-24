@@ -1,0 +1,63 @@
+{
+  "$schema": "https://unpkg.com/@rn-tempo/contracts/schemas/feature-manifest.schema.json",
+  "name": "app-icons",
+  "title": "App icons",
+  "description": "Choose a bundled launcher icon in Settings.",
+  "defaultEnabled": true,
+  "requires": [],
+  "conflicts": [],
+  "deleteGlobs": [
+    "src/services/app-icon/**",
+    "src/features/settings/screens/AppIconScreen/**",
+    "src/features/settings/hooks/useCurrentAppIcon{,.test}.ts",
+    "src/assets/icons-source/previews/**",
+    "src/assets/icons-source/alternates/**",
+    "src/assets/icons-source/svg/{forest,ocean,sunset}.svg",
+    "ios/*/Images.xcassets/AppIcon*-{Forest,Ocean,Sunset}.appiconset/**",
+    "ios/Config/AlternateIcons.xcconfig",
+    "ios/*/AppIconModule.mm",
+    "android/app/src/main/java/**/AppIcon{Module,Package}.kt",
+    "android/app/src/*/res/mipmap-*/ic_launcher_{forest,ocean,sunset}{,_round,_foreground}.{png,xml}",
+    "android/app/src/*/res/values/ic_launcher_{forest,ocean,sunset}_background.xml",
+    "scripts/__tests__/icons-alternates.test.mjs"
+  ],
+  "dependencies": [],
+  "devDependencies": [],
+  "envKeys": [],
+  "jsonPatches": [
+    {
+      "file": "package.json",
+      "op": "remove",
+      "path": "/codegenConfig"
+    },
+    {
+      "file": "src/locales/en/settings.json",
+      "op": "remove",
+      "path": "/appIcon"
+    },
+    {
+      "file": "src/locales/ar/settings.json",
+      "op": "remove",
+      "path": "/appIcon"
+    },
+    {
+      "file": "src/locales/es/settings.json",
+      "op": "remove",
+      "path": "/appIcon"
+    },
+    {
+      "file": "src/locales/de/settings.json",
+      "op": "remove",
+      "path": "/appIcon"
+    },
+    {
+      "file": "src/locales/fr/settings.json",
+      "op": "remove",
+      "path": "/appIcon"
+    }
+  ],
+  "postRemove": [
+    "pods"
+  ],
+  "docs": "/docs/features/app-icons"
+}

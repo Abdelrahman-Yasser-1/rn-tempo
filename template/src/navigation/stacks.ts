@@ -9,7 +9,9 @@ import {
   AboutScreen,
   LanguageScreen,
   SettingsScreen,
+  // @tempo-feature:app-icons:start
   AppIconScreen,
+  // @tempo-feature:app-icons:end
   TextSizeScreen,
   ThemeScreen,
 } from '@features/settings';
@@ -60,7 +62,9 @@ export function createSettingsStack() {
       Settings: { screen: SettingsScreen, linking: LINK_PATHS.Settings },
       Language: { screen: LanguageScreen, linking: LINK_PATHS.Language },
       Theme: { screen: ThemeScreen, linking: LINK_PATHS.Theme },
+      // @tempo-feature:app-icons:start
       AppIcon: { screen: AppIconScreen, linking: LINK_PATHS.AppIcon },
+      // @tempo-feature:app-icons:end
       TextSize: { screen: TextSizeScreen, linking: LINK_PATHS.TextSize },
       About: { screen: AboutScreen, linking: LINK_PATHS.About },
     },

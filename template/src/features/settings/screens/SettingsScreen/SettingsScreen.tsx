@@ -54,6 +54,7 @@ export function SettingsScreen() {
         onPress={vm.onTextSize}
         testID="settings.text-size"
       />
+      {/* @tempo-feature:app-icons:start */}
       <ListItem
         title={t('appIcon.title')}
         subtitle={vm.appIconLabel}
@@ -64,6 +65,7 @@ export function SettingsScreen() {
         onPress={vm.onAppIcon}
         testID="settings.app-icon"
       />
+      {/* @tempo-feature:app-icons:end */}
       {/* @tempo-feature:push-notifications:start */}
       <NotificationsRow />
       {/* @tempo-feature:push-notifications:end */}

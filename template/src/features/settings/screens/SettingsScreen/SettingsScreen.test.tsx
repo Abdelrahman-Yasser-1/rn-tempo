@@ -2,7 +2,9 @@ import { screen, waitFor } from '@testing-library/react-native';
 
 import { ENV } from '@config/env'; // @tempo-feature:push-notifications
 import { useAuthStore } from '@features/auth';
+// @tempo-feature:app-icons:start
 import { appIconService } from '@services/app-icon';
+// @tempo-feature:app-icons:end
 import { createUser } from '@test-utils/factories/user';
 import { renderWithProviders } from '@test-utils/renderWithProviders';
 
@@ -53,6 +55,7 @@ describe('SettingsScreen', () => {
     await user.press(screen.getByText('About'));
     expect(mockNavigation.navigate).toHaveBeenLastCalledWith('About');
   });
+  // @tempo-feature:app-icons:start
 
   test('AC-I-2: the App icon row names the current native icon and opens the picker', async () => {
     jest.spyOn(appIconService, 'getIcon').mockResolvedValueOnce('sunset');
@@ -60,6 +63,7 @@ describe('SettingsScreen', () => {
     await user.press(await screen.findByRole('button', { name: 'App icon, Sunset' }));
     expect(mockNavigation.navigate).toHaveBeenLastCalledWith('AppIcon');
   });
+  // @tempo-feature:app-icons:end
 
   // @tempo-feature:push-notifications:start
   test('shows the Notifications row between Theme and About when push is on', async () => {

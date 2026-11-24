@@ -186,6 +186,11 @@ android {
         // dotenv.gradle (above). Flavor placeholders below merge with this one. Empty is allowed.
         manifestPlaceholders = [googleMapsApiKey: (project.env.get("GOOGLE_MAPS_API_KEY") ?: "")]
         // @tempo-feature:maps:end
+        manifestPlaceholders.primaryLauncherCategory = "android.intent.category.LAUNCHER"
+        // @tempo-feature:app-icons:start
+        // Only the active alias should match the launcher's MAIN/LAUNCHER query.
+        manifestPlaceholders.primaryLauncherCategory = "android.intent.category.DEFAULT"
+        // @tempo-feature:app-icons:end
     }
     buildFeatures {
         buildConfig true

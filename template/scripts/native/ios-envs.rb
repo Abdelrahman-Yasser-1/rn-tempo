@@ -180,7 +180,9 @@ envs.each do |env|
     PRODUCT_BUNDLE_IDENTIFIER = #{meta[:bundle_id]}
     APP_DISPLAY_NAME = #{meta[:display_name]}
     ASSETCATALOG_COMPILER_APPICON_NAME = #{meta[:icon]}
+    // @tempo-feature:app-icons:start
     #include? "AlternateIcons.xcconfig"
+    // @tempo-feature:app-icons:end
     APP_URL_SCHEME = #{meta[:url_scheme]}
     APP_ENV = #{env[:key]}
   XCCONFIG

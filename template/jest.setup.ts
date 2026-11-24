@@ -236,6 +236,7 @@ afterAll(() => {
   queryClient.clear();
   server.close();
 });
+// @tempo-feature:app-icons:start
 
 jest.mock('@services/app-icon/NativeAppIcon', () => ({
   __esModule: true,
@@ -245,3 +246,4 @@ jest.mock('@services/app-icon/NativeAppIcon', () => ({
     setIcon: jest.fn(() => Promise.resolve()),
   },
 }));
+// @tempo-feature:app-icons:end

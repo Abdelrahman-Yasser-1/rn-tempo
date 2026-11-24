@@ -59,6 +59,10 @@
         android:windowSoftInputMode="adjustResize"
         android:exported="true"
         android:theme="@style/BootTheme">
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="${primaryLauncherCategory}" />
+        </intent-filter>
         <!-- Custom scheme deep link, e.g. tempo-dev://items/1 (per-flavor via manifestPlaceholders). -->
         <intent-filter>
             <action android:name="android.intent.action.VIEW" />
@@ -79,6 +83,7 @@
         </intent-filter>
       </activity>
 
+      <!-- @tempo-feature:app-icons:start -->
       <activity-alias
         android:name="${applicationId}.LauncherDefault"
         android:targetActivity=".MainActivity"
@@ -130,5 +135,6 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity-alias>
+      <!-- @tempo-feature:app-icons:end -->
     </application>
 </manifest>

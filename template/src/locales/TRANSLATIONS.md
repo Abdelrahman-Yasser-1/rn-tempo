@@ -1,18 +1,20 @@
 # Translation status
 
 English (`en`) is the source language. Arabic (`ar`) is maintained with the template. Spanish, German and French were machine-drafted and need a native speaker to review them before a release that ships those languages.
+<!-- @tempo-feature:app-icons:start -->
+
+The new `settings.appIcon` strings need review in Arabic, Spanish, German and French.
+<!-- @tempo-feature:app-icons:end -->
 
 ## Status per language
 
-| Language | Code | Status                    | Reviewer | Date |
-| -------- | ---- | ------------------------- | -------- | ---- |
-| English  | en   | source                    |          |      |
-| Arabic   | ar   | draft (new app icon keys) |          |      |
-| Spanish  | es   | draft (machine)           |          |      |
-| German   | de   | draft (machine)           |          |      |
-| French   | fr   | draft (machine)           |          |      |
-
-The new `settings.appIcon` strings need review in Arabic, Spanish, German and French.
+| Language | Code | Status          | Reviewer | Date |
+| -------- | ---- | --------------- | -------- | ---- |
+| English  | en   | source          |          |      |
+| Arabic   | ar   | maintained      |          |      |
+| Spanish  | es   | draft (machine) |          |      |
+| German   | de   | draft (machine) |          |      |
+| French   | fr   | draft (machine) |          |      |
 
 ## Signing off a language
 
