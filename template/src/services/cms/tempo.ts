@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { ENV } from '@config/env';
-import { httpClient } from '@services/http/client';
+import { httpClient, resolveBaseUrl } from '@services/http/client';
 import { ApiError } from '@services/http/errors';
 
 import { CmsEntryError, parseCmsEntries, parseCmsEntry } from './schemas';
@@ -21,10 +21,18 @@ const localeProblem = z.object({
 // Insertion order is recency: a hit re-inserts its URL, the oldest URL is dropped past the bound.
 const cache = new Map<string, { etag: string; body: unknown }>();
 
+/**
+ * Where content comes from. Without its own CMS_BASE_URL (it then equals API_BASE_URL) content follows the API,
+ * including the dev menu's backend choice; an explicit CMS_BASE_URL always wins.
+ */
+export function contentBaseUrl(): string {
+  return ENV.CMS_BASE_URL === ENV.API_BASE_URL ? resolveBaseUrl() : ENV.CMS_BASE_URL;
+}
+
 async function read(path: string, { locale, limit, cursor }: CmsEntriesParams): Promise<unknown> {
   // An absolute URL, because the shared client's interceptor sets `baseURL` to the API base on every request.
   const url = httpClient.getUri({
-    baseURL: ENV.CMS_BASE_URL,
+    baseURL: contentBaseUrl(),
     url: CONTENT_PATH + path,
     params: { locale, limit, cursor },
   });
