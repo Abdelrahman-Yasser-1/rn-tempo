@@ -2391,3 +2391,24 @@ Recorded by the integrator during WS0. Where this list and the plan disagree, **
 60. **WS16 phase F moves to WS11 (owner, 2026-11-24).**
     - The WS16 Maestro flows and the device tour need the WS11 Maestro setup, so they become WS11 tasks T11.6 and T11.7. WS16 is complete with phases A–E.
     - The old mocks were removed in T15.Z9 (owner confirmation, 2026-11-23): E2E flows run against the Tempo local backend (a local `serve` or a CI session).
+61. **WS15 later phases and WS17 backend app v2 (owner, 2026-11-24).**
+    - **WS15 phases D–I** (Express + Postgres API, Docker, portal access and UI, portal CMS, Strapi option, CLI `--with-backend`) move after **WS14**. Shipped work already covers part of them (the Local Backend CMS and the team server roles and audit log), so each phase is re-checked before it starts. `T15.I1` drops `@rn-tempo/dev-api`, which T15.Z9 removed.
+    - **New WS17: Tempo Local Backend app v2** in `apps/local-backend`. It redesigns the whole app UI and UX for production, with a native app menu bar (Tempo, File, Edit, View, Backend, Request, Window, Help) and a command palette. It adds an MCP server so AI agents can work with a backend, and a Postman/curl-like request runner. It also adds features chosen from a survey of open-source API tools.
+    - **Phase A (design selection)** runs now. It produces three HTML design directions and a feature recommendation list. The owner picks one design and the features, then the build phases are written and scheduled. Spec: `specs/ws17-backend-app-v2/spec.md`.
+62. **WS17 becomes Mockyard (owner, 2026-11-24).**
+    - **The app:** the Tempo Local Backend app is renamed **Mockyard**, a standalone, framework-agnostic app that moves to its own repository after phase L. Until then it must not import from `template/` or Tempo-only packages, and a CI boundary check enforces this.
+    - **Design:** Studio (`specs/ws17-backend-app-v2/designs/2-studio.html`). It has a Home start screen, project tabs, selection-based actions, a Devices view with CA trust, and the soft slate palette.
+    - **Scope:** every feature in `research.md`, plus **share links**, which share a backend outside the local network as VS Code port forwarding does.
+    - **Phases B–L:**
+      - B: rename and boundary
+      - C: design system and shell
+      - D: move the existing pages
+      - E: request runner
+      - F: devices and connecting an app
+      - G: MCP server
+      - H: power features
+      - I: share links
+      - J: guide and discoverability. First-run onboarding, a sample project, the Get started checklist, opt-in tours, an in-app guide panel and ⌘K help, per-framework quick starts and recipes, and a five-user usability check. Every phase also ships its own help through the "guide kit".
+      - K: production readiness
+      - L: prepare the repository move
+    - **Order:** WS17 runs before WS11, WS13 and WS14. WS11's end-to-end flows target the Mockyard backend.

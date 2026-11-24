@@ -88,6 +88,13 @@ Spec: "Tier 1d" in `spec.md`. Stacked on Phase Y. One PR per step.
 - [x] **T15.Z10** (AC-LP-10) An endpoint-level faults form in the app: each fault setting is "Same as the backend" or its own value, and a rate limit can be turned off for one endpoint.
 - [x] **T15.Z9** (owner confirmed 2026-11-23) Remove the old mocks, `packages/api-contract` and `packages/dev-api`.
 
+## Later phases D to I (deferred, amendment 61)
+These phases build the deployable Express + Postgres backend. They run **after WS14**, and each is re-checked against what shipped before it starts. Shipped work already covers part of them:
+- **H1–H3 (CMS):** the Local Backend Content tab and its public `/content` API (Tier 1d) cover types, per-locale entries, draft/publish, locale fallback and ETag. Phase H only ports them to Express + Postgres.
+- **F1–F4 (admins, roles, audit):** the team server mode absorbs the portal admin scope (amendment 59). Phase F ports the same model; it does not design a second one.
+- **G (portal UI):** reuses the WS17 design system instead of a separate look.
+- **I1:** `@rn-tempo/dev-api` was removed in T15.Z9, so I1 keeps only `--with-backend` and `--cms`.
+
 ## Phase D: backend API foundation (`ws15/d-api`)
 - [ ] **T15.D1** (AC-B-8) `backend/api` skeleton.
   - env for dev, staging and prod; `pino` with redaction; helmet, CORS and limits; problem+json; `/api/v1/health`.
@@ -157,7 +164,7 @@ Spec: "Tier 1d" in `spec.md`. Stacked on Phase Y. One PR per step.
   - Docs: `backend/cms-strapi` (setup, what Community lacks, how to switch back).
 
 ## Phase I: CLI (`ws15/i-cli`)
-- [ ] **T15.I1** `create-tempo-app` always adds `@rn-tempo/dev-api` and `api/`. It also gets the option `--cms builtin|strapi`, which applies with `--with-backend` and records `cms` in `.tempo.json`.
+- [ ] **T15.I1** `create-tempo-app` gets the option `--cms builtin|strapi`, which applies with `--with-backend` and records `cms` in `.tempo.json`. (It no longer adds `@rn-tempo/dev-api` or `api/`: both were removed in T15.Z9.)
   - `--with-backend` copies `backend/` and wires its scripts, and `.tempo.json` gets `backend`.
   - Commit: `feat(cli): add dev api and backend options`.
 - [ ] **T15.I2** (AC-B-12, AC-B-13) CLI e2e cases for `--with-backend` and `--with-backend --cms strapi`.

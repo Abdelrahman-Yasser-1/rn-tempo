@@ -1,0 +1,34 @@
+<!doctype html>
+<!-- Comparison · shared slate #485e78, canvas #f8f8f5, dark #202226, mist #adbed4. System UI 17/13/12/11px. -->
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tempo · Compare design directions</title>
+<style>
+:root{color-scheme:light dark;--bg:#f8f8f5;--panel:#f0f1ef;--ink:#292e33;--sub:#505b61;--line:#d5d9d7;--border:#798381;--blue:#485e78}
+@media(prefers-color-scheme:dark){:root{--bg:#202226;--panel:#26292d;--ink:#e4e4e0;--sub:#b3b8ba;--line:#3d4246;--border:#828b91;--blue:#adbed4}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif}header{height:43px;display:flex;align-items:center;gap:9px;padding:0 20px;border-bottom:1px solid var(--line);background:var(--panel)}header strong{font-size:13px}header span{color:var(--sub);font-size:12px}.mark{display:grid;place-items:center;width:23px;height:23px;background:var(--ink);color:var(--bg);border-radius:5px}.mark svg{width:16px;height:16px}main{padding:20px;max-width:1800px;margin:auto}h1{font-size:17px;margin:0;letter-spacing:-.4px}h2{font-size:16px;margin:0}p{margin:0}.toolbar,.cardhead{display:flex;align-items:center;gap:8px}.toolbar{margin-bottom:14px}.toolbar span{margin-left:auto;font-size:12px;color:var(--sub)}button,a{font:inherit;color:inherit;background:transparent;border:1px solid var(--border);border-radius:4px;padding:3px 9px;cursor:pointer;text-decoration:none}button.selected,button:hover,a:hover{background:var(--panel)}button.selected{box-shadow:inset 0 -2px var(--ink)}a:focus-visible,button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}.compare{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.card{min-width:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;align-self:start}.cardhead{padding:9px 12px;border-top:3px solid var(--accent);background:var(--panel)}.cardhead a{margin-left:auto;font-size:12px}.preview{position:relative;width:100%;overflow:hidden;aspect-ratio:1280/800;border-block:1px solid var(--line)}iframe{width:1280px;height:800px;transform-origin:top left;position:absolute;inset:0;border:0;background:var(--bg)}.copy{padding:12px}.copy>p{font-size:13px;margin-bottom:12px}dl{margin:0;display:grid;grid-template-columns:70px 1fr;gap:8px;font-size:12px}dt{color:var(--sub);font-weight:600}dd{margin:0}.card{--accent:var(--blue)}@media(max-width:950px){.compare{grid-template-columns:1fr}.card{display:grid;grid-template-columns:1.2fr 1fr}.cardhead{grid-column:1/-1}.toolbar{flex-wrap:wrap}}
+[data-tone=dark]{color-scheme:dark;--bg:#202226;--panel:#26292d;--ink:#e4e4e0;--sub:#b3b8ba;--line:#3d4246;--border:#828b91;--blue:#adbed4}
+[data-tone=light]{color-scheme:light;--bg:#f8f8f5;--panel:#f0f1ef;--ink:#292e33;--sub:#505b61;--line:#d5d9d7;--border:#798381;--blue:#485e78}#appearance{margin-left:auto;font-size:12px}
+</style>
+</head>
+<body>
+<header><i class="mark"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M2 5h7L6 12H3l3-5H2z M10 4h4l-4 8H7z"/></svg></i><strong>Tempo</strong><span>/ &nbsp; Local Backend</span><button id="appearance" title="Change appearance">Appearance · System</button></header>
+<main><div class="toolbar"><h1>Compare design directions</h1><span>Preview</span><button class="selected" data-screen="home" aria-pressed="true">Home</button><button data-screen="endpoint" aria-pressed="false">Endpoint</button><button data-screen="devices" aria-pressed="false">Devices</button><button data-screen="connect" aria-pressed="false">Connect your app</button></div><div class="compare">
+<article class="card"><div class="cardhead"><h2>Familiar</h2><a href="1-familiar.html">Open ↗</a></div><div class="preview"><iframe title="Familiar interactive preview" src="1-familiar.html"></iframe></div><div class="copy"><p>Select an endpoint to work on its mock, send a request, and inspect the response below.</p><dl><dt>Strength</dt><dd>One editor handles both sides of the request. The layout follows a familiar API-client workflow.</dd><dt>Trade-off</dt><dd>Switching from Mock to Params hides the response definition.</dd><dt>Best for</dt><dd>Developers who already work in a tabbed API client.</dd></dl></div></article>
+<article class="card"><div class="cardhead"><h2>Studio</h2><a href="2-studio.html">Open ↗</a></div><div class="preview"><iframe title="Studio interactive preview" src="2-studio.html"></iframe></div><div class="copy"><p>Keep the server definition and client side by side. Recent hits show when the app calls the endpoint.</p><dl><dt>Strength</dt><dd>Edit a scenario, try the request, and observe its traffic in one view.</dd><dt>Trade-off</dt><dd>Long payloads and URLs have less horizontal space on a laptop.</dd><dt>Best for</dt><dd>App developers iterating on error states and response shapes.</dd></dl></div></article>
+<article class="card"><div class="cardhead"><h2>Hub</h2><a href="3-hub.html">Open ↗</a></div><div class="preview"><iframe title="Hub interactive preview" src="3-hub.html"></iframe></div><div class="copy"><p>Home groups projects, connected devices, and recent activity. Open the backend overview, then choose an inspector from the right rail.</p><dl><dt>Strength</dt><dd>Project state, device addresses, MCP activity, and live logs stay close at hand.</dd><dt>Trade-off</dt><dd>The overview adds a step before editing a route. Opening an inspector uses editor space.</dd><dt>Best for</dt><dd>Teams running several backends or supervising agent changes.</dd></dl></div></article>
+</div></main>
+<script>
+const frames=[...document.querySelectorAll('iframe')];
+let appearance='System';
+document.getElementById('appearance').addEventListener('click',e=>{appearance=appearance==='System'?(window.matchMedia?.('(prefers-color-scheme: dark)').matches?'Light':'Dark'):appearance==='Dark'?'Light':'System';document.documentElement.dataset.tone=appearance.toLowerCase();e.target.textContent='Appearance · '+appearance;for(const f of frames)f.contentWindow.postMessage({tempoAppearance:appearance},'*')});
+function fit(){for(const f of frames)f.style.transform='scale('+f.parentElement.clientWidth/1280+')'}
+fit();window.addEventListener('resize',fit);
+document.querySelector('.toolbar').addEventListener('click',e=>{
+  const screen=e.target.dataset.screen;if(!screen)return;
+  for(const b of document.querySelectorAll('[data-screen]')){b.classList.toggle('selected',b===e.target);b.setAttribute('aria-pressed',String(b===e.target))}
+  for(const f of frames)f.contentWindow.postMessage({tempoPreview:screen},'*');
+});
+</script>
+</body></html>

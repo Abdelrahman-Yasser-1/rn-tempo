@@ -1,0 +1,2058 @@
+<!doctype html>
+<!-- Familiar · slate #485e78, canvas #f8f8f5, surface #f0f1ef, graphite #292e33; dark #202226 with mist #adbed4. System UI 17/13/12/11px; SF Mono for requests and source. -->
+<html lang="en" data-design="Familiar">
+<head>
+<meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval'; style-src 'unsafe-inline'; img-src data:; worker-src blob:; connect-src 'none'; form-action 'none'; base-uri 'none'"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Familiar · Tempo Local Backend</title>
+<style>
+*{box-sizing:border-box}
+:root{color-scheme:light;--bg:#f8f8f5;--panel:#f0f1ef;--inset:#e8ebe9;--line:#d5d9d7;--border:#798381;--ink:#292e33;--sub:#505b61;--accent:#485e78;--wash:#dfe7ef;--on:#fafaf8;--green:#42634c;--amber:#715923;--blue:#436181;--purple:#715578;--red:#954f55;--shadow:0 4px 14px #20252415;--mono:ui-monospace,"SF Mono",Menlo,monospace}
+
+
+:root[data-tone=dark]{color-scheme:dark;--bg:#202226;--panel:#26292d;--inset:#2f3337;--line:#3d4246;--border:#828b91;--ink:#e4e4e0;--sub:#b3b8ba;--accent:#adbed4;--wash:#343f4e;--on:#20262b;--green:#aac6ae;--amber:#d8c295;--blue:#a9c2db;--purple:#ceb7d4;--red:#dfafb2;--shadow:0 4px 16px #14141435}
+
+
+body{margin:0;font:13px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+button,input,textarea,select{font:inherit;color:inherit}button{background:none;border:1px solid transparent;border-radius:4px;padding:3px 7px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;min-height:26px}button:hover,.rowbutton:hover{background:var(--inset)}button:disabled{opacity:.62;cursor:default}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+input,select,textarea{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:4px 8px;min-width:0}textarea{width:100%;min-height:76px;font:12px/1.65 var(--mono);resize:vertical}svg.i{width:16px;height:16px;flex:none;vertical-align:middle}b,strong{font-weight:620}small,.sub{color:var(--sub);font-size:12px}.mono,code,pre,kbd{font-family:var(--mono)}kbd{font-size:11px;font-weight:450;color:var(--sub)}h1,h2,h3,p{margin:0}h1{font-size:17px;letter-spacing:-.45px}h2{font-size:14px;letter-spacing:-.15px}h3{font-size:13px}p{color:var(--sub)}hr{border:0;border-top:1px solid var(--line);margin:4px 0}.primary{background:var(--accent);color:var(--on);font-weight:620;padding-inline:14px}.primary:hover{background:var(--accent);filter:brightness(.92)}.outline{border-color:var(--border);background:var(--bg)}.danger{color:var(--red)}.iconbtn{width:28px;padding:3px}.mark{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:5px;background:var(--accent);color:var(--on)}.mark svg{width:16px;height:16px}.grow{flex:1;min-width:0}.flex,.bar,.heading,.sectionhead,.statusline,.tools,.strip,.fieldline{display:flex;align-items:center;gap:8px}.bar,.heading,.sectionhead,.statusline,.strip{border-bottom:1px solid var(--line)}.tag,.count{font:11px/1.5 var(--mono);padding:0 5px;border-radius:3px;background:var(--inset);color:var(--sub)}.eyebrow{font-size:11px;letter-spacing:.075em;text-transform:uppercase;font-weight:650;color:var(--sub)}.dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;flex:none}.off{background:var(--sub)}.active,.selected{background:var(--wash)!important;color:var(--accent)!important}.good,.GET{color:var(--green)}.POST{color:var(--amber)}.PUT{color:var(--blue)}.PATCH{color:var(--purple)}.DELETE,.bad{color:var(--red)}.verb{font:650 11px var(--mono);min-width:30px;text-align:left}
+#app{height:100dvh;display:grid;grid-template-rows:25px 43px minmax(0,1fr) auto 27px;overflow:hidden}.mac{padding:0 12px;display:flex;align-items:center;gap:1px;background:var(--inset);border-bottom:1px solid var(--line)}.mac button{min-height:22px;font-size:12px;padding:0 8px}.mac button:first-child{font-weight:700}.mac .edition{margin-left:auto;font-size:11px;color:var(--sub)}.header{display:grid;grid-template-columns:1fr minmax(190px,26%) 1fr;align-items:center;padding:0 12px;gap:8px;background:var(--panel);border-bottom:1px solid var(--line)}.header .tools{gap:3px}.lights{display:flex;gap:6px;padding-right:12px}.lights i{width:11px;height:11px;border-radius:50%;background:#e76c67;box-shadow:inset 0 0 0 1px #0002}.lights i:nth-child(2){background:#e7bc52}.lights i:last-child{background:#67b779}.search{background:var(--bg);border:1px solid var(--border);height:27px;color:var(--sub);font-size:12px;justify-content:flex-start}.avatar{background:var(--wash);color:var(--accent);border-radius:50%;width:24px;min-height:24px;font-size:10px;font-weight:bold}.sep{height:16px;width:1px;background:var(--line);margin:0 5px}.shell{display:flex;min-height:0;overflow:hidden}.rail,.browser,.context,.inspector{background:var(--panel);flex:none;overflow:auto}.rail{width:78px;padding:8px 4px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:2px}.rail button{display:flex;flex-direction:column;gap:2px;font-size:11px;color:var(--sub);min-height:44px}.rail button.active{box-shadow:inset 2px 0 var(--accent)}.browser{width:208px;border-right:1px solid var(--line);padding:12px 8px;display:flex;flex-direction:column;gap:3px}.browser .sectionhead{padding:0 4px 10px}.browser .searchbox{display:flex;gap:4px;margin:8px 2px}.searchbox input{width:100%;font-size:12px}.group{font-size:11px;font-weight:650;letter-spacing:.06em;color:var(--sub);margin:14px 6px 4px;text-transform:uppercase}.navrow{display:flex;align-items:center;min-height:29px;border-radius:4px;position:relative}.navrow>button:first-child{justify-content:flex-start;width:100%;height:29px;min-width:0;text-overflow:ellipsis;overflow:hidden}.more{display:none;position:absolute;right:2px;background:var(--panel);min-height:22px}.navrow.selected>button{color:var(--accent)}.navfoot{margin-top:auto;padding:12px 4px 0;color:var(--sub);font-size:11px;display:flex;align-items:center;gap:5px}.studio .rail{width:124px;padding:6px}.studio .rail button,.hub .rail button{flex-direction:row;justify-content:flex-start;min-height:29px;font-size:12px;gap:8px}.studio .browser{width:164px}.hub .rail{width:146px;padding:12px 8px}.hub .browser{width:174px}.work{min-width:0;flex:1;display:flex;flex-direction:column;overflow:hidden}.tabs{height:35px;flex:none;display:flex;align-items:stretch;background:var(--inset);border-bottom:1px solid var(--line)}.tablist{display:flex;overflow:auto;scrollbar-width:none;min-width:0}.tab{border-radius:0;border-right:1px solid var(--line);display:flex;align-items:center;color:var(--sub);padding:0 4px 0 10px;gap:4px}.tab.on{background:var(--bg);color:var(--ink);box-shadow:inset 0 2px var(--accent)}.tab button{padding:2px;min-height:20px}.tab .x{font-size:14px;width:16px;color:var(--sub)}.tab.preview .tabname{font-style:italic}.env{font-size:12px;color:var(--accent);margin:auto 0}.context{border-left:1px solid var(--line);width:36px;display:flex;align-items:center;flex-direction:column;gap:6px;padding-top:6px}.hub .context{width:48px}.hub .context button{height:38px}.inspector{width:218px;border-left:1px solid var(--line);padding:12px}.screen{flex:1;min-height:0;overflow:auto}.heading{padding:13px 16px;gap:9px}.crumb{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--sub);margin-bottom:3px}.secticon{width:32px;height:32px;background:var(--wash);color:var(--accent);border-radius:6px;display:grid;place-items:center}.sectionhead{padding:8px 12px;min-height:35px}.pad{padding:16px}.block{border:1px solid var(--line);border-radius:5px;overflow:hidden;margin-bottom:16px}.block>.sectionhead,.codehead,thead{background:var(--panel)}.blockbody{padding:12px}.line{border-bottom:1px solid var(--line);padding:7px 12px;display:flex;align-items:center;gap:8px;min-height:30px}.line:last-child{border:0}.strip{padding:0 10px;min-height:35px;gap:4px;overflow:auto}.strip button{border-radius:0;color:var(--sub);font-size:12px;min-height:34px}.strip .current{box-shadow:inset 0 -2px var(--accent);font-weight:650;color:var(--accent)}.builderbar{padding:12px;display:flex;gap:6px}.address{border:1px solid var(--border);border-radius:4px;display:flex;align-items:center;flex:1;min-width:0;height:32px;background:var(--bg)}.address select{border:0;border-right:1px solid var(--line);border-radius:0;font-weight:650;font-size:12px}.address input{border:0;flex:1;font:12px var(--mono);width:40px;padding-left:0}.variable{position:relative;color:var(--accent);background:var(--wash);font:12px var(--mono);padding:2px 3px;margin-left:6px;border-radius:2px}.variable:before{content:attr(data-tip);display:none;position:absolute;top:100%;left:0;z-index:4;white-space:nowrap;background:var(--ink);color:var(--bg);padding:5px 8px;border-radius:4px}.variable:hover:before,.variable:focus:before{display:block}.endpoint{min-height:100%;display:flex;flex-direction:column}.mockgrid{display:grid;grid-template-columns:minmax(135px,22%) minmax(0,1fr);min-height:222px}.scenarios{border-right:1px solid var(--line);padding:10px 8px}.scenarios button{display:flex;width:100%;justify-content:flex-start;height:29px;font-size:12px}.scenario-code{margin-left:auto;font:11px var(--mono)}.editor{padding:12px 16px;min-width:0}.codehead{display:flex;align-items:center;gap:6px;padding:5px 10px;font:11px var(--mono);color:var(--sub);border:1px solid var(--line);border-radius:4px 4px 0 0}.source{background:var(--bg);padding:8px 0;font:12px/1.65 var(--mono);overflow:auto;tab-size:2}.source>div{display:flex;white-space:pre}.ln{min-width:36px;border-right:1px solid var(--line);margin-right:12px;text-align:right;padding-right:9px;color:var(--sub);user-select:none}.key{color:var(--blue)}.str{color:var(--green)}.num{color:var(--purple)}details{margin:8px 0;color:var(--sub)}summary{cursor:pointer;font-size:12px}.response{border-top:1px solid var(--border);min-width:0;flex:1}.response .source{min-height:110px}.statusline{padding:6px 12px;min-height:32px}.metric{font:11px var(--mono);color:var(--sub)}.badge{font:600 11px var(--mono);border:1px solid currentColor;border-radius:4px;padding:2px 5px}.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);flex:1}.split>section{min-width:0}.split>section+section{border-left:1px solid var(--border)}.studio .mockgrid{display:block}.studio .scenarios{border-right:0;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:4px}.studio .scenarios button{width:auto;gap:5px;border:1px solid var(--line);height:24px;min-height:24px}.studio .scenarios .eyebrow{width:100%;margin-bottom:4px}.lane{background:var(--panel);border-bottom:1px solid var(--line);padding:8px 12px;display:flex;align-items:center;gap:8px}.lane b{font-size:14px}.lane small{margin-left:auto}.studio .split .strip{flex-wrap:wrap;gap:0}.studio .split .strip button{min-height:26px}.hits{border-top:1px solid var(--border);background:var(--panel);padding:6px 12px;display:flex;align-items:center;gap:8px;font-size:12px}.side-response{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);flex:1}.side-response>.response{border-top:0;border-left:1px solid var(--border)}
+.footer{display:flex;align-items:center;gap:2px;background:var(--panel);border-top:1px solid var(--line);padding:0 6px;white-space:nowrap;overflow:auto;font-size:11px}.footer button{font-size:11px;min-height:23px;padding:1px 5px}.footer .i{width:13px}.drawer{max-height:170px;overflow:auto;border-top:1px solid var(--border);background:var(--bg)}.drawer:empty{display:none}.drawer .sectionhead{position:sticky;top:0;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:12px;text-align:left}th,td{border-bottom:1px solid var(--line);padding:5px 10px;height:30px}th{color:var(--sub);font-weight:550;font-size:11px}tr:last-child td{border-bottom:0}td input{max-width:100%;height:24px}tr[data-act]{cursor:pointer}tr[data-act]:hover{background:var(--inset)}.fieldline{margin:9px 0;flex-wrap:wrap}.fieldline label{min-width:90px}.fieldline input{max-width:100%}.fields label{display:grid;gap:4px;font-size:12px;color:var(--sub);margin-bottom:12px}.fields input,.fields select{max-width:460px}.columns{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(240px,1fr);gap:16px}.empty{padding:24px;text-align:center;color:var(--sub)}.empty p{margin:4px 0 10px}.homelist .line{height:45px}.homebody{padding:20px;max-width:1440px;margin:auto}.homebody .heading{padding:0 0 15px;margin-bottom:16px}.homebody .block{border-radius:4px}.homebody .sectionhead{background:var(--panel)}.activity{display:grid;grid-template-columns:21px 1fr auto;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);align-items:start}.activity:last-child{border:0}.activity p{font-size:12px}.menu,.popover,.modal,.toastbox{background:var(--bg);border:1px solid var(--border);border-radius:6px;box-shadow:var(--shadow);z-index:20}.menu,.popover{position:fixed;padding:4px;min-width:200px;max-height:80vh;overflow:auto}.menu button,.results button{width:100%;justify-content:flex-start;text-align:left;font-size:12px;height:28px}.menu kbd,.results kbd{margin-left:auto}.overlay{position:fixed;inset:0;z-index:18;background:#141a202e;display:flex;align-items:flex-start;justify-content:center;padding:12vh 20px}.modal{width:min(510px,100%);max-height:74vh;overflow:auto}.modal .pad{padding:16px}.results{padding:5px;max-height:46vh;overflow:auto}.results button:focus,.menu button:focus{background:var(--wash);color:var(--accent)}.modal input.searchinput{width:100%;border:0;border-radius:0;padding:13px 16px;border-bottom:1px solid var(--line)}.toastbox{position:fixed;bottom:40px;left:50%;transform:translateX(-50%);padding:6px 10px;display:flex;gap:12px;align-items:center}.toastbox button{color:var(--accent)}.popover{padding:10px;min-width:240px}.popover h3{margin-bottom:7px}.mutebtn{color:var(--sub)}.empty svg{margin-bottom:4px}.deviceqr{width:128px;image-rendering:pixelated}.hubhome{padding:16px 12px;border-left:1px solid var(--line);background:var(--panel);width:216px;overflow:auto}.hubhome .group{margin:14px 0 5px}.hubhome .line{padding-inline:0}.studio .endpoint>.heading{background:var(--panel)}.mutedbox{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:10px}.sectionhead .tools{margin-left:auto}.wrap{flex-wrap:wrap}.listpath{font-family:var(--mono);font-size:12px}
+@media(max-width:1350px){.browser{width:184px}.studio .browser{width:150px}.studio .rail{width:112px}.hub .inspector{width:186px}.strip{gap:1px}.studio .builderbar{padding:8px}.columns{grid-template-columns:minmax(0,1.4fr) minmax(210px,1fr)}}
+
+#app{grid-template-rows:24px 39px 42px minmax(0,1fr) auto 27px}
+.titlebar{display:flex;align-items:center;gap:6px;background:var(--inset);padding:0 12px;border-bottom:1px solid var(--line)}
+.titlebar .lights{width:72px}.projecttabs{display:flex;align-self:stretch;gap:3px;align-items:end;overflow:auto;scrollbar-width:none}.projecttab{display:flex;align-items:center;gap:6px;border:1px solid transparent;border-radius:6px 6px 0 0;font-weight:600;color:var(--sub);height:32px;min-width:96px;padding:0 7px;flex:none}.projecttab+.projecttab{border-left-color:var(--line)}.projecttab.front{background:var(--bg);color:var(--ink);border-color:var(--line);border-bottom-color:var(--bg)}.projecttab button{padding:2px 4px;font-weight:550}.projecttab .tabclose{min-height:20px;margin-left:8px;color:var(--sub)}.projecttab .dot{height:6px;width:6px}.runmanager{font-size:12px}
+.projicon,.featureicon{display:inline-grid;place-items:center;border-radius:5px;width:26px;height:26px;flex:none;background:var(--wash);color:var(--accent)}
+.pic1{background:var(--inset);color:var(--purple)}.pic2{background:var(--inset);color:var(--green)}.projecttab .projicon{width:19px;height:19px}.projecttab .i{width:14px}.dot.error{background:var(--red)}
+.homeShell{min-height:0;display:flex}.homeNav,.studioLaunch{display:flex;flex-direction:column;flex:none;background:var(--panel);border-right:1px solid var(--line);width:172px;padding:16px 8px 10px;overflow:auto}.homeNav button,.studioLaunch button{justify-content:flex-start;height:30px;gap:9px}.homeNav button.active{box-shadow:inset 2px 0 var(--accent)}.brand{display:flex;gap:8px;align-items:center;padding:0 8px 12px;font-size:15px;letter-spacing:-.4px}.homeNav .group,.studioLaunch .group{font-size:10.5px;margin:15px 8px 5px}.homeScroll{overflow:auto;flex:1;min-width:0;padding:16px 20px 20px}.homeTitle{padding:0 0 12px}.homeTitle .crumb{margin:0 0 3px}.homeTitle .i{width:12px;height:12px}.homeLayout{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,28%);gap:16px}.homeMain,.homeAside{min-width:0}.homeScroll .block{margin-bottom:12px}.homeScroll .sectionhead,.featureblock .sectionhead{height:36px;padding:5px 10px}.homeScroll h2{font-size:13px}.homeScroll .step,.settinglink{width:100%;justify-content:flex-start;padding:4px 10px;height:29px;border-radius:0;font-size:12px}.step>.i,.settinglink>.i:last-child{width:11px;color:var(--sub)}.settinglink small{margin-left:auto;font-size:11px}.tick{display:inline-grid;place-items:center;width:13px;height:13px;border-radius:50%;border:1px solid var(--border);font-size:10px}.tick.done{color:var(--accent);background:var(--wash);border-color:var(--accent)}.progress{height:3px;background:var(--line);margin:10px 12px 5px}.progress i{display:block;height:100%;background:var(--accent)}.projectfilters{display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--line)}.projectfilters select{font-size:11px;height:24px;padding:1px 4px}.filterwrap{display:flex;align-items:center;gap:5px;flex:1;color:var(--sub)}.filterwrap input{border:none;background:transparent;padding:2px;width:100%;font-size:12px}.projectrow{display:flex;align-items:center;gap:10px;padding:3px 10px;min-height:32px;border-bottom:1px solid var(--line)}.projectrow:last-child{border:0}.projectrow>.projicon{width:23px;height:23px}.projectrow .pname{min-width:0;flex:1;display:flex;align-items:baseline;gap:10px}.pname b{white-space:nowrap}.pname small{font:11px var(--mono);text-overflow:ellipsis;overflow:hidden;white-space:nowrap}.pstate{display:inline-flex;align-items:center;gap:5px;font-size:11px;width:56px;color:var(--sub)}.projectrow>code{font-size:11px;color:var(--sub)}.lasttime{min-width:58px;font-size:11px;text-align:right}.rowactions{display:flex;gap:2px;align-items:center}.rowactions button,.itemtools button{min-height:21px;height:22px;font-size:11px}.rowactions .iconbtn,.itemtools .iconbtn{width:22px}.rowactions .i,.itemtools .i{width:13px;height:13px}.featureblock{margin-bottom:12px}.featureblock>.sectionhead{border:0;padding-left:0}.featuregrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--line);border-radius:5px;overflow:hidden}.featuregrid button{border-radius:0;justify-content:flex-start;gap:8px;min-width:0;text-align:left;padding:7px 9px;min-height:44px;border:0;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}.featuregrid button:nth-child(3n){border-right:0}.featuregrid button:nth-child(n+4){border-bottom:0}.featuregrid b{font-size:12px;display:block}.featuregrid small{font-size:11px;display:block}.featuregrid button>.i{width:11px;margin-left:auto;color:var(--sub)}.featureicon{width:24px;height:24px}.homeMain .line,.homeAside .line{padding:3px 10px;min-height:29px}.homeMain .activity{padding:6px 10px}.homeMain .activity b,.homeAside .activity b{font-size:12px}
+.studioLaunch{width:179px;background:var(--wash)}.studioLaunch .brand{padding-bottom:15px}.studioHomeGrid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(240px,1fr);gap:14px}.studio .projectblock{border-top:2px solid var(--accent)}.studio .studioHome .projectrow{min-height:32px}.studioHome .homeTitle{display:flex;align-items:center;justify-content:space-between;flex-direction:row-reverse}.hub .homeNav{width:168px}.hub .homeLayout{grid-template-columns:minmax(0,1fr) minmax(245px,25%)}.hub .homeAside{background:var(--panel);border-left:1px solid var(--line);padding:0 12px 8px}.hub .homeAside .block{background:transparent;border:0;border-bottom:1px solid var(--line);border-radius:0}.hub .homeAside .sectionhead{padding-left:0}.hub .footer{background:var(--inset)}.hub .work .tabs{background:var(--panel)}.hub .inspector .sectionhead{padding-inline:0}
+.rail,.studio .rail,.hub .rail{width:139px;padding:5px 5px;gap:0}.rail button,.studio .rail button,.hub .rail button{min-height:27px;height:27px;width:100%;flex-direction:row;justify-content:flex-start;gap:6px;padding:3px 5px;font-size:12px}.rail button small{margin-left:auto;font-size:10.5px;color:var(--sub)}.rail .group{font-size:10.5px;margin:8px 5px 2px}.rail.compact{width:37px}.rail.compact button{justify-content:center}.rail.compact button span,.rail.compact button small,.rail.compact .group{display:none}.rail.compact .active{border-left:2px solid var(--accent)}.browser,.studio .browser,.hub .browser{width:228px}.hub .browser{width:211px}.studio .rail{width:128px}.browser .sectionhead{padding-inline:2px}.itemtools{display:inline-flex;align-items:center;justify-content:flex-end;gap:1px;flex:none}.navrow{padding-right:0}.navrow>.itemtools,.scenarioRow>.itemtools{margin-left:auto}.navrow>button:first-child{flex:1;white-space:nowrap}.navrow .miniSelect{font-size:10.5px;padding:0 2px;height:22px;width:62px;background:var(--panel);color:var(--sub)}.scenarioRow>button{min-width:0;flex:1}.scenarios .itemtools button{display:inline-flex;width:20px;min-height:20px;height:20px}.studio .scenarios .scenarioRow{padding-right:2px}.match{background:var(--wash)}.hub .context{width:42px}.studioSide{display:grid;grid-template-columns:1fr 1fr;overflow:auto}.studioSide>section{min-width:185px}.studioSide .response{border-left:1px solid var(--line)}.studioSide input{max-width:100%}.studio .split .address select{max-width:62px}.lasttime,.metric{font-variant-numeric:tabular-nums}.screen .itemtools{vertical-align:middle}.screen .activity .itemtools{grid-column:4}.activity:has(.itemtools){grid-template-columns:18px minmax(0,1fr) auto auto}.step:hover,.settinglink:hover,.projectrow:hover{background:var(--inset)}.featuregrid .featureicon>.i{width:15px}.menu hr{margin:4px}.screen{scrollbar-gutter:stable}
+@media(max-width:1400px){.projectrow .pname{flex-direction:column;gap:0;line-height:1.2}.projectrow{gap:6px}.pname small{font-size:10.5px}.homeScroll{padding:12px 14px}.featuregrid button{gap:6px}.featuregrid button>.i{display:none}.browser,.studio .browser{width:216px}.studio .browser{width:194px}.studio .split .editor{padding:8px}.studio .split .builderbar{gap:3px}.homeNav{width:151px}}
+@media(min-width:1500px){.homeScroll{padding:20px 24px}.homeNav,.hub .homeNav{width:186px}.homeLayout,.hub .homeLayout{grid-template-columns:minmax(0,1fr) minmax(295px,27%)}.projectrow{min-height:32px}.homeMain .featuregrid button{padding:9px 12px}.inspector{width:238px}}
+.studio .endpoint:has(.split){height:100%;min-height:0}.studio .split{min-height:0}.studio .split>section{overflow:auto}.studio .hits{flex:none;min-height:30px}.homeRightHidden .homeAside,.homeRightHidden .studioHomeGrid>aside{display:none}.homeRightHidden .homeLayout,.homeRightHidden .studioHomeGrid{grid-template-columns:1fr}.homeCollapsed .homeNav,.homeCollapsed .studioLaunch{display:none}.inspector pre{font:11px/1.6 var(--mono)}.runningPop{width:min(440px,95vw);padding:0;z-index:22}.runningPop .line{min-height:34px}.studioLaunch>button{border:1px solid var(--line);background:var(--bg);margin:2px 0;text-align:left;min-height:32px}.studioLaunch>button:hover{background:var(--panel)}.hub .homeTitle{border-bottom:1px solid var(--line);margin-bottom:12px}.hub .homeAside .activity{padding-inline:0}.homeAside .sectionhead .tools{gap:2px}.homeMain .activity .itemtools,.homeAside .activity .itemtools{grid-column:4}.modal textarea,.popover textarea{max-width:100%}.browser .navrow>button:first-child span:last-child{overflow:hidden;text-overflow:ellipsis}.rowactions{position:relative}.scenarios .scenarioRow>button{overflow:hidden;text-overflow:ellipsis}.projectrow .rowactions{background:transparent}.screen .hits{overflow:hidden}.deviceqr{flex:none}.projectrow .pname b{overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.block,.homeScroll .block{border:0;border-radius:0}.block>.sectionhead,.homeScroll .sectionhead{background:transparent}.homeMain .block,.homeAside .block{margin-bottom:18px}.homeAside{border-left:1px solid var(--line);padding-left:12px}.homeLayout{grid-template-columns:minmax(0,1fr) minmax(245px,27%)}.studio .homeLayout{grid-template-columns:minmax(0,1.8fr) minmax(240px,1fr)}.studio .homeNav{background:var(--inset)}.homeTitle{padding-bottom:14px}.studio .homeTitle{display:block}.projectfilters{background:var(--panel)}.browser{padding-inline:5px}.navrow{min-height:30px}.deviceRow,.projectrow{min-height:36px;display:flex;align-items:center;gap:8px}.deviceRow{padding:3px 6px}.deviceGlyph{color:var(--sub);padding:4px}.deviceName{flex:1;min-width:0}.deviceName b,.deviceName small{display:block}.deviceName small{font-size:11px}.deviceRow code{font-size:11px}.caChip{font-size:11px;color:var(--sub);background:var(--inset);border-radius:4px;padding:1px 5px}.caChip.good{color:var(--green)}.selectiontools{display:inline-flex;align-items:center;justify-content:flex-end;gap:1px;margin-left:auto;visibility:hidden;flex:none}.selectiontools button{height:22px;min-height:22px;width:22px;padding:2px}.selectiontools .i{width:14px;height:14px}[data-item]:hover{background:var(--inset)}[data-item].picked{background:var(--wash);color:var(--ink)}[data-item].picked .selectiontools{visibility:visible}.navrow .selectiontools{position:absolute;right:1px;background:var(--wash)}.navrow:has(select) .selectiontools{right:67px}.navrow .miniSelect{width:64px;margin-left:auto;font-size:11px;padding:0 2px}.selectionbar{display:flex;align-items:center;gap:4px;padding:3px 6px;background:var(--wash);color:var(--ink);font-size:11px;position:sticky;bottom:0;z-index:1}.selectionbar button{min-height:21px;padding:1px 3px;font-size:11px}.scenarioRow{position:relative}.scenarioRow .selectiontools{position:absolute;right:0;background:var(--wash)}.activity .selectiontools{grid-column:3}.deviceList .selectiontools{width:68px}.homeScroll .line{min-height:29px}.rowlabel{justify-content:flex-start}.screen .pad>.block{margin-bottom:20px}.homeShell .sectionhead{border-bottom:1px solid var(--line)}.homeAside .step,.homeMain .step{min-height:28px}.homeNav .navfoot{margin-top:auto}.projectrow>code,.deviceRow code{white-space:nowrap}.deviceRow code{min-width:155px}
+.scenarioRow{position:relative;display:flex;align-items:center}</style>
+</head><body><div id="app"></div><div id="layers"></div><div id="toast" aria-live="polite"></div>
+<script>
+'use strict';
+const D = document.documentElement.dataset.design, studio = D === 'Studio', hub = D === 'Hub', base = 'https://localhost:8443';
+const icons = {
+    tempo: 'M2 5h7L6 12H3l3-5H2z M10 4h4l-4 8H7z', back: 'm10 3-5 5 5 5', next: 'm6 3 5 5-5 5', down: 'm4 6 4 4 4-4', home: 'm2 7 6-5 6 5v7H9v-4H7v4H3V7', search: 'M11 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0m0 4 3 3', gear: 'm6 2 4 0 .5 2 2 .4 1.3 2.4-1.4 1.4.4 2.2-1.8 2-2-.4-1.5 1.5-2.3-1-.5-2-2-.7-.4-2.6L4 6l.1-2z M10 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0', bell: 'M2 11h12l-2-3V6a4 4 0 0 0-8 0v2z M6 13q2 2 4 0', box: 'm2 5 6-3 6 3v7l-6 3-6-3z m0 0 6 3 6-3 M8 8v7', end: 'M3 4h4v4h6 M7 8v4h6 M2 3h2v2H2z M12 7h2v2h-2z M12 11h2v2h-2z', requests: 'M4 2h7l2 2v9H4z M2 5v10h8 M6 6h5 M6 9h4', env: 'M2 5h12 M5 3v4 M2 11h12 M10 9v4', history: 'M2 7a6 6 0 1 1 1 5 M2 3v4h4 M8 4v4l3 2', data: 'M2 4q6-4 12 0v8q-6 4-12 0z M2 4q6 4 12 0 M2 8q6 4 12 0', content: 'M3 2h7l3 3v9H3z M9 2v4h4 M5 9h6 M5 11h4', traffic: 'M1 8h3l2-5 3 10 2-5h4', simulate: 'M3 2v12 M8 2v12 M13 2v12 M1 5h4 M6 10h4 M11 6h4', ai: 'M3 5h10v8H3z M8 2v3 M6 8h.1 M10 8h.1 M6 11h4 M1 8v2 M15 8v2', folder: 'M2 4h5l2 2h5v7H2z', plus: 'M8 3v10 M3 8h10', more: 'M3 8h.1 M8 8h.1 M13 8h.1', eye: 'M1 8q7-10 14 0-7 10-14 0z M10 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0', code: 'm5 4-4 4 4 4 m6-8 4 4-4 4 M9 2 7 14', info: 'M14 8a6 6 0 1 1-12 0 6 6 0 0 1 12 0 M8 7v4 M8 5v.2', comments: 'M2 3h12v8H7l-4 3v-3H2z', play: 'm4 2 9 6-9 6z', stop: 'M4 4h8v8H4z', save: 'M2 2h10l2 2v10H2z M5 2v4h6V2 M5 14V9h6v5', share: 'M8 10V2 M5 5l3-3 3 3 M3 8v6h10V8', console: 'M2 3h12v10H2z m2 3 2 2-2 2 m4 0h3', lock: 'M4 7h8v7H4z M6 7V5a2 2 0 0 1 4 0v2', layout: 'M2 3h12v10H2z M6 3v10', split: 'M2 3h12v10H2z M2 9h12', trash: 'M3 4h10 M6 4V2h4v2 M4 5l1 9h6l1-9', cookie: 'M14 8A6 6 0 1 1 8 2q-1 4 3 4 0 3 3 2z M5 8h.2 M8 11h.2', pin: 'm6 2 6 2-2 4 1 2-7-2 2-2z M7 9l-2 5', check: 'm2 8 4 4 8-9', file: 'M3 2h7l3 3v9H3z M9 2v4h4', arrow: 'M3 8h10 M9 4l4 4-4 4', user: 'M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0 M2 14q0-7 6-6 6-1 6 6', media: 'M2 2h12v12H2z m1 10 4-5 3 3 2-2 2 2', inbox: 'M2 10l2-7h8l2 7v3H2z M2 9h4l1 2h2l1-2h4', layers: 'm1 5 7-3 7 3-7 3z M2 8l6 3 6-3 M2 11l6 3 6-3', qr: 'M2 2h5v5H2zM9 2h5v5H9zM2 9h5v5H2zM10 10h1.5v1.5H10zM12.5 12.5H14V14h-1.5zM12.5 9.5H14V11h-1.5zM9.5 12.5H11V14H9.5z', globe: 'M14 8a6 6 0 1 1-12 0 6 6 0 0 1 12 0 M2 8h12 M8 2q-5 6 0 12 5-6 0-12z', terminal: 'm3 4 4 4-4 4 M8 12h5', link: 'm6 10 4-4 M5 7 3 9q-2 4 2 4l3-3 M8 6l3-3q4-1 3 3l-3 3', theme: 'M14 8a6 6 0 1 1-12 0 6 6 0 0 1 12 0 M8 2v12', copy: 'M5 5h9v9H5z M2 11V2h9'
+};
+const ico = k => '<svg class="i" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="' + (icons[k] || icons.file) + '"/></svg>';
+const esc = v => String(v ?? '').replace(/[&<>"']/g, x => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[x]));
+const btn = (label, action, icon = '', cls = '', title = '') => '<button class="' + cls + '" data-act="' + esc(action) + '" title="' + esc(title || label) + '" aria-label="' + esc(title || label) + '">' + (icon ? ico(icon) : '') + esc(label) + '</button>';
+const ib = (icon, action, title) => btn('', action, icon, 'iconbtn', title);
+const table = (heads, rows) => '<table><thead><tr>' + heads.map(c => '<th>' + c + '</th>').join('') + '</tr></thead><tbody>' + rows.map(r => '<tr>' + r.map(c => '<td>' + c + '</td>').join('') + '</tr>').join('') + '</tbody></table>';
+const block = (title, body, tools = '') => '<section class="block"><div class="sectionhead"><h2>' + title + '</h2><div class="tools">' + tools + '</div></div>' + body + '</section>';
+const line = (a, b = '') => '<div class="line"><span class="grow">' + a + '</span>' + b + '</div>';
+const opts = (values, v) => values.map(x => '<option ' + (x === v ? 'selected' : '') + '>' + esc(x) + '</option>').join('');
+const sel = (key, values, v) => '<select aria-label="' + esc(key) + '" data-field="' + esc(key) + '">' + opts(values, v) + '</select>';
+const inp = (key, value, type = 'text') => '<input aria-label="' + esc(key) + '" data-field="' + esc(key) + '" type="' + type + '" value="' + esc(value) + '">';
+const area = (key, value) => '<textarea aria-label="' + esc(key) + '" data-field="' + esc(key) + '">' + esc(value) + '</textarea>';
+const field = (label, control) => '<label class="fieldline"><span>' + label + '</span>' + control + '</label>';
+const code = value => '<div class="source">' + String(value).split('\n').map((l, i) => '<div><span class="ln">' + (i + 1) + '</span><span>' + l.split(/("(?:[^"\\]|\\.)*"\s*:|"(?:[^"\\]|\\.)*"|\b\d+(?:\.\d+)?\b)/g).map((s, j) => j % 2 ? '<span class="' + (s.endsWith(':') ? 'key' : s.startsWith('"') ? 'str' : 'num') + '">' + esc(s) + '</span>' : esc(s)).join('') + '</span></div>').join('') + '</div>';
+let store = new Map(), val = (k, d = '') => store.has(k) ? store.get(k) : d;
+let routes = [['POST', 'auth/login'], ['POST', 'auth/refresh'], ['GET', 'me'], ['GET', 'products'], ['GET', 'products/:id'], ['POST', 'orders']];
+const sections = { Devices:['Devices','Connect your app'], 'Endpoints': ['Endpoint', 'OpenAPI', 'Shared response', 'GraphQL', 'WebSocket', 'SSE'], 'Requests': ['Request', 'Collection runner', 'Expect requests', 'GraphQL', 'WebSocket', 'SSE'], 'Environments': ['Environments', 'Vault', 'Cookies'], 'History': ['History'], 'Data': ['Data', 'Users', 'Media'], 'Content': ['Content'], 'Traffic': ['Traffic', 'Inbox', 'Push sender', 'Proxy', 'Expect requests'], 'Simulate': ['Simulate', 'OAuth2 mock'], 'AI & MCP': ['AI & MCP', 'Agent activity', 'Snapshots'], 'Media': ['Media'], 'Users': ['Users'], 'Runner': ['Collection runner', 'Expect requests'], 'Inbox': ['Inbox', 'Push sender'], 'Agent activity': ['Agent activity', 'AI & MCP', 'Snapshots'], 'Backend': ['Overview', 'Settings', 'Addresses', 'Snapshots', 'Proxy', 'OpenAPI', 'AI & MCP', 'Simulate'] };
+const imap = { Devices:'phone','Connect your app':'link', 'Endpoints': 'end', 'Endpoint': 'end', 'Requests': 'requests', 'Request': 'requests', 'Environments': 'env', 'History': 'history', 'Data': 'data', 'Content': 'content', 'Traffic': 'traffic', 'Simulate': 'simulate', 'AI & MCP': 'ai', 'Users': 'user', 'Media': 'media', 'Inbox': 'inbox', 'Runner': 'play', 'Collection runner': 'play', 'Agent activity': 'ai', 'Backend': 'box', 'Overview': 'box', 'Home': 'home', 'Snapshots': 'layers', 'Settings': 'gear', 'Proxy': 'globe', 'Vault': 'lock', 'Cookies': 'cookie', 'OpenAPI': 'code' };
+const allViews = [...new Set(['Home', 'First run', ...Object.values(sections).flat(), 'Import', 'Export', 'Shortcuts', 'Release notes', 'Documentation'])];
+let norm = ['Normal', 'Empty', 'Unauthorized', 'Server error', 'Slow'], statuses = [200, 200, 401, 500, 200], scenarios = {};
+const product = { id: 'prd_1042', name: 'Canvas tote', price: 28, currency: 'USD' }, product2 = { id: 'prd_1043', name: 'Field notebook', price: 12, currency: 'USD' };
+const example = (path, sc) => sc === 'Empty' ? { data: [] } : sc === 'Unauthorized' ? { error: 'Unauthorized' } : sc === 'Server error' ? { error: 'Internal server error' } : path.includes('auth') ? { token: 'demo.jwt.local', expiresIn: 3600 } : path.endsWith('me') ? { name: 'Mona Saleh', email: 'mona@example.com' } : path.includes('orders') ? { id: 'ord_208', status: 'created' } : path.endsWith(':id') ? product : { data: [product], total: 1 };
+let run = true, mcp = true, proxy = false, record = false, env = 'Local', section = 'Endpoints', side = true, right = true, panel = '', drawer = '', sideResponse = false, theme = 'System', backend = 'Shop API', notice = true;
+let backends = ['Shop API', 'Checkout QA', 'Catalog sandbox'], snapshots = ['Before agent batch · 10:42', 'Clean seed · 09:00'], activity = ['Codex updated the empty scenario', 'Cursor read the products schema'], records = [product, product2, { id: 'prd_1044', name: 'Travel mug', price: 24, currency: 'USD' }, { id: 'prd_1045', name: 'Desk tray', price: 32, currency: 'USD' }];
+let serial = 0, tabs = [], current, trail = [], trailPos = -1, filter = '', mult = new Set(), menuName = '', submenu = '', lastFocus = null, undoFn = null, toastTimer, locale = 'English', settings = 'Server', selectedLog = 0, profile = 'Standard', pickedUser = 'Mona Saleh', currentSnapshot = '', homeAnchor = null;
+let logs = [['10:42:18', 'GET', '/api/v1/products', 200, '24 ms', 'iOS simulator'], ['10:41:54', 'POST', '/api/v1/auth/login', 200, '18 ms', 'Runner'], ['10:41:32', 'GET', '/api/v1/me', 401, '12 ms', 'Android emulator'], ['10:40:16', 'GET', '/api/v1/products/:id', 200, '21 ms', 'iOS simulator']];
+let files = ['Catalog smoke', 'Auth flow'], saved = ['List products', 'Sign in'], groups = ['auth', 'account', 'products', 'orders'], collapsed = new Set();
+function newTab(view, path = 'products') { const method = routes.find(r => r[1] === path)?.[0] || 'GET'; return { id: ++serial, view, path, method, url: '/api/v1/' + path, preview: false, dirty: false, sub: view === 'Endpoint' && !studio ? 'Mock' : 'Params', resp: 'Body', format: 'Pretty', received: true, scenario: 'Normal', result: JSON.stringify(example(path, 'Normal'), null, 2), status: 200, edit: false, query: '', mockEdit: false }; }
+function active() { return tabs.find(t => t.id === current); }
+function selectTab(id, remember = true) { current = id; if (remember && trail[trailPos] !== id) {
+    trail.splice(++trailPos);
+    trail.push(id);
+} }
+function openView(view, path = 'products', preview = false, force = false) { if (view === 'Home') {
+    showHome();
+    return active();
+} atHome = false; ensureProject(); let t = !force && tabs.find(x => x.view === view && x.path === path); if (!t) {
+    t = newTab(view, path);
+    if (view === 'Endpoint')
+        t.scenario = val('scenario ' + path, 'Normal');
+    let ix = preview ? tabs.findIndex(x => x.preview) : -1;
+    if (ix >= 0)
+        tabs.splice(ix, 1, t);
+    else
+        tabs.push(t);
+    t.preview = preview;
+}
+else if (!preview)
+    t.preview = false; selectTab(t.id); if (view === 'Home')
+    section = 'Home';
+else if (section === 'Home' || !sections[section]?.includes(view))
+    section = Object.keys(sections).find(k => sections[k].includes(view)) || 'Backend'; closeLayer(); render(); return t; }
+function tablabel(t) { return t.view === 'Endpoint' ? t.path : t.view === 'Request' ? (t.name || 'List products') : t.view; }
+function markDirty() { const t = active(); t.dirty = true; t.preview = false; const el = document.querySelector('.tab.on'); if (el) {
+    el.classList.remove('preview');
+    el.querySelector('.x').textContent = '●';
+} }
+function heading(title, crumb, icon, action = '') { return '<header class="heading"><span class="secticon">' + ico(icon) + '</span><div class="grow"><div class="crumb">' + esc(backend) + ' / ' + esc(crumb) + '</div><h1>' + esc(title) + '</h1></div>' + action + '</header>'; }
+const empty = (title, desc, action = '') => '<div class="empty">' + ico('inbox') + '<h3>' + title + '</h3><p>' + desc + '</p>' + action + '</div>';
+const themeMQ = window.matchMedia?.('(prefers-color-scheme: dark)');
+function tone() { document.documentElement.dataset.tone = (theme === 'System' ? themeMQ?.matches : theme === 'Dark') ? 'dark' : 'light'; }
+themeMQ?.addEventListener('change', tone);
+tone();
+function rail() { return '<nav class="rail" aria-label="Sections">' + Object.entries(sideBands()).map(([band, items]) => (band ? '<div class="group">' + band + '</div>' : '') + items.map(k => railButton(k)).join('')).join('') + '</nav>'; }
+function row(name, action, icon, activeRow = false, prefix = '') { return '<div class="navrow ' + (activeRow || mult.has(action) ? 'selected' : '') + '"><button data-act="' + esc(action) + '">' + (prefix || ico(icon)) + '<span>' + esc(name) + '</span></button>' + '</div>'; }
+function browserItems() {
+    const t = active(), matches = s => s.toLowerCase().includes(filter.toLowerCase());
+    if (section === 'Endpoints') {
+        const folders = [...new Set(routes.map(([, path]) => path.split('/')[0]))];
+        return folders.map(folder => {
+            const items = routes.filter(r => r[1].split('/')[0] === folder && matches(r.join(' ')));
+            if (!items.length) return '';
+            const head = '<div class="flex">' + btn('/' + folder, 'group:' + folder, 'folder', 'mutebtn') + '</div>';
+            return head + (collapsed.has(folder) && !filter ? '' : items.map(([method,path]) => row(path.split('/').pop(), 'endpoint:' + path, '', t.view === 'Endpoint' && t.path === path, '<span class="verb ' + esc(method) + '">' + esc(method) + '</span>')).join(''));
+        }).join('') + '<div class="group">Definition</div>' + sections.Endpoints.slice(1).filter(matches).map(v => row(v, 'view:' + v, 'file', t.view === v)).join('');
+    }
+    if (section === 'Requests')
+        return '<div class="group">Collection files</div>' + files.filter(matches).map(f => row(f + '.json', 'collection:' + f, 'folder')).join('') + '<div class="group">Requests</div>' + saved.filter(matches).map(n => row(n, 'saved:' + n, 'requests')).join('') + sections.Requests.slice(1).filter(matches).map(v => row(v, 'view:' + v, imap[v], v === t.view)).join('');
+    return (sections[section] || sections.Backend).filter(matches).map(v => row(v, 'view:' + v, imap[v], t.view === v)).join('');
+}
+function browser() { return '<aside class="browser"><div class="sectionhead"><b class="grow">' + esc(section) + '</b>' + ib('more', 'backendMenu', 'Backend tools') + '</div><div class="searchbox"><input aria-label="Filter sidebar" placeholder="Filter ' + esc(section.toLowerCase()) + '" id="filter" value="' + esc(filter) + '">' + ib('plus', 'addItem', 'Add item') + '</div><div id="items">' + browserItems() + '</div><div class="navfoot">' + ico('folder') + ' ' + esc(projects[backend].folder) + '</div></aside>'; }
+function header() { return '<div class="mac" role="menubar">' + Object.keys(menus).map(n => btn(n, 'menu:' + n)).join('') + '<span class="edition">Tempo Local Backend</span></div>' + titlebar() + '<header class="header"><div class="tools">' + ib('back', 'back', 'Go back') + ib('next', 'forward', 'Go forward') + '<span class="sep"></span>' + btn((atHome ? 'Projects' : backend) + ' ﹀', 'switch', 'box') + '<span class="dot ' + (run ? '' : 'off') + '"></span>' + (atHome ? '' : ib(run ? 'stop' : 'play', 'running', run ? 'Stop backend' : 'Start backend') + ib('qr', 'qr', 'Connect a device (QR)')) + '</div><button class="search" data-act="search">' + ico('search') + '<span class="grow">Search Tempo</span><kbd>⌘ K</kbd></button><div class="tools" style="justify-content:flex-end">' + ib('bell', 'updates', 'Notifications') + ib('theme', 'theme', 'Toggle appearance') + ib('gear', 'view:Settings', 'Settings') + btn('MS', 'account', '', 'avatar', 'Mona Saleh · Account') + '</div></header>'; }
+function tabstrip() { return '<div class="tabs"><div class="tablist">' + tabs.map(t => '<div class="tab ' + (t.id === current ? 'on ' : '') + (t.preview ? 'preview' : '') + '" data-tab="' + t.id + '"><button class="tabname" data-act="tab:' + t.id + '">' + (t.view === 'Endpoint' || t.view === 'Request' ? '<span class="verb ' + t.method + '">' + t.method + '</span>' : ico(imap[t.view])) + esc(tablabel(t)) + '</button><button class="x" data-act="close:' + t.id + '" aria-label="Close ' + esc(tablabel(t)) + '">' + (t.dirty ? '●' : '×') + '</button></div>').join('') + '</div>' + ib('plus', 'new', 'New request · ⌘T') + ib('down', 'tabsearch', 'Search tabs · ⇧⌘A') + '<span class="grow"></span>' + btn(env + ' ﹀', 'envmenu', 'env', 'env', 'Active environment · ' + env) + ib('eye', 'quick', 'Environment quick look') + '</div>'; }
+const contexts = hub ? ['Info', 'Code', 'Variables', 'Docs preview', 'AI agent', 'Comments'] : ['Info', 'Code', 'Variables', 'Comments', 'AI agent'];
+function context() { return (panel ? '<aside class="inspector"><div class="sectionhead"><b class="grow">' + panel + '</b>' + btn('×', 'context:' + panel) + '</div>' + contextBody() + '</aside>' : '') + '<aside class="context" aria-label="Context tools">' + contexts.map((p, i) => ib(({ Info: 'info', Code: 'code', Variables: 'env', 'Docs preview': 'content', 'AI agent': 'ai', Comments: 'comments' })[p], 'context:' + p, p).replace('iconbtn', 'iconbtn ' + (panel === p ? 'active' : ''))).join('') + '</aside>'; }
+function footer() { return '<footer class="footer">' + [['Console', 'console'], ['Runner', 'play'], ['Cookies', 'cookie'], ['Vault', 'lock'], ['Trash', 'trash']].map(([n, i]) => btn(n, 'drawer:' + n, i)).join('') + '<span class="sep"></span>' + btn(caLabel(),'caOverview','lock') + btn('Proxy ' + (proxy ? 'on' : 'off'), 'view:Proxy', 'globe') + btn('MCP ' + (mcp ? 'on' : 'off'), 'view:AI & MCP', 'ai') + '<span class="grow"></span><span class="dot ' + (run ? '' : 'off') + '"></span>' + btn(backend + ' · ' + (run ? 'Running' : 'Stopped') + ' · :' + projects[backend].port, 'view:Overview') + '<small>'+esc(env)+'</small>' + '<span class="sep"></span>' + ib('layout', 'sidebar', 'Toggle sidebar') + ib('split', 'layout', 'Toggle response position') + ib('layout', 'right', 'Toggle right bar') + '</footer>'; }
+function render() {if(groupUndo)return; const t = active(); document.body.className = (studio ? 'studio' : hub ? 'hub' : 'familiar') + (document.body.classList.contains('homeCollapsed') ? ' homeCollapsed' : '') + (document.body.classList.contains('homeRightHidden') ? ' homeRightHidden' : ''); const focusBefore = document.activeElement, focusAction = focusBefore?.dataset.act, scroll = $('.screen')?.scrollTop || 0, oldView = document.body.dataset.view; document.getElementById('app').innerHTML = header() + (atHome ? homeScreen() : '<div class="shell">' + (rail() + (side ? browser() : '')) + '<main class="work">' + tabstrip() + '<div class="screen">' + screen(t) + '</div></main>' + (right ? context() : '') + '</div>') + '<div class="drawer">' + drawerBody() + '</div>' + footer(); decorateRows(); document.body.dataset.view = atHome ? 'Home' : String(t.id); if (oldView === document.body.dataset.view && $('.screen'))
+    $('.screen').scrollTop = scroll; if (focusAction && !layer().children.length) {
+    const next = [...document.querySelectorAll('#app [data-act]')].find(n => n.dataset.act === focusAction);
+    next?.focus({ preventScroll: true });
+} }
+const scenariosFor = p => scenarios[p] || (scenarios[p] = [...norm]);
+const currentMock = t => val('mock:' + t.path + ':' + t.scenario, JSON.stringify(example(t.path, t.scenario), null, 2));
+const statusFor = t => val('status ' + t.path + ':' + t.scenario, statuses[norm.indexOf(t.scenario)] || 200);
+const strip = (items, selected, prefix) => '<div class="strip">' + items.map(s => btn(s === 'Headers (8)' ? 'Headers (' + Object.keys(requestHeaders(active())).length + ')' : s, prefix + s, '', selected === s ? 'current' : '')).join('') + '</div>';
+function mock(t) { return '<div class="mockgrid"><div class="scenarios"><div class="eyebrow">Scenarios · ' + scenariosFor(t.path).length + '</div>' + scenariosFor(t.path).map(n => '<button class="' + (t.scenario === n ? 'selected' : '') + '" data-act="scenario:' + esc(n) + '">' + ico(t.scenario === n ? 'check' : 'file') + esc(n) + '<span class="scenario-code">' + val('status ' + t.path + ':' + n, statuses[norm.indexOf(n)] || 200) + '</span></button>').join('') + btn('Add scenario', 'newScenario', 'plus') + '</div><div class="editor"><div class="codehead">' + ico('code') + 'response.json<span class="grow"></span>' + btn(t.mockEdit ? 'Done' : 'Edit JSON', 'editMock') + '</div>' + (t.mockEdit ? area('mock:' + t.path + ':' + t.scenario, currentMock(t)) : code(currentMock(t))) + '<details><summary>Response rules &amp; JS handler</summary>' + field('Match when', inp('Rule ' + t.path, val('Rule ' + t.path, 'Always'))) + area('Handler ' + t.path, val('Handler ' + t.path, 'return { status: 200, body: response };')) + '</details>' + '<details><summary>Endpoint delay &amp; faults</summary>' + simFields('Endpoint ' + t.path) + '</details>' + '</div></div>'; }
+function address(t) { return '<div class="builderbar"><div class="address"><select class="' + t.method + '" data-field="Method" aria-label="HTTP method">' + opts(['GET', 'POST', 'PUT', 'PATCH', 'DELETE'], t.method) + '</select>' + (t.url.startsWith('/') ? '<span class="variable" tabindex="0" data-tip="' + esc(envBase()) + '">{{baseUrl}}</span>' : '') + '<input id="url" data-field="URL" aria-label="Request URL or cURL" value="' + esc(t.url) + '"></div><button class="primary" data-act="send" title="' + (run ? 'Send · ⌘↵' : 'Start the backend to send') + '" ' + (run ? '' : 'disabled') + '>Send ' + ico('arrow') + '</button>' + ib('down', 'sendMenu', 'Send options') + '</div><div id="urlError" class="bad" role="alert"></div>'; }
+const requestSubs = ['Params', 'Authorization', 'Headers (8)', 'Body', 'Scripts', 'Tests', 'Settings', 'Cookies'];
+function bodyEditor(k) { const fmt = val(k + 'Body format', 'Raw JSON'); if (fmt === 'None')
+    return '<p class="pad">This request has no body.</p>'; if (fmt === 'Binary')
+    return '<label class="fieldline">Binary body <input type="file" aria-label="Choose a local body file"></label>'; if (['form-data', 'x-www-form-urlencoded'].includes(fmt))
+    return table(['Field', 'Value'], [[inp(k + 'formKey', val(k + 'formKey', 'name')), inp(k + 'formValue', val(k + 'formValue', 'Canvas tote'))]]); return area(k + 'Body', val(k + 'Body', fmt === 'Raw XML' ? '<product id="prd_1042" />' : fmt === 'GraphQL' ? 'query { products { id } }' : fmt === 'Raw Text' ? 'Canvas tote' : '{\n  "limit": 20\n}')); }
+function requestFields(t) {
+    const k = 'tab' + t.id + ' ';
+    switch (t.sub) {
+        case 'Mock': return mock(t);
+        case 'Tests': return '<div class="pad">' + area(k + 'Tests', val(k + 'Tests', 'expect(response.status).toBe(200)')) + btn('Verify app calls', 'view:Expect requests') + '</div>';
+        case 'Cookies': return cookieTable();
+        case 'Authorization': {
+            const mode = val(k + 'Auth', 'Act as app user');
+            return '<div class="pad fields">' + field('Auth helper', sel(k + 'Auth', ['Act as app user', 'Bearer', 'Basic', 'API key', 'OAuth2'], mode)) + (mode === 'Act as app user' ? field('App user', sel(k + 'App user', ['Mona Saleh', 'Omar Ali'], pickedUser)) : mode === 'OAuth2' ? btn('Configure OAuth2 mock', 'view:OAuth2 mock', 'lock') : field(mode === 'Basic' ? 'Username' : 'Key', inp(k + 'Auth key', val(k + 'Auth key', '')))) + (mode === 'Basic' ? field('Password', inp(k + 'Password', '', 'password')) : '') + '</div>';
+        }
+        case 'Headers (8)': return table(['Header', 'Value'], Object.entries(requestHeaders(t)).map(([a, b]) => [esc(a), inp(k + a, b)]));
+        case 'Body': return '<div class="pad">' + sel(k + 'Body format', ['None', 'form-data', 'x-www-form-urlencoded', 'Raw JSON', 'Raw Text', 'Raw XML', 'Binary', 'GraphQL'], val(k + 'Body format', 'Raw JSON')) + bodyEditor(k) + '</div>';
+        case 'Scripts': return '<div class="pad">' + field('Pre-request', area(k + 'Pre', val(k + 'Pre', '// Set request variables here'))) + field('Post-response · tests and assertions', area(k + 'Post', val(k + 'Post', 'expect(response.status).toBe(200)'))) + btn('Expect requests', 'view:Expect requests', 'check') + '</div>';
+        case 'Settings': return '<div class="pad fields">' + ['Follow redirects', 'Trust local mkcert', 'Use proxy'].map(x => field(x, sel(k + x, ['Enabled', 'Disabled'], val(k + x, 'Enabled')))).join('') + field('Timeout (ms)', inp(k + 'Timeout', val(k + 'Timeout', '5000'), 'number')) + '</div>';
+        default: return '<div class="pad">' + table(['Query parameter', 'Value'], [['limit', inp(k + 'limit', val(k + 'limit', '20'))], ['offset', inp(k + 'offset', val(k + 'offset', '0'))]]) + '</div>';
+    }
+}
+function previewJSON(text) { try {
+    const obj = JSON.parse(text);
+    return table(['Field', 'Value'], Object.entries(obj ?? {}).map(([k, v]) => [esc(k), typeof v === 'object' ? code(JSON.stringify(v, null, 2)) : esc(v)]));
+}
+catch {
+    return '<div class="pad">' + esc(text) + '</div>';
+} }
+function response(t) {
+    let display = t.result;
+    if (t.query) {
+        try {
+            const keys = t.query.replace(/^\$\.?/, '').replace(/\[(\d+)\]/g, '.$1').split('.').filter(Boolean);
+            let v = JSON.parse(display);
+            for (const k of keys)
+                v = v?.[k];
+            display = v === undefined ? 'No matching value' : JSON.stringify(v, null, 2);
+        }
+        catch {
+            display = 'No matching value';
+        }
+    }
+    return '<section class="response"><div class="statusline"><b>Response</b><span class="grow"></span>' + (t.received ? '<span class="badge ' + (t.status >= 400 ? 'bad' : 'good') + '">' + t.status + ' ' + (t.status === 200 ? 'OK' : t.status === 401 ? 'Unauthorized' : 'Error') + '</span><span class="metric" tabindex="0" title="DNS 1 ms · Connect 3 ms · Server 18 ms · Transfer 2 ms">' + (t.elapsed || (t.scenario === 'Slow' ? '1,200 ms' : '24 ms')) + ' · ' + new Blob([t.result]).size + ' B</span>' : '') + ib('split', 'layout', 'Move response pane') + '</div>' + strip(['Body', 'Cookies', 'Headers', 'Test Results'], t.resp, 'resp:') + (t.received ? (t.resp === 'Body' ? '<div class="statusline wrap">' + ['Pretty', 'Raw', 'Preview'].map(n => btn(n, 'format:' + n, '', t.format === n ? 'active' : '')).join('') + '<span class="grow"></span><input aria-label="JSONPath response filter" placeholder="JSONPath · $.data[0]" data-field="JSONPath" value="' + esc(t.query) + '" size="14"><input aria-label="Search response" data-field="Response search" placeholder="Find in body" size="10" value="' + esc(t.find || '') + '">' + (store.has('example '+t.id)?btn('Open example','viewExample'):btn('Save as example', 'saveExample')) + '</div><div id="result">' + (t.format === 'Raw' ? '<pre class="pad">' + esc(display.replace(/\n\s*/g, '')) + '</pre>' : t.format === 'Preview' ? previewJSON(display) : code(display)) + '</div>' : t.resp === 'Cookies' ? cookieTable() : t.resp === 'Headers' ? table(['Header', 'Value'], [['Content-Type', 'application/json'], ['X-Tempo-Scenario', esc(t.scenario)]]) : table(['Assertion', 'Result'], t.assertions || [['Status is 200', t.status === 200 ? 'Pass' : 'Fail']])) + '<div class="line">' + btn('Save response as scenario', 'saveScenario', 'layers') + '</div>' : empty('No response yet', 'Enter the URL and click Send to get a response.')) + '</section>';
+}
+function endpoint(t) {
+    const ep = t.view === 'Endpoint', req = address(t) + strip(ep && !studio ? ['Mock', ...requestSubs] : requestSubs, t.sub, 'sub:') + requestFields(t);
+    const title = heading(ep ? '/api/v1/' + t.path : tablabel(t), ep ? 'Endpoints / ' + t.path.split('/')[0] : 'Requests / Catalog smoke', ep ? 'end' : 'requests', btn('Save', 'save', 'save', 'outline') + btn('Share', 'share', 'share'));
+    if (studio && ep)
+        return '<article class="endpoint">' + title + '<div class="split"><section><div class="lane">' + ico('layers') + '<b>Mock</b><small>Server definition</small></div>' + mock(t) + '</section><section><div class="lane">' + ico('play') + '<b>Try</b><small>Request client</small></div><div class="' + (sideResponse ? 'studioSide' : '') + '"><section>' + req + '</section>' + response(t) + '</div>' + '</section></div><div class="hits">' + ico('traffic') + '<b>Recent hits</b><span class="grow"></span>' + esc((logs.find(l => l[2] === '/api/v1/' + t.path) || ['No hits for this endpoint yet']).slice(0, 6).join(' · ')) + btn('View traffic', 'view:Traffic') + '</div></article>';
+    return '<article class="endpoint">' + title + '<div class="' + (sideResponse ? 'side-response' : '') + '"><section>' + req + '</section>' + response(t) + '</div></article>';
+}
+function screen(t) { if(t.view==='Endpoint'&&!routes.length)return empty('No endpoints','Add the first endpoint or import an OpenAPI definition.',btn('Add endpoint','addItem','plus')+btn('Import OpenAPI','import:OpenAPI','file'));if (['Endpoint', 'Request'].includes(t.view))
+    return endpoint(t); if (t.view === 'First run')
+    return home(); return heading(t.view, category(t.view), imap[t.view], pageAction(t.view)) + '<div class="pad">' + page(t.view) + '</div>'; }
+function category(v) { return Object.keys(sections).find(k => sections[k].includes(v)) || 'Workspace'; }
+function pageAction(v) {
+    const a = { 'Overview': [run ? 'Stop backend' : 'Start backend', 'running'], 'Settings': ['Save settings', 'save'],  'Collection runner': ['Run collection', 'runCollection'], 'Snapshots': ['Create snapshot', 'snapshot'], 'Proxy': [record ? 'Stop recording' : 'Record traffic', 'record'], 'AI & MCP': [mcp ? 'Turn MCP off' : 'Turn MCP on', 'mcp'], 'Expect requests': ['Verify requests', 'verify'], 'Environments': ['Save variables', 'save'], 'Data': ['Add record', 'newRecord'], 'History': ['New request', 'new'], 'OpenAPI': ['Sync specification', 'sync'],  'Media': ['Add media', 'addMedia'], 'Inbox': ['Trigger webhook', 'webhook'], 'Push sender': ['Send test push', 'push'], 'GraphQL': ['Run query', 'protocol'], 'WebSocket': ['Send message', 'protocol'], 'SSE': ['Emit event', 'protocol'], 'Simulate': ['Apply simulation', 'applySim'], 'Import': ['Import', 'doImport'], 'Export': ['Export', 'doExport'], 'Addresses': ['Show device QR', 'qr'], 'OAuth2 mock': ['Issue token', 'jwt'], 'Shared response': ['Save response', 'save'] };
+    return a[v] ? btn(a[v][0], a[v][1], '', v === 'Overview' && run ? 'outline' : 'primary') : '';
+}
+function home() { return '<div class="homebody">' + heading('Welcome to Tempo', 'First run', 'home', btn('Create backend', 'createBackend', 'plus', 'primary')) + empty('Your backend library is empty', 'Create a backend, open an existing folder, or start from a specification.', btn('Open folder', 'openFolder', 'folder', 'outline') + ' ' + btn('Import OpenAPI', 'import:OpenAPI', 'file', 'outline')) + '</div>'; }
+const localBase = () => 'https://localhost:' + projects[backend].port;
+const envBase = () => val(env + ' baseUrl', env === 'Local' ? 'https://localhost:' + projects[backend].port : 'https://staging.example.com');
+const defaultReport = () => [['List products', 'Status', '200', '200'], ['Product detail', 'Has id', 'true', 'true'], ['Sign in', 'Token issued', 'true', 'true'], ['Expired session', 'Status', '401', '200']];
+let runnerReport = defaultReport();
+const reportSummary = () => { const pass = runnerReport.filter(r => r[2] === r[3]).length; return pass + ' passed · ' + (runnerReport.length - pass) + ' failed'; };
+const lanURL=()=>'https://192.168.1.24:'+projects[backend].port;
+// The device URL fits a version 2-L byte-mode QR (34 data and 10 parity codewords).
+function deviceMatrix(url){
+ const size=25, cells=Array.from({length:size},()=>Array(size).fill(null)), bits=[];
+ const push=(v,width)=>{for(let i=width-1;i>=0;i--)bits.push((v>>i)&1)};
+ push(4,4);push(url.length,8);for(const ch of url)push(ch.charCodeAt(0),8);push(0,4);
+ const bytes=[];for(let i=0;i<bits.length;i+=8)bytes.push(bits.slice(i,i+8).reduce((v,b)=>2*v+b,0));
+ let pad=0;while(bytes.length<34)bytes.push(pad++%2?17:236);
+ function mul(a,b){let v=0;while(b){if(b&1)v^=a;a=(a<<1)^((a&128)?285:0);b>>=1}return v}
+ let poly=[1],root=1;for(let i=0;i<10;i++){const next=Array(poly.length+1).fill(0);poly.forEach((v,j)=>{next[j]^=v;next[j+1]^=mul(v,root)});poly=next;root=mul(root,2)}
+ const ecc=Array(10).fill(0);for(const v of bytes){const factor=v^ecc.shift();ecc.push(0);for(let i=0;i<10;i++)ecc[i]^=mul(poly[i+1],factor)}
+ const data=bytes.concat(ecc);
+ for(const [x,y] of [[3,3],[21,3],[3,21]])for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){if(x+dx<0||x+dx>=size||y+dy<0||y+dy>=size)continue;const d=Math.max(Math.abs(dx),Math.abs(dy));cells[y+dy][x+dx]=d!==2&&d!==4}
+ for(let i=8;i<size-8;i++)cells[6][i]=cells[i][6]=i%2===0;
+ for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++)cells[18+dy][18+dx]=Math.max(Math.abs(dx),Math.abs(dy))!==1;
+ for(let i=0;i<15;i++){const dark=!!((0x77c4>>i)&1);cells[i<6?i:i<8?i+1:size-15+i][8]=dark;cells[8][i<8?size-i-1:i===8?7:14-i]=dark}cells[size-8][8]=true;
+ let index=0,up=true;for(let x=size-1;x>0;x-=2){if(x===6)x--;for(let row=0;row<size;row++){const y=up?size-1-row:row;for(let offset=0;offset<2;offset++){const col=x-offset;if(cells[y][col]!==null)continue;const bit=(data[index>>3]>>(7-index%8))&1;cells[y][col]=Boolean(bit^Number((y+col)%2===0));index++}}up=!up}
+ return cells
+}
+function deviceQR(url){let path='';deviceMatrix(url).forEach((row,y)=>row.forEach((on,x)=>{if(on)path+='M'+(x+4)+' '+(y+4)+'h1v1h-1z'}));return '<svg class="deviceqr" role="img" aria-label="Device QR for '+esc(url)+'" viewBox="0 0 33 33" shape-rendering="crispEdges"><rect width="33" height="33" fill="#fafaf8"/><path fill="#292e33" d="'+path+'"/></svg>'}
+function cookieRows() { if (!store.has('cookieJar'))
+    store.set('cookieJar', [{ name: 'tempo_session', domain: 'localhost', path: '/', value: 'demo-session', policy: 'HttpOnly · Secure' }]); return store.get('cookieJar'); }
+function cookieTable() { return table(['Cookie', 'Domain', 'Path', 'Policy', ''], cookieRows().map((c, i) => [esc(c.name), esc(c.domain), esc(c.path), esc(c.policy), btn('Edit', 'cookie:' + i) + ib('more', 'cookieMenu:' + i, 'Cookie actions')])) + btn('Add cookie', 'addCookie', 'plus'); }
+function variables() { const id = env + ' variable list'; if (!store.has(id))
+    store.set(id, [['baseUrl', 'URL', env + ' baseUrl'], ['apiVersion', 'String', env + ' version'], ['authToken', 'Vault secret', env + ' token']]); return store.get(id); }
+const varValue = ([name, type, key]) => val(key, name === 'baseUrl' ? envBase() : name === 'apiVersion' ? 'v1' : type === 'Vault secret' ? 'demo-local-token' : '');
+function vars() { return table(['Variable', 'Value'], [...variables().map(row => [esc(row[0]), row[1] === 'Vault secret' ? '••••••••' : esc(varValue(row))]), ...Object.entries(val(env + ' script variables', {})).filter(([k]) => !variables().some(r => r[0] === k)).map(([k, v]) => [esc(k), esc(v)])]); }
+const activityBody = () => activity.length ? activity.map((a, i) => '<div class="activity">' + ico('ai') + '<div><b>' + esc(a) + '</b><p>' + (a.includes('read') ? 'Read only · endpoints' : 'Write batch · snapshot available') + '</p></div>' + (a.includes('read') ? '<small>10:39</small>' : btn('Undo', 'undoBatch:' + i)) + '</div>').join('') : empty('No agent activity', 'Connect an agent to see tool calls.', btn('Connect agent', 'view:AI & MCP'));
+const simFields = scope => field('Network preset', sel(scope + ' preset', ['Clear', 'Offline', 'Slow 3G', 'Random failures'], val(scope + ' preset', 'Clear'))) + field('Delay (ms)', inp(scope + ' delay', val(scope + ' delay', '0'), 'number')) + field('Failure rate (%)', inp(scope + ' failure', val(scope + ' failure', '0'), 'number')) + field('Rate limit / min', inp(scope + ' rate', val(scope + ' rate', '120'), 'number'));
+const snippets = { 'Claude Code': 'claude mcp add tempo -- tempo mcp', 'Codex': 'codex mcp add tempo -- tempo mcp', 'Cursor': '{"mcpServers":{"tempo":{"command":"tempo","args":["mcp"]}}}', 'AGENTS.md': 'Use the Tempo MCP server to inspect Shop API. Snapshot before a write batch.' };
+let importFormat = 'OpenAPI', exportFormat = 'OpenAPI', runnerFile = files[0], runCount = 1, protocolReply = {}, media = ['catalog-cover.webp', 'canvas-tote.png'], inbox = ['order.created · ord_208'], simScope = 'Global', simPath = 'products', published = {}, verified = '', generated = false, types = false, apiSync = 'Today at 09:14', draftNames = {}, profileScopes = ['read', 'write'], activePreset = 'Clear', backendStates = { 'Shop API': true };
+function contextBody() { const t = active(); if (panel === 'Variables')
+    return vars(); if (panel === 'Code')
+    return '<div class="fieldline">' + sel('Code language', ['cURL', 'fetch', 'axios', 'Python'], val('Code language', 'cURL')) + '</div><pre style="white-space:pre-wrap;overflow-wrap:anywhere">' + esc(gencode()) + '</pre>' + btn('Copy snippet', 'copyCode', 'copy', 'outline'); if (panel === 'AI agent')
+    return activityBody() + btn('MCP setup', 'view:AI & MCP', 'ai'); if (panel === 'Docs preview')
+    return '<div class="group">OpenAPI 3.1</div><h3>List products</h3><p>Returns the catalog visible to the signed-in app user.</p>' + line('200', 'Products') + line('401', 'Unauthorized') + btn('Open specification', 'view:OpenAPI'); if (panel === 'Comments')
+    return field('Thread', area('Comment', val('Comment', ''))) + btn('Add comment', 'comment') + line(esc(val('Posted comment', 'No comments yet'))); return '<div class="group">Backend</div>' + line(esc(backend)) + line(run ? 'Running' : 'Stopped') + line('Port', String(projects[backend].port)) + '<div class="group">Current tab</div>' + line(esc(tablabel(t))) + btn('Connect your app', 'view:Connect your app', 'link') + btn('Snapshots', 'view:Snapshots', 'layers'); }
+const defaultHeaders = { 'Accept': 'application/json', 'Content-Type': 'application/json', 'Authorization': 'Bearer ••••••••', 'User-Agent': 'Tempo/2.0', 'Accept-Language': 'en', 'Cache-Control': 'no-cache', 'X-Client': 'ios', 'X-Request-Id': '{{uuid}}' };
+function requestHeaders(t) { const k = 'tab' + t.id + ' ', names = new Set([...Object.keys(defaultHeaders), ...val(k + 'importHeaders', [])]); return Object.fromEntries([...names].map(n => [n, val(k + n, defaultHeaders[n] || '')])); }
+function requestData(t) {
+    const k = 'tab' + t.id + ' ', headers = requestHeaders(t), mode = val(k + 'Auth', 'Act as app user'), fmt = val(k + 'Body format', 'Raw JSON');
+    if (!store.has(k + 'Authorization')) {
+        if (mode === 'Basic')
+            headers.Authorization = 'Basic ' + btoa(unescape(encodeURIComponent(val(k + 'Auth key', 'mona') + ':' + val(k + 'Password', 'demo'))));
+        else if (mode === 'API key') {
+            delete headers.Authorization;
+            headers['X-API-Key'] = val(k + 'Auth key', 'demo-key');
+        }
+        else
+            headers.Authorization = 'Bearer ' + (mode === 'Act as app user' ? 'demo.' + val(k + 'App user', 'Mona Saleh').split(' ')[0].toLowerCase() + '.jwt' : mode === 'OAuth2' ? val('jwt', 'demo.oauth.local') : val(k + 'Auth key', 'demo-token'));
+    }
+    const url = new URL(t.url.replace('{{baseUrl}}', envBase()), envBase());
+    for (const n of ['limit', 'offset'])
+        if (store.has(k + n) || t.method === 'GET' && t.path === 'products') {
+            if (!url.searchParams.has(n))
+                url.searchParams.set(n, val(k + n, n === 'limit' ? '20' : '0'));
+        }
+    let body = val(k + 'Body', '{}');
+    if (fmt === 'None' || t.method === 'GET')
+        body = undefined;
+    else if (['form-data', 'x-www-form-urlencoded'].includes(fmt))
+        body = new URLSearchParams([[val(k + 'formKey', 'name'), val(k + 'formValue', 'Canvas tote')]]).toString();
+    return { url: url.href, method: t.method, headers, body };
+}
+function gencode(lang = val('Code language', 'cURL')) {
+    const t = active();
+    let r;
+    try {
+        r = requestData(t);
+    }
+    catch {
+        return 'Enter a valid URL to generate code.';
+    }
+    const opts = { method: r.method, headers: r.headers, ...(r.body === undefined ? {} : { body: r.body }) }, quote = v => "'" + String(v).replaceAll("'", "'\\''") + "'";
+    if (lang === 'cURL')
+        return ['curl -X ' + r.method + ' ' + quote(r.url), ...Object.entries(r.headers).map(([k, v]) => '-H ' + quote(k + ': ' + v)), ...(r.body === undefined ? [] : ['--data-raw ' + quote(r.body)])].join(' \\\n  ');
+    if (lang === 'axios')
+        return 'await axios(' + JSON.stringify({ method: r.method, url: r.url, headers: r.headers, data: r.body }, null, 2) + ')';
+    if (lang === 'Python')
+        return 'requests.request(' + JSON.stringify(r.method) + ', ' + JSON.stringify(r.url) + ', headers=' + JSON.stringify(r.headers) + ', data=' + JSON.stringify(r.body ?? '') + ')';
+    return 'await fetch(' + JSON.stringify(r.url) + ', ' + JSON.stringify(opts, null, 2) + ')';
+}
+function drawerBody() { if (!drawer)
+    return ''; const body = drawer === 'Console' ? logs.slice(0, 5).map(l => line('<code>' + esc(l.join('   ')) + '</code>')).join('') : drawer === 'Runner' ? line(esc(runnerFile) + ' · ' + reportSummary(), btn('View report', 'view:Collection runner')) : drawer === 'Cookies' ? cookieTable() : drawer === 'Vault' ? page('Vault') : empty('Trash is empty', 'Removed workspace items appear here.', btn('Browse snapshots', 'view:Snapshots')); return '<div class="sectionhead"><b class="grow">' + drawer + '</b>' + ib('down', 'drawer:' + drawer, 'Close drawer') + '</div>' + body; }
+function page(v) {
+    switch (v) {
+        case 'Overview': return block('Backend process', line('<span class="dot ' + (run ? '' : 'off') + '"></span> ' + (run ? 'Running' : 'Stopped'), '<code>' + esc(localBase()) + '</code>') + (!run ? empty(esc(backend) + ' is stopped', 'Start the backend to accept requests from your app.', '') : '') + line('Active endpoints', String(routes.length)) + line('Network preset', activePreset)) + block('Backend tools', ['Endpoints', 'Addresses', 'Proxy', 'Snapshots', 'Settings', 'AI & MCP', 'OpenAPI', 'Simulate'].map(n => line(btn(n, n === 'Endpoints' ? 'endpoint:products' : 'view:' + n, imap[n] || 'globe'), ico('next'))).join(''));
+        case 'Collection runner': return block('Collection', line(sel('Runner file', files, runnerFile), '<code>collections/' + esc(runnerFile.toLowerCase().replaceAll(' ', '-')) + '.json</code>')) + block('Run #' + runCount + ' · ' + esc(runnerFile), table(['Request', 'Assertion', 'Expected', 'Actual', 'Result'], runnerReport.map(r => [...r, r[2] === r[3] ? '<b class="good">Pass</b>' : '<b class="bad">Fail</b>'])), '<small>' + reportSummary() + ' · 96 ms</small>') + block('Continuous integration', line('<code>tempo run collections/' + esc(runnerFile.toLowerCase().replaceAll(' ', '-')) + '.json</code>', btn('Copy', 'copyCI', 'copy'))) + btn('Expect requests', 'view:Expect requests', 'check');
+        case 'Environments': return block('Environment variables', line(sel('Environment', ['Local', 'Staging'], env), '<small>Active environment</small>') + table(['Key', 'Type', 'Current value'], variables().map(r => [esc(r[0]), esc(r[1]), inp(r[2], varValue(r), r[1] === 'Vault secret' ? 'password' : 'text')])), btn('Add variable', 'addVar', 'plus')) + btn('Open vault', 'drawer:Vault', 'lock');
+        case 'History':
+        case 'Traffic': {
+            if (!logs.length)
+                return empty('No requests yet', 'Send a request to populate the local log.', btn('New request', 'new', 'plus'));
+            selectedLog = Math.min(selectedLog, logs.length - 1);
+            const l = logs[selectedLog];
+            return block(v === 'Traffic' ? 'Live requests' : 'Request history', table(['Time', 'Method', 'Path', 'Status', 'Duration', 'Source'], logs.map((r, i) => [btn(r[0], 'log:' + i, '', selectedLog === i ? 'selected' : ''), '<b class="verb ' + r[1] + '">' + r[1] + '</b>', '<code>' + esc(r[2]) + '</code>', '<span class="' + (r[3] >= 400 ? 'bad' : 'good') + '">' + r[3] + '</span>', r[4], esc(r[5])])), '<span class="dot"></span><small>Local session</small>') + block('Request detail', line('<code>' + esc(l[1] + ' ' + l[2]) + '</code>', '<small>' + l[0] + '</small>') + (l[8]?line('<b class="bad">'+esc(l[8])+'</b>'):'')+code(l[7] || JSON.stringify(example(l[2], l[3] === 401 ? 'Unauthorized' : 'Normal'), null, 2))) + btn('Expect requests', 'view:Expect requests') + btn('Proxy and record', 'view:Proxy');
+        }
+        case 'Data': return block('products', table(['Record ID', 'Name', 'Price', 'Currency'], records.map(r => ['<code>' + esc(r.id) + '</code>', esc(r.name), r.price, r.currency])), '<small>' + records.length + ' records</small>') + btn('App users', 'view:Users', 'user') + btn('Media library', 'view:Media', 'media');
+        case 'Content': {
+            if (!entries.length)
+                return empty('No entries', 'Create a content entry to edit its translations.', btn('New entry', 'newEntry', 'plus'));
+            const ar = locale === 'العربية', prefix = 'cms ' + val('CMS entry', 'welcome') + ' ' + locale;
+            return block('Content types', '<div class="entryList">'+entries.map(n=>'<div class="line" tabindex="0" data-item="entry" data-id="'+esc(n)+'">'+ico('content')+'<b>'+esc(n)+'</b></div>').join('')+'</div>',btn('New entry','newEntry','plus')) + block('Entry editor', '<div class="pad fields" dir="' + (ar ? 'rtl' : 'ltr') + '">' +field('Language',sel('Locale',['English','العربية'],locale))+ field(ar ? 'العنوان' : 'Title', inp(prefix + ' title', val(prefix + ' title', ar ? 'أهلاً بكم في متجرنا' : 'Welcome to the shop'))) + field(ar ? 'المحتوى' : 'Body', area(prefix + ' body', val(prefix + ' body', ar ? 'تصفّح أحدث المنتجات في متجرنا.' : 'Explore the latest arrivals in our store.'))) + '</div>', '<span class="tag">' + (published[val('CMS entry', 'welcome') + ' ' + locale] ? 'Published' : 'Draft') + '</span>') + btn('Save draft', 'draft', 'save', 'outline');
+        }
+        case 'Users': return block('App users · JWT', table(['Name', 'Email', 'Role'], [['Mona Saleh', 'mona@example.com', 'Member'], ['Omar Ali', 'omar@example.com', 'Admin']])) + field('Issue token for', sel('App user', ['Mona Saleh', 'Omar Ali'], pickedUser)) + line('Test JWT', '<code>' + esc(val('jwt', 'No token issued')) + '</code>');
+        case 'Media': return block('Media library', table(['File', 'Storage'], media.map(m => [esc(m), 'Local assets'])));
+        case 'Simulate': return block('Network simulation', strip(['Global', 'Per endpoint'], simScope, 'scope:') + '<div class="pad">' + (simScope === 'Per endpoint' ? field('Endpoint', sel('Simulated endpoint', routes.map(r => r[1]), simPath)) : '') + simFields(simScope === 'Global' ? 'Global' : 'Endpoint ' + simPath) + '</div>') + btn('OAuth2 mock', 'view:OAuth2 mock', 'lock');
+        case 'Proxy': return block('Forward unmatched routes', '<div class="pad">' + field('Proxy mode', btn(proxy ? 'Enabled' : 'Disabled', 'proxy', 'globe', 'outline')) + field('Upstream URL', inp('Upstream', val('Upstream', 'https://api.example.com'))) + '<p>Matched routes use their local scenarios. Unmatched routes go to the upstream API.</p></div>') + block('Recorded traffic', line(record ? 'Recording unmatched routes' : 'Recording paused', btn('View traffic', 'view:Traffic')) + line(esc(val('Recorded', 'No recorded endpoints yet. Start recording, then send an unmatched request.'))));
+        case 'Snapshots': return block('Named snapshots', table(['Name', 'Action'], snapshots.map(n => [esc(n), '']))) + block('Backend archive', line(btn('Export archive', 'export:Backend archive', 'share') + btn('Import archive', 'import:Backend archive', 'folder'))) + block('Seed data', line('Replace working data with the bundled seed.', btn('Reset to seed', 'reset', '', 'danger')));
+        case 'Agent activity': return block('Agent activity', activityBody()) + btn('MCP setup', 'view:AI & MCP', 'ai');
+        case 'AI & MCP': return '<div class="columns"><div>' + block('MCP server', line('Local server', '<span class="badge">' + (mcp ? 'On' : 'Off') + '</span>') + line('stdio', '<code>tempo mcp</code>') + line('Local HTTP', '<code>http://127.0.0.1:8444/mcp</code>') + line('Access token', inp('MCP token', val('MCP token', 'demo-token'), 'password'))) + block('Connect a client', Object.keys(snippets).map(k => line(k, btn(k === 'AGENTS.md' ? 'Copy AGENTS.md snippet' : 'Copy snippet', 'snippet:' + k, 'copy'))).join('')) + block('Agent activity', activityBody()) + '</div><div>' + block('Tool permissions', '<div class="pad">' + field('Profile', sel('Profile', ['Read only', 'Standard', 'Full'], profile)) + ['read', 'write', 'destructive', 'handlers', 'external HTTP'].map(n => field(n, '<input type="checkbox" data-scope="' + n + '" ' + (profileScopes.includes(n) ? 'checked' : '') + '>')).join('') + '</div>') + block('Write recovery', line('Each write batch creates a snapshot.', btn('View', 'view:Snapshots'))) + '</div></div>';
+        case 'Devices':return devicesPanel(true);
+        case 'Connect your app':return connectPanel();
+        case 'Settings': return strip(['Server', 'CORS', 'HTTPS certificates', 'Team', 'App'], settings, 'settings:') + '<div class="pad">' + (settings === 'Server' ? block('Local server', '<div class="pad fields">' + field('Backend name', inp('Server name', val('Server name', backend))) + field('Port', inp('Server port', val('Server port', projects[backend].preferred), 'number')) + '</div>') + btn('Connect your app', 'view:Connect your app', 'link') : settings === 'CORS' ? corsBlock() : settings === 'HTTPS certificates' ? block('HTTPS certificates · mkcert', line('localhost.pem',esc(caState(deviceBy('browser')))) + line('Local certificate authority', btn('Reissue certificate', 'cert', 'lock'))) : settings === 'Team' ? block('Team server', line('https://team.example.com', btn(val('Signed in', false) ? 'Signed in · Mona Saleh' : 'Sign in', 'teamSignIn', 'user', 'outline'))) + block('Accounts and roles', table(['Account', 'Role'], [['mona@example.com', sel('Mona role', ['Owner', 'Admin', 'Member'], val('Mona role', 'Owner'))], ['omar@example.com', 'Member']])) + block('API keys', line('CI runner', '<code>•••• 22fa</code>')) + block('Audit log', line('Mona updated the Catalog QA role', '10:12')) + block('CI sessions', line('ci-shop-104 · isolated', 'Passed')) : block('Appearance and updates', line('Appearance', sel('Appearance', ['System', 'Light', 'Dark'], theme)) + line(notice ? 'Update available, restart to install' : 'Up to date', btn('Release notes', 'updates')) + field('Crash reporting', sel('Crash reporting', ['Off', 'On'], val('Crash reporting', 'Off'))))) + '</div>';
+        case 'Addresses': return block('Connect a device', table(['Target', 'Base URL'], [['Localhost', localBase()], ['LAN device', lanURL()], ['Android emulator', 'https://10.0.2.2:' + projects[backend].port], ['iOS simulator', localBase()]])) + btn('Devices', 'view:Devices', 'phone', 'outline');
+        case 'OpenAPI': return block('Specification', line('shop-api.openapi.json', esc(apiSync)) + line(btn('Import OpenAPI', 'import:OpenAPI', 'file') + btn('Export OpenAPI', 'export:OpenAPI', 'share'))) + block('Request validation', line('Flag requests that break the specification', sel('Validate', ['Enabled', 'Disabled'], val('Validate', 'Enabled'))) + line('GET /api/v1/products · limit must be an integer', '<span class="bad">Flagged · 09:36</span>')) + block('Type bindings', line('shop-api.d.ts', btn('Generate TypeScript types', 'types', 'code')) + (types ? code('export interface Product {\n  id: string;\n  name: string;\n  price: number;\n}') : ''));
+        case 'Shared response': return block('Base response', line('Dynamic values', '<code>{{uuid}} · {{timestamp}}</code>') + area('Base response', val('Base response', '{\n  "requestId": "{{uuid}}",\n  "servedAt": "{{timestamp}}"\n}')));
+        case 'Expect requests': return block('Verify an app call', '<div class="pad fields">' + field('Path', inp('Expected route', val('Expected route', '/api/v1/products'))) + field('Body equals (JSON)', area('Expected body', val('Expected body', '{}'))) + field('Expected count', inp('Expected count', val('Expected count', '1'), 'number')) + line('Available in tests and MCP', '<code>tempo_assert_request_received</code>') + (verified ? line(esc(verified)) : '') + '</div>');
+        case 'OAuth2 mock': return block('Mock provider', line('Authorization URL', '<code>' + base + '/oauth/authorize</code>') + line('Token URL', '<code>' + base + '/oauth/token</code>') + field('Grant', sel('Grant', ['Authorization code', 'Client credentials'], val('Grant', 'Authorization code'))) + line('Access token', esc(val('jwt', 'No token issued'))));
+        case 'Inbox': return block('Webhook inbox', inbox.map(n => line(esc(n), '<small>Received</small>')).join('')) + field('Webhook target', inp('Webhook target', val('Webhook target', 'https://hooks.example.com/orders')));
+        case 'Push sender': return block('Test notification', '<div class="pad fields">' + field('Device', sel('Push device', ['iOS simulator', 'Android emulator'], val('Push device', 'iOS simulator'))) + field('Title', inp('Push title', val('Push title', 'Order ready'))) + field('Payload', area('Push body', val('Push body', '{"orderId":"ord_208"}'))) + '</div>');
+        case 'GraphQL':
+        case 'WebSocket':
+        case 'SSE': return block(v + ' client', '<div class="pad fields">' + field('Endpoint', inp(v + ' URL', val(v + ' URL', (v === 'WebSocket' ? 'wss://localhost:8443' : base) + '/api/v1/' + v.toLowerCase()))) + field(v === 'GraphQL' ? 'Query' : 'Message', area(v + ' body', val(v + ' body', v === 'GraphQL' ? 'query Catalog { products { id name } }' : '{"event":"order.updated"}'))) + (v === 'GraphQL' ? field('Variables', area('GraphQL variables', val('GraphQL variables', '{}'))) + btn('Fetch schema', 'schema') : '') + '</div>') + block(v === 'GraphQL' ? 'Result' : 'Event stream', protocolReply[v] ? code(protocolReply[v]) : empty('No ' + (v === 'GraphQL' ? 'result' : 'messages') + ' yet', v === 'GraphQL' ? 'Run the query to see its result.' : 'Send an event to see it in the stream.'));
+        case 'Import':
+        case 'Export': {
+            const imp = v === 'Import', fmt = imp ? importFormat : exportFormat;
+            return block(imp ? 'Import source' : 'Export format', '<div class="pad fields">' + field('Format', sel(v + ' format', imp ? importers : exporters, fmt)) + (imp ? field('Source', area('Import ' + fmt, val('Import ' + fmt, importSample(fmt)))) : line('Backend', esc(backend))) + '</div>');
+        }
+        case 'Vault': return block('Local secrets', variables().filter(r => r[1] === 'Vault secret').map(r => line(esc(r[0]), inp(r[2], varValue(r), 'password'))).join(''), btn('Add secret', 'addSecret', 'plus'));
+        case 'Cookies': return block('Cookie jar', cookieTable());
+        case 'Release notes': return block('Tempo 2.1', line(notice ? 'Update available, restart to install' : 'Up to date', notice ? btn('Restart to install', 'install', '', 'primary') : '') + line('Improved request verification and local MCP activity.'));
+        case 'Shortcuts': return block('Keyboard shortcuts', table(['Action', 'Shortcut'], [['Search', '⌘K'], ['Command palette', '⇧⌘P'], ['New / close tab', '⌘T / ⌘W'], ['Save / send', '⌘S / ⌘↵'], ['Find and replace', '⇧⌘F'], ['Search tabs', '⇧⌘A'], ['Pin preview', 'Double-click tab or edit'], ['Select multiple', '⌘-click sidebar rows']]));
+        default: return block('Workspace guides', ['Overview', 'OpenAPI', 'AI & MCP', 'Collection runner', 'Shortcuts', 'First run'].map(n => line(btn(n, 'view:' + n, 'file'))).join(''));
+    }
+}
+const importers = ['OpenAPI', 'Postman', 'Mockoon', 'Insomnia/Bruno', 'HAR', 'cURL', 'Backend archive'], exporters = ['OpenAPI', 'Postman', 'Backend archive'];
+const submenus = { 'Open Recent': () => backends.map(n => [n, 'backend:' + n]), Import: () => importers.map(n => [n, 'import:' + n]), Export: () => exporters.map(n => [n, 'export:' + n]), 'Response Pane': () => [['Below', 'position:Below'], ['Side', 'position:Side']], Appearance: () => ['System', 'Light', 'Dark'].map(n => [n, 'appearance:' + n]), Snapshots: () => [['View snapshots', 'view:Snapshots'], ['Create snapshot', 'snapshot'], ['Restore latest', 'restore:' + snapshots[0]]], 'Proxy Mode': () => [['Configure proxy', 'view:Proxy'], [proxy ? 'Disable proxy' : 'Enable proxy', 'proxy'], [record ? 'Stop recording' : 'Record', 'record']], Simulate: () => ['Offline', 'Slow 3G', 'Random failures', 'Clear'].map(n => [n, 'preset:' + n]) };
+const menus = { Tempo: [['About Tempo', 'about'], ['Check for Updates', 'updates'], '-', ['Settings', 'view:Settings', '⌘,'], '-', ['Hide Tempo', 'hide', '⌘H'], ['Quit Tempo', 'quit', '⌘Q']],
+    File: [['New Backend', 'createBackend', '⌘N'], ['New Request', 'new', '⌘T'], ['Open Backend Folder', 'openFolder', '⌘O'], ['Open Recent', '>'], '-', ['Import', '>'], ['Export', '>'], '-', ['Close Tab', 'closeCurrent', '⌘W']],
+    Edit: [['Undo', 'undo', '⌘Z'], ['Redo', 'redo', '⇧⌘Z'], '-', ['Cut', 'edit:cut', '⌘X'], ['Copy', 'edit:copy', '⌘C'], ['Paste', 'pasteText', '⌘V'], ['Duplicate', 'duplicate', '⌘D'], '-', ['Find', 'search', '⌘F'], ['Find and Replace', 'replace', '⇧⌘F']],
+    View: [['Search', 'search', '⌘K'], ['Command Palette', 'palette', '⇧⌘P'], '-', ['Toggle Sidebar', 'sidebar', '⌘\\'], ['Toggle Right Bar', 'right'], ['Response Pane', '>'], ['Appearance', '>'], '-', ['Zoom', 'zoom'], ['Full Screen', 'fullscreen']],
+    Backend: [['Start', 'start', '⌘R'], ['Stop', 'stop', '⌘.'], ['Restart', 'restart'], '-', ['Copy Base URL', 'copyBase'], ['Show Device QR', 'qr'], ['Snapshots', '>'], ['Reset to Seed', 'reset'], '-', ['Proxy Mode', '>'], ['Simulate', '>']],
+    Request: [['Send', 'send', '⌘↵'], ['Save', 'save', '⌘S'], ['Copy as cURL', 'curl'], ['Paste cURL', 'pasteCurl'], ['Generate Code', 'code'], ['Run Collection', 'view:Collection runner'], ['Environments', 'view:Environments']],
+    Window: [['Minimize', 'hide', '⌘M'], ['Zoom', 'zoom'], '-', ['Tempo Local Backend', 'view:Home']],
+    Help: [['Documentation', 'view:Documentation'], ['Keyboard Shortcuts', 'view:Shortcuts', '⌘/'], ['Connect an AI Agent (MCP)', 'view:AI & MCP'], ['Release Notes', 'updates'], ['Report an Issue', 'issue']] };
+const $ = s => document.querySelector(s), layer = () => $('#layers');
+function closeLayer(restore = false) { layer().innerHTML = ''; menuName = ''; submenu = ''; if (restore && lastFocus?.isConnected)
+    lastFocus.focus(); }
+function toast(msg, undo) {if(groupUndo){if(undo)groupUndo.push(undo);return} clearTimeout(toastTimer); if (undo)
+    undoFn = undo; $('#toast').innerHTML = '<div class="toastbox" role="status">' + ico('check') + esc(msg) + (undo ? btn('Undo', 'undo') : '') + btn('×', 'dismiss') + '</div>'; toastTimer = setTimeout(() => { $('#toast').innerHTML = ''; }, 6500); }
+function dialog(title, body, actions = '', focus = true) { lastFocus = document.activeElement; closeLayer(); layer().innerHTML = '<div class="overlay"><section class="modal" role="dialog" aria-modal="true" aria-label="' + esc(title) + '"><div class="sectionhead"><b class="grow">' + esc(title) + '</b>' + btn('×', 'escape', '', '', 'Close') + '</div>' + body + (actions ? '<div class="statusline" style="justify-content:flex-end">' + actions + '</div>' : '') + '</section></div>'; if (focus)
+    (layer().querySelector('input,textarea') || layer().querySelector('button')).focus(); }
+let pending = null;
+function confirmAction(title, desc, fn, label) { pending = fn; dialog(title, '<p class="pad">' + esc(desc) + '</p>', btn('Cancel', 'escape') + btn(label || title, 'confirm', '', 'outline danger')); }
+function ask(title, label, initial, fn) { pending = () => { const s = $('#answer').value.trim(); if (!s) {
+    $('#answer').setCustomValidity('Enter a value');
+    $('#answer').reportValidity();
+    return false;
+} return fn(s); }; dialog(title, '<div class="pad fields"><label>' + esc(label) + '<input id="answer" value="' + esc(initial) + '" required></label></div>', btn('Cancel', 'escape') + btn('Continue', 'confirm', '', 'primary')); }
+function limitPos(el, x, y) { el.style.left = Math.max(4, Math.min(x, innerWidth - el.offsetWidth - 4)) + 'px'; el.style.top = Math.max(2, Math.min(y, innerHeight - el.offsetHeight - 4)) + 'px'; }
+function disabled(a) { return a === 'stopAll' && !runningProjects().length ? 'No projects are running' : a === 'start' && run ? 'Backend is already running' : a === 'stop' && !run ? 'Backend is stopped' : a === 'redo' ? 'No edits to redo' : a === 'undo' && !undoFn ? 'No action to undo' : a === 'send' && (!run || !['Endpoint', 'Request'].includes(active().view)) ? 'Open a request with a running backend' : ''; }
+function menuHTML(entries) { return entries.map(e => { if (e === '-')
+    return '<hr role="separator">'; const [n, a, key, icon] = e, reason = disabled(a); return '<button role="menuitem" data-act="' + esc(a === '>' ? 'submenu:' + n : a) + '" ' + (reason ? 'disabled title="' + esc(reason) + '"' : '') + '>' + (icon?ico(icon):'') + esc(n) + '<kbd>' + esc(a === '>' ? '›' : key || '') + '</kbd></button>'; }).join(''); }
+function popup(entries, anchor, name = 'custom', point) { lastFocus = document.activeElement; closeLayer(); menuName = name; layer().innerHTML = '<div role="menu" class="menu">' + menuHTML(entries) + '</div>'; const r = anchor?.getBoundingClientRect(); limitPos($('.menu'), point?.x ?? r?.left ?? 80, point?.y ?? r?.bottom ?? 48); $('.menu button:not(:disabled)')?.focus(); }
+function childMenu(n, el) { layer().querySelector('.child')?.remove(); submenu = n; const m = document.createElement('div'); m.className = 'menu child'; m.setAttribute('role', 'menu'); m.innerHTML = menuHTML(submenus[n]()); layer().append(m); const r = el.getBoundingClientRect(); limitPos(m, r.right + m.offsetWidth < innerWidth ? r.right - 2 : r.left - m.offsetWidth, r.top); m.querySelector('button')?.focus(); }
+function quick(anchor) { closeLayer(); lastFocus = anchor; layer().innerHTML = '<div class="popover" role="dialog" aria-label="Environment quick look"><h3>' + env + ' variables</h3>' + vars() + btn('Edit environment', 'view:Environments', 'env') + '</div>'; const r = anchor.getBoundingClientRect(); limitPos($('.popover'), r.right - 245, r.bottom + 4); $('.popover button').focus(); }
+let finder = '', searchItems = [];
+function palette(mode) { finder = mode; const tabMode = mode === 'tabsearch', commands = Object.values(menus).flat().filter(Array.isArray).filter(e => e[1] !== '>'); searchItems = tabMode ? tabs.map(t => [tablabel(t), 'tab:' + t.id, 'Tab']) : [...(mode === 'palette' ? commands.map(([n, a, k]) => [n, a, k || 'Command']) : []), ...backends.map(n => [n, 'project:' + n, 'Project']), ['Running projects', 'manager', 'Workspace'], ...saved.map(n => [n, 'saved:' + n, 'Saved request']), ...allViews.map(v => [v, 'view:' + v, 'Screen']), ...routes.map(([m, p]) => [m + ' /api/v1/' + p, 'endpoint:' + p, 'Endpoint'])]; dialog(tabMode ? 'Search tabs' : mode === 'search' ? 'Search Tempo' : 'Command palette', '<input class="searchinput" placeholder="' + (tabMode ? 'Find an open tab…' : mode === 'search' ? 'Find endpoints, requests and screens…' : 'Type a command…') + '" aria-label="Search" id="finder"><div class="results"></div>'); filterResults(''); }
+function filterResults(q) { const matches = searchItems.filter(([s]) => s.toLowerCase().includes(q.toLowerCase())); $('.results').innerHTML = matches.length ? matches.map(([n, a, k]) => '<button data-act="' + esc(a) + '">' + ico(k === 'Endpoint' ? 'end' : k === 'Screen' ? 'layout' : 'terminal') + esc(n) + '<kbd>' + esc(k) + '</kbd></button>').join('') : empty('No matches', 'Try another name or command.'); }
+function clip(s) { if (navigator.clipboard?.writeText)
+    navigator.clipboard.writeText(s).then(() => toast('Copied to clipboard')).catch(() => manualCopy(s));
+else
+    manualCopy(s); }
+function manualCopy(s) { dialog('Copy text', '<div class="pad">' + area('Clipboard text', s) + '</div>'); layer().querySelector('textarea').select(); }
+function send(t = active(), execute = true) {
+    if (!['Endpoint', 'Request'].includes(t.view))
+        t = openView('Request');
+    if (!run) {
+        toast('Start the backend to send');
+        return;
+    }
+    if (!/^(\/|https?:\/\/[^\s/]+)/.test(t.url) || /\s/.test(t.url)) {
+        const e = $('#urlError');
+        if (e)
+            e.textContent = 'Enter a path starting with / or a full HTTP URL.';
+        return;
+    }
+    let outgoing;
+    try {
+        outgoing = requestData(t);
+    }
+    catch {
+        if ($('#urlError'))
+            $('#urlError').textContent = 'Check the request URL and the active environment base URL.';
+        return false;
+    }
+    const path = t.url.replace(/^https?:\/\/[^/]+/, '').split('?')[0], p = path.replace(/^\/api\/v1\//, ''), known = routes.some(r => r[0] === t.method && (r[1] === p || r[1].endsWith('/:id') && p.replace(/\/[^/]+$/, '/:id') === r[1])), sc = val('scenario ' + p, t.view === 'Endpoint' ? t.scenario : 'Normal');
+    t.status = known ? val('status ' + p + ':' + sc, statuses[norm.indexOf(sc)] || 200) : (proxy ? 200 : 404);
+    t.received = true;
+    t.result = known ? val('mock:' + p + ':' + sc, JSON.stringify(example(p, sc), null, 2)) : JSON.stringify(proxy ? { forwarded: true } : { error: 'Route not found' }, null, 2);
+    const scope = 'Endpoint ' + p, preset = val(scope + ' preset', 'Clear') !== 'Clear' ? val(scope + ' preset') : val('Global preset', 'Clear');
+    const delay = Number(val(scope + ' delay', val('Global delay', 0))) || (sc === 'Slow' ? 1200 : preset === 'Slow 3G' ? 750 : 0);
+    const rate = Number(val(scope + ' rate', val('Global rate', 120))), fault = Number(val(scope + ' failure', val('Global failure', 0)));
+    t.elapsed = (24 + delay) + ' ms';
+    const err = preset === 'Offline' ? [503, 'Simulated offline network'] : rate === 0 ? [429, 'Rate limit exceeded'] : fault >= 100 || preset === 'Random failures' && logs.length % 3 === 0 ? [500, 'Simulated server fault'] : null;
+    if (err) {
+        t.status = err[0];
+        t.result = JSON.stringify({ error: err[1] }, null, 2);
+    }
+    if (!known && record && proxy) {
+        routes.push([t.method, p]);
+        store.set('Recorded', t.method + ' ' + path + ' → endpoint');
+        store.set('mock:' + p + ':Normal', t.result);
+    }
+    const validation = val('Validate','Enabled')==='Enabled' && p==='products' && !/^\d+$/.test(new URL(outgoing.url).searchParams.get('limit')||'20') ? 'OpenAPI validation · limit must be an integer' : '';
+    const done = () => { logs.unshift([new Date().toLocaleTimeString('en-GB'), t.method, path, t.status, t.elapsed || '24 ms', 'Runner', outgoing.body || '{}', t.result,validation]); guide.add('Send a first request'); render(); toast('Response received · ' + t.status); };
+    const key = 'tab' + t.id + ' ', scripts = ['Pre', 'Post', 'Tests'].map(n => val(key + n, '')), handler = val('Handler ' + p, '');
+    if (execute && (handler || scripts.some(Boolean)))
+        return evaluateRequest(t, scripts, handler, done);
+    t.assertions = [['Status is 200', t.status === 200 ? 'Pass' : 'Fail']];
+    done();
+    return true;
+}
+// Run edited scripts against local fixtures. The worker has no DOM or network access.
+function scriptHost() {
+    self.onmessage = ({ data }) => {
+        const { scripts, handler, request, response, variables } = data, assertions = [];
+        const expect = actual => ({ toBe(expected) { assertions.push(['Expected ' + JSON.stringify(actual) + ' to be ' + JSON.stringify(expected), Object.is(actual, expected) ? 'Pass' : 'Fail']); }, toEqual(expected) { assertions.push(['Values are equal', JSON.stringify(actual) === JSON.stringify(expected) ? 'Pass' : 'Fail']); } });
+        const invoke = (program, ...args) => Function('request', 'response', 'variables', 'expect', '"use strict";\n' + program)(...args);
+        try {
+            invoke(scripts[0], request, response, variables, expect);
+            if (handler) {
+                const reply = invoke(handler, request, response.body, variables, expect);
+                if (reply && typeof reply === 'object') {
+                    response.status = Number(reply.status) || response.status;
+                    if ('body' in reply)
+                        response.body = reply.body;
+                }
+            }
+            invoke(scripts[1], request, response, variables, expect);
+            invoke(scripts[2] || 'expect(response.status).toBe(200)', request, response, variables, expect);
+            self.postMessage({ response, variables, assertions });
+        }
+        catch (err) {
+            self.postMessage({ error: err.message });
+        }
+    };
+}
+function evaluateRequest(t, scripts, handler, done) {
+    if (typeof Worker === 'undefined') {
+        toast('This browser cannot run local scripts');
+        return false;
+    }
+    const project = backend, token = (t.execution || 0) + 1;
+    t.execution = token;
+    const uri = URL.createObjectURL(new Blob(['(' + scriptHost.toString() + ')()'], { type: 'text/javascript' })), worker = new Worker(uri);
+    return new Promise(resolve => {
+        let timer;
+        const finish = (reply) => {
+            clearTimeout(timer);
+            worker.terminate();
+            URL.revokeObjectURL(uri);
+            if (backend !== project || t.execution !== token) {
+                resolve(false);
+                return;
+            }
+            if (reply.error) {
+                t.assertions = [[esc(reply.error), 'Fail']];
+                render();
+                toast('Script error · ' + reply.error);
+                resolve(false);
+                return;
+            }
+            t.status = reply.response.status;
+            t.result = JSON.stringify(reply.response.body, null, 2);
+            t.assertions = reply.assertions.map(r => r.map(esc));
+            store.set(env + ' script variables', reply.variables);
+            done();
+            resolve(true);
+        };
+        worker.onmessage = e => finish(e.data);
+        worker.onerror = e => finish({ error: e.message });
+        timer = setTimeout(() => finish({ error: 'Script timed out' }), 1000);
+        let body;
+        try {
+            body = JSON.parse(t.result);
+        }
+        catch {
+            body = t.result;
+        }
+        worker.postMessage({ scripts, handler, request: requestData(t), response: { status: t.status, body }, variables: { baseUrl: envBase(), ...val(env + ' script variables', {}) } });
+    });
+}
+function importSample(fmt) {
+    const path = '/api/v1/catalog-preview', method = 'GET', url = localBase() + path;
+    if (fmt === 'cURL')
+        return 'curl ' + url;
+    const sample = { OpenAPI: { openapi: '3.1.0', info: { title: 'Catalog', version: '1' }, paths: { [path]: { get: { responses: { 200: { description: 'OK' } } } } } }, Postman: { info: { name: 'Catalog checks' }, item: [{ name: 'Catalog preview', request: { method, url } }] }, Mockoon: { name: 'Catalog', routes: [{ method: 'get', endpoint: path.slice(1) }] }, 'Insomnia/Bruno': { resources: [{ _type: 'request', name: 'Catalog preview', method, url }] }, HAR: { log: { entries: [{ request: { method, url } }] } }, 'Backend archive': { backend, ...capture() } };
+    return JSON.stringify(sample[fmt] || {}, null, 2);
+}
+function importSource() {
+    const fmt = importFormat, src = val('Import ' + fmt, importSample(fmt));
+    try {
+        if (fmt === 'cURL') {
+            if (!/https?:\/\//.test(src))
+                throw Error('Include an HTTP URL');
+            parseCurl(src, openView('Request', 'products', false, true));
+            return;
+        }
+        const obj = JSON.parse(src);
+        let rows = [], defs = false;
+        if (fmt === 'Backend archive') {
+            if (!Array.isArray(obj.records) || !Array.isArray(obj.routes) || !Array.isArray(obj.values))
+                throw Error('Select a Tempo backend archive');
+            const before = capture();
+            applyCapture({ ...seed, ...obj });
+            openView('Snapshots');
+            toast('Backend archive imported', () => applyCapture(before));
+            return;
+        }
+        if (fmt === 'OpenAPI') {
+            defs = true;
+            for (const [url, ops] of Object.entries(obj.paths || {}))
+                for (const method of Object.keys(ops))
+                    if (['get', 'post', 'put', 'patch', 'delete'].includes(method))
+                        rows.push({ url, method });
+        }
+        if (fmt === 'Mockoon') {
+            defs = true;
+            rows = (obj.routes || []).map(r => ({ url: '/' + String(r.endpoint).replace(/^\//, ''), method: r.method }));
+        }
+        if (fmt === 'Postman') {
+            const walk = items => { for (const item of items || []) {
+                if (item.item)
+                    walk(item.item);
+                if (item.request) {
+                    const r = item.request;
+                    rows.push({ name: item.name, url: typeof r.url === 'string' ? r.url : r.url?.raw, method: r.method });
+                }
+            } };
+            walk(obj.item);
+        }
+        if (fmt === 'HAR')
+            rows = (obj.log?.entries || []).map(entry => entry.request);
+        if (fmt === 'Insomnia/Bruno')
+            rows = (obj.resources || obj.items || []).map(r => r.request ? { name: r.name, ...r.request } : r).filter(r => r.url);
+        rows = rows.filter(r => r.url && r.method).map(r => { const u = new URL(r.url.replace('{{baseUrl}}', localBase()), localBase()); return { ...r, path: u.pathname.replace(/^\/api\/v1\/|^\//, ''), method: r.method.toUpperCase(), url: u.pathname + u.search }; });
+        if (!rows.length)
+            throw Error('No requests found in this ' + fmt + ' source');
+        if (defs) {
+            for (const r of rows)
+                if (!routes.some(x => x[0] === r.method && x[1] === r.path))
+                    routes.push([r.method, r.path]);
+            selectSection('Endpoints');
+            openView('Endpoint', rows[0].path);
+        }
+        else {
+            const name = obj.info?.name || fmt + ' import';
+            if (!files.includes(name))
+                files.push(name);
+            for (const r of rows) {
+                const label = r.name || r.method + ' ' + r.path;
+                if (!saved.includes(label))
+                    saved.push(label);
+                store.set('saved:' + label, { path: r.path, request: { url: r.url, method: r.method }, fields: [] });
+            }
+            selectSection('Requests');
+        }
+        toast('Imported ' + rows.length + ' ' + (defs ? 'endpoint' : 'request') + (rows.length === 1 ? '' : 's'));
+    }
+    catch (err) {
+        const x = document.querySelector('.screen textarea');
+        if (x) {
+            x.setCustomValidity(err.message);
+            x.reportValidity();
+        }
+        toast(err.message);
+    }
+}
+function parseCurl(s, t) {
+    const tokens = (s.replace(/\\\r?\n/g, ' ').match(/'(?:[^']*)'|"(?:\\.|[^"\\])*"|[^\s]+/g) || []).map(v => v.replace(/^(['"])([\s\S]*)\1$/, '$2'));
+    const url = tokens.find(v => /^https?:\/\//.test(v));
+    if (!url) {
+        toast('Include an HTTP URL in the cURL command');
+        return;
+    }
+    const key = 'tab' + t.id + ' ';
+    let method = 'GET', body, headers = {};
+    for (let i = 1; i < tokens.length; i++) {
+        const flag = tokens[i];
+        if (flag === '-X' || flag === '--request')
+            method = (tokens[++i] || 'GET').toUpperCase();
+        else if (['-d', '--data', '--data-raw', '--data-binary'].includes(flag))
+            body = tokens[++i] || '';
+        else if (flag === '-H' || flag === '--header') {
+            const h = tokens[++i] || '', split = h.indexOf(':');
+            if (split > 0)
+                headers[h.slice(0, split).trim()] = h.slice(split + 1).trim();
+        }
+    }
+    t.method = body !== undefined && method === 'GET' && !tokens.includes('-X') && !tokens.includes('--request') ? 'POST' : method;
+    t.url = url.startsWith(localBase() + '/') ? url.slice(localBase().length) : url;
+    t.path = new URL(url).pathname.replace(/^\/api\/v1\//, '');
+    if (body !== undefined) {
+        store.set(key + 'Body', body);
+        store.set(key + 'Body format', 'Raw JSON');
+    }
+    for (const [h, v] of Object.entries(headers))
+        store.set(key + h, v);
+    store.set(key + 'importHeaders', Object.keys(headers));
+    t.preview = false;
+    t.dirty = true;
+    t.received = false;
+    render();
+    toast('Imported cURL request');
+}
+function applyLog(i) { const l = logs[i], p = l[2].replace('/api/v1/', ''), t = openView('Request', p, false, true); t.name = l[1] + ' ' + p; t.method = l[1]; t.url = l[2]; t.status = l[3]; t.result = l[7] || JSON.stringify(example(p, l[3] === 401 ? 'Unauthorized' : 'Normal'), null, 2); render(); return t; }
+function removeTab(id) { const i = tabs.findIndex(t => t.id === id); if (i < 0)
+    return; tabs.splice(i, 1); if (!tabs.length)
+    tabs.push(newTab('Overview')); if (current === id)
+    selectTab(tabs[Math.min(i, tabs.length - 1)].id); render(); }
+function selectSection(n) { atHome = false; ensureProject(); filter = ''; mult.clear(); section = n; if (n === 'Home')
+    openView('Home');
+else if (n === 'Endpoints')
+    openView('Endpoint', 'products', true);
+else
+    openView(sections[n][0]); render(); }
+function tabMenu(t, el, point) { selectTab(t.id); render(); popup([['New Request', 'new', '⌘T'], ['Duplicate Tab', 'duplicate'], '-', ['Close Tab', 'closeCurrent', '⌘W'], ['Close Other Tabs', 'closeOthers'], ['Close All Tabs', 'closeAll'], '-', ['Reveal in Sidebar', 'reveal']], el, 'tabs', point); }
+function goHistory(step) { let i = trailPos + step; while (i >= 0 && i < trail.length) {
+    if (tabs.some(t => t.id === trail[i])) {
+        trailPos = i;
+        selectTab(trail[i], false);
+        render();
+        return;
+    }
+    i += step;
+} }
+function saveScenario(p, body, status = 200) { ask('Save as scenario', 'Scenario name', 'Captured response', n => { if (scenariosFor(p).includes(n)) {
+    toast('Choose a different scenario name');
+    return false;
+} scenariosFor(p).push(n); store.set('status ' + p + ':' + n, status); store.set('mock:' + p + ':' + n, body); toast('Scenario saved · ' + n, () => { scenarios[p] = scenariosFor(p).filter(s => s !== n); store.delete('mock:' + p + ':' + n); }); render(); }); }
+function openBackend(n) { switchProject(n); }
+function changeRun(on) { setRunning(backend, on); render(); toast(backend + (on ? ' started' : ' stopped')); }
+function perform(action, el = document.activeElement, event) {
+    const ix = action.indexOf(':'), a = ix < 0 ? action : action.slice(0, ix), v = ix < 0 ? '' : action.slice(ix + 1), t = active();
+    if (a === 'menu') {
+        if (menuName === v) {
+            closeLayer();
+            return;
+        }
+        popup(menus[v], el, v);
+        return;
+    }
+    if (a === 'submenu') {
+        childMenu(v, el);
+        return;
+    }
+    const exportText = $('[data-field="Export preview"]')?.value;
+    if (!['confirm', 'escape', 'quick', 'undo', 'dismiss'].includes(a))
+        closeLayer();
+    if (extraAction(a, v, el, event))
+        return;
+    switch (a) {
+        case 'view':
+            openView(v);
+            break;
+        case 'project':
+            switchProject(v);
+            break;
+        case 'home':
+            showHome();
+            break;
+        case 'section':
+            selectSection(v);
+            break;
+        case 'endpoint':
+            if (!atHome && t.view === 'Endpoint' && t.path === v && section === 'Endpoints')
+                break;
+            section = 'Endpoints';
+            openView('Endpoint', v, true);
+            break;
+        case 'group':
+            collapsed.has(v) ? collapsed.delete(v) : collapsed.add(v);
+            render();
+            break;
+        case 'tab':
+            if (atHome || t.id !== +v) {
+                atHome = false;
+                ensureProject();
+                selectTab(+v);
+                render();
+            }
+            break;
+        case 'close':
+        case 'closeCurrent': {
+            const id = a === 'close' ? +v : t.id;
+            if (tabs.find(x => x.id === id)?.dirty)
+                confirmAction('Close unsaved tab?', 'Discard the edits in this tab.', () => removeTab(id), 'Discard edits');
+            else
+                removeTab(id);
+            break;
+        }
+        case 'closeOthers':
+        case 'closeAll': {
+            const drop = () => { tabs = a === 'closeOthers' ? [t] : [newTab('Overview')]; selectTab(tabs[0].id); render(); };
+            if (tabs.some(x => x.dirty && (a === 'closeAll' || x !== t)))
+                confirmAction('Discard unsaved changes?', 'Closing these tabs discards their pending edits.', drop, 'Discard and close');
+            else
+                drop();
+            break;
+        }
+        case 'duplicate': {
+            atHome = false;
+            ensureProject();
+            const c = { ...t, id: ++serial, preview: false };
+            for (const [key, value] of [...store])
+                if (key.startsWith('tab' + t.id + ' '))
+                    store.set(key.replace('tab' + t.id + ' ', 'tab' + c.id + ' '), structuredClone(value));
+            tabs.push(c);
+            selectTab(c.id);
+            render();
+            break;
+        }
+        case 'reveal':
+            side = true;
+            section = category(t.view);
+            filter = '';
+            collapsed.clear();
+            render();
+            break;
+        case 'new': {
+            const n = openView('Request', 'products', false, true);
+            n.name = 'Untitled request';
+            n.received = false;
+            render();
+            break;
+        }
+        case 'saved': {
+            const definition = val('saved:' + v, null);
+            let n = tabs.find(x => x.view === 'Request' && tablabel(x) === v);
+            if (n) {
+                atHome = false;
+                ensureProject();
+                selectTab(n.id);
+            }
+            else {
+                n = openView('Request', definition?.path || (v === 'Sign in' ? 'auth/login' : 'products'), true, true);
+                if (definition) {
+                    Object.assign(n, definition.request);
+                    for (const [k, value] of definition.fields)
+                        store.set('tab' + n.id + ' ' + k, value);
+                }
+            }
+            n.name = v;
+            section = 'Requests';
+            render();
+            break;
+        }
+        case 'collection':
+            runnerFile = v;
+            openView('Collection runner');
+            break;
+        case 'backendMenu':
+            popup(sections.Backend.map(n => [n, 'view:' + n]), el);
+            break;
+        case 'rowmenu':
+            popup([['Open', v], ['Reveal in sidebar', 'reveal'], ['New request', 'new']], el);
+            break;
+        case 'addItem':
+            if (section === 'Environments')
+                perform('addVar');
+            else if (section === 'Endpoints')
+                ask('Create endpoint', 'Path under /api/v1', 'products/search', s => { routes.push(['GET', s]); openView('Endpoint', s); });
+            else if (section === 'Requests')
+                ask('New collection', 'File name', 'Smoke tests', s => { files.push(s); runnerFile = s; openView('Collection runner'); });
+            else
+                perform(({ Data: 'newRecord', Content: 'view:Content', Media: 'addMedia', Environments: 'view:Environments' })[section] || 'new');
+            break;
+        case 'back':
+            goHistory(-1);
+            break;
+        case 'forward':
+            goHistory(1);
+            break;
+        case 'switch':
+            popup([...backends.map(n => [n + (n === backend ? ' ✓' : ''), 'backend:' + n]), '-', ['Backend library', 'view:Home'], ['Create backend', 'createBackend'], ['Open folder', 'openFolder']], el);
+            break;
+        case 'backend':
+            openBackend(v);
+            break;
+        case 'createBackend':newProjectDialog();break;
+        case 'openFolder':
+            ask(a === 'createBackend' ? 'Create backend' : 'Open backend folder', a === 'createBackend' ? 'Backend name' : 'Demo folder path', a === 'createBackend' ? 'Inventory API' : '~/Backends/checkout-qa', s => { const n = s.split('/').filter(Boolean).pop() || s; if (!backends.includes(n)) {
+                backends.push(n);
+                projects[n] = projectMeta(n, 8443, 'Just now');
+                guide.add('Create a project');
+            } openBackend(n); });
+            break;
+        case 'running':
+            changeRun(!run);
+            break;
+        case 'stop':
+            changeRun(false);
+            break;
+        case 'start':
+        case 'restart':
+            changeRun(true);
+            break;
+        case 'theme':
+            theme = document.documentElement.dataset.tone === 'dark' ? 'Light' : 'Dark';
+            tone();
+            render();
+            break;
+        case 'appearance':
+            theme = v;
+            tone();
+            render();
+            break;
+        case 'sidebar':
+            if (atHome) {
+                document.body.classList.toggle('homeCollapsed');
+                break;
+            }
+            side = !side;
+            render();
+            break;
+        case 'right':
+            if (atHome) {
+                document.body.classList.toggle('homeRightHidden');
+                break;
+            }
+            right = !right;
+            render();
+            break;
+        case 'layout':
+        case 'position':
+            sideResponse = a === 'layout' ? !sideResponse : v === 'Side';
+            if (studio && t.view === 'Endpoint')
+                document.body.dataset.trySide = sideResponse ? 'yes' : 'no';
+            render();
+            break;
+        case 'envmenu':
+            popup(['Local', 'Staging'].map(n => [n + (n === env ? ' ✓' : ''), 'env:' + n]).concat([['Manage environments', 'view:Environments']]), el);
+            break;
+        case 'env':
+            env = v;
+            render();
+            break;
+        case 'quick':
+            quick(el);
+            break;
+        case 'drawer':
+            drawer = drawer === v ? '' : v;
+            render();
+            break;
+        case 'context':
+            right = true;
+            panel = panel === v ? '' : v;
+            render();
+            break;
+        case 'search':
+        case 'palette':
+        case 'tabsearch':
+            palette(a);
+            break;
+        case 'escape':
+            closeLayer(true);
+            break;
+        case 'dismiss':
+            $('#toast').innerHTML = '';
+            break;
+        case 'confirm': {
+            const f = pending;
+            if (f) {
+                const modal = $('.modal');
+                if (f() !== false && modal === $('.modal'))
+                    closeLayer(true);
+            }
+            break;
+        }
+        case 'sub':
+            t.sub = v;
+            render();
+            break;
+        case 'resp':
+            t.resp = v;
+            render();
+            break;
+        case 'format':
+            t.format = v;
+            render();
+            break;
+        case 'scenario':
+            t.scenario = v;
+            store.set('scenario ' + t.path, v);
+            markDirty();
+            render();
+            break;
+        case 'editMock':
+            if (t.mockEdit) {
+                try {
+                    JSON.parse(currentMock(t));
+                }
+                catch {
+                    const x = $('.editor textarea');
+                    x?.reportValidity();
+                    toast('Enter valid JSON before closing the editor');
+                    return;
+                }
+            }
+            t.mockEdit = !t.mockEdit;
+            render();
+            break;
+        case 'send':
+            send();
+            break;
+        case 'sendMenu':
+            popup([['Send', 'send', '⌘↵'], ['Send and download', 'sendDownload']], el);
+            break;
+        case 'sendDownload':
+            Promise.resolve(send()).then(ok => { if (ok)
+                download('response.json', t.result); });
+            break;
+        case 'save': {
+            if (t.view === 'Environments') {
+                try {
+                    const u = new URL(envBase());
+                    if (!['https:', 'http:'].includes(u.protocol))
+                        throw Error();
+                }
+                catch {
+                    const input = document.querySelector('[data-field="' + env + ' baseUrl"]');
+                    input?.setCustomValidity('Use an HTTP or HTTPS base URL');
+                    input?.reportValidity();
+                    return;
+                }
+            }
+            if (t.view === 'Settings' && settings === 'Server') {
+                const port = Number(val('Server port', projects[backend].preferred));
+                if (!Number.isInteger(port) || port < 1 || port > 65535) {
+                    toast('Enter a port between 1 and 65535');
+                    return;
+                }
+                projects[backend].preferred = port;
+                if (run)
+                    setRunning(backend, true);
+                else
+                    projects[backend].port = port;
+            }
+            if (t.view === 'Endpoint') {
+                try {
+                    JSON.parse(currentMock(t));
+                }
+                catch {
+                    toast('Response JSON is invalid');
+                    return;
+                }
+            }
+            if (t.view === 'Request') {
+                const name = tablabel(t);
+                if (!saved.includes(name))
+                    saved.push(name);
+                const prefix = 'tab' + t.id + ' ';
+                store.set('saved:' + name, { path: t.path, request: { url: t.url, method: t.method, result: t.result, status: t.status, received: t.received }, fields: [...store].filter(([k]) => k.startsWith(prefix)).map(([k, v]) => [k.slice(prefix.length), v]) });
+            }
+            t.dirty = false;
+            t.preview = false;
+            render();
+            toast(t.view === 'Request' ? 'Saved to collections/catalog-smoke.json' : 'Changes saved');
+            break;
+        }
+        case 'newScenario':
+            saveScenario(t.path, currentMock(t));
+            break;
+        case 'saveScenario':
+            saveScenario(t.path, t.result, t.status);
+            break;
+        case 'saveExample':
+            store.set('example ' + t.id, t.result);render();
+            toast('Response example saved', () => store.delete('example ' + t.id));
+            break;
+        case 'share':
+        case 'copyBase':
+            clip(a === 'share' ? gencode('cURL') : base);
+            break;
+        case 'curl':
+            clip(gencode('cURL'));
+            break;
+        case 'code':
+            if (atHome)
+                openView('Request');
+            panel = 'Code';
+            right = true;
+            render();
+            break;
+        case 'copyCode':
+            clip(gencode());
+            break;
+        case 'pasteCurl':
+            ask('Import cURL', 'cURL command', 'curl ' + base + '/api/v1/products', s => { const n = openView('Request', 'products', false, true); parseCurl(s, n); });
+            break;
+        case 'log':
+            selectedLog = +v;
+            render();
+            break;
+        case 'logopen':
+            applyLog(+v);
+            break;
+        case 'replay':
+            send(applyLog(selectedLog));
+            break;
+        case 'logscenario': {
+            const l = logs[selectedLog], p = l[2].replace('/api/v1/', '');
+            saveScenario(p, l[7] || JSON.stringify(example(p, l[3] === 401 ? 'Unauthorized' : 'Normal'), null, 2), l[3]);
+            break;
+        }
+        case 'runCollection':
+            if (!run) {
+                toast('Start the backend to run the collection');
+                break;
+            }
+            runCount++;
+            runnerReport = defaultReport();
+            runnerReport[0][3] = String(statuses[norm.indexOf(val('scenario products', 'Normal'))] || 200);
+            runnerReport[3][3] = String(statuses[norm.indexOf(val('scenario me', 'Normal'))] || 200);
+            if (runnerFile === 'Auth flow')
+                runnerReport = runnerReport.slice(2);
+            render();
+            toast('Collection finished · ' + reportSummary());
+            break;
+        case 'copyCI':
+            clip('tempo run collections/' + runnerFile.toLowerCase().replaceAll(' ', '-') + '.json');
+            break;
+        case 'scope':
+            simScope = v;
+            render();
+            break;
+        case 'preset':
+            activePreset = v;
+            store.set('Global preset', v);
+            simScope = 'Global';
+            openView('Simulate');
+            break;
+        case 'applySim':
+            activePreset = val((simScope === 'Global' ? 'Global' : 'Endpoint ' + simPath) + ' preset', 'Clear');
+            toast('Applied ' + activePreset + ' to ' + (simScope === 'Global' ? 'all endpoints' : simPath));
+            break;
+        case 'proxy':
+            proxy = !proxy;
+            if (!proxy)
+                record = false;
+            render();
+            break;
+        case 'record':
+            if (!record) {
+                try {
+                    const u = new URL(val('Upstream', 'https://api.example.com'));
+                    if (!['https:', 'http:'].includes(u.protocol))
+                        throw Error();
+                }
+                catch {
+                    const x = document.querySelector('[data-field="Upstream"]');
+                    x?.setCustomValidity('Enter a valid HTTP or HTTPS upstream URL');
+                    x?.reportValidity();
+                    return;
+                }
+            }
+            record = !record;
+            if (record)
+                proxy = true;
+            render();
+            toast(record ? 'Recording unmatched routes' : 'Recording stopped');
+            break;
+        case 'newRecord':
+            ask('Add product', 'Product name', 'Linen pouch', n => { records.push({ id: 'prd_' + (1042 + records.length), name: n, price: 18, currency: 'USD' }); render(); toast('Product added', () => records.pop()); });
+            break;
+        case 'draft':
+            published[val('CMS entry', 'welcome') + ' ' + locale] = false;
+            t.dirty = false;
+            render();
+            toast('Draft saved');
+            break;
+        case 'publish': {
+            const before = published[val('CMS entry', 'welcome') + ' ' + locale];
+            published[val('CMS entry', 'welcome') + ' ' + locale] = true;
+            t.dirty = false;
+            render();
+            toast('Entry published · ' + locale, () => published[val('CMS entry', 'welcome') + ' ' + locale] = before);
+            break;
+        }
+        case 'mcp':
+            mcp = !mcp;
+            render();
+            break;
+        case 'snippet':
+            guide.add('Connect an AI agent');
+            clip(snippets[v]);
+            break;
+        case 'snapshot':
+            ask('Create named snapshot', 'Name', 'Before checkout test', n => { snapshots.unshift(n); snapshotData[n] = capture(); render(); toast('Snapshot created'); });
+            break;
+        case 'restore':
+            confirmAction('Restore snapshot?', 'Restore backend data and scenarios from “' + v + '”.', () => { const old = capture(); applyCapture(snapshotData[v] || seed); render(); toast('Restored ' + v, () => applyCapture(old)); }, 'Restore snapshot');
+            break;
+        case 'reset':
+            confirmAction('Reset to seed?', 'Replace backend data and scenarios with the original seed.', () => { const old = capture(); applyCapture(seed); render(); toast('Backend reset to seed', () => applyCapture(old)); }, 'Reset to seed');
+            break;
+        case 'undoBatch': {
+            const n = activity[+v];
+            confirmAction('Undo agent write batch?', 'Restore the snapshot taken before this batch.', () => { const before = capture(); applyCapture(snapshotData[snapshots.find(s => s.startsWith('Before agent'))] || seed); activity.splice(+v, 1); render(); toast('Agent batch undone', () => { applyCapture(before); activity.splice(+v, 0, n); }); }, 'Undo batch');
+            break;
+        }
+        case 'undo':
+            if (undoFn) {
+                const f = undoFn;
+                undoFn = null;
+                f();
+                render();
+                toast('Change undone');
+            }
+            break;
+        case 'settings':
+            settings = v;
+            render();
+            break;
+        case 'updates':
+            openView('Release notes');
+            break;
+        case 'install':
+            notice = false;
+            render();
+            toast('Tempo restarted · up to date');
+            break;
+        case 'account':
+            dialog('Mona Saleh', line('mona@example.com', 'Owner'), btn('Team settings', 'team', '', 'outline'));
+            break;
+        case 'team':
+            settings = 'Team';
+            openView('Settings');
+            break;
+        case 'verify': {
+            const raw = val('Expected body', '{}');
+            try {
+                const body = JSON.stringify(JSON.parse(raw));
+                const count = logs.filter(l => { if (l[2] !== val('Expected route', '/api/v1/products'))
+                    return false; try {
+                    return JSON.stringify(JSON.parse(l[6] || '{}')) === body;
+                }
+                catch {
+                    return false;
+                } }).length;
+                verified = (count === Number(val('Expected count', '1')) ? 'Passed' : 'Failed') + ' · ' + count + ' matching requests';
+            }
+            catch {
+                verified = 'Enter a valid JSON body';
+            }
+            render();
+            break;
+        }
+        case 'jwt':
+            store.set('jwt', 'demo.' + (pickedUser === 'Mona Saleh' ? 'mona' : 'omar') + '.local');
+            render();
+            break;
+        case 'addMedia':
+            ask('Add media', 'Asset filename', 'field-notebook.webp', s => { media.push(s); render(); });
+            break;
+        case 'webhook':
+            inbox.unshift('order.updated · ord_209');
+            render();
+            toast('Webhook received');
+            break;
+        case 'push':
+            toast('Test push delivered to ' + val('Push device', 'iOS simulator'));
+            break;
+        case 'sync':
+            apiSync = 'Synced just now';
+            render();
+            break;
+        case 'types':
+            types = true;
+            render();
+            break;
+        case 'protocol':
+            protocolReply[t.view] = t.view === 'GraphQL' ? JSON.stringify({ data: { products: [product] } }, null, 2) : '10:43:01  ' + val(t.view + ' body', '{"event":"order.updated"}');
+            render();
+            break;
+        case 'schema':
+            protocolReply.GraphQL = 'type Product { id: ID!, name: String! }';
+            render();
+            break;
+        case 'cert':
+            toast('Local certificate reissued');
+            break;
+        case 'comment':
+            store.set('Posted comment', val('Comment', ''));
+            render();
+            break;
+        case 'import':
+        case 'export':
+            if (a === 'import')
+                importFormat = v;
+            else
+                exportFormat = v;
+            openView(a === 'import' ? 'Import' : 'Export');
+            break;
+        case 'doImport':
+            importSource();
+            break;
+        case 'doExport': {
+            const s = exportFormat === 'OpenAPI' ? { openapi: '3.1.0', info: { title: backend, version: '1' }, paths: Object.fromEntries(routes.map(([m, p]) => ['/api/v1/' + p, { [m.toLowerCase()]: { responses: { 200: { description: 'OK' } } } }])) } : exportFormat === 'Postman' ? { info: { name: backend }, item: routes.map(([m, p]) => ({ name: p, request: { method: m, url: base + '/api/v1/' + p } })) } : { backend, ...capture() };
+            dialog('Export ' + exportFormat, '<div class="pad">' + area('Export preview', JSON.stringify(s, null, 2)) + '</div>', btn('Copy export', 'copyExport', 'copy') + btn('Download', 'downloadExport', 'share', 'primary'));
+            break;
+        }
+        case 'downloadExport':
+            download(backend.toLowerCase().replaceAll(' ', '-') + '.json', exportText || '');
+            break;
+        case 'copyExport':
+            clip(exportText || '');
+            break;
+        case 'qr':
+            guide.add('Connect your app');
+            dialog('Connect a device','<div class="pad flex">'+deviceQR(lanURL())+'<div><b>'+esc(backend)+' · LAN</b><p class="mono">'+lanURL()+'</p><p>Scan from a device on the same network.</p></div></div>',btn('All addresses','view:Addresses'));
+            break;
+        case 'about':
+            dialog('About Tempo', line('Tempo Local Backend', 'Version 2.0 · ' + D));
+            break;
+        case 'issue':
+            dialog('Report an issue', '<div class="pad">' + area('Issue', 'Describe the issue and reproduction steps…') + '</div>', btn('Copy report', 'copyIssue', 'copy'));
+            break;
+        case 'copyIssue':
+            clip(val('Issue', ''));
+            break;
+        case 'hide':
+        case 'quit':
+            dialog(a === 'hide' ? 'Window minimized' : 'Tempo closed', empty('Workspace paused', 'Reopen the window to resume the demo.'), btn('Reopen Tempo', 'escape', '', 'primary'));
+            break;
+        case 'zoom':
+            document.body.style.zoom = document.body.style.zoom === '1.1' ? '1' : '1.1';
+            break;
+        case 'fullscreen':
+            if (document.fullscreenElement)
+                document.exitFullscreen?.().catch(() => { });
+            else
+                document.documentElement.requestFullscreen?.().catch(() => toast('Full screen unavailable in this preview'));
+            break;
+        case 'replace':
+            dialog('Find and replace', '<div class="pad fields">' + field('Find', inp('Find text', val('Find text', 'products'))) + field('Replace with', inp('Replacement', val('Replacement', 'items'))) + '</div>', btn('Replace in request URL', 'replaceNow', '', 'primary'));
+            break;
+        case 'replaceNow':
+            t.url = t.url.replaceAll(val('Find text', 'products'), val('Replacement', 'items'));
+            markDirty();
+            render();
+            toast('Request URL updated');
+            break;
+        case 'edit':
+            document.execCommand?.(v);
+            break;
+        case 'pasteText':
+            ask('Paste text', 'Text to insert', '', s => { if (lastFocus?.matches('textarea,input')) {
+                lastFocus.value += s;
+                lastFocus.dispatchEvent(new Event('input', { bubbles: true }));
+            } });
+            break;
+    }
+}
+sections.Proxy = ['Proxy'];
+sections.Snapshots = ['Snapshots'];
+sections.Settings = ['Settings', 'Addresses', 'OpenAPI', 'Shared response', 'OAuth2 mock'];
+imap.Proxy = 'globe';
+imap.Snapshots = 'layers';
+let atHome = true, projectTabs = ['Shop API', 'Checkout QA'], projectQuery = '', projectSort = 'Last opened', homePlace = 'Overview';
+const projectMeta = (name, preferred, last) => ({ name, preferred, port: preferred, last, folder: '~/Backends/' + name.toLowerCase().replaceAll(' ', '-'), error: false });
+const projects = Object.fromEntries(backends.map((n, i) => [n, projectMeta(n, i === 2 ? 8445 : 8443, ['Just now', 'Yesterday', 'Mon, 09:16'][i])]));
+projects['Catalog sandbox'].error = true;
+const guide = new Set(['Create a project']), savedSessions = new Map(), snapshotData = {}, badges = ['S', 'Q', 'C'];
+const capture = () => JSON.parse(JSON.stringify({ records, routes, scenarios, values: [...store], media, inbox, profile, profileScopes, published }));
+function applyCapture(s) { records = structuredClone(s.records); routes = structuredClone(s.routes); scenarios = structuredClone(s.scenarios); store = new Map(s.values); media = [...s.media]; inbox = [...s.inbox]; profile = s.profile; profileScopes = [...s.profileScopes]; published = { ...s.published }; }
+const seed = capture(), initialLogs = structuredClone(logs);
+snapshotData[snapshots[0]] = structuredClone(seed);
+function stashSession() { savedSessions.set(backend, { tabs, current, trail, trailPos, section, env, side, right, panel, drawer, sideResponse, filter, mult, collapsed, store, routes, scenarios, records, logs, activity, snapshots, files, saved, media, inbox, proxy, record, mcp, locale, published, selectedLog, profile, profileScopes, entries, runnerFile, settings, simScope, simPath, activePreset, runnerReport, runCount, snapshotData: { ...snapshotData } }); }
+function loadSession(n) {
+    let s = savedSessions.get(n);
+    if (!s) {
+        const first = newTab(hub || !backendStates[n] ? 'Overview' : 'Endpoint'), req = newTab('Request');
+        s = { tabs: [first, req], current: first.id, trail: [first.id], trailPos: 0, section: first.view === 'Endpoint' ? 'Endpoints' : 'Backend', env: 'Local', side: true, right: true, panel: '', drawer: '', sideResponse: false, filter: '', mult: new Set(), collapsed: new Set(), store: new Map(), routes: structuredClone(seed.routes), scenarios: {}, records: structuredClone(seed.records), logs: structuredClone(initialLogs), activity: ['Codex updated the empty scenario', 'Cursor read the products schema'], snapshots: ['Before agent batch · 10:42', 'Clean seed · 09:00'], files: ['Catalog smoke', 'Auth flow'], saved: ['List products', 'Sign in'], media: [...seed.media], inbox: [...seed.inbox], proxy: false, record: false, mcp: true, locale: 'English', published: {}, selectedLog: 0, profile: 'Standard', profileScopes: ['read', 'write'], entries: ['welcome'], runnerFile: 'Catalog smoke', settings: 'Server', simScope: 'Global', simPath: 'products', activePreset: 'Clear', runnerReport: defaultReport(), runCount: 1, snapshotData: { 'Before agent batch · 10:42': structuredClone(seed) } };
+    }
+    ({ tabs, current, trail, trailPos, section, env, side, right, panel, drawer, sideResponse, filter, mult, collapsed, store, routes, scenarios, records, logs, activity, snapshots, files, saved, media, inbox, proxy, record, mcp, locale, published, selectedLog, profile, profileScopes, entries, runnerFile, settings, simScope, simPath, activePreset, runnerReport, runCount } = s);
+    Object.keys(snapshotData).forEach(k => delete snapshotData[k]);
+    Object.assign(snapshotData, s.snapshotData);
+}
+function ensureProject() { if (!projectTabs.includes(backend))
+    projectTabs.push(backend); }
+function switchProject(n) { if (!projects[n])
+    return; if (n !== backend) {
+    undoFn = null;
+    $('#toast').innerHTML = '';
+} stashSession(); backend = n; projects[n].last = 'Just now'; projects[n].stamp = Date.now(); run = !!backendStates[n]; loadSession(n); atHome = false; ensureProject(); closeLayer(); render(); }
+function showHome() { atHome = true; homePlace = 'Overview'; closeLayer(); render(); }
+function setRunning(n, on) { const p = projects[n]; if (on) {
+    const used = new Set(backends.filter(k => k !== n && backendStates[k]).map(k => projects[k].port));
+    p.port = p.preferred;
+    while (used.has(p.port))
+        p.port++;
+    p.error = false;
+} backendStates[n] = on; if (n === backend)
+    run = on; }
+const runningProjects = () => backends.filter(n => backendStates[n]);
+function projectIcon(n) { return '<span class="projicon pic' + (Math.max(0, backends.indexOf(n)) % 3) + '">' + ico(['box', 'layers', 'data'][Math.max(0, backends.indexOf(n)) % 3]) + '</span>'; }
+function projectDot(n) { return '<i class="dot ' + (projects[n]?.error ? 'error' : backendStates[n] ? '' : 'off') + '"></i>'; }
+function stateName(n) { return projects[n]?.error ? 'Error' : backendStates[n] ? 'Running' : 'Stopped'; }
+function titlebar() { return '<div class="titlebar"><span class="lights"><i></i><i></i><i></i></span><div class="projecttabs"><button class="projecttab ' + (atHome ? 'front' : '') + '" data-act="home">' + ico('home') + ' Home</button>' + projectTabs.map(n => '<div class="projecttab ' + (!atHome && backend === n ? 'front' : '') + '"><button data-act="project:' + esc(n) + '" title="' + esc(n) + ' · ' + stateName(n) + ' · port ' + projects[n].port + '">' + projectIcon(n) + esc(n) + projectDot(n) + '</button>' + btn('×', 'projectClose:' + n, '', 'tabclose', 'Close project tab') + '</div>').join('') + '</div>' + ib('plus', 'projectPlus', 'Open project or create new') + '<span class="grow"></span>' + btn('Running · ' + runningProjects().length, 'manager', 'traffic', 'runmanager') + '</div>'; }
+function sideBands() { return studio ? { Build: ['Endpoints', 'Data', 'Content', 'Media', 'Users'], Test: ['Requests', 'Environments', 'Runner', 'History'], Observe: ['Traffic', 'Inbox', 'Agent activity'], System: ['Devices', 'Simulate', 'Proxy', 'Snapshots', 'AI & MCP', 'Settings'] } : hub ? { Project: ['Backend', 'Endpoints', 'Requests', 'Environments', 'History'], Resources: ['Data', 'Users', 'Media', 'Content'], Operations: ['Devices', 'Traffic', 'Inbox', 'Simulate', 'Proxy', 'Snapshots', 'AI & MCP', 'Settings'] } : { API: ['Endpoints', 'Requests', 'Environments', 'History'], Resources: ['Data', 'Users', 'Media', 'Content'], Operations: ['Devices', 'Traffic', 'Inbox', 'Simulate', 'Proxy', 'Snapshots', 'AI & MCP', 'Settings'] }; }
+function railButton(n) { const counts = { Traffic: run ? 'live' : '', Proxy: proxy ? 'on' : 'off', 'AI & MCP': mcp ? 'on' : 'off' }; return '<button class="' + (section === n ? 'active' : '') + '" data-act="section:' + n + '" title="' + n + '">' + ico(imap[n]) + '<span>' + n + '</span>' + (counts[n] !== undefined ? '<small>' + counts[n] + '</small>' : '') + '</button>'; }
+const features = [
+    ['Mock endpoints', 'end', 'endpoint:products', 'Routes & scenarios'], ['Request runner', 'requests', 'saved:List products', 'Compose & send'], ['Data and CMS', 'data', 'view:Data', 'Records & entries'], ['Simulate faults', 'simulate', 'view:Simulate', 'Latency & failures'], ['Proxy and record', 'globe', 'view:Proxy', 'Capture real traffic'], ['Connect an AI agent', 'ai', 'view:AI & MCP', 'MCP setup']
+];
+function homeNav(){return '<aside class="homeNav"><div class="brand"><span class="mark">'+ico('tempo')+'</span><b>Tempo</b></div><div class="group">Tools</div>'+features.map(([n,i,a])=>btn(n,a,i)).join('')+'<div class="group">Workspace</div>'+btn('Preferences','homePrefs','gear')+btn('Documentation','view:Documentation','file')+btn('Shortcuts','view:Shortcuts','terminal')+'<div class="navfoot">'+ico('globe')+' Local workspace</div></aside>'}
+function projectRows() { const list = backends.filter(n => (n + ' ' + projects[n].folder).toLowerCase().includes(projectQuery.toLowerCase())); if (projectSort === 'Name')
+    list.sort((a, b) => a.localeCompare(b)); if (projectSort === 'Status')
+    list.sort((a, b) => Number(!!backendStates[b]) - Number(!!backendStates[a])); if (projectSort === 'Last opened')
+    list.sort((a, b) => (projects[b].stamp || 0) - (projects[a].stamp || 0)); return list.length ? list.map(n => { const p = projects[n]; return '<div class="projectrow item" tabindex="0" data-item="project" data-id="' + esc(n) + '">' + projectIcon(n) + '<div class="pname"><b>' + esc(n) + '</b><small>' + esc(p.folder) + '</small></div><span class="pstate">' + projectDot(n) + stateName(n) + '</span><code>:' + p.port + '</code><small class="lasttime">' + esc(p.last) + '</small></div>'; }).join('') : empty('No matching projects', 'Try another project name.', btn('Clear filter', 'clearProjects')); }
+function projectList() { return '<section class="block projectblock" id="projects"><div class="sectionhead"><h2>Projects</h2><span class="grow"></span>' + btn('Open folder', 'openFolder', 'folder') + btn('Import', 'homeImport', 'share') + btn('New project', 'createBackend', 'plus', 'primary') + '</div><div class="projectfilters"><span class="filterwrap">' + ico('search') + '<input id="projectFilter" placeholder="Filter projects…" aria-label="Filter projects" value="' + esc(projectQuery) + '"></span>' + sel('Sort projects', ['Last opened', 'Name', 'Status'], projectSort) + '</div><div id="projectRows">' + projectRows() + '</div></section>'; }
+function runningPanel(){return block('Running now',runningProjects().length?'<div class="runningList">'+runningProjects().map(n=>'<div class="line" tabindex="0" data-item="project" data-id="'+esc(n)+'">'+projectDot(n)+'<b class="grow">'+esc(n)+'</b><code>:'+projects[n].port+'</code></div>').join('')+'</div>':empty('No running projects','Select a project to start it.'),runningProjects().length?btn('Stop all','stopAll'):'')}
+const steps = [['Create a project', 'createBackend'], ['Connect your app', 'view:Connect your app'], ['Send a first request', 'saved:List products'], ['Connect an AI agent', 'view:AI & MCP']];
+function guidePanel() { return '<div id="guide">' + block('Get started', '<div class="progress"><i style="width:' + guide.size * 25 + '%"></i></div>' + steps.map(([n, a]) => guide.has(n)?'<div class="step flex"><span class="tick done">✓</span>'+n+'</div>':'<button class="step" data-act="' + a + '"><span class="tick ' + (guide.has(n) ? 'done' : '') + '">' + (guide.has(n) ? '✓' : '') + '</span>' + n + '<span class="grow"></span>' + ico('next') + '</button>').join(''), '<small>' + guide.size + ' of 4</small>') + '</div>'; }
+let recentType='Requests';
+function recentPanel(){return block('Recent',recentType==='Agents'?activityBody():logs.slice(0,3).map((l,i)=>'<div tabindex="0" class="line" data-item="log" data-id="'+i+'"><span class="verb '+l[1]+'">'+l[1]+'</span><code class="grow">'+esc(l[2])+'</code><small>'+l[0]+'</small></div>').join(''),sel('Recent activity',['Requests','Agents'],recentType))}
+function homeScreen(){const first=projectList(),devices=devicesPanel(false),side=runningPanel()+guidePanel(),recent=recentPanel();return '<div class="homeShell">'+homeNav()+'<main class="homeScroll"><div class="homeTitle"><h1>'+({Familiar:'Workspace',Studio:'Project studio',Hub:'Workspace hub'})[D]+'</h1></div>'+(studio?first:'')+'<div class="homeLayout"><div class="homeMain">'+(studio?'':first)+devices+(hub?'':recent)+'</div><aside class="homeAside">'+side+(hub?recent:'')+'</aside></div></main></div>'}
+function manager() { const anchor = $('[data-act="manager"]'); dialog('Running projects', '<div class="managerList">'+backends.map(n=>'<div class="line" tabindex="0" data-item="project" data-id="'+esc(n)+'">'+projectDot(n)+'<b>'+esc(n)+'</b><code>:'+projects[n].port+'</code><small>'+stateName(n)+'</small></div>').join('')+'</div>' + '<p class="pad">If a preferred port is busy, Tempo assigns the next available port.</p>', btn('Stop all', 'stopAll', '', 'danger')); const box = $('.modal'); box.className = 'popover runningPop'; box.parentElement.className = 'popAnchor'; const r = anchor.getBoundingClientRect(); limitPos(box, r.right - 440, r.bottom + 4);prepareSelection();box.querySelector('[data-item]')?.focus() }
+function download(n, s) { const u = URL.createObjectURL(new Blob([s], { type: 'application/json' })), a = document.createElement('a'); a.href = u; a.download = n; a.click(); setTimeout(() => URL.revokeObjectURL(u), 1000); }
+const itemData = (el) => el?.closest('[data-item]');
+let chosen = null;
+const itemMenus = { cookie:['Edit','Duplicate','Delete'],project: ['Open', 'Start / Stop', 'Duplicate', 'Copy folder', 'Delete'], endpoint: ['Open', 'Send', 'Edit', 'Duplicate', 'Copy as cURL', 'Delete'], request: ['Open', 'Send', 'Edit', 'Duplicate', 'Copy as cURL', 'Delete'], log: ['Open in runner', 'Replay', 'Save as scenario', 'Duplicate', 'Copy as cURL', 'Delete'], record: ['Edit', 'Duplicate', 'Copy JSON', 'Delete'], entry: ['Open', 'Publish', 'Edit', 'Duplicate', 'Delete'], scenario: ['Activate', 'Edit', 'Duplicate', 'Copy JSON', 'Delete'], snapshot: ['Restore', 'Duplicate', 'Delete'], media: ['Open', 'Duplicate', 'Delete'], collection: ['Open', 'Run', 'Duplicate', 'Delete'], variable: ['Edit', 'Duplicate', 'Copy name', 'Delete'], agent: ['Open', 'Undo batch', 'Copy text'], user: ['Open', 'Issue JWT', 'Copy email'], webhook: ['Open', 'Replay', 'Copy text', 'Delete'] };
+const actionKeys = {Details:'↵',Activate:'↵', 'Open': '↵', 'Edit': '↵', 'Open in runner': '↵', 'Duplicate': '⌘D', 'Delete': '⌫' };
+function itemMenu(item,anchor,point){if(item)showItemMenu(item,anchor,point)}
+function itemize(el, kind, id, common = '') { if (!el || el.dataset.item)
+    return; el.dataset.item = kind; el.dataset.id = id; el.tabIndex = 0; let target = el; if (el.tagName === 'TR') {
+    target = document.createElement('td');
+    el.append(target);
+} if (el.classList.contains('navrow'))
+    el.querySelector('.more')?.remove(); const actions = document.createElement('span'); actions.className = 'itemtools'; actions.innerHTML = common + ib('more', 'actions', 'All actions'); target.append(actions); }
+let entries = ['welcome'];
+function decorateRows() {
+    document.querySelectorAll('.screen tbody tr,.drawer tbody tr').forEach(r=>{
+        const cookie=r.querySelector('button[data-act^="cookie:"]');if(cookie){r.dataset.item='cookie';r.dataset.id=cookie.dataset.act.slice(7);r.tabIndex=0}
+    });
+    if (!atHome) {
+        const t = active();
+        document.querySelectorAll('.navrow').forEach(r => { const a = r.querySelector('[data-act]')?.dataset.act || '', i = a.indexOf(':'), k = a.slice(0, i), id = a.slice(i + 1); if (k === 'endpoint') {
+            const opts = scenariosFor(id);
+            itemize(r, k, id, '<select class="miniSelect" title="Active scenario" aria-label="Scenario for ' + esc(id) + '" data-route="' + esc(id) + '">' + opts.map(n => '<option ' + (n === val('scenario ' + id, 'Normal') ? 'selected' : '') + '>' + esc(n) + '</option>').join('') + '</select>');
+        }
+        else if (k === 'saved')
+            itemize(r, 'request', id, ib('play', 'direct:Send', 'Send'));
+        else if (k === 'collection')
+            itemize(r, k, id); });
+        document.querySelectorAll('.scenarios > button[data-act^="scenario:"]').forEach(b => { const r = document.createElement('div'); r.className = 'scenarioRow'; b.replaceWith(r); r.append(b); itemize(r, 'scenario', b.dataset.act.slice(9)); });
+        const rows = [...document.querySelectorAll('.screen table:first-of-type tbody tr')];
+        if (t.view === 'Environments')
+            rows.forEach((r, i) => itemize(r, 'variable', String(i), ib('env', 'direct:Edit', 'Edit variable')));
+        if (t.view === 'Data')
+            rows.forEach((r, i) => itemize(r, 'record', String(i), btn('Edit', 'direct:Edit')));
+        if (['Traffic', 'History'].includes(t.view))
+            rows.forEach((r, i) => itemize(r, 'log', String(i), btn('Replay', 'replayAt:' + i, 'play')));
+        if (t.view === 'Media')
+            rows.forEach((r, i) => itemize(r, 'media', String(i), ib('eye', 'direct:Open', 'Preview asset')));
+        if (t.view === 'Users')
+            rows.forEach((r, i) => itemize(r, 'user', String(i), btn('Issue JWT', 'direct:Issue JWT')));
+        if (t.view === 'Snapshots')
+            rows.forEach((r, i) => itemize(r, 'snapshot', String(i)));
+        if (t.view === 'Inbox')
+            document.querySelectorAll('.screen .block .line').forEach((r, i) => itemize(r, 'webhook', String(i), btn('Replay', 'direct:Replay')));
+    }
+    document.querySelectorAll('.activity').forEach((r, i) => itemize(r, 'agent', String(i % Math.max(activity.length, 1))));
+    document.querySelector('.rail')?.classList.toggle('compact', !side);prepareSelection();
+}
+function itemAction(op, { kind, id }) {
+    if(kind==='device'){deviceAction(id,op);return}if(kind==='screen'){openView(id);return}if(op==='Copy URL'){clip(itemURL(kind,id));return}
+    if(kind==='cookie'){perform(({Edit:'cookie',Duplicate:'duplicateCookie',Delete:'deleteCookie'})[op]+':'+id);return}
+    let i = +id, t = active();
+    if (kind === 'project') {
+        if (op === 'Open')
+            switchProject(id);
+        else if (op === 'Start / Stop')
+            perform('manageToggle:' + id);
+        else if (op === 'Copy folder')
+            clip(projects[id].folder);
+        else if (op === 'Duplicate') {
+            let name = unique(id, backends);
+            backends.push(name);
+            projects[name] = projectMeta(name, projects[id].preferred, 'Just now');
+            render();
+            toast('Project duplicated', () => { backends.splice(backends.indexOf(name), 1); delete projects[name]; });
+        }
+        else if (op === 'Delete') {
+            if(backends.length<2){toast('Keep one project in the workspace');return}
+            const ix=backends.indexOf(id),on=backendStates[id],tab=projectTabs.indexOf(id);
+            if(backend===id)switchProject(backends.find(n=>n!==id));
+            backends.splice(ix,1);projectTabs=projectTabs.filter(n=>n!==id);setRunning(id,false);showHome();
+            toast('Project removed',()=>{backends.splice(ix,0,id);if(tab>=0)projectTabs.splice(tab,0,id);setRunning(id,on)})
+        }
+        return;
+    }
+    if (kind === 'entry') {
+        store.set('CMS entry',id);
+        if (op === 'Open' || op === 'Edit') {
+            openView('Content');
+            $('.screen input')?.focus();
+        }
+        else if (op === 'Publish')
+            perform('publish');
+        else if (op === 'Duplicate') {
+            const n = unique(id, entries);
+            entries.push(n);
+            for (const [key, value] of [...store])
+                if (key.startsWith('cms ' + id + ' '))
+                    store.set(key.replace('cms ' + id + ' ', 'cms ' + n + ' '), value);
+            store.set('CMS entry', n);
+            render();
+            toast('Entry duplicated', () => { entries.splice(entries.indexOf(n), 1); store.set('CMS entry', id); });
+        }
+        else if (op === 'Delete') {
+            const ix = entries.indexOf(id);
+            if (ix >= 0)
+                entries.splice(ix, 1);
+            store.set('CMS entry', entries[0] || '');
+            render();
+            toast('Entry removed', () => { entries.splice(Math.max(0, ix), 0, id); store.set('CMS entry', id); });
+        }
+        return;
+    }
+    if (kind === 'variable') {
+        const vars = variables(), r = vars[i];
+        if (!r)
+            return;
+        if (op === 'Copy name')
+            clip(r[0]);
+        else if (op === 'Edit')
+            document.querySelectorAll('.screen tbody input')[i]?.focus();
+        else if (op === 'Duplicate') {
+            const name = unique(r[0], vars.map(r => r[0]), '_copy'), key = env + ' ' + name;
+            vars.splice(i + 1, 0, [name, r[1], key]);
+            store.set(key, varValue(r));
+            render();
+            toast('Variable duplicated', () => vars.splice(i + 1, 1));
+        }
+        else if (op === 'Delete') {
+            vars.splice(i, 1);
+            render();
+            toast('Variable removed', () => vars.splice(i, 0, r));
+        }
+        return;
+    }
+    if (kind === 'agent') {
+        if (op === 'Undo batch')
+            perform('undoBatch:' + i);
+        else if (op === 'Copy text')
+            clip(activity[i]);
+        else
+            openView('Agent activity');
+        return;
+    }
+    if (kind === 'user') {
+        pickedUser = i === 0 ? 'Mona Saleh' : 'Omar Ali';
+        if (op === 'Issue JWT')
+            perform('jwt');
+        else if (op === 'Copy email')
+            clip(i === 0 ? 'mona@example.com' : 'omar@example.com');
+        else
+            dialog(pickedUser, line('Authentication', 'JWT'), btn('Issue JWT', 'jwt'));
+        return;
+    }
+    const list = ({ endpoint: routes, request: saved, log: logs, record: records, scenario: scenariosFor(t.path), snapshot: snapshots, media, collection: files, webhook: inbox })[kind];
+    if (!list)
+        return;
+    if (kind === 'endpoint')
+        i = list.findIndex(r => r[1] === id);
+    else if (['request', 'scenario', 'collection'].includes(kind))
+        i = list.indexOf(id);
+    if (i < 0 || i >= list.length)
+        return;
+    const value = list[i];
+    if (op === 'Delete') {
+        list.splice(i, 1);
+        if (kind === 'scenario' && t.scenario === id) {
+            t.scenario = list[0] || 'Normal';
+            store.set('scenario ' + t.path, t.scenario);
+        }
+        render();
+        toast('Removed ' + kind, () => list.splice(i, 0, value));
+        return;
+    }
+    if (op === 'Duplicate') {
+        let cp = structuredClone(value);
+        if (kind === 'record') {
+            cp.name += ' copy';
+            cp.id = unique(value.id,records.map(r=>r.id),'_copy');
+        }
+        else if (kind === 'endpoint')
+            cp[1] = unique(cp[1], routes.map(r => r[1]), '-copy');
+        else if (typeof cp === 'string')
+            cp = unique(cp, list);
+        list.splice(i + 1, 0, cp);
+        if(kind==='request'&&store.has('saved:'+id))store.set('saved:'+cp,structuredClone(val('saved:'+id)));
+        if(kind==='endpoint'){const name=cp[1];scenarios[name]=[...scenariosFor(id)];for(const key of [...store.keys()])if(key.startsWith('mock:'+id+':'))store.set('mock:'+name+key.slice(('mock:'+id).length),val(key))}
+        if (kind === 'scenario')
+            store.set('mock:' + t.path + ':' + cp, val('mock:' + t.path + ':' + id, JSON.stringify(example(t.path, id), null, 2)));
+        render();
+        toast('Duplicated ' + kind, () => list.splice(list.indexOf(cp), 1));
+        return;
+    }
+    if (op === 'Copy JSON') {
+        clip(kind === 'scenario' ? val('mock:' + t.path + ':' + id, JSON.stringify(example(t.path, id), null, 2)) : JSON.stringify(value, null, 2));
+        return;
+    }
+    if(op==='Copy as cURL'){clip(copyValue(kind,id));return}
+    if (kind === 'record') {
+        ask('Edit record', 'Product name', value.name, n => { const old = value.name; value.name = n; render(); toast('Record saved', () => value.name = old); });
+        return;
+    }
+    if (kind === 'log') {
+        if (op === 'Replay')
+            send(applyLog(i));
+        else if (op === 'Save as scenario') {
+            selectedLog = i;
+            perform('logscenario');
+        }
+        else
+            applyLog(i);
+        return;
+    }
+    if (kind === 'endpoint' || kind === 'request') {
+        if (kind === 'endpoint')
+            t = openView('Endpoint', id);
+        else {
+            perform('saved:' + id);
+            t = active();
+        }
+        if (op === 'Send')
+            send(t);
+        if (op === 'Edit') {
+            if (kind === 'endpoint') {
+                t.mockEdit = true;
+                t.sub = studio ? 'Params' : 'Mock';
+                render();
+            }
+            else
+                $('#url')?.focus();
+        }
+        return;
+    }
+    if (kind === 'scenario') {
+        t.scenario = id;
+        store.set('scenario ' + t.path, id);
+        t.mockEdit = op === 'Edit';
+        markDirty();
+        render();
+        return;
+    }
+    if (kind === 'snapshot') {
+        perform('restore:' + value);
+        return;
+    }
+    if (kind === 'collection') {
+        perform('collection:' + id);
+        return;
+    }
+    if (kind === 'webhook' && op === 'Replay') {
+        perform('webhook');
+        return;
+    }
+    if (op === 'Copy text') {
+        clip(value);
+        return;
+    }
+    dialog(value, line(kind === 'media' ? 'Local asset' : 'Webhook event', esc(value)));
+}
+function unique(n, list, suffix = ' copy') { let s = n + suffix, i = 2; while (list.includes(s))
+    s = n + suffix + i++; return s; }
+function extraAction(a, v, el, event) {
+    if(workspaceAction(a,v,el))return true;
+    switch (a) {
+        case 'viewExample':dialog('Saved example',code(val('example '+active().id,'')));break;
+        case 'actions':
+            itemMenu(itemData(el), el);
+            break;
+        case 'direct': {
+            const item = itemData(el);
+            if(item?.closest('.managerList') && v==='Start / Stop'){perform('managerToggle:'+item.dataset.id);break}
+            if (item)
+                itemAction(v, { kind: item.dataset.item, id: item.dataset.id });
+            break;
+        }
+        case 'item':
+            if (chosen)
+                itemAction(v, chosen);
+            break;
+        case 'replayAt':
+            send(applyLog(+v));
+            break;
+        case 'addVar':
+        case 'addSecret':
+            ask(a === 'addVar' ? 'Add variable' : 'Add secret', 'Variable name', a === 'addVar' ? 'pageSize' : 'apiKey', n => { const rows = variables(); if (rows.some(r => r[0] === n)) {
+                toast('Choose a unique variable name');
+                return false;
+            } rows.push([n, a === 'addVar' ? 'String' : 'Vault secret', env + ' ' + n]); store.set(env + ' ' + n, ''); render(); });
+            break;
+        case 'cookieMenu':
+            popup([['Edit cookie', 'cookie:' + v], ['Duplicate cookie', 'duplicateCookie:' + v], ['Delete cookie', 'deleteCookie:' + v]], el);
+            break;
+        case 'cookie': {
+            const c = cookieRows()[+v];
+            ask('Edit ' + c.name, 'Cookie value', c.value, s => { c.value = s; render(); toast('Cookie saved'); });
+            break;
+        }
+        case 'addCookie':
+            ask('Add cookie', 'Name', 'locale', s => { cookieRows().push({ name: s, value: 'en', domain: 'localhost', path: '/', policy: 'Secure' }); render(); });
+            break;
+        case 'deleteCookie': {
+            const rows = cookieRows(), old = rows.splice(+v, 1)[0];
+            render();
+            toast('Cookie removed', () => rows.splice(+v, 0, old));
+            break;
+        }
+        case 'duplicateCookie': {
+            const rows = cookieRows(), old = rows[+v];
+            rows.push({ ...old, name: unique(old.name, rows.map(c => c.name), '_copy') });
+            render();
+            toast('Cookie duplicated', () => rows.pop());
+            break;
+        }
+        case 'teamSignIn':
+            store.set('Signed in', true);
+            render();
+            toast('Signed in as Mona Saleh');
+            break;
+        case 'manager':
+            manager();
+            break;
+        case 'manageToggle':
+        case 'managerToggle': {
+            const prev = !!backendStates[v];
+            setRunning(v, !prev);
+            render();
+            if (a === 'managerToggle')
+                manager();
+            toast(prev ? v + ' stopped' : v + ' running on :' + projects[v].port + (projects[v].port !== projects[v].preferred ? ' · port auto-assigned' : ''), () => setRunning(v, prev));
+            break;
+        }
+        case 'stopAll':
+            confirmAction('Stop all running projects?', 'Stop the ' + runningProjects().length + ' running local backend processes. Open tabs stay available.', () => { const old = runningProjects(); old.forEach(n => setRunning(n, false)); render(); toast('All projects stopped', () => old.forEach(n => setRunning(n, true))); }, 'Stop all');
+            break;
+        case 'projectClose':
+            projectTabs = projectTabs.filter(n => n !== v);
+            if (backend === v && !atHome)
+                showHome();
+            else
+                render();
+            break;
+        case 'projectPlus':
+            popup([['Home', 'home'], ['New project', 'createBackend'], ...backends.map(n => [n, 'project:' + n])], el);
+            break;
+        case 'homeImport':
+            popup(['OpenAPI', 'Postman', 'Mockoon'].map(n => [n, 'import:' + n]), el);
+            break;
+        case 'appearanceMenu':
+            popup(submenus.Appearance(), el);
+            break;
+        case 'pref':
+            settings = v;
+            openView('Settings');
+            break;
+        case 'homeJump':
+            homePlace = v;
+            render();
+            document.getElementById(({ 'Projects': 'projects', 'Getting started': 'guide', 'Recent requests': 'recent' })[v])?.scrollIntoView?.({ block: 'nearest' });
+            break;
+        case 'clearProjects':
+            projectQuery = '';
+            render();
+            break;
+        case 'newEntry':
+            ask('Create content entry', 'Slug', 'new-page', n => { entries.push(n); store.set('CMS entry', n); render(); });
+            break;
+        default: return false;
+    }
+    return true;
+}
+function updateFields(e) {
+    const x = e.target, k = x.dataset.field, t = active();
+    if(x.id==='answer')x.setCustomValidity('');
+    if(k==='Recent activity'||k==='Discovery preview'||k==='Framework'||k==='Client target'){if(e.type==='change'){if(k==='Recent activity')recentType=x.value;else if(k==='Discovery preview')setDiscovery(x.value);else store.set(k,x.value);render()}return}
+    if (x.id === 'projectFilter') {
+        projectQuery = x.value;
+        $('#projectRows').innerHTML = projectRows();decorateRows();
+        return;
+    }
+    if (x.id === 'filter') {
+        filter = x.value;
+        $('#items').innerHTML = browserItems();
+        decorateRows();
+        return;
+    }
+    if (x.id === 'finder') {
+        filterResults(x.value);
+        return;
+    }
+    if (x.dataset.route) {
+        if (e.type === 'change') {
+            const p = x.dataset.route;
+            store.set('scenario ' + p, x.value);
+            if (t.path === p) {
+                t.scenario = x.value;
+                markDirty();
+            }
+            render();
+        }
+        return;
+    }
+    if (x.dataset.scope) {
+        if (e.type === 'change') {
+            profileScopes = profileScopes.filter(n => n !== x.dataset.scope);
+            if (x.checked)
+                profileScopes.push(x.dataset.scope);
+            render();
+        }
+        return;
+    }
+    if (!k)
+        return;
+    const v = x.value;
+    if (e.type === 'input' && x.tagName === 'SELECT')
+        return;
+    if (k === 'URL') {
+        t.url = v;
+        markDirty();
+        $('#urlError').textContent = /^(\/|https?:\/\/[^\s/]+)/.test(v) ? '' : 'Enter a path or a full HTTP URL.';
+        return;
+    }
+    if (k === 'JSONPath' || k === 'Response search') {
+        if (k === 'JSONPath')
+            t.query = v;
+        else
+            t.find = v;
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = response(t);
+        const output = wrapper.querySelector('#result');
+        if (output) {
+            $('#result').innerHTML = output.innerHTML;
+            if (t.find)
+                for (const r of $('#result').querySelectorAll('.source>div'))
+                    if (r.textContent.toLowerCase().includes(t.find.toLowerCase()))
+                        r.classList.add('match');
+        }
+        return;
+    }
+    if (k === 'Expected count' || k.endsWith(' delay') || k.endsWith(' rate'))
+        x.min = 0;
+    store.set(k, v);
+    if (x.tagName === 'INPUT' || x.tagName === 'TEXTAREA') {
+        x.setCustomValidity('');
+        if (x.closest('.screen'))
+            markDirty();
+        if (k.startsWith('mock:')) {
+            try {
+                JSON.parse(v);
+                x.setCustomValidity('');
+            }
+            catch {
+                x.setCustomValidity('Enter valid JSON');
+            }
+        }
+        return;
+    }
+    if (e.type !== 'change')
+        return;
+    switch (k) {
+        case 'Sort projects':
+            projectSort = v;
+            break;
+        case 'Method':
+            t.method = v;
+            markDirty();
+            break;
+        case 'Environment':
+            env = v;
+            break;
+        case 'Locale':
+            locale = v;
+            break;
+        case 'CMS entry': break;
+        case 'Profile':
+            profile = v;
+            profileScopes = v === 'Full' ? ['read', 'write', 'handlers', 'destructive', 'external HTTP'] : v === 'Read only' ? ['read'] : ['read', 'write'];
+            break;
+        case 'Runner file':
+            runnerFile = v;
+            break;
+        case 'Appearance':
+            theme = v;
+            tone();
+            break;
+        case 'Import format':
+            importFormat = v;
+            break;
+        case 'Export format':
+            exportFormat = v;
+            break;
+        case 'Simulated endpoint':
+            simPath = v;
+            break;
+        case 'App user':
+            pickedUser = v;
+            break;
+        default: if (x.closest('.screen'))
+            markDirty();
+    }
+    render();
+}
+document.addEventListener('input', updateFields);
+document.addEventListener('change', updateFields);
+document.addEventListener('paste', e => { if (e.target.id === 'url') {
+    const s = e.clipboardData?.getData('text/plain') || '';
+    if (/^\s*curl\s/i.test(s)) {
+        e.preventDefault();
+        parseCurl(s, active());
+    }
+} });
+document.addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b) {
+    if (b.disabled)
+        return;
+    if (layer().children.length && !b.closest('#layers') && !b.dataset.act.startsWith('menu:'))
+        closeLayer();
+    perform(b.dataset.act, b, e);
+    return;
+} if (e.target.closest('.overlay') && !e.target.closest('.modal') || layer().children.length && !e.target.closest('#layers'))
+    closeLayer(true); });
+document.addEventListener('dblclick', e => { const r=itemData(e.target);if(r&&!r.closest('.navrow')&&!e.target.closest('button,input,select')){openItem(r);return}const tab = e.target.closest('[data-tab]'); if (tab) {
+    const t = tabs.find(x => x.id === +tab.dataset.tab);
+    t.preview = false;
+    render();
+}
+else if (e.target.closest('.navrow')) {
+    active().preview = false;
+    render();
+} });
+document.addEventListener('contextmenu', e => { const t = e.target.closest('[data-tab]'), r = itemData(e.target); if (!t && !r)
+    return; e.preventDefault(); const pt = { x: e.clientX, y: e.clientY }; if (t)
+    tabMenu(tabs.find(x => x.id === +t.dataset.tab), t, pt);
+else {selectOne(r);itemMenu(r,r,pt)} });
+document.addEventListener('mouseover', e => { const a = e.target.closest('[data-act]'); if (!a)
+    return; const n = a.dataset.act; if (Object.hasOwn(menus, menuName) && n.startsWith('menu:') && menuName !== n.slice(5))
+    popup(menus[n.slice(5)], a, n.slice(5)); if (n.startsWith('submenu:') && submenu !== n.slice(8))
+    childMenu(n.slice(8), a);
+else if (a.closest('.menu:not(.child)') && !n.startsWith('submenu:') && submenu) {
+    $('.child')?.remove();
+    submenu = '';
+} });
+document.addEventListener('keydown', e => {
+    if(rowKeyboard(e))return;
+    const k = e.key.toLowerCase(), mod = e.metaKey || e.ctrlKey, field = e.target.matches('input,textarea,select'), r = itemData(e.target), menu = e.target.closest('.menu'), modal = $('.modal');
+    if (k === 'escape') {
+        closeLayer(true);
+        $('#toast').innerHTML = '';
+        return;
+    }
+    if (modal && k === 'tab') {
+        const els = [...modal.querySelectorAll('button:not(:disabled),input,textarea,select')];
+        if (e.shiftKey && e.target === els[0] || !e.shiftKey && e.target === els.at(-1)) {
+            e.preventDefault();
+            (e.shiftKey ? els.at(-1) : els[0]).focus();
+        }
+        return;
+    }
+    if (menu && ['arrowright', 'arrowleft'].includes(k)) {
+        e.preventDefault();
+        if (k === 'arrowright' && e.target.dataset.act?.startsWith('submenu:'))
+            perform(e.target.dataset.act, e.target);
+        else if (k === 'arrowleft' && menu.classList.contains('child')) {
+            const n = submenu;
+            menu.remove();
+            submenu = '';
+            [...document.querySelectorAll('.menu button')].find(b => b.dataset.act === 'submenu:' + n)?.focus();
+        }
+        else if (Object.hasOwn(menus, menuName)) {
+            const ns = Object.keys(menus), n = ns[(ns.indexOf(menuName) + (k === 'arrowright' ? 1 : ns.length - 1)) % ns.length];
+            popup(menus[n], document.querySelector('[data-act="menu:' + n + '"]'), n);
+        }
+        return;
+    }
+    if (['arrowdown', 'arrowup'].includes(k)) {
+        const parent = menu || e.target.closest('.results') || (e.target.id === 'finder' ? $('.results') : null) || e.target.closest('.rail,.browser,.projectblock,tbody,.scenarios');
+        if (parent) {
+            const items = [...parent.querySelectorAll(menu || parent.matches('.results,.rail') ? 'button:not(:disabled)' : '[data-item],.navrow>button:first-child')];
+            if (items.length) {
+                e.preventDefault();
+                items[(items.indexOf(e.target) + (k === 'arrowdown' ? 1 : items.length - 1) + items.length) % items.length].focus();
+            }
+            return;
+        }
+    }
+    if (modal && k === 'enter' && e.target.id === 'answer') {
+        e.preventDefault();
+        perform('confirm');
+        return;
+    }
+    if (k === 'enter' && e.target.id === 'finder') {
+        e.preventDefault();
+        $('.results button')?.click();
+        return;
+    }
+    if (r && !field && ((k === 'enter' && e.target === r) || (mod && k === 'd') || ['backspace', 'delete'].includes(k))) {
+        e.preventDefault();
+        const op = k === 'enter' ? itemMenus[r.dataset.item][0] : k === 'd' ? 'Duplicate' : 'Delete';
+        if (itemMenus[r.dataset.item].includes(op))
+            itemAction(op, { kind: r.dataset.item, id: r.dataset.id });
+        return;
+    }
+    if (!mod)
+        return;
+    const action = e.shiftKey ? ({ p: 'palette', a: 'tabsearch', f: 'replace' })[k] : ({ k: 'search', f: 'search', t: 'new', w: 'closeCurrent', s: 'save', enter: 'send', n: 'createBackend', o: 'openFolder', r: 'start', '.': 'stop', ',': 'view:Settings', '/': 'view:Shortcuts', '\\': 'sidebar', d: 'duplicate' })[k];
+    if (action) {
+        e.preventDefault();
+        if (!disabled(action))
+            perform(action);
+    }
+});
+// Discovery is a local fixture. Installation and trust are separate user decisions.
+const deviceCatalog=[
+ {id:'ios',name:'iPhone 17 Pro',detail:'iOS 26.1 · Booted',icon:'ios',host:'localhost',ca:'Trusted'},
+ {id:'android',name:'Pixel 9 API 36',detail:'Android 16 · Emulator · Running',icon:'android',host:'10.0.2.2',ca:'Not installed'},
+ {id:'physical',name:"Mona’s iPhone",detail:'iOS 26.1 · USB/LAN',icon:'phone',host:'192.168.1.24',ca:'Installed but not trusted'},
+ {id:'tablet',name:'QA tablet',detail:'Android 16 · USB',icon:'android',host:'192.168.1.24',ca:'Unknown'},
+ {id:'browser',name:'Browsers',detail:'Chrome & Safari · Mac trust store',icon:'globe',host:'localhost',ca:'Trusted'}];
+let availableDevices=deviceCatalog.map(d=>d.id),discovery='Connected',macTrusted=true;const granted=new Set();
+Object.assign(icons,{ios:'M5 1.5h6q1 0 1 1v11q0 1-1 1H5q-1 0-1-1v-11q0-1 1-1z M7 3h2 M7 12.5h2',phone:'M4 2h8v12H4z M7 11.5h2',android:'M3 8a5 5 0 0 1 10 0z M4 10v3h8v-3 M4 2l2 2 M12 2l-2 2 M6 6h.1 M10 6h.1'});
+const deviceBy=id=>deviceCatalog.find(d=>d.id===id);
+const deviceURL=d=>'https://'+d.host+':'+projects[backend].port;
+const devicesNow=()=>deviceCatalog.filter(d=>availableDevices.includes(d.id));
+const caState=d=>d.id==='browser'?(macTrusted?'Trusted':'Not installed'):discovery==='Permission needed'&&!granted.has(d.id)?'Unknown':d.ca;
+function caLabel(){const hardware=devicesNow().filter(d=>d.id!=='browser');return 'CA · Mac '+(macTrusted?'trusted':'untrusted')+' · '+hardware.filter(d=>caState(d)==='Trusted').length+'/'+hardware.length}
+function setDiscovery(mode){granted.clear();discovery=mode;availableDevices=mode==='No devices'?['browser']:deviceCatalog.map(d=>d.id);selection.ids.clear()}
+function devicesPanel(full){const rows=devicesNow().map(d=>'<div class="deviceRow" tabindex="0" data-item="device" data-id="'+d.id+'"><span class="deviceGlyph">'+ico(d.icon)+'</span><div class="deviceName"><b>'+esc(d.name)+'</b><small>'+esc(d.detail)+'</small></div><span class="caChip '+(caState(d)==='Trusted'?'good':'')+'">'+caState(d)+'</span><code>'+deviceURL(d)+'</code></div>').join('');
+const blank=availableDevices.length===1?empty('No devices connected','Boot an iOS simulator in Xcode or an Android emulator in Device Manager.',btn('Start a simulator','boot:ios','ios')+btn('Start an emulator','boot:android','android')):'';
+return block(full?'Connected clients':'Devices',blank+'<div class="deviceList">'+rows+'</div>'+(full?'<details><summary>Discovery preview</summary>'+field('Device state',sel('Discovery preview',['Connected','No devices','Permission needed'],discovery))+'</details>':''),full?btn('Connect your app','view:Connect your app','link'):ib('arrow','view:Devices','All devices'))}
+const iosTrust='Then trust it in Settings > General > About > Certificate Trust Settings.';
+const androidTrust='Open Settings > Security > Install a certificate > CA certificate. Only debug builds configured to trust user CAs will use it in this setup.';
+function deviceOps(id){const d=deviceBy(id);if(id==='browser')return ['Certificate settings','Copy base URL','Dev menu hint'];return [...(caState(d)==='Unknown'?['Request permission']:caState(d)==='Not installed'?['Install CA']:[]),'Certificate settings','Copy base URL',...(['physical','tablet'].includes(id)?['Show QR']:[]),'Dev menu hint']}
+function deviceAction(id,op){const d=deviceBy(id),apple=['ios','physical'].includes(id);
+ if(op==='Copy base URL'){clip(deviceURL(d));return}
+ if(op==='Show QR'){perform('qr');return}
+ if(op==='Dev menu hint'){dialog('Developer menu',line(id==='browser'?'Open Developer Tools with ⌥⌘I.':apple?'Simulator: use the app’s developer shortcut (⌘D in Expo). On a device, shake a development build that supports a menu.':'Use the client’s developer menu. For Expo on the emulator, press ⌘M.'));return}
+ if(op==='Request permission'){dialog('Device permission',line('Unlock '+esc(d.name)+' and approve device access before checking its certificate store.'),btn('Simulate permission granted','grantDevice:'+id,'','primary'));return}
+ if(op==='Install CA'||op==='Certificate settings'){const text=id==='browser'?'Chrome and Safari use the Mac system trust store. Review the Tempo CA in Keychain Access.':apple?(caState(d)==='Not installed'?'Install the downloaded Tempo CA profile. ':'')+iosTrust:androidTrust;
+ const next=id==='browser'?btn(macTrusted?'Remove demo trust':'Trust demo CA','macTrust','','outline'):caState(d)==='Unknown'?btn('Request permission','devicePermission:'+id):caState(d)==='Not installed'?btn('Confirm installation','deviceInstalled:'+id,'','primary'):caState(d)==='Installed but not trusted'?btn('Confirm trust enabled','deviceTrusted:'+id,'','primary'):'';
+ dialog((id==='browser'?'Mac certificate settings':apple?'Certificate Trust Settings':'Android security settings'),'<div class="pad"><b>'+esc(d.name)+'</b><p>'+esc(text)+'</p></div>',next);return}
+ dialog(d.name,'<div class="pad"><p>'+esc(d.detail)+' · '+caState(d)+'</p><code>'+deviceURL(d)+'</code></div>',deviceOps(id).map(op=>btn(op,'deviceOp:'+id+'|'+op)).join(''))}
+const frameworks=['Web · Vite','Web · Next.js','Web · plain fetch','React Native / Expo','Flutter','iOS (Swift)','Android (Kotlin)','Node','Other'];
+function clientSnippet(){const f=val('Framework',frameworks[0]),target=val('Client target',f==='Android (Kotlin)'?'Android emulator':'This Mac / iOS simulator'),u=target==='Physical device'?lanURL():target==='Android emulator'?deviceURL(deviceBy('android')):localBase();
+return ({'Web · Vite':'VITE_API_URL='+u+'\n\n// app.js\nfetch(import.meta.env.VITE_API_URL + "/api/v1/products")','Web · Next.js':'NEXT_PUBLIC_API_URL='+u+'\n\n// Client component\nfetch(process.env.NEXT_PUBLIC_API_URL + "/api/v1/products")','Web · plain fetch':'const apiURL = "'+u+'";\nconst response = await fetch(apiURL + "/api/v1/products");','React Native / Expo':'EXPO_PUBLIC_API_URL='+u+'\n\n// In an Expo app\nfetch(process.env.EXPO_PUBLIC_API_URL + "/api/v1/products")\n\n// Other React Native clients\nconst apiURL = "'+u+'";',Flutter:'flutter run --dart-define=API_URL='+u+"\n\n// Dart\nconst apiUrl = String.fromEnvironment('API_URL');",'iOS (Swift)':'let apiURL = URL(string: "'+u+'")!','Android (Kotlin)':'const val API_URL = "'+u+'"',Node:'const apiURL = "'+u+'";\nconst response = await fetch(apiURL + "/api/v1/products");',Other:'curl '+u+'/api/v1/products'})[f]}
+function corsBlock(){return block('CORS','<div class="pad fields">'+field('Allowed origins (one per line)',area('Allowed origins',val('Allowed origins','http://localhost:5173\nhttp://localhost:3000')))+field('Credentials',sel('Credentials',['Allow','Omit'],val('Credentials','Omit')))+field('OPTIONS preflight',sel('Preflight',['Respond automatically','Use endpoint handler'],val('Preflight','Respond automatically')))+'</div>')}
+function connectPanel(){const f=val('Framework',frameworks[0]);return block('Client setup','<div class="pad">'+field('Framework',sel('Framework',frameworks,f))+field('Client target',sel('Client target',['This Mac / iOS simulator','Android emulator','Physical device'],val('Client target',f==='Android (Kotlin)'?'Android emulator':'This Mac / iOS simulator')))+code(clientSnippet())+'</div>',btn('Copy snippet','copyClient','copy','primary'))+(f.startsWith('Web')?block('Browser HTTPS',line('Trust the CA in your browser','<b>'+caState(deviceBy('browser'))+'</b>')+line('Chrome & Safari use the Mac trust store.',btn('Certificate settings','deviceOp:browser|Certificate settings')))+corsBlock():'')}
+function newProjectDialog(){dialog('New project','<div class="pad fields"><label>Project name<input id="answer" required value="Inventory API"></label><label>Template<select id="template">'+opts(['Blank','From OpenAPI','Tempo mobile template preset','CRUD starter'],'Blank')+'</select></label></div>',btn('Cancel','escape')+btn('Create project','confirm','','primary'));
+ pending=()=>{const field=$('#answer'),n=field.value.trim(),preset=$('#template').value;if(!n||projects[n]){field.setCustomValidity('Enter an unused project name');field.reportValidity();return false}
+ backends.push(n);projects[n]=projectMeta(n,8443,'Just now');projects[n].template=preset;guide.add('Create a project');openBackend(n);
+ if(preset!=='Tempo mobile template preset'){routes=preset==='CRUD starter'?[['GET','products'],['POST','products'],['GET','products/:id'],['PATCH','products/:id'],['DELETE','products/:id']]:[];records=[];files=[];saved=[];logs=[];media=[];inbox=[];activity=[];entries=[];snapshots=[];tabs=[newTab('Overview')];selectTab(tabs[0].id)}
+ if(preset==='From OpenAPI')perform('import:OpenAPI');else render();toast('Project created · '+preset)}}
+function workspaceAction(a,v,el){switch(a){
+ case 'caOverview':dialog('Certificate authority',line('Mac system trust',macTrusted?'Trusted':'Not trusted')+line('Connected devices',caLabel().split(' · ').at(-1)+' trusted'),btn('View devices','view:Devices'));break;
+ case 'homePrefs':popup([['Appearance','appearanceMenu'],['HTTPS certificates','pref:HTTPS certificates'],['CORS','pref:CORS'],['Team server','pref:Team'],[notice?'Update available':'Updates','updates'],['MCP server','view:AI & MCP']],el);break;
+ case 'deviceOp':{const [id,op]=v.split('|');deviceAction(id,op);break}
+ case 'devicePermission':deviceAction(v,'Request permission');break;
+ case 'grantDevice':granted.add(v);if(deviceBy(v).ca==='Unknown')deviceBy(v).ca='Not installed';render();toast('Device access granted');break;
+ case 'deviceInstalled':deviceBy(v).ca='Installed but not trusted';render();deviceAction(v,'Certificate settings');break;
+ case 'deviceTrusted':deviceBy(v).ca='Trusted';render();toast('Device trust confirmed');break;
+ case 'macTrust':macTrusted=!macTrusted;render();break;
+ case 'boot':if(!availableDevices.includes(v))availableDevices.unshift(v);discovery='Connected';render();toast(v==='ios'?'Simulator booted':'Emulator running');break;
+ case 'copyClient':guide.add('Connect your app');clip(clientSnippet());break;
+ case 'bulk':bulkAction(v,el);break;
+ default:return false}return true}
+const selection={scope:'',ids:new Set(),anchor:''};
+let groupUndo=null,focusGuard=false;
+const rowKey=r=>r.dataset.item+':'+r.dataset.id;
+const actionIcon=op=>({'Open':'arrow','Open in runner':'requests','Edit':'env','Replay':'play','Run':'play','Send':'play','Delete':'trash','Duplicate':'copy','Publish':'share','Activate':'check','Restore':'history','Issue JWT':'lock','Undo batch':'history','Install CA':'lock','Certificate settings':'gear','Dev menu hint':'terminal','Show QR':'qr','Request permission':'lock','Save as scenario':'layers','Start / Stop':'play','Details':'info'})[op]||'copy';
+function itemURL(kind,id){if(kind==='project')return 'https://localhost:'+projects[id].port;if(kind==='device')return deviceURL(deviceBy(id));if(kind==='record')return localBase()+'/api/v1/products/'+records[+id]?.id;if(kind==='scenario')return envBase()+'/api/v1/'+active().path;if(kind==='entry')return localBase()+'/api/v1/content/'+encodeURIComponent(id);return localBase()}
+function operations(kind,id){if(kind==='device')return ['Details',...deviceOps(id)];const ops=(itemMenus[kind]||['Open']).filter(s=>s!=='Undo batch'||!activity[+id]?.includes('read'));if(['project','entry','record','scenario'].includes(kind))return [...ops,'Copy URL'];return ops}
+function primaryOps(kind,id){return ({project:['Open','Start / Stop'],endpoint:['Open','Send'],request:['Send'],log:['Replay','Open in runner'],entry:['Publish'],device:kind==='device'?deviceOps(id).slice(0,2):[],scenario:['Activate','Edit'],record:['Edit'],agent:activity[+id]?.includes('read')?['Open']:['Undo batch']})[kind]||operations(kind,id).slice(0,1)}
+function showItemMenu(row,anchor,point){selectOne(row);const {item:kind,id}=row.dataset;chosen={kind,id};popup(operations(kind,id).map(op=>[op==='Start / Stop'?(backendStates[id]?'Stop':'Start'):op,'item:'+op,op.startsWith('Copy')?'⌘C':actionKeys[op]||'',actionIcon(op)]),anchor,'item',point)}
+function selectHost(row){return row.closest('[data-list]')}
+function listRows(host){return [...host.querySelectorAll('[data-item]')].filter(r=>selectHost(r)===host)}
+function selectedRows(){return [...document.querySelectorAll('[data-list]')].filter(h=>h.dataset.list===selection.scope).flatMap(listRows).filter(r=>selection.ids.has(rowKey(r)))}
+function paintSelection(){document.querySelectorAll('.selectionbar').forEach(b=>b.remove());const rows=selectedRows();const picked=new Set(rows);for(const r of document.querySelectorAll('[data-item]')){r.classList.toggle('picked',picked.has(r));r.setAttribute('aria-selected',String(picked.has(r)))}
+ if(rows.length<2)return;const host=selectHost(rows[0]),bar=document.createElement('div');bar.className='selectionbar';bar.innerHTML='<b>'+rows.length+' selected</b><span class="grow"></span>'+['Duplicate','Delete'].map(op=>rows.every(r=>operations(r.dataset.item,r.dataset.id).includes(op))?btn(op,'bulk:'+op):'<button disabled title="These items do not support this action">'+op+'</button>').join('')+ib('more','bulk:Menu','Selection actions');(host.tagName==='TBODY'?host.closest('table'):host).after(bar)}
+function choose(row,extend=false,toggle=false){const host=selectHost(row);if(!host)return;const key=rowKey(row),rows=listRows(host).map(rowKey);
+ if(selection.scope!==host.dataset.list){selection.scope=host.dataset.list;selection.ids.clear();selection.anchor=''}
+ if(extend&&rows.includes(selection.anchor)){const a=rows.indexOf(selection.anchor),b=rows.indexOf(key);if(!toggle)selection.ids.clear();for(const k of rows.slice(Math.min(a,b),Math.max(a,b)+1))selection.ids.add(k)}
+ else if(toggle){selection.ids.has(key)?selection.ids.delete(key):selection.ids.add(key);selection.anchor=key}
+ else{selection.ids=new Set([key]);selection.anchor=key}paintSelection()}
+function selectOne(row){if(row)choose(row)}
+function prepareSelection(){
+ const containers=new Map();for(const r of document.querySelectorAll('#app [data-item],#app .navrow,.managerList [data-item]')){
+  if(!r.dataset.item){const a=r.querySelector('[data-act]')?.dataset.act;if(!a?.startsWith('view:'))continue;r.dataset.item='screen';r.dataset.id=a.slice(5)}
+  const {item:kind,id}=r.dataset;const host=r.closest('#items,.deviceList,#projectRows,.entryList,.runningList,.managerList,tbody,.scenarios')||r.parentElement;
+  if(!containers.has(host))containers.set(host,containers.size);host.dataset.list=backend+'|'+(r.closest('#items')?'sidebar:'+section:(atHome?'home':active().id))+'|'+(host.id||host.className||host.tagName)+containers.get(host);
+  if(r.dataset.ready)continue;r.dataset.ready='1';r.tabIndex=0;
+  const route=r.querySelector('select[data-route]');if(route)r.append(route);
+  let target=r;if(r.tagName==='TR'){target=r.lastElementChild;if(!target.querySelector('.itemtools')&&kind!=='cookie'){target=document.createElement('td');r.append(target)}}
+  r.querySelectorAll('.itemtools,.rowactions,.more').forEach(b=>b.remove());
+  for(const b of r.querySelectorAll('button')){if(b.closest('.navrow,.scenarioRow')||b.dataset.act?.startsWith('log:')){b.classList.add('rowlabel');b.tabIndex=-1}else b.remove()}
+  const bar=document.createElement('span');bar.className='selectiontools';
+  bar.innerHTML=primaryOps(kind,id).map(op=>ib(op==='Start / Stop'&&backendStates[id]?'stop':actionIcon(op),'direct:'+op,op==='Start / Stop'?(backendStates[id]?'Stop':'Start'):op)).join('')+ib('more','actions','More actions');target.append(bar)
+ }paintSelection()}
+function openItem(r){const {item:kind,id}=r.dataset;
+ if(kind==='device')deviceAction(id,'Details');else if(kind==='snapshot')dialog(snapshots[+id],line('Named backend snapshot'),btn('Restore','restore:'+snapshots[+id]));
+ else itemAction(operations(kind,id)[0],{kind,id})}
+function copyItem(r){const k=r.dataset.item,id=r.dataset.id,ops=operations(k,id);const op=['Copy as cURL','Copy base URL','Copy URL','Copy JSON','Copy email','Copy name','Copy text','Copy folder'].find(n=>ops.includes(n));if(op)itemAction(op,{kind:k,id});else clip(itemURL(k,id))}
+function bulkAction(op,anchor){const rows=selectedRows();if(!rows.length)return;
+ if(op==='Menu'){popup([['Copy selected URLs','bulk:Copy','⌘C','copy'],...['Duplicate','Delete'].filter(n=>rows.every(r=>operations(r.dataset.item,r.dataset.id).includes(n))).map(n=>[n,'bulk:'+n,actionKeys[n],actionIcon(n)])],anchor);return}
+ if(op==='Copy'){clip(rows.map(r=>copyValue(r.dataset.item,r.dataset.id)).join('\n'));return}
+ if(!rows.every(r=>operations(r.dataset.item,r.dataset.id).includes(op)))return;
+ const items=rows.map(r=>({kind:r.dataset.item,id:r.dataset.id})).reverse();
+ if(op==='Delete'&&items.filter(x=>x.kind==='project').length>=backends.length){toast('Keep one project in the workspace');return}
+ groupUndo=[];selection.ids.clear();try{for(const x of items)itemAction(op,x)}finally{const undos=groupUndo;groupUndo=null;render();toast((op==='Delete'?'Removed ':'Duplicated ')+items.length+' items',()=>undos.reverse().forEach(f=>f()))}}
+function copyValue(kind,id){if(kind==='endpoint'||kind==='request'||kind==='log'){
+ const def=val('saved:'+id,{}).request||{},log=logs[+id],m=kind==='endpoint'?routes.find(r=>r[1]===id)?.[0]:kind==='log'?log[1]:def.method||(id==='Sign in'?'POST':'GET');
+ const path=kind==='log'?log[2]:kind==='endpoint'?'/api/v1/'+id:def.url||('/api/v1/'+(id==='Sign in'?'auth/login':'products'));return 'curl -X '+m+" '"+new URL(path,envBase()).href+"'"}return itemURL(kind,id)}
+function rowKeyboard(e){const r=itemData(e.target);if(!r||(e.target.closest('#layers')&&!e.target.closest('.managerList'))||e.target.matches('input,select,textarea'))return false;
+ const k=e.key.toLowerCase(),mod=e.metaKey||e.ctrlKey,rows=listRows(selectHost(r));if(['arrowup','arrowdown'].includes(k)){const target=rows[Math.min(rows.length-1,Math.max(0,rows.indexOf(r)+(k==='arrowup'?-1:1)))];choose(target,e.shiftKey);focusGuard=true;target.focus();focusGuard=false}
+ else if(k==='contextmenu'||k==='f10'&&e.shiftKey)showItemMenu(r,r);
+ else if(k==='enter'&&!mod&&!e.target.closest('.selectiontools'))openItem(r);
+ else if(mod&&k==='c'){if(selectedRows().length>1)bulkAction('Copy',r);else copyItem(r)}
+ else if((mod&&k==='d')||['delete','backspace'].includes(k)){const op=k==='d'?'Duplicate':'Delete';if(selectedRows().length>1)bulkAction(op,r);else if(operations(r.dataset.item,r.dataset.id).includes(op))itemAction(op,{kind:r.dataset.item,id:r.dataset.id})}
+ else return false;e.preventDefault();return true}
+document.addEventListener('mousedown',e=>{if(itemData(e.target)&&(e.shiftKey||e.metaKey||e.ctrlKey))e.preventDefault()});
+document.addEventListener('focusin',e=>{const r=itemData(e.target);if(r&&!focusGuard&&!e.target.closest('.selectiontools')&&(selection.scope!==selectHost(r)?.dataset.list||!selection.ids.has(rowKey(r))))choose(r)});
+document.addEventListener('click',e=>{const r=itemData(e.target);if(!r||e.target.closest('.selectiontools'))return;
+ if(e.target.closest('input,textarea,select')){selectOne(r);return}
+ choose(r,e.shiftKey,e.metaKey||e.ctrlKey);focusGuard=true;r.focus({preventScroll:true});focusGuard=false;e.stopImmediatePropagation();if(layer().children.length&&!r.closest('#layers'))closeLayer();
+ if(e.shiftKey||e.metaKey||e.ctrlKey)return;
+ const b=e.target.closest('.rowlabel');if(b){perform(b.dataset.act,b);return}
+ if(r.dataset.item==='log'&&!atHome)perform('log:'+r.dataset.id);if(r.dataset.item==='entry'){store.set('CMS entry',r.dataset.id);render()}
+},true);
+
+window.addEventListener('message', e => { if(e.source===window.parent && window.parent!==window && ['Light','Dark','System'].includes(e.data?.tempoAppearance)){theme=e.data.tempoAppearance;tone();return} if (window.parent === window || e.source !== window.parent)
+    return; if(['devices','connect'].includes(e.data?.tempoPreview)){switchProject('Shop API');openView(e.data.tempoPreview==='devices'?'Devices':'Connect your app');return}if (e.data?.tempoPreview === 'home')
+    showHome(); if (e.data?.tempoPreview === 'endpoint') {
+    switchProject('Shop API');
+    section = 'Endpoints';
+    openView('Endpoint', 'products');
+} });
+loadSession(backend);
+render();
+</script></body></html>
